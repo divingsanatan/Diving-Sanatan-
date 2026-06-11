@@ -1,0 +1,340 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
+
+:root {
+  /* Premium Soothing Light Theme Palette (White Base with Pastel Accents) */
+  --bg-base: 0 0% 100%;             /* Pure White */
+  --bg-surface: 240 20% 99%;        /* Softest lavender-white surface */
+  --bg-card: 0 0% 100%;             /* Clean white card background */
+  
+  /* Soothing Accent Colors (Pastel Shades) */
+  --color-pink-bg: 340 70% 97%;     /* Very soft light pink background */
+  --color-pink-text: 340 60% 55%;   /* Soothing pink text */
+  --color-pink-border: 340 70% 90%;
+  
+  --color-violet-bg: 262 80% 97%;   /* Very soft light violet background */
+  --color-violet-text: 262 50% 55%; /* Soothing violet text */
+  --color-violet-border: 262 80% 92%;
+  
+  --color-green-bg: 150 60% 96%;    /* Very soft light green background */
+  --color-green-text: 160 50% 40%;  /* Soothing green text */
+  --color-green-border: 150 60% 90%;
+  
+  --color-blue-bg: 205 80% 96%;     /* Very soft light blue background */
+  --color-blue-text: 205 60% 50%;   /* Soothing blue text */
+  --color-blue-border: 205 80% 90%;
+  
+  /* Primary & Accents (Mapped to Lavender/Rose Gold wellness feel) */
+  --gold-primary: 262 50% 55%;      /* Soothing Violet/Lavender instead of dark gold */
+  --gold-glow: rgba(168, 85, 247, 0.1);
+  --gold-border: rgba(168, 85, 247, 0.2);
+  
+  --teal-primary: 160 60% 40%;      /* Soothing Mint/Teal Green */
+  --teal-glow: rgba(16, 185, 129, 0.1);
+  
+  --border-muted: 220 15% 92%;      /* Light gray border */
+  --border-glass: rgba(0, 0, 0, 0.05);
+  
+  --text-cream: 222 47% 12%;        /* Deep Charcoal/Slate for high readability */
+  --text-muted: 220 15% 45%;        /* Soothing Muted Gray */
+  --text-gold: 262 60% 50%;         /* Highlight color (Violet/Lavender) */
+  
+  --font-serif: 'Cinzel', 'Playfair Display', Georgia, serif;
+  --font-sans: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+  
+  --transition-smooth: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-fast: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Button Styles (Pastel/Soothing Light Theme) */
+  --btn-gold-bg: linear-gradient(135deg, #fbcfe8 0%, #e9d5ff 50%, #c7d2fe 100%); /* Pink to Violet to Blue gradient */
+  --btn-gold-text: #4c1d95; /* Deep Violet text */
+  --btn-gold-border: rgba(168, 85, 247, 0.3);
+  
+  --btn-gold-outline-bg: rgba(168, 85, 247, 0.04);
+  --btn-gold-outline-text: #6d28d9; /* Violet text */
+  --btn-gold-outline-border: rgba(168, 85, 247, 0.4);
+  
+  --btn-primary-bg: linear-gradient(135deg, #a7f3d0 0%, #10b981 100%); /* Mint Green gradient */
+  --btn-primary-text: #064e3b; /* Deep Green text */
+  
+  --btn-secondary-bg: rgba(0, 0, 0, 0.04);
+  --btn-secondary-text: #334155; /* Slate-700 */
+  --btn-secondary-border: rgba(0, 0, 0, 0.08);
+  
+  --btn-glass-bg: rgba(255, 255, 255, 0.4);
+  --btn-glass-text: #475569;
+  --btn-glass-border: rgba(0, 0, 0, 0.08);
+
+  --btn-gold-hover-shadow: rgba(168, 85, 247, 0.2);
+  --btn-gold-outline-hover-shadow: rgba(168, 85, 247, 0.1);
+  --btn-gold-outline-hover-border: rgba(168, 85, 247, 0.7);
+  --btn-primary-hover-shadow: rgba(16, 185, 129, 0.2);
+  --btn-secondary-hover-shadow: rgba(0, 0, 0, 0.06);
+
+  /* Header Styles (Pastel/Soothing Light Theme) */
+  --header-bg: rgba(255, 255, 255, 0.85);
+  --header-logo-fill: #db2777; /* Soothing Pink */
+  --header-logo-shadow: rgba(219, 39, 119, 0.2);
+  --header-brand-color: #4c1d95; /* Soothing Violet/Lavender */
+  --header-brand-shadow: rgba(168, 85, 247, 0.05);
+  --header-link-color: #475569; /* Slate-600 */
+  --header-link-hover-color: #db2777; /* Pink */
+  --header-link-hover-shadow: rgba(219, 39, 119, 0.2);
+  
+  --cart-badge-bg: rgba(236, 72, 153, 0.08);
+  --cart-badge-border: rgba(236, 72, 153, 0.3);
+  --cart-badge-text: #db2777; /* Deep Pink */
+  --cart-pulse-color: #ec4899;
+  
+  --admin-cta-bg: rgba(168, 85, 247, 0.04);
+  --admin-cta-border: rgba(168, 85, 247, 0.4);
+  --admin-cta-text: #6d28d9;
+  --admin-cta-shadow: rgba(168, 85, 247, 0.05);
+  
+  --admin-cta-hover-bg: rgba(168, 85, 247, 0.08);
+  --admin-cta-hover-border: #6d28d9;
+  --admin-cta-hover-shadow: rgba(168, 85, 247, 0.15);
+
+  /* Footer Styles (Pastel/Soothing Light Theme) */
+  --footer-bg: #FAF9F6; /* Warm off-white */
+  --footer-brand-color: #4c1d95; /* Deep Violet */
+  --footer-title-color: #1e1b4b; /* Deep Indigo */
+  --footer-link-hover-color: #db2777; /* Soothing Pink */
+  --newsletter-success-color: #059669; /* Soothing Mint Green */
+}
+
+/* Reset & Base Styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html, body {
+  background: 
+    radial-gradient(circle at top right, rgba(236, 72, 153, 0.08), transparent 50%),   /* Pastel Pink */
+    radial-gradient(circle at bottom left, rgba(168, 85, 247, 0.08), transparent 50%), /* Pastel Violet */
+    radial-gradient(circle at bottom right, rgba(16, 185, 129, 0.06), transparent 50%), /* Pastel Green */
+    radial-gradient(circle at top left, rgba(59, 130, 246, 0.06), transparent 50%),    /* Pastel Blue */
+    #ffffff fixed;
+  color: hsl(var(--text-cream));
+  font-family: var(--font-sans);
+  min-height: 100vh;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+}
+
+/* Global Link Resets */
+a {
+  text-decoration: none !important;
+  color: inherit;
+}
+
+/* Premium Scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: hsl(var(--bg-base));
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(168, 85, 247, 0.15); /* Soft Violet scrollbar thumb */
+  border-radius: 99px;
+  border: 2px solid hsl(var(--bg-base));
+  transition: var(--transition-smooth);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(168, 85, 247, 0.35);
+}
+
+/* Ambient Aura Backgrounds */
+.glow-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.glow-orb-1 {
+  position: absolute;
+  top: -15%;
+  right: -5%;
+  width: 800px;
+  height: 800px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(236, 72, 153, 0.12) 0%, rgba(168, 85, 247, 0.05) 50%, transparent 100%);
+  filter: blur(120px);
+  animation: floatOrb 30s infinite alternate ease-in-out;
+}
+
+.glow-orb-2 {
+  position: absolute;
+  bottom: -20%;
+  left: -10%;
+  width: 900px;
+  height: 900px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, rgba(16, 185, 129, 0.05) 60%, transparent 100%);
+  filter: blur(140px);
+  animation: floatOrb 35s infinite alternate-reverse ease-in-out;
+}
+
+@keyframes floatOrb {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(50px, -40px) scale(1.08); }
+  100% { transform: translate(-30px, 50px) scale(0.92); }
+}
+
+/* Typography Utilities */
+h1, h2, h3, h4 {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: hsl(var(--text-cream));
+  line-height: 1.25;
+}
+
+p {
+  color: hsl(var(--text-muted));
+  line-height: 1.7;
+}
+
+/* Glassmorphism Styles (Light Mode) */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid var(--gold-border);
+  border-radius: 24px;
+  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.03);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-glass);
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.02);
+  transition: var(--transition-smooth);
+  position: relative;
+  overflow: hidden;
+  color: hsl(var(--text-cream));
+}
+
+.glass-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.03) 0%, transparent 100%);
+  pointer-events: none;
+  transition: var(--transition-smooth);
+}
+
+.glass-card:hover {
+  transform: translateY(-5px);
+  border-color: var(--gold-border);
+  box-shadow: 0 16px 45px rgba(0, 0, 0, 0.05), 0 0 25px var(--gold-glow);
+}
+
+.glass-card:hover::before {
+  opacity: 0.5;
+}
+
+/* Luxurious Glowing Outline Inputs */
+.glass-input {
+  width: 100%;
+  padding: 14px 18px;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.02);
+  border: 1px solid var(--border-glass);
+  color: hsl(var(--text-cream));
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  transition: var(--transition-smooth);
+  outline: none;
+}
+
+.glass-input:focus {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: hsl(var(--gold-primary));
+  box-shadow: 0 0 15px var(--gold-glow);
+}
+
+/* Soothing Pastel Gradients */
+.gold-text-gradient {
+  background: linear-gradient(135deg, #db2777 0%, #7c3aed 50%, #2563eb 100%); /* Pink to Violet to Blue */
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+}
+
+.teal-text-gradient {
+  background: linear-gradient(135deg, #059669 0%, #06b6d4 50%, #2563eb 100%); /* Green to Cyan to Blue */
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Micro-animations */
+.hover-scale {
+  transition: var(--transition-fast);
+}
+.hover-scale:hover {
+  transform: scale(1.02);
+}
+
+.hover-gold-glow {
+  transition: var(--transition-smooth);
+}
+.hover-gold-glow:hover {
+  box-shadow: 0 0 20px var(--gold-glow);
+}
+
+/* Custom Grid Layouts */
+.responsive-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 32px;
+}
+
+.footer-nav-link {
+  color: hsl(var(--text-muted));
+  text-decoration: none;
+  transition: var(--transition-fast);
+}
+.footer-nav-link:hover {
+  color: hsl(var(--text-gold));
+  padding-left: 4px;
+}
+
+/* Global Shimmer Pulsing Keyframe Animation for Skeletons */
+@keyframes pulse-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Chakra Aura Visual Colors (Soothing light theme palette overrides) */
+.chakra-root { fill: #f87171; filter: drop-shadow(0 0 6px rgba(248, 113, 113, 0.4)); }
+.chakra-sacral { fill: #fb923c; filter: drop-shadow(0 0 6px rgba(251, 146, 60, 0.4)); }
+.chakra-solar { fill: #facc15; filter: drop-shadow(0 0 6px rgba(250, 204, 21, 0.4)); }
+.chakra-heart { fill: #4ade80; filter: drop-shadow(0 0 6px rgba(74, 222, 128, 0.4)); }
+.chakra-throat { fill: #22d3ee; filter: drop-shadow(0 0 6px rgba(34, 211, 238, 0.4)); }
+.chakra-thirdeye { fill: #818cf8; filter: drop-shadow(0 0 6px rgba(129, 140, 248, 0.4)); }
+.chakra-crown { fill: #c084fc; filter: drop-shadow(0 0 6px rgba(192, 132, 252, 0.4)); }

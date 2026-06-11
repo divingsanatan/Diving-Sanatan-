@@ -1,0 +1,184 @@
+{
+  "services": [
+    {
+      "id": "srv-1",
+      "name": "Aura Balancing",
+      "price": 120,
+      "duration": "1 Hour",
+      "rating": 4.9,
+      "practitioner": "Dr. Elara Vance",
+      "category": "Energy",
+      "image": "aura_balancing",
+      "description": "A comprehensive energy purification designed to balance your auric fields, align your chakras, and restore your inner vitality."
+    },
+    {
+      "id": "srv-2",
+      "name": "Crystal Healing",
+      "price": 90,
+      "duration": "1.5 Hours",
+      "rating": 4.8,
+      "practitioner": "Dr. Elara Vance",
+      "category": "Energy",
+      "image": "crystal_healing",
+      "description": "Uses mineral crystals placed on key chakra nodes to clear blockages, release deep-rooted physical stress, and manifest positive thoughts."
+    },
+    {
+      "id": "srv-3",
+      "name": "Chakra Clearing",
+      "price": 150,
+      "duration": "1 Hour",
+      "rating": 4.9,
+      "practitioner": "Dr. Elara Vance",
+      "category": "Energy",
+      "image": "chakra_clearing",
+      "description": "Targeted purification session activating your 7 primary energy centers. Includes acoustic tuning bowls and aromatherapy elements."
+    },
+    {
+      "id": "srv-4",
+      "name": "Mindfulness Meditation",
+      "price": 75,
+      "duration": "1 Hour",
+      "rating": 4.8,
+      "practitioner": "Master Zephyr",
+      "category": "Meditation",
+      "image": "mindfulness_meditation",
+      "description": "Learn breathing disciplines, conscious visualization, and deep grounding techniques to calm your active mind and control stress levels."
+    },
+    {
+      "id": "srv-5",
+      "name": "Anxiety Release Session",
+      "price": 140,
+      "duration": "1.5 Hours",
+      "rating": 4.9,
+      "practitioner": "Dr. Elara Vance",
+      "category": "Meditation",
+      "image": "anxiety_release",
+      "description": "A tailored therapeutic program combining somatic breathing patterns and soft reiki sequences to rapidly dissolve anxiety triggers."
+    },
+    {
+      "id": "srv-6",
+      "name": "Spiritual Counseling",
+      "price": 110,
+      "duration": "1 Hour",
+      "rating": 4.9,
+      "practitioner": "Dr. Celeste Thorne",
+      "category": "Counseling",
+      "image": "spiritual_counseling",
+      "description": "One-on-one psychological-spiritual integration to discuss career blockages, inner child transitions, and overall life path alignment."
+    }
+  ],
+  "practitioners": [
+    {
+      "id": "prac-1",
+      "name": "Dr. Elara Vance",
+      "specialty": "Energy Therapist & Reiki Master",
+      "bio": "Dr. Elara Vance has spent over 15 years studying holistic health systems across Asia and Europe. She specializes in auric cleansing, alignment, and targeted crystals layouts to cultivate physical healing and mental quietude.",
+      "rating": 4.9,
+      "reviewsCount": 128,
+      "image": "elara_vance"
+    },
+    {
+      "id": "prac-2",
+      "name": "Master Zephyr",
+      "specialty": "Meditation Guide & Sound Healer",
+      "bio": "Master Zephyr guides seekers into deep tranquility using sacred sound bowls and guided breathwork routines. His meditation exercises focus on lowering heart rate variability and accessing higher states of peace.",
+      "rating": 4.8,
+      "reviewsCount": 94,
+      "image": "master_zephyr"
+    },
+    {
+      "id": "prac-3",
+      "name": "Dr. Celeste Thorne",
+      "specialty": "Spiritual Counselor & Metaphysician",
+      "bio": "Dr. Celeste Thorne bridges psychological counseling with metaphysical wisdom. She assists individuals in overcoming transition points, identifying limiting subconscious patterns, and restoring absolute clarity of purpose.",
+      "rating": 4.9,
+      "reviewsCount": 82,
+      "image": "celeste_thorne"
+    }
+  ],
+  "bookings": [
+    {
+      "id": "bk-1",
+      "serviceId": "srv-1",
+      "serviceName": "Aura Balancing",
+      "practitionerId": "prac-1",
+      "practitionerName": "Dr. Elara Vance",
+      "date": "2026-06-14",
+      "timeSlot": "10:00 AM",
+      "price": 120,
+      "clientName": "Sumeet",
+      "clientEmail": "sumeet@example.com",
+      "clientPhone": "+1 (555) 019-2834",
+      "notes": "Feeling heavily fatigued and stressed lately. Excited to try aura alignment.",
+      "status": "confirmed",
+      "paymentStatus": "paid"
+    }
+  ],
+  "reviews": [
+    {
+      "id": "rv-1",
+      "serviceId": "srv-1",
+      "serviceName": "Aura Balancing",
+      "practitionerId": "prac-1",
+      "practitionerName": "Dr. Elara Vance",
+      "clientName": "Jonathan K.",
+      "rating": 5,
+      "comment": "Absolutely transcendental experience. I walked in carrying weeks of work stress and left feeling lightweight, centered, and deeply peaceful.",
+      "date": "2026-05-28T14:32:00.000Z"
+    },
+    {
+      "id": "rv-2",
+      "serviceId": "srv-4",
+      "serviceName": "Mindfulness Meditation",
+      "practitionerId": "prac-2",
+      "practitionerName": "Master Zephyr",
+      "clientName": "Sarah M.",
+      "rating": 5,
+      "comment": "Master Zephyr has a calm energy that instantly grounds you. The breathwork exercises helped control my hyperventilating tendencies.",
+      "date": "2026-06-02T10:15:00.000Z"
+    },
+    {
+      "id": "rv-3",
+      "serviceId": "srv-6",
+      "serviceName": "Spiritual Counseling",
+      "practitionerId": "prac-3",
+      "practitionerName": "Dr. Celeste Thorne",
+      "clientName": "Liam P.",
+      "rating": 4,
+      "comment": "A highly insightful integration. Dr. Celeste helped me map my subconscious blockers and gave me daily journal prompts to stay on track.",
+      "date": "2026-06-05T16:40:00.000Z"
+    }
+  ],
+  "blogs": [
+    {
+      "id": "bl-1",
+      "title": "The Healing Power of Amethyst Crystals",
+      "category": "Crystals",
+      "author": "Dr. Elara Vance",
+      "content": "Amethyst is more than just a beautiful purple mineral; it is a natural tranquilizer. In energy medicine, amethyst is renowned for its high vibrational resonance that aligns directly with the Crown and Third Eye chakras. By placing amethyst stones around your sleeping quarters or wearing them during meditation, you allow the crystal's natural high-frequency currents to clear residual static from your aura. This encourages deep sleep, filters negative psychic thoughts, and fosters an environment of cognitive stillness. When beginning crystal layouts, ensure you cleanse your amethyst under cool salt water and charge it during a full moon cycle for peak efficacy.",
+      "date": "2026-05-18",
+      "readTime": "5 Min Read",
+      "image": "amethyst_crystals"
+    },
+    {
+      "id": "bl-2",
+      "title": "Unlocking the Chakras: A Beginner's Guide",
+      "category": "Energy Healing",
+      "author": "Dr. Celeste Thorne",
+      "content": "Chakras are the spinning energetic vortices that govern our emotional, mental, and biological wellness. Derived from the Sanskrit word for 'wheel', our seven primary chakras act as transformer stations along the spine—from the Root (Muladhara) at the tailbone to the Crown (Sahasrara) at the peak of the skull. When emotional trauma or daily stress triggers physical constriction, our chakras can become sluggish or completely blocked. This manifest as brain fog, chronic exhaustion, or physical tension. By utilizing targeted visualizations, color therapy, and vocalized mantras, you can break up stagnant energy and restore a free, healthy flow of vital force (Prana) throughout your system.",
+      "date": "2026-05-24",
+      "readTime": "8 Min Read",
+      "image": "chakras_guide"
+    },
+    {
+      "id": "bl-3",
+      "title": "Mindfulness and Anxiety: Breathing Through Stress",
+      "category": "Mindfulness",
+      "author": "Master Zephyr",
+      "content": "In moments of high anxiety, our sympathetic nervous system triggers the fight-or-flight cycle. Our breathing becomes shallow, chest muscles contract, and cortisol floods our bloodstream. The fastest portal back to equilibrium is your breath. By practicing conscious pranayama or box breathing (inhaling for 4 seconds, holding for 4, exhaling for 4, and holding empty for 4), you signal to your vagus nerve that you are safe. This activates the parasympathetic nervous system, lowering heart rate and bringing hyperactive neural circuits back to baseline. Make it a daily ritual: spend 10 minutes every morning sitting in silence, focusing solely on the tactile feeling of air entering and exiting your nostrils.",
+      "date": "2026-06-01",
+      "readTime": "6 Min Read",
+      "image": "breathing_stress"
+    }
+  ]
+}
