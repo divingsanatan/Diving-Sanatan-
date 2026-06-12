@@ -54,6 +54,24 @@ function BookingContent() {
   const [clientNotes, setClientNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState("");
+  
+  // Validation states
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+
+  // Prefill details from localStorage
+  useEffect(() => {
+    const saved = window.localStorage.getItem("divingsanatan_user_profile");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.name) setClientName(parsed.name);
+        if (parsed.email) setClientEmail(parsed.email);
+        if (parsed.phone) setClientPhone(parsed.phone);
+      } catch (e) {
+        console.warn("Failed to load saved profile in booking:", e);
+      }
+    }
+  }, []);
 
   // Calendar dates mock (June 2026)
   const daysInMonth = Array.from({ length: 30 }, (_, i) => i + 1);
@@ -109,6 +127,34 @@ function BookingContent() {
     }
   };
 
+  const validateForm = () => {
+    const errors: Record<string, string> = {};
+    if (!clientName.trim()) {
+      errors.name = "Full Name is required";
+    } else if (clientName.trim().length < 2) {
+      errors.name = "Full Name must be at least 2 characters";
+    } else if (!/^[A-Za-z\s]+$/.test(clientName)) {
+      errors.name = "Full Name must contain only letters and spaces";
+    }
+
+    const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+    if (!clientEmail.trim()) {
+      errors.email = "Email Address is required";
+    } else if (!emailPattern.test(clientEmail)) {
+      errors.email = "Please enter a valid email address";
+    }
+
+    const digitsOnly = clientPhone.replace(/\D/g, "");
+    if (!clientPhone.trim()) {
+      errors.phone = "Phone number is required";
+    } else if (digitsOnly.length < 10) {
+      errors.phone = "Please enter a valid phone number with at least 10 digits";
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   // Submit appointment booking
   const handleBookingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -116,13 +162,25 @@ function BookingContent() {
       alert("Please ensure all booking metrics (Service, Practitioner, Date, Time) are selected.");
       return;
     }
-    if (!clientName || !clientEmail || !clientPhone) {
-      alert("Please fill out the contact fields.");
-      return;
-    }
+    if (!validateForm()) return;
 
     setSubmitting(true);
     setMessage("");
+
+    // Update localStorage cache
+    try {
+      const savedProfile = window.localStorage.getItem("divingsanatan_user_profile");
+      const currentProfile = savedProfile ? JSON.parse(savedProfile) : {};
+      const updatedProfile = {
+        ...currentProfile,
+        name: clientName,
+        email: clientEmail,
+        phone: clientPhone
+      };
+      window.localStorage.setItem("divingsanatan_user_profile", JSON.stringify(updatedProfile));
+    } catch (err) {
+      console.warn("Failed to update saved profile in booking:", err);
+    }
 
     try {
       const res = await fetch("/api/bookings", {
@@ -176,7 +234,7 @@ function BookingContent() {
           </p>
         </section>
 
-        <form onSubmit={handleBookingSubmit} className="booking-grid">
+        <form onSubmit={handleBookingSubmit} noValidate className="booking-grid">
           
           {/* Calendar, Services & Healer Columns */}
           <div className="booking-controls-col">
@@ -285,36 +343,45 @@ function BookingContent() {
                 <label>Full Name</label>
                 <input 
                   type="text" 
-                  className="glass-input" 
-                  required
+                  className={`glass-input ${formErrors.name ? "input-border-error" : ""}`} 
                   placeholder="e.g. Sumeet"
                   value={clientName}
-                  onChange={(e) => setClientName(e.target.value)}
+                  onChange={(e) => {
+                    setClientName(e.target.value);
+                    if (formErrors.name) setFormErrors({ ...formErrors, name: "" });
+                  }}
                 />
+                {formErrors.name && <span className="inline-error-msg">{formErrors.name}</span>}
               </div>
 
               <div className="form-group">
                 <label>Email Address</label>
                 <input 
                   type="email" 
-                  className="glass-input" 
-                  required
+                  className={`glass-input ${formErrors.email ? "input-border-error" : ""}`} 
                   placeholder="e.g. sumeet@example.com"
                   value={clientEmail}
-                  onChange={(e) => setClientEmail(e.target.value)}
+                  onChange={(e) => {
+                    setClientEmail(e.target.value);
+                    if (formErrors.email) setFormErrors({ ...formErrors, email: "" });
+                  }}
                 />
+                {formErrors.email && <span className="inline-error-msg">{formErrors.email}</span>}
               </div>
 
               <div className="form-group">
                 <label>Phone Number</label>
                 <input 
                   type="tel" 
-                  className="glass-input" 
-                  required
+                  className={`glass-input ${formErrors.phone ? "input-border-error" : ""}`} 
                   placeholder="e.g. +1 (555) 019-2834"
                   value={clientPhone}
-                  onChange={(e) => setClientPhone(e.target.value)}
+                  onChange={(e) => {
+                    setClientPhone(e.target.value);
+                    if (formErrors.phone) setFormErrors({ ...formErrors, phone: "" });
+                  }}
                 />
+                {formErrors.phone && <span className="inline-error-msg">{formErrors.phone}</span>}
               </div>
 
               <div className="form-group">
@@ -602,6 +669,18 @@ function BookingContent() {
           display: flex;
           flex-direction: column;
           gap: 8px;
+        }
+        .input-border-error {
+          border-color: #ef4444 !important;
+          box-shadow: 0 0 10px rgba(239, 68, 68, 0.15) !important;
+        }
+        .inline-error-msg {
+          color: #ef4444;
+          font-size: 0.75rem;
+          margin-top: 4px;
+          font-weight: 600;
+          text-align: left;
+          display: block;
         }
         .text-area-input {
           height: 100px;

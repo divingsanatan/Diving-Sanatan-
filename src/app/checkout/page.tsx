@@ -37,6 +37,7 @@ export default function CheckoutPage() {
   
   // Form input states
   const [paymentOption, setPaymentOption] = useState<"card" | "paypal" | "apple">("card");
+  const [cardholderName, setCardholderName] = useState("");
   const [cardNumber, setCardNumber] = useState("");
   const [expiry, setExpiry] = useState("");
   const [cvv, setCvv] = useState("");
@@ -44,6 +45,9 @@ export default function CheckoutPage() {
 
   const [processing, setProcessing] = useState(false);
   const [success, setSuccess] = useState(false);
+
+  // Validation errors
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   // History state
   const [orderHistory, setOrderHistory] = useState<BookingRecord[]>([]);
@@ -59,6 +63,12 @@ export default function CheckoutPage() {
       const bid = window.localStorage.getItem("active_booking_id");
       if (bid) {
         setBookingId(bid);
+      }
+
+      const savedProfile = window.localStorage.getItem("divingsanatan_user_profile");
+      if (savedProfile) {
+        const parsed = JSON.parse(savedProfile);
+        if (parsed.name) setCardholderName(parsed.name);
       }
     } catch (e) {
       console.warn(e);
@@ -86,9 +96,80 @@ export default function CheckoutPage() {
   // Compute total
   const totalCost = selections.reduce((s, x) => s + x.price, 0);
 
+  const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value.replace(/\D/g, "");
+    const formatted = val.match(/.{1,4}/g)?.join(" ") || "";
+    setCardNumber(formatted);
+    if (formErrors.cardNumber) setFormErrors({ ...formErrors, cardNumber: "" });
+  };
+
+  const handleExpiryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let val = e.target.value.replace(/\D/g, "");
+    if (val.length > 2) {
+      val = val.substring(0, 2) + "/" + val.substring(2, 4);
+    }
+    setExpiry(val);
+    if (formErrors.expiry) setFormErrors({ ...formErrors, expiry: "" });
+  };
+
+  const handleCvvChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value.replace(/\D/g, "");
+    setCvv(val);
+    if (formErrors.cvv) setFormErrors({ ...formErrors, cvv: "" });
+  };
+
+  const validateForm = () => {
+    const errors: Record<string, string> = {};
+    if (paymentOption === "card") {
+      if (!cardholderName.trim()) {
+        errors.name = "Cardholder Name is required";
+      } else if (cardholderName.trim().length < 2) {
+        errors.name = "Name must be at least 2 characters";
+      } else if (!/^[A-Za-z\s]+$/.test(cardholderName)) {
+        errors.name = "Name must contain only letters and spaces";
+      }
+
+      const cleanedCard = cardNumber.replace(/\s+/g, "");
+      if (!cleanedCard) {
+        errors.cardNumber = "Card Number is required";
+      } else if (!/^\d{16}$/.test(cleanedCard)) {
+        errors.cardNumber = "Card Number must be exactly 16 digits";
+      }
+
+      if (!expiry) {
+        errors.expiry = "Expiry Date is required";
+      } else if (!/^\d{2}\/\d{2}$/.test(expiry)) {
+        errors.expiry = "Expiry format must be MM/YY";
+      } else {
+        const [m, y] = expiry.split("/").map(Number);
+        const now = new Date();
+        const currentMonth = now.getMonth() + 1;
+        const currentYear = now.getFullYear() % 100;
+        if (m < 1 || m > 12) {
+          errors.expiry = "Invalid month";
+        } else if (y < currentYear || (y === currentYear && m < currentMonth)) {
+          errors.expiry = "Card has expired";
+        }
+      }
+
+      if (!cvv) {
+        errors.cvv = "CVV is required";
+      } else if (!/^\d{3}$/.test(cvv)) {
+        errors.cvv = "CVV must be exactly 3 digits";
+      }
+
+      if (!billingAddress.trim()) {
+        errors.billingAddress = "Billing Address is required";
+      }
+    }
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   // Submit payment handler
   const handlePaymentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validateForm()) return;
     setProcessing(true);
 
     // Simulate network delay
@@ -150,7 +231,7 @@ export default function CheckoutPage() {
             
             {/* Payment Details Form */}
             <div className="checkout-form-col">
-              <form onSubmit={handlePaymentSubmit} className="payment-card-panel glass-panel">
+              <form onSubmit={handlePaymentSubmit} noValidate className="payment-card-panel glass-panel">
                 <h3 className="checkout-section-title">Payment Details</h3>
 
                 {/* Options selector (From Slide 1) */}
@@ -184,23 +265,28 @@ export default function CheckoutPage() {
                       <label>Cardholder Name</label>
                       <input 
                         type="text" 
-                        required 
-                        className="glass-input" 
+                        className={`glass-input ${formErrors.name ? "input-border-error" : ""}`} 
                         placeholder="e.g. Sumeet" 
+                        value={cardholderName}
+                        onChange={(e) => {
+                          setCardholderName(e.target.value);
+                          if (formErrors.name) setFormErrors({ ...formErrors, name: "" });
+                        }}
                       />
+                      {formErrors.name && <span className="inline-error-msg">{formErrors.name}</span>}
                     </div>
 
                     <div className="form-group">
                       <label>Card Number</label>
                       <input 
                         type="text" 
-                        required 
-                        className="glass-input" 
+                        className={`glass-input ${formErrors.cardNumber ? "input-border-error" : ""}`} 
                         placeholder="1111 - 2222 - 3333 - 4444" 
                         maxLength={19}
                         value={cardNumber}
-                        onChange={(e) => setCardNumber(e.target.value)}
+                        onChange={handleCardNumberChange}
                       />
+                      {formErrors.cardNumber && <span className="inline-error-msg">{formErrors.cardNumber}</span>}
                     </div>
 
                     <div className="form-row">
@@ -208,25 +294,25 @@ export default function CheckoutPage() {
                         <label>Expiry Date</label>
                         <input 
                           type="text" 
-                          required 
-                          className="glass-input" 
+                          className={`glass-input ${formErrors.expiry ? "input-border-error" : ""}`} 
                           placeholder="MM/YY" 
                           maxLength={5}
                           value={expiry}
-                          onChange={(e) => setExpiry(e.target.value)}
+                          onChange={handleExpiryChange}
                         />
+                        {formErrors.expiry && <span className="inline-error-msg">{formErrors.expiry}</span>}
                       </div>
                       <div className="form-group" style={{ flex: 1 }}>
                         <label>CVV</label>
                         <input 
                           type="password" 
-                          required 
-                          className="glass-input" 
+                          className={`glass-input ${formErrors.cvv ? "input-border-error" : ""}`} 
                           placeholder="•••" 
                           maxLength={3}
                           value={cvv}
-                          onChange={(e) => setCvv(e.target.value)}
+                          onChange={handleCvvChange}
                         />
+                        {formErrors.cvv && <span className="inline-error-msg">{formErrors.cvv}</span>}
                       </div>
                     </div>
 
@@ -234,12 +320,15 @@ export default function CheckoutPage() {
                       <label>Billing Address</label>
                       <input 
                         type="text" 
-                        required 
-                        className="glass-input" 
+                        className={`glass-input ${formErrors.billingAddress ? "input-border-error" : ""}`} 
                         placeholder="777 Ethereal Pathway, Zen City, CA" 
                         value={billingAddress}
-                        onChange={(e) => setBillingAddress(e.target.value)}
+                        onChange={(e) => {
+                          setBillingAddress(e.target.value);
+                          if (formErrors.billingAddress) setFormErrors({ ...formErrors, billingAddress: "" });
+                        }}
                       />
+                      {formErrors.billingAddress && <span className="inline-error-msg">{formErrors.billingAddress}</span>}
                     </div>
                   </div>
                 ) : (
@@ -405,6 +494,18 @@ export default function CheckoutPage() {
           display: flex;
           flex-direction: column;
           gap: 8px;
+        }
+        .input-border-error {
+          border-color: #ef4444 !important;
+          box-shadow: 0 0 10px rgba(239, 68, 68, 0.15) !important;
+        }
+        .inline-error-msg {
+          color: #ef4444;
+          font-size: 0.75rem;
+          margin-top: 4px;
+          font-weight: 600;
+          text-align: left;
+          display: block;
         }
         .form-group label {
           font-size: 0.8rem;

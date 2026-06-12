@@ -96,58 +96,6 @@ export default function AdminDashboardPage() {
               <span className="stat-sub">Testimonials recorded</span>
             </Card>
           </section>
-
-          {/* Overview Columns */}
-          <section className="dashboard-split-layout">
-            {/* Recent Bookings */}
-            <div className="split-column">
-              <div className="column-header-row">
-                <h3 className="column-title">Recent Appointments</h3>
-              </div>
-              <Card variant="glass" style={{ padding: "24px" }}>
-                {bookings.length === 0 ? (
-                  <p style={{ color: "hsl(var(--text-muted))", fontSize: "0.9rem" }}>No active bookings.</p>
-                ) : (
-                  <div className="recent-list">
-                    {bookings.slice(0, 5).map(b => (
-                      <div key={b.id} className="recent-item">
-                        <div className="item-details">
-                          <span className="item-title">{b.clientName}</span>
-                          <span className="item-subtitle">{b.serviceName} • {b.date}</span>
-                        </div>
-                        <span className={`status-badge ${b.status}`}>{b.status}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </Card>
-            </div>
-
-            {/* Testimonials moderator list */}
-            <div className="split-column">
-              <div className="column-header-row">
-                <h3 className="column-title">Moderator Testimonials Feed</h3>
-              </div>
-              <Card variant="glass" style={{ padding: "24px" }}>
-                {reviews.length === 0 ? (
-                  <p style={{ color: "hsl(var(--text-muted))", fontSize: "0.9rem" }}>No reviews posted yet.</p>
-                ) : (
-                  <div className="recent-list">
-                    {reviews.slice(0, 5).map(r => (
-                      <div key={r.id} className="recent-item-vertical">
-                        <div className="review-meta-row">
-                          <span className="reviewer-name">{r.clientName}</span>
-                          <span className="review-rating">{"★".repeat(r.rating)}</span>
-                        </div>
-                        <p className="review-comment">"{r.comment}"</p>
-                        <span className="review-sub">{r.serviceName} • {r.practitionerName}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </Card>
-            </div>
-          </section>
         </>
       )}
 

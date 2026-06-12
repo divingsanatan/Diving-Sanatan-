@@ -40,7 +40,7 @@ export default function AdminLoginPage() {
           <h1 className="login-title">Diving Sanatan Gateway</h1>
         </div>
         <p className="login-subtitle">Enter passcode to authorize logistics dashboard.</p>
-        
+
         <form onSubmit={handleLogin} className="login-form">
           <div className="form-group">
             <label>Passcode</label>
@@ -53,14 +53,14 @@ export default function AdminLoginPage() {
               onChange={(e) => setPassword(e.target.value)}
             />
           </div>
-          
+
           {error && <p className="error-text">{error}</p>}
-          
-          <Button variant="gold" type="submit" style={{ width: "100%", marginTop: "8px" }}>
+
+          <Button variant="gold" type="submit">
             Unlock Panel
           </Button>
         </form>
-        
+
         <Link href="/" className="return-link">← Return to Public Portal</Link>
       </Card>
 

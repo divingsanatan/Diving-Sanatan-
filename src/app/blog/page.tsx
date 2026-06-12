@@ -64,7 +64,7 @@ export default function BlogListingPage() {
       <Header />
 
       <main className="blog-container">
-        
+
         {/* Header */}
         <section className="blog-header">
           <h1 className="blog-title">Spiritual Guidance Blog</h1>
@@ -115,7 +115,7 @@ export default function BlogListingPage() {
                     <span className="blog-card-cat">{post.category}</span>
                     <span className="blog-card-time">{post.readTime}</span>
                   </div>
-                  
+
                   <h3 className="blog-card-title">{post.title}</h3>
                   <p className="blog-card-excerpt">
                     {post.content.substring(0, 150)}...
@@ -128,7 +128,7 @@ export default function BlogListingPage() {
 
                   <div className="blog-card-action">
                     <Link href={`/blog/${post.id}`} passHref legacyBehavior>
-                      <Button variant="gold-outline" size="sm" style={{ width: "100%" }}>
+                      <Button variant="gold-outline" size="sm">
                         Read Article
                       </Button>
                     </Link>

@@ -69,6 +69,8 @@ export default function AdminLayout({
           <Link href="/admin/services" className={`sidebar-link ${pathname === "/admin/services" ? "active" : ""}`}>Services</Link>
           <Link href="/admin/practitioners" className={`sidebar-link ${pathname === "/admin/practitioners" ? "active" : ""}`}>Practitioners</Link>
           <Link href="/admin/categories" className={`sidebar-link ${pathname === "/admin/categories" ? "active" : ""}`}>Categories</Link>
+          <Link href="/admin/quiz-questions" className={`sidebar-link ${pathname === "/admin/quiz-questions" ? "active" : ""}`}>Quiz Questions</Link>
+          <Link href="/admin/leads" className={`sidebar-link ${pathname === "/admin/leads" ? "active" : ""}`}>Leads Profiles</Link>
           <Link href="/" className="sidebar-link">Public Site</Link>
         </nav>
         
