@@ -1038,7 +1038,7 @@ export default function Home() {
                         <span className="power-tag">Power Session</span>
                         <h3 className="consult-title">Stage 2: Live Consultation</h3>
                         <p className="consult-desc">Activate your custom 15-minute guided session with a certified spiritual therapist to map out your Aura alignment.</p>
-                        <Button variant="gold" onClick={() => router.push("/contact")} style={{ width: "100%", marginTop: "auto" }}>
+                        <Button variant="gold" onClick={() => router.push("/contact")} >
                           Schedule Live Call (Free)
                         </Button>
                       </div>
@@ -1058,7 +1058,7 @@ export default function Home() {
                               <Button
                                 variant="gold-outline"
                                 onClick={() => router.push(`/booking?service=${srv.id}`)}
-                                style={{ width: "100%", marginTop: "12px" }}
+
                               >
                                 Book This Session
                               </Button>
