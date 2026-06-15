@@ -26,7 +26,7 @@ export default function ReviewsPage() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [filteredReviews, setFilteredReviews] = useState<Review[]>([]);
   const [practitioners, setPractitioners] = useState<Practitioner[]>([]);
-  
+
   // Filters
   const [selectedHealer, setSelectedHealer] = useState("all");
 
@@ -43,7 +43,7 @@ export default function ReviewsPage() {
     try {
       const rRes = await fetch("/api/reviews");
       const rJson = await rRes.json();
-      
+
       const pRes = await fetch("/api/practitioners");
       const pJson = await pRes.json();
 
@@ -74,7 +74,7 @@ export default function ReviewsPage() {
   }, [reviews, selectedHealer]);
 
   // Aggregate stats
-  const aggregateRating = reviews.length 
+  const aggregateRating = reviews.length
     ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
     : "5.0";
 
@@ -92,7 +92,7 @@ export default function ReviewsPage() {
     try {
       const selectedPracObj = practitioners.find(p => p.id === practitionerId);
       const practitionerName = selectedPracObj ? selectedPracObj.name : "Dr. Elara Vance";
-      
+
       const res = await fetch("/api/reviews", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -130,7 +130,7 @@ export default function ReviewsPage() {
       <Header />
 
       <main className="reviews-container">
-        
+
         {/* Title */}
         <section className="reviews-header">
           <h1 className="reviews-title">Client Testimonials</h1>
@@ -151,15 +151,15 @@ export default function ReviewsPage() {
 
         {/* Split: Listing + Submit Form */}
         <section className="reviews-grid">
-          
+
           {/* List */}
           <div className="reviews-list-col">
             <div className="list-header-row">
               <h3 className="column-title">Client Feedback ({filteredReviews.length})</h3>
-              
+
               {/* Healer Filter */}
               <div className="healer-filter-wrapper">
-                <select 
+                <select
                   className="glass-input small-select"
                   value={selectedHealer}
                   onChange={(e) => setSelectedHealer(e.target.value)}
@@ -179,11 +179,11 @@ export default function ReviewsPage() {
                     <span className="reviewer-name">{rv.clientName}</span>
                     <span className="review-stars">{"★".repeat(rv.rating)}{"☆".repeat(5 - rv.rating)}</span>
                   </div>
-                  
+
                   <p className="review-comment">
                     &ldquo;{rv.comment}&rdquo;
                   </p>
-                  
+
                   <div className="review-card-footer">
                     <span>Practitioner: <strong>{rv.practitionerName}</strong></span>
                     <span>Session: <strong>{rv.serviceName}</strong></span>
@@ -197,9 +197,9 @@ export default function ReviewsPage() {
           <div className="reviews-form-col">
             <Card variant="glass" style={{ padding: "32px" }}>
               <h3 className="column-title" style={{ marginBottom: "20px" }}>Share Your Experience</h3>
-              
+
               <form onSubmit={handleSubmitReview} className="feedback-submission-form">
-                
+
                 <div className="form-group">
                   <label>Your Name</label>
                   <input
@@ -253,7 +253,7 @@ export default function ReviewsPage() {
 
                 {message && <p className="form-feedback-msg">{message}</p>}
 
-                <Button variant="gold" type="submit" disabled={submitting} style={{ width: "100%", marginTop: "12px" }}>
+                <Button variant="gold" type="submit" disabled={submitting} >
                   {submitting ? "Submitting..." : "Submit Review"}
                 </Button>
 

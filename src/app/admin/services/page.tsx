@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { formatCurrency } from "@/utils/formatters";
@@ -11,7 +11,11 @@ export default function AdminServicesPage() {
   const [practitioners, setPractitioners] = useState<Practitioner[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [editServiceId, setEditServiceId] = useState<string | null>(null);
 
   // Form states
   const [serviceName, setServiceName] = useState("");
@@ -20,6 +24,16 @@ export default function AdminServicesPage() {
   const [servicePractitioner, setServicePractitioner] = useState("");
   const [selectedServiceCategories, setSelectedServiceCategories] = useState<string[]>([]);
   const [serviceDesc, setServiceDesc] = useState("");
+  const [serviceImage, setServiceImage] = useState("");
+  const [serviceVideoUrl, setServiceVideoUrl] = useState("");
+  const [benefits, setBenefits] = useState<string[]>([]);
+  const [processSteps, setProcessSteps] = useState<string[]>([]);
+
+  // UI state
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const loadData = async () => {
     try {
@@ -38,7 +52,7 @@ export default function AdminServicesPage() {
         setServices(sJson.data);
         setPractitioners(pJson.data);
         setCategories(cJson.data);
-        if (pJson.data.length > 0) {
+        if (pJson.data.length > 0 && !servicePractitioner) {
           setServicePractitioner(pJson.data[0].name);
         }
       }
@@ -53,10 +67,92 @@ export default function AdminServicesPage() {
     loadData();
   }, []);
 
-  const handleAddService = async (e: React.FormEvent) => {
+  // Close dropdown on click outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const resetForm = () => {
+    setServiceName("");
+    setServicePrice("");
+    setServiceDuration("");
+    if (practitioners.length > 0) {
+      setServicePractitioner(practitioners[0].name);
+    } else {
+      setServicePractitioner("");
+    }
+    setSelectedServiceCategories([]);
+    setServiceDesc("");
+    setServiceImage("");
+    setServiceVideoUrl("");
+    setBenefits([]);
+    setProcessSteps([]);
+    setEditMode(false);
+    setEditServiceId(null);
+  };
+
+  const handleOpenCreateModal = () => {
+    resetForm();
+    setIsModalOpen(true);
+  };
+
+  const handleOpenEditModal = (service: Service) => {
+    setEditMode(true);
+    setEditServiceId(service.id);
+    setServiceName(service.name);
+    setServicePrice(service.price.toString());
+    setServiceDuration(service.duration);
+    setServicePractitioner(service.practitioner);
+    setSelectedServiceCategories(service.categoryIds || []);
+    setServiceDesc(service.description);
+    setServiceImage(service.image || "");
+    setServiceVideoUrl(service.video_url || "");
+    setBenefits(service.benefits || []);
+    setProcessSteps(service.process || []);
+    setIsModalOpen(true);
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: "image" | "video") => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    if (type === "image") setUploadingImage(true);
+    else setUploadingVideo(true);
+
+    try {
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData
+      });
+      const json = await res.json();
+      if (json.success) {
+        if (type === "image") setServiceImage(json.url);
+        else setServiceVideoUrl(json.url);
+      } else {
+        alert("Upload failed: " + json.error);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("An error occurred during file upload.");
+    } finally {
+      if (type === "image") setUploadingImage(false);
+      else setUploadingVideo(false);
+    }
+  };
+
+  const handleSaveService = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!serviceName || !servicePrice || !serviceDuration || !serviceDesc) {
-      alert("Please enter all service fields.");
+      alert("Please enter all required fields.");
       return;
     }
     if (selectedServiceCategories.length === 0) {
@@ -64,32 +160,47 @@ export default function AdminServicesPage() {
       return;
     }
 
+    const payload = {
+      name: serviceName,
+      price: Number(servicePrice),
+      duration: serviceDuration,
+      practitioner: servicePractitioner,
+      categoryIds: selectedServiceCategories,
+      description: serviceDesc,
+      image: serviceImage || "aura_balancing",
+      video_url: serviceVideoUrl,
+      benefits: benefits.filter(b => b.trim() !== ""),
+      process: processSteps.filter(p => p.trim() !== "")
+    };
+
     try {
-      const res = await fetch("/api/services", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: serviceName,
-          price: Number(servicePrice),
-          duration: serviceDuration,
-          practitioner: servicePractitioner,
-          categoryIds: selectedServiceCategories,
-          description: serviceDesc
-        })
-      });
+      let res;
+      if (editMode && editServiceId) {
+        res = await fetch("/api/services", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: editServiceId, ...payload })
+        });
+      } else {
+        res = await fetch("/api/services", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+      }
+
       const json = await res.json();
       if (json.success) {
-        setServiceName("");
-        setServicePrice("");
-        setServiceDuration("");
-        setServiceDesc("");
-        setSelectedServiceCategories([]);
         setIsModalOpen(false);
-        alert("Service successfully added to catalog!");
+        resetForm();
+        alert(editMode ? "Service details updated successfully!" : "Service successfully added to catalog!");
         loadData();
+      } else {
+        alert("Operation failed: " + json.error);
       }
     } catch (err) {
       console.error(err);
+      alert("An error occurred while saving the service.");
     }
   };
 
@@ -100,10 +211,46 @@ export default function AdminServicesPage() {
       const json = await res.json();
       if (json.success) {
         loadData();
+      } else {
+        alert("Failed to delete service: " + json.error);
       }
     } catch (err) {
       console.error(err);
     }
+  };
+
+  const handleAddBenefit = () => setBenefits([...benefits, ""]);
+  const handleUpdateBenefit = (index: number, val: string) => {
+    const next = [...benefits];
+    next[index] = val;
+    setBenefits(next);
+  };
+  const handleRemoveBenefit = (index: number) => {
+    setBenefits(benefits.filter((_, idx) => idx !== index));
+  };
+
+  const handleAddProcessStep = () => setProcessSteps([...processSteps, ""]);
+  const handleUpdateProcessStep = (index: number, val: string) => {
+    const next = [...processSteps];
+    next[index] = val;
+    setProcessSteps(next);
+  };
+  const handleRemoveProcessStep = (index: number) => {
+    setProcessSteps(processSteps.filter((_, idx) => idx !== index));
+  };
+
+  const toggleCategorySelection = (catId: string) => {
+    if (selectedServiceCategories.includes(catId)) {
+      setSelectedServiceCategories(selectedServiceCategories.filter(id => id !== catId));
+    } else {
+      setSelectedServiceCategories([...selectedServiceCategories, catId]);
+    }
+  };
+
+  const getCategoryNamesSelected = () => {
+    return selectedServiceCategories
+      .map(id => categories.find(c => c.id === id)?.name)
+      .filter(Boolean) as string[];
   };
 
   return (
@@ -119,7 +266,7 @@ export default function AdminServicesPage() {
           <button className="sync-btn" onClick={loadData}>
             🔄 Refresh Services
           </button>
-          <Button variant="gold" onClick={() => setIsModalOpen(true)}>
+          <Button variant="gold" onClick={handleOpenCreateModal}>
             ➕ Add Service
           </Button>
         </div>
@@ -129,7 +276,6 @@ export default function AdminServicesPage() {
         <p style={{ color: "hsl(var(--text-muted))", marginTop: "40px" }}>Loading catalog data...</p>
       ) : (
         <div className="admin-split-layout">
-          {/* List */}
           <div className="split-list-col">
             <h3 className="column-title">Services List ({services.length})</h3>
             <div className="table-responsive-container">
@@ -185,9 +331,14 @@ export default function AdminServicesPage() {
                           <span className="practitioner-text">{s.practitioner}</span>
                         </td>
                         <td style={{ textAlign: "right" }}>
-                          <button className="delete-row-btn" onClick={() => handleDeleteService(s.id)}>
-                            ✕ Remove
-                          </button>
+                          <div className="action-buttons-cell">
+                            <button className="edit-row-btn" onClick={() => handleOpenEditModal(s)}>
+                              ✎ Edit
+                            </button>
+                            <button className="delete-row-btn" onClick={() => handleDeleteService(s.id)}>
+                              ✕ Remove
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -199,19 +350,21 @@ export default function AdminServicesPage() {
         </div>
       )}
 
-      {/* Modal Popup for Creating Service */}
+      {/* Modal Popup for Creating/Editing Service */}
       {isModalOpen && (
         <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
           <div className="modal-content-wrapper" onClick={(e) => e.stopPropagation()}>
-            <Card variant="glass" style={{ padding: "28px", position: "relative" }}>
+            <Card variant="glass" className="modal-inner-card">
               <button className="close-modal-btn" onClick={() => setIsModalOpen(false)}>
                 ✕
               </button>
-              <h3 className="column-title" style={{ marginBottom: "20px" }}>Create Service</h3>
-              <form onSubmit={handleAddService} className="admin-catalog-form">
-
+              <h3 className="column-title" style={{ marginBottom: "20px" }}>
+                {editMode ? "Edit Service details" : "Create Service"}
+              </h3>
+              
+              <form onSubmit={handleSaveService} className="admin-catalog-form">
                 <div className="form-group">
-                  <label>Service Name</label>
+                  <label>Service Name *</label>
                   <input
                     type="text"
                     className="glass-input"
@@ -224,7 +377,7 @@ export default function AdminServicesPage() {
 
                 <div className="form-row">
                   <div className="form-group" style={{ flex: 1 }}>
-                    <label>Price ($)</label>
+                    <label>Price ($) *</label>
                     <input
                       type="number"
                       className="glass-input"
@@ -235,7 +388,7 @@ export default function AdminServicesPage() {
                     />
                   </div>
                   <div className="form-group" style={{ flex: 1 }}>
-                    <label>Duration</label>
+                    <label>Duration *</label>
                     <input
                       type="text"
                       className="glass-input"
@@ -247,25 +400,53 @@ export default function AdminServicesPage() {
                   </div>
                 </div>
 
-                <div className="form-group">
-                  <label>Categories (Select all that apply)</label>
-                  <div className="checkbox-grid">
-                    {categories.map(cat => (
-                      <label key={cat.id} className="checkbox-label">
-                        <input
-                          type="checkbox"
-                          checked={selectedServiceCategories.includes(cat.id)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setSelectedServiceCategories([...selectedServiceCategories, cat.id]);
-                            } else {
-                              setSelectedServiceCategories(selectedServiceCategories.filter(id => id !== cat.id));
-                            }
-                          }}
-                        />
-                        {cat.name}
-                      </label>
-                    ))}
+                {/* Custom Multi-select Dropdown instead of checkboxes */}
+                <div className="form-group" ref={dropdownRef}>
+                  <label>Categories *</label>
+                  <div className="dropdown-selector-wrapper">
+                    <div 
+                      className="dropdown-trigger-box glass-input"
+                      onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                    >
+                      <div className="selected-categories-preview">
+                        {getCategoryNamesSelected().length === 0 ? (
+                          <span className="placeholder-text">Select Categories...</span>
+                        ) : (
+                          getCategoryNamesSelected().map(name => (
+                            <span 
+                              key={name} 
+                              className="selected-preview-chip"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const cat = categories.find(c => c.name === name);
+                                if (cat) toggleCategorySelection(cat.id);
+                              }}
+                            >
+                              {name} <span className="chip-close-x">×</span>
+                            </span>
+                          ))
+                        )}
+                      </div>
+                      <span className="dropdown-chevron-arrow">▼</span>
+                    </div>
+
+                    {isDropdownOpen && (
+                      <div className="dropdown-options-menu glass-panel">
+                        {categories.map(cat => {
+                          const isSelected = selectedServiceCategories.includes(cat.id);
+                          return (
+                            <div
+                              key={cat.id}
+                              className={`dropdown-option-item ${isSelected ? "selected" : ""}`}
+                              onClick={() => toggleCategorySelection(cat.id)}
+                            >
+                              <span className="checkbox-indicator">{isSelected ? "✓" : ""}</span>
+                              <span className="option-label">{cat.name}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -283,7 +464,7 @@ export default function AdminServicesPage() {
                 </div>
 
                 <div className="form-group">
-                  <label>Description</label>
+                  <label>Description *</label>
                   <textarea
                     className="glass-input desc-area"
                     required
@@ -293,8 +474,126 @@ export default function AdminServicesPage() {
                   />
                 </div>
 
-                <Button variant="gold" type="submit" style={{ width: "100%", marginTop: "8px" }}>
-                  Create Service
+                {/* Image upload field */}
+                <div className="form-group">
+                  <label>Service Image Asset URL</label>
+                  <div className="media-input-row">
+                    <input
+                      type="text"
+                      className="glass-input"
+                      placeholder="Enter Image URL or Upload File"
+                      value={serviceImage}
+                      onChange={(e) => setServiceImage(e.target.value)}
+                    />
+                    <label className="upload-media-btn">
+                      {uploadingImage ? "⌛ Uplo..." : "⬆️ Image"}
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        onChange={(e) => handleFileUpload(e, "image")}
+                        style={{ display: "none" }}
+                        disabled={uploadingImage}
+                      />
+                    </label>
+                  </div>
+                  {serviceImage && (
+                    <div className="media-preview-container">
+                      <img src={serviceImage} alt="Service preview" className="media-preview-img" />
+                    </div>
+                  )}
+                </div>
+
+                {/* Video upload field */}
+                <div className="form-group">
+                  <label>Service Video (Upload MP4 or paste video link)</label>
+                  <div className="media-input-row">
+                    <input
+                      type="text"
+                      className="glass-input"
+                      placeholder="Enter Video URL or Upload File"
+                      value={serviceVideoUrl}
+                      onChange={(e) => setServiceVideoUrl(e.target.value)}
+                    />
+                    <label className="upload-media-btn">
+                      {uploadingVideo ? "⌛ Uplo..." : "⬆️ Video"}
+                      <input 
+                        type="file" 
+                        accept="video/*" 
+                        onChange={(e) => handleFileUpload(e, "video")}
+                        style={{ display: "none" }}
+                        disabled={uploadingVideo}
+                      />
+                    </label>
+                  </div>
+                  {serviceVideoUrl && (
+                    <div className="media-preview-container">
+                      <span className="media-preview-badge">Video Attached</span>
+                      <span className="media-preview-text">{serviceVideoUrl}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Somatic Benefits lists */}
+                <div className="form-group">
+                  <div className="list-header-row">
+                    <label>Somatic Benefits</label>
+                    <button type="button" className="add-list-item-btn" onClick={handleAddBenefit}>
+                      ＋ Add Benefit
+                    </button>
+                  </div>
+                  <div className="dynamic-inputs-list">
+                    {benefits.map((benefit, idx) => (
+                      <div key={idx} className="dynamic-item-row">
+                        <input
+                          type="text"
+                          className="glass-input"
+                          placeholder="e.g. Clears cognitive fatigue"
+                          value={benefit}
+                          onChange={(e) => handleUpdateBenefit(idx, e.target.value)}
+                        />
+                        <button type="button" className="remove-item-btn" onClick={() => handleRemoveBenefit(idx)}>
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                    {benefits.length === 0 && (
+                      <span className="list-empty-label">No benefits listed yet. Click button to add benefits.</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Process Steps lists */}
+                <div className="form-group">
+                  <div className="list-header-row">
+                    <label>Therapeutic Process Steps</label>
+                    <button type="button" className="add-list-item-btn" onClick={handleAddProcessStep}>
+                      ＋ Add Step
+                    </button>
+                  </div>
+                  <div className="dynamic-inputs-list">
+                    {processSteps.map((step, idx) => (
+                      <div key={idx} className="dynamic-item-row">
+                        <span className="step-number-indicator">{idx + 1}</span>
+                        <input
+                          type="text"
+                          className="glass-input"
+                          placeholder="e.g. Initial acoustic tuning bowl resonance scan"
+                          value={step}
+                          onChange={(e) => handleUpdateProcessStep(idx, e.target.value)}
+                        />
+                        <button type="button" className="remove-item-btn" onClick={() => handleRemoveProcessStep(idx)}>
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                    {processSteps.length === 0 && (
+                      <span className="list-empty-label">No process steps listed yet. Click button to add steps.</span>
+                    )}
+                  </div>
+                </div>
+
+                <Button variant="gold" type="submit" style={{ width: "100%", marginTop: "12px", padding: "14px" }}>
+                  {editMode ? "Save changes" : "Create Service"}
                 </Button>
               </form>
             </Card>
@@ -361,8 +660,16 @@ export default function AdminServicesPage() {
         }
         .modal-content-wrapper {
           width: 100%;
-          max-width: 550px;
+          max-width: 620px;
+          max-height: 90vh;
+          overflow-y: auto;
+          border-radius: 20px;
+          box-shadow: 0 20px 50px rgba(0,0,0,0.15);
           animation: scaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        :global(.modal-inner-card) {
+          padding: 32px !important;
+          position: relative !important;
         }
         .close-modal-btn {
           position: absolute;
@@ -374,14 +681,10 @@ export default function AdminServicesPage() {
           font-size: 1.2rem;
           cursor: pointer;
           transition: var(--transition-fast);
+          z-index: 10;
         }
         .close-modal-btn:hover {
           color: #ef4444;
-        }
-        .modal-actions-row {
-          display: flex;
-          gap: 12px;
-          margin-top: 8px;
         }
         @keyframes fadeIn {
           from { opacity: 0; }
@@ -490,6 +793,25 @@ export default function AdminServicesPage() {
           color: hsl(var(--text-muted));
           font-size: 0.85rem;
         }
+        .action-buttons-cell {
+          display: flex;
+          gap: 8px;
+          justify-content: flex-end;
+        }
+        .edit-row-btn {
+          background: transparent;
+          border: 1px solid rgba(124, 58, 237, 0.3);
+          color: #6d28d9;
+          padding: 6px 12px;
+          border-radius: 6px;
+          cursor: pointer;
+          font-size: 0.75rem;
+          font-weight: 600;
+          transition: var(--transition-fast);
+        }
+        .edit-row-btn:hover {
+          background: rgba(124, 58, 237, 0.08);
+        }
         .delete-row-btn {
           background: transparent;
           border: 1px solid rgba(239, 68, 68, 0.3);
@@ -500,7 +822,6 @@ export default function AdminServicesPage() {
           font-size: 0.75rem;
           font-weight: 600;
           transition: var(--transition-fast);
-          flex-shrink: 0;
         }
         .delete-row-btn:hover {
           background: rgba(239, 68, 68, 0.08);
@@ -508,12 +829,12 @@ export default function AdminServicesPage() {
         .admin-catalog-form {
           display: flex;
           flex-direction: column;
-          gap: 16px;
+          gap: 20px;
         }
         .form-group {
           display: flex;
           flex-direction: column;
-          gap: 16px;
+          gap: 8px;
         }
         .form-group label {
           font-size: 0.75rem;
@@ -530,32 +851,215 @@ export default function AdminServicesPage() {
           height: 100px;
           resize: none;
         }
-        .checkbox-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-          gap: 12px;
-          background: rgba(0, 0, 0, 0.02);
-          border: 1px solid rgba(0, 0, 0, 0.08);
-          padding: 16px;
-          border-radius: 8px;
-          margin-top: 4px;
+        
+        /* Dropdown Multi-Select UI Styles */
+        .dropdown-selector-wrapper {
+          position: relative;
+          width: 100%;
         }
-        .checkbox-label {
+        .dropdown-trigger-box {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 10px 16px;
+          cursor: pointer;
+          min-height: 44px;
+        }
+        .selected-categories-preview {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px;
+        }
+        .placeholder-text {
+          color: rgba(0, 0, 0, 0.35);
+        }
+        .selected-preview-chip {
+          background: #7c3aed;
+          color: #ffffff;
+          padding: 2px 10px;
+          border-radius: 99px;
+          font-size: 0.78rem;
+          font-weight: 600;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+        }
+        .chip-close-x {
+          font-size: 1rem;
+          cursor: pointer;
+          opacity: 0.8;
+        }
+        .chip-close-x:hover {
+          opacity: 1;
+        }
+        .dropdown-chevron-arrow {
+          font-size: 0.65rem;
+          color: hsl(var(--text-muted));
+        }
+        .dropdown-options-menu {
+          position: absolute;
+          top: 105%;
+          left: 0;
+          right: 0;
+          z-index: 100;
+          border: 1px solid rgba(0,0,0,0.08);
+          border-radius: 12px;
+          background: rgba(255, 255, 255, 0.98);
+          box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+          overflow: hidden;
+          padding: 6px 0;
+        }
+        .dropdown-option-item {
           display: flex;
           align-items: center;
-          gap: 8px;
+          padding: 10px 16px;
+          cursor: pointer;
+          transition: var(--transition-fast);
+          font-size: 0.9rem;
+          color: #1e293b;
+        }
+        .dropdown-option-item:hover {
+          background: rgba(168, 85, 247, 0.05);
+          color: #7c3aed;
+        }
+        .dropdown-option-item.selected {
+          font-weight: 600;
+          color: #6d28d9;
+          background: rgba(168, 85, 247, 0.08);
+        }
+        .checkbox-indicator {
+          width: 18px;
+          font-weight: 700;
+          color: #7c3aed;
+          margin-right: 8px;
+        }
+
+        /* Media file upload & dynamic lists design */
+        .media-input-row {
+          display: flex;
+          gap: 12px;
+        }
+        .media-input-row input {
+          flex: 1;
+        }
+        .upload-media-btn {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: rgba(168, 85, 247, 0.08);
+          border: 1.5px dashed rgba(168, 85, 247, 0.4);
+          color: #7c3aed;
+          padding: 0 18px;
           font-size: 0.85rem;
-          color: hsl(var(--text-cream));
+          font-weight: 600;
+          border-radius: 10px;
           cursor: pointer;
+          white-space: nowrap;
+          transition: var(--transition-fast);
         }
-        .checkbox-label input {
-          accent-color: #7c3aed;
+        .upload-media-btn:hover {
+          background: rgba(168, 85, 247, 0.12);
+          border-color: #7c3aed;
+        }
+        .media-preview-container {
+          margin-top: 6px;
+          background: rgba(0, 0, 0, 0.02);
+          border: 1px solid rgba(0, 0, 0, 0.06);
+          border-radius: 10px;
+          padding: 10px;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+        .media-preview-img {
+          width: 80px;
+          height: 60px;
+          object-fit: cover;
+          border-radius: 6px;
+        }
+        .media-preview-badge {
+          background: rgba(34, 197, 94, 0.08);
+          border: 1px solid rgba(34, 197, 94, 0.2);
+          color: #15803d;
+          font-size: 0.7rem;
+          font-weight: 700;
+          padding: 3px 8px;
+          border-radius: 6px;
+          text-transform: uppercase;
+        }
+        .media-preview-text {
+          font-size: 0.8rem;
+          color: hsl(var(--text-muted));
+          word-break: break-all;
+        }
+        
+        .list-header-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 4px;
+        }
+        .add-list-item-btn {
+          background: transparent;
+          border: none;
+          color: #7c3aed;
+          font-size: 0.82rem;
+          font-weight: 700;
           cursor: pointer;
+          transition: var(--transition-fast);
         }
-        @media (max-width: 1024px) {
-          .admin-split-layout {
-            grid-template-columns: 1fr;
-          }
+        .add-list-item-btn:hover {
+          color: #6d28d9;
+          transform: translateY(-1px);
+        }
+        .dynamic-inputs-list {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          background: rgba(0,0,0,0.01);
+          border: 1px solid rgba(0,0,0,0.04);
+          padding: 12px;
+          border-radius: 10px;
+        }
+        .dynamic-item-row {
+          display: flex;
+          gap: 10px;
+          align-items: center;
+        }
+        .dynamic-item-row input {
+          flex: 1;
+        }
+        .step-number-indicator {
+          width: 24px;
+          height: 24px;
+          background: rgba(168, 85, 247, 0.1);
+          color: #7c3aed;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 0.78rem;
+          font-weight: 700;
+          flex-shrink: 0;
+        }
+        .remove-item-btn {
+          background: transparent;
+          border: none;
+          color: rgba(0, 0, 0, 0.3);
+          font-size: 1rem;
+          cursor: pointer;
+          padding: 4px 8px;
+          transition: var(--transition-fast);
+        }
+        .remove-item-btn:hover {
+          color: #ef4444;
+        }
+        .list-empty-label {
+          font-size: 0.78rem;
+          color: rgba(0, 0, 0, 0.4);
+          font-style: italic;
+          text-align: center;
+          padding: 8px 0;
         }
       `}</style>
     </div>

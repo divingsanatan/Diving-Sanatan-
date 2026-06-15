@@ -5,10 +5,11 @@ import Link from "next/link";
 
 export const Header: React.FC = () => {
   const [cartCount, setCartCount] = useState(0);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    // Keep check on local selections
-    const checkCart = () => {
+    // Keep check on local selections and admin auth state
+    const checkState = () => {
       try {
         const item = window.localStorage.getItem("divingsanatan_selections");
         if (item) {
@@ -20,60 +21,82 @@ export const Header: React.FC = () => {
       } catch (err) {
         setCartCount(0);
       }
+
+      try {
+        const auth = window.sessionStorage.getItem("divingsanatan_admin_auth");
+        setIsAdmin(auth === "true");
+      } catch (err) {
+        setIsAdmin(false);
+      }
     };
-    
-    checkCart();
-    // Poll localstorage slightly for state updates
-    const interval = setInterval(checkCart, 1000);
+
+    checkState();
+    // Poll storage slightly for state updates
+    const interval = setInterval(checkState, 1000);
     return () => clearInterval(interval);
   }, []);
 
   return (
-    <header className="header-nav">
-      <div className="nav-container">
-        {/* Glowing Lotus Brand Logo */}
-        <Link href="/" className="logo-brand">
-          <svg className="lotus-logo" viewBox="0 0 50 50" width="36" height="36" xmlns="http://www.w3.org/2000/svg">
-            <path d="M25 5C25 5 18 18 12 22C10 23.5 7 24 5 24C3 24 2.5 25 3 26C4 28 10 29 15 28C21 27 24 35 25 45C26 35 29 27 35 28C40 29 46 28 47 26C47.5 25 47 24 45 24C43 24 40 23.5 38 22C32 18 25 5 25 5Z" />
-            <path d="M25 12C25 12 21 21 16 24C14.5 25 12 25.5 10 25.5C8.5 25.5 8 26.2 8.5 27C9.5 28.5 14 29 18 28.5C22.5 28 24.5 33.5 25 41C25.5 33.5 27.5 28 32 28.5C36 29 40.5 28.5 41.5 27C42 26.2 41.5 25.5 40 25.5C38 25.5 35.5 25 34 24C29 21 25 12 25 12Z" opacity="0.8" />
-          </svg>
-          <span className="brand-text">DIVING SANATAN</span>
-        </Link>
-
-        {/* Links */}
-        <nav className="nav-menu">
-          <Link href="/" className="nav-item-link">Home</Link>
-          <Link href="/search" className="nav-item-link">Services</Link>
-          <Link href="/about" className="nav-item-link">About</Link>
-          <Link href="/blog" className="nav-item-link">Blog</Link>
-          <Link href="/reviews" className="nav-item-link">Reviews</Link>
-          <Link href="/contact" className="nav-item-link">Contact</Link>
-        </nav>
-
-        {/* CTA Buttons */}
-        <div className="nav-actions">
-          {cartCount > 0 && (
-            <Link href="/search" className="cart-badge-container">
-              <span className="cart-pulse"></span>
-              <span className="cart-text">Cart ({cartCount})</span>
-            </Link>
-          )}
-          <Link href="/admin" className="admin-cta-btn">
-            Admin Portal
+    <>
+      <header className="header-nav">
+        <div className="nav-container">
+          {/* Glowing Lotus Brand Logo */}
+          <Link href="/" className="logo-brand">
+            <svg className="lotus-logo" viewBox="0 0 50 50" width="36" height="36" xmlns="http://www.w3.org/2000/svg">
+              <path d="M25 5C25 5 18 18 12 22C10 23.5 7 24 5 24C3 24 2.5 25 3 26C4 28 10 29 15 28C21 27 24 35 25 45C26 35 29 27 35 28C40 29 46 28 47 26C47.5 25 47 24 45 24C43 24 40 23.5 38 22C32 18 25 5 25 5Z" />
+              <path d="M25 12C25 12 21 21 16 24C14.5 25 12 25.5 10 25.5C8.5 25.5 8 26.2 8.5 27C9.5 28.5 14 29 18 28.5C22.5 28 24.5 33.5 25 41C25.5 33.5 27.5 28 32 28.5C36 29 40.5 28.5 41.5 27C42 26.2 41.5 25.5 40 25.5C38 25.5 35.5 25 34 24C29 21 25 12 25 12Z" opacity="0.8" />
+            </svg>
+            <span className="brand-text">DIVING SANATAN</span>
           </Link>
+
+          {/* Nav Links */}
+          <nav className="nav-menu">
+            <Link href="/" className="nav-item-link">Home</Link>
+            <Link href="/search" className="nav-item-link">Services</Link>
+            <Link href="/about" className="nav-item-link">About</Link>
+            <Link href="/blog" className="nav-item-link">Blog</Link>
+          </nav>
+
+          {/* CTA Buttons */}
+          <div className="nav-actions">
+            {cartCount > 0 && (
+              <Link href="/search" className="cart-badge-container">
+                <span className="cart-pulse"></span>
+                <span className="cart-text">Cart ({cartCount})</span>
+              </Link>
+            )}
+            {isAdmin ? (
+              <Link href="/admin" className="admin-cta-btn">
+                Dashboard
+              </Link>
+            ) : (
+              <Link href="/admin/login" className="admin-cta-btn">
+                Login
+              </Link>
+            )}
+          </div>
         </div>
-      </div>
+      </header>
+
+      {/* Spacer to push content below fixed header */}
+      <div className="header-spacer" />
 
       <style jsx>{`
         .header-nav {
-          position: sticky;
+          position: fixed;
           top: 0;
+          left: 0;
+          right: 0;
           z-index: 100;
           background: var(--header-bg);
           backdrop-filter: blur(16px);
           border-bottom: 1.5px solid var(--border-glass);
           padding: 16px 0;
           transition: var(--transition-smooth);
+        }
+        .header-spacer {
+          height: 70px;
+          flex-shrink: 0;
         }
         .nav-container {
           max-width: 1200px;
@@ -191,10 +214,25 @@ export const Header: React.FC = () => {
         }
         @media (max-width: 768px) {
           .nav-menu {
-            display: none; /* Mobile collapsible menu handled in core layouts or simplified */
+            display: none;
+          }
+          .nav-actions {
+            gap: 12px;
+          }
+          .brand-text {
+            font-size: 1rem;
+            letter-spacing: 0.08em;
+          }
+          .cart-badge-container {
+            padding: 4px 8px;
+            font-size: 0.72rem;
+          }
+          .admin-cta-btn {
+            padding: 8px 14px;
+            font-size: 0.7rem;
           }
         }
       `}</style>
-    </header>
+    </>
   );
 };

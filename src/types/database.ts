@@ -13,6 +13,15 @@ export interface Practitioner {
   reviewsCount: number;
   image: string;
   createdAt?: string;
+  video_url?: string;
+  certifications?: string[];
+  expertise?: string[];
+}
+
+export interface Expertise {
+  id: string;
+  name: string;
+  createdAt?: string;
 }
 
 export interface Service {
@@ -27,6 +36,18 @@ export interface Service {
   categoryIds?: string[]; // Array of category IDs
   image: string;
   description: string;
+  createdAt?: string;
+  video_url?: string;
+  benefits?: string[];
+  process?: string[];
+}
+
+export interface Keyword {
+  id: string;
+  word: string;
+  categories?: string[];
+  categoryIds?: string[];
+  chakras?: string[];
   createdAt?: string;
 }
 

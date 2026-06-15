@@ -19,11 +19,14 @@ function mapServiceCategories(s: any): Service {
     duration: s.duration,
     rating: Number(s.rating),
     practitioner: s.practitioner,
-    image: s.image,
+    image: s.image || "aura_balancing",
     description: s.description,
     categories,
     categoryIds,
-    category: categories.join(", ") || s.category || "Uncategorized" // backward compatibility
+    category: categories.join(", ") || s.category || "Uncategorized", // backward compatibility
+    video_url: s.video_url || "",
+    benefits: s.benefits || [],
+    process: s.process || []
   };
 }
 
@@ -33,6 +36,32 @@ function mapServiceCategories(s: any): Service {
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
+    
+    // Support fetching a single service by ID
+    const singleId = searchParams.get("id");
+    if (singleId) {
+      const { data: service, error } = await supabaseServer
+        .from("services")
+        .select(`
+          *,
+          service_categories (
+            categories (
+              id,
+              name
+            )
+          )
+        `)
+        .eq("id", singleId)
+        .single();
+        
+      if (error) {
+        return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+      }
+      if (!service) {
+        return NextResponse.json({ success: false, error: "Service not found" }, { status: 404 });
+      }
+      return NextResponse.json({ success: true, data: mapServiceCategories(service) });
+    }
     
     // Select all fields along with joined categories
     let supabaseQuery = supabaseServer
@@ -98,7 +127,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { name, price, duration, practitioner, description, categoryIds } = body;
+    const { name, price, duration, practitioner, description, categoryIds, image, video_url, benefits, process } = body;
     
     if (!name || !price || !duration || !practitioner || !description) {
       return NextResponse.json({ success: false, error: "Missing required service details" }, { status: 400 });
@@ -112,9 +141,12 @@ export async function POST(req: NextRequest) {
       duration,
       rating: 5.0, // Default for new service
       practitioner,
-      image: "aura_balancing", // Default asset token
+      image: image || "aura_balancing",
       description,
-      category: "" // Temporary fallback
+      category: "", // Temporary fallback for backward compatibility
+      video_url: video_url || "",
+      benefits: benefits || [],
+      process: process || []
     };
     
     // 1. Insert service
@@ -173,7 +205,7 @@ export async function POST(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   try {
     const body = await req.json();
-    const { id, name, price, duration, practitioner, description, categoryIds } = body;
+    const { id, name, price, duration, practitioner, description, categoryIds, image, video_url, benefits, process } = body;
     
     if (!id) {
       return NextResponse.json({ success: false, error: "Service ID is required for updating" }, { status: 400 });
@@ -181,10 +213,14 @@ export async function PUT(req: NextRequest) {
     
     const updates: any = {};
     if (name) updates.name = name;
-    if (price) updates.price = Number(price);
+    if (price !== undefined) updates.price = Number(price);
     if (duration) updates.duration = duration;
     if (practitioner) updates.practitioner = practitioner;
     if (description) updates.description = description;
+    if (image !== undefined) updates.image = image;
+    if (video_url !== undefined) updates.video_url = video_url;
+    if (benefits !== undefined) updates.benefits = benefits;
+    if (process !== undefined) updates.process = process;
     
     // 1. Update basic fields
     if (Object.keys(updates).length > 0) {
@@ -274,5 +310,3 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ success: false, error: "Failed to delete service" }, { status: 500 });
   }
 }
-
-

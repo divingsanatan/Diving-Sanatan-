@@ -163,6 +163,28 @@ export default function Home() {
       setTransitioning(false);
     }
   };
+  const getDbCategory = (cat: string): string => {
+    const mapping: Record<string, string> = {
+      "Anxiety & overthinking": "Anxiety",
+      "Relationship pain": "Loss",
+      "Financial stress": "Stress",
+      "No life direction": "Loss",
+      "Life partner": "Loss",
+      "Family conflict": "Stress",
+      "Spiritual crisis": "Anxiety",
+      "Career & business": "Stress",
+      "Anxious and Lost": "Anxiety",
+      "Stressed and Fatigued": "Stress",
+      "Need Mental Clarity": "Health",
+      "Spiritual Blockage": "Anxiety",
+      "Anxiety": "Anxiety",
+      "Stress": "Stress",
+      "Loss": "Loss",
+      "Health": "Health"
+    };
+    return mapping[cat] || "Stress";
+  };
+
   const [selectedCategory, setSelectedCategory] = useState("Stress");
   const [currentQuestions, setCurrentQuestions] = useState<any[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -298,7 +320,8 @@ export default function Home() {
     setAnswers({});
 
     try {
-      const res = await fetch(`/api/quiz-questions?category=${encodeURIComponent(cat)}`);
+      const dbCat = getDbCategory(cat);
+      const res = await fetch(`/api/quiz-questions?category=${encodeURIComponent(dbCat)}`);
       const json = await res.json();
       if (json.success && json.data && json.data.length > 0) {
         setCurrentQuestions(json.data);
@@ -306,22 +329,22 @@ export default function Home() {
         // Fallback questions if database query is empty
         const fallbacks = [
           {
-            id: `f1-${cat}`,
-            category: cat,
-            question_text: `How long have you been experiencing this ${cat.toLowerCase()}-related challenge?`,
+            id: `f1-${dbCat}`,
+            category: dbCat,
+            question_text: `How long have you been experiencing this ${dbCat.toLowerCase()}-related challenge?`,
             question_type: "choice",
             options: ["Less than a month", "1 to 6 months", "Over 6 months", "It has been years"]
           },
           {
-            id: `f2-${cat}`,
-            category: cat,
+            id: `f2-${dbCat}`,
+            category: dbCat,
             question_text: `On a scale of 1-10, how severely does this block your daily peace?`,
             question_type: "choice",
             options: ["Mild (1-3)", "Moderate (4-6)", "Severe (7-8)", "Overwhelming (9-10)"]
           },
           {
-            id: `f3-${cat}`,
-            category: cat,
+            id: `f3-${dbCat}`,
+            category: dbCat,
             question_text: `What primary release mechanism is your soul seeking right now?`,
             question_type: "choice",
             options: ["Deep acoustic sound vibrations", "Somatic crystal energy alignment", "Gentle counselor conversations", "Just a space to let go and breathe"]
@@ -377,6 +400,7 @@ export default function Home() {
 
   // Calculate Chakra scores dynamically based on the category
   const generateChakraScores = (cat: string) => {
+    const dbCat = getDbCategory(cat);
     const base = {
       Root: 70 + Math.floor(Math.random() * 20),
       Sacral: 70 + Math.floor(Math.random() * 20),
@@ -387,16 +411,16 @@ export default function Home() {
       Crown: 70 + Math.floor(Math.random() * 20)
     };
 
-    if (cat === "Anxiety") {
+    if (dbCat === "Anxiety") {
       base.Root = 30 + Math.floor(Math.random() * 15); // Root (grounding) is severely blocked
       base.Solar = 45 + Math.floor(Math.random() * 20); // Solar Plexus (fear/confidence) is affected
-    } else if (cat === "Stress") {
+    } else if (dbCat === "Stress") {
       base.Solar = 25 + Math.floor(Math.random() * 20); // Stress blocks Solar Plexus
       base.Heart = 40 + Math.floor(Math.random() * 20); // Drains emotional resilience
-    } else if (cat === "Loss") {
+    } else if (dbCat === "Loss") {
       base.Heart = 30 + Math.floor(Math.random() * 15); // Grief directly impacts Heart chakra
       base.Crown = 50 + Math.floor(Math.random() * 20); // Disconnects Crown
-    } else if (cat === "Health") {
+    } else if (dbCat === "Health") {
       base.Root = 35 + Math.floor(Math.random() * 15); // Health directly drains Root (physicality)
       base.Sacral = 40 + Math.floor(Math.random() * 20); // Drains Sacral (vitality)
     }
@@ -501,7 +525,7 @@ export default function Home() {
 
   // Match recommended therapies based on their selected category
   const getRecommendedServices = () => {
-    const cat = selectedCategory.toLowerCase();
+    const cat = getDbCategory(selectedCategory).toLowerCase();
     return services.filter((s) => {
       const name = s.name.toLowerCase();
       const desc = s.description.toLowerCase();
@@ -536,7 +560,7 @@ export default function Home() {
   const currentQuestion = currentQuestions[currentQuestionIndex];
 
   return (
-    <div className={`homepage-wrapper ${activeStep === 4 ? 'step-report-active' : ''}`}>
+    <div className={`homepage-wrapper step-${activeStep} ${activeStep === 4 ? 'step-report-active' : ''}`}>
       <Header />
 
       {activeStep > 1 && (
@@ -588,21 +612,122 @@ export default function Home() {
       <div className="slider-container">
         <div ref={sliderRef} className="steps-slider">
 
-          {/* 1. Landing Viewport (Google Search Layout) */}
+          {/* 1. Landing Viewport (Redesigned Dark Theme Layout) */}
           <section id="section-landing" className="viewport-section landing-view">
             <div className="hero-banner">
               <div className="hero-content">
-                <h1 className="hero-title">How can we guide you today?</h1>
-                <p className="hero-subtitle">Enter your feelings, spiritual blockers, or healing needs...</p>
+                <h1 className="hero-title">What is stealing your peace right now?</h1>
+                <p className="hero-subtitle">Choose what you're experiencing and we'll show you what your energy is saying</p>
 
+                {/* Grid of 8 options */}
+                <div className="landing-grid">
+                  <button type="button" className="grid-item-card" onClick={() => startQuiz("Anxiety & overthinking")}>
+                    <div className="grid-item-icon">
+                      {/* Brain Icon */}
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10Z" opacity="0.1" fill="currentColor"/>
+                        <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.44 2.5 2.5 0 0 1 0-3.12 3 3 0 0 1 0-3.88 2.5 2.5 0 0 1 0-3.12A2.5 2.5 0 0 1 9.5 2Z" />
+                        <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.44 2.5 2.5 0 0 0 0-3.12 3 3 0 0 0 0-3.88 2.5 2.5 0 0 0 0-3.12A2.5 2.5 0 0 0 14.5 2Z" />
+                      </svg>
+                    </div>
+                    <span className="grid-item-text">Anxiety & overthinking</span>
+                  </button>
+
+                  <button type="button" className="grid-item-card" onClick={() => startQuiz("Relationship pain")}>
+                    <div className="grid-item-icon">
+                      {/* Broken Heart Icon */}
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" opacity="0.1" fill="currentColor"/>
+                        <path d="M12 5c-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+                        <path d="M12 5c1.5-1.5 3-2 4.5-2A5.5 5.5 0 0 1 22 8.5c0 2.3-1.5 4.05-3 5.5l-7 7" />
+                        <path d="M12 5v4l-2.5 2 3.5 2-2 3.5 1 4" />
+                      </svg>
+                    </div>
+                    <span className="grid-item-text">Relationship pain</span>
+                  </button>
+
+                  <button type="button" className="grid-item-card" onClick={() => startQuiz("Financial stress")}>
+                    <div className="grid-item-icon">
+                      {/* Dollar sign in circle icon */}
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10" opacity="0.1" fill="currentColor"/>
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M12 6v12M14.5 8H10.5a2 2 0 0 0 0 4h3a2 2 0 0 1 0 4H9.5" />
+                      </svg>
+                    </div>
+                    <span className="grid-item-text">Financial stress</span>
+                  </button>
+
+                  <button type="button" className="grid-item-card" onClick={() => startQuiz("No life direction")}>
+                    <div className="grid-item-icon">
+                      {/* Compass Icon */}
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10" opacity="0.1" fill="currentColor"/>
+                        <circle cx="12" cy="12" r="10" />
+                        <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
+                      </svg>
+                    </div>
+                    <span className="grid-item-text">No life direction</span>
+                  </button>
+
+                  <button type="button" className="grid-item-card" onClick={() => startQuiz("Life partner")}>
+                    <div className="grid-item-icon">
+                      {/* Two people Icon */}
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                      </svg>
+                    </div>
+                    <span className="grid-item-text">Life partner</span>
+                  </button>
+
+                  <button type="button" className="grid-item-card" onClick={() => startQuiz("Family conflict")}>
+                    <div className="grid-item-icon">
+                      {/* House Icon */}
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" opacity="0.1" fill="currentColor"/>
+                        <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                        <polyline points="9 22 9 12 15 12 15 22" />
+                      </svg>
+                    </div>
+                    <span className="grid-item-text">Family conflict</span>
+                  </button>
+
+                  <button type="button" className="grid-item-card" onClick={() => startQuiz("Spiritual crisis")}>
+                    <div className="grid-item-icon">
+                      {/* Star Icon */}
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" opacity="0.1" fill="currentColor"/>
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                      </svg>
+                    </div>
+                    <span className="grid-item-text">Spiritual crisis</span>
+                  </button>
+
+                  <button type="button" className="grid-item-card" onClick={() => startQuiz("Career & business")}>
+                    <div className="grid-item-icon">
+                      {/* Briefcase Icon */}
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <rect width="20" height="14" x="2" y="7" rx="2" ry="2" opacity="0.1" fill="currentColor"/>
+                        <rect width="20" height="14" x="2" y="7" rx="2" ry="2" />
+                        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+                      </svg>
+                    </div>
+                    <span className="grid-item-text">Career & business</span>
+                  </button>
+                </div>
+
+                {/* Search Bar Form */}
                 <form onSubmit={handleSearchSubmit} className="search-bar-form">
                   <div className={`search-input-wrapper ${searchError ? "shake-input-error" : ""}`}>
-                    <svg className="search-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="20" height="20">
+                    <svg className="search-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="22" height="22">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                     <input
                       type="text"
-                      placeholder={searchError ? "Please type something first..." : "I am struggling with stress and need peace..."}
+                      placeholder={searchError ? "Please type something first..." : "Or type what you're feeling..."}
                       className="search-input"
                       value={searchQuery}
                       onChange={(e) => {
@@ -610,80 +735,28 @@ export default function Home() {
                         if (e.target.value.trim()) setSearchError(false);
                       }}
                     />
-                    <button type="submit" className="search-submit-btn">
-                      Seek Guidance
-                    </button>
                   </div>
                 </form>
 
-                {/* Quick Feelings Buttons */}
-                <div className="feelings-tag-container">
-                  <span className="feelings-label">Common Seekings:</span>
-                  {feelings.map((f, i) => (
-                    <button
-                      key={i}
-                      className="feeling-tag"
-                      onClick={() => startQuiz(f.category)}
-                    >
-                      {f.label}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="process-timeline-container">
-                  <div className="process-timeline-title">Interactive Alignment Path</div>
-                  <div ref={timelineRef} className="process-timeline">
-                    <div className="timeline-progress-line">
-                      <div ref={timelineLineRef} className="timeline-progress-fill"></div>
-                    </div>
-
-                    <div className="timeline-steps">
-                      <div className="timeline-step">
-                        <div className="step-circle bg-green">
-                          <span className="step-num">1</span>
-                          <span className="step-icon">🧘</span>
-                        </div>
-                        <div className="step-info">
-                          <h4 className="step-heading">1. Seek Guidance</h4>
-                          <p className="step-desc">Search or select your current emotional blockers.</p>
-                        </div>
-                      </div>
-
-                      <div className="timeline-step">
-                        <div className="step-circle bg-purple">
-                          <span className="step-num">2</span>
-                          <span className="step-icon">⚡</span>
-                        </div>
-                        <div className="step-info">
-                          <h4 className="step-heading">2. Somatic Quiz</h4>
-                          <p className="step-desc">Answer questions tailored dynamically to your needs.</p>
-                        </div>
-                      </div>
-
-                      <div className="timeline-step">
-                        <div className="step-circle bg-blue">
-                          <span className="step-num">3</span>
-                          <span className="step-icon">✨</span>
-                        </div>
-                        <div className="step-info">
-                          <h4 className="step-heading">3. Energy Mapping</h4>
-                          <p className="step-desc">Enter baseline resonance parameters for report generation.</p>
-                        </div>
-                      </div>
-
-                      <div className="timeline-step">
-                        <div className="step-circle bg-gold">
-                          <span className="step-num">4</span>
-                          <span className="step-icon">💎</span>
-                        </div>
-                        <div className="step-info">
-                          <h4 className="step-heading">4. Realign & Consult</h4>
-                          <p className="step-desc">Access custom Chakra reports & book free 15 min power sessions.</p>
-                        </div>
-                      </div>
-                    </div>
+                {/* Bottom Stats Section */}
+                <div className="stats-divider-line"></div>
+                <div className="landing-stats-row">
+                  <div className="stat-column">
+                    <div className="stat-value">3,200+</div>
+                    <div className="stat-label">souls healed</div>
+                  </div>
+                  <div className="stat-column relative">
+                    <div className="stat-value">Free</div>
+                    <div className="stat-label">Soul Report | no card needed</div>
+                  </div>
+                  <div className="stat-column">
+                    <div className="stat-value">Online</div>
+                    <div className="stat-label">Sessions via Google Meet</div>
                   </div>
                 </div>
+
+
+
               </div>
             </div>
           </section>
@@ -985,10 +1058,10 @@ export default function Home() {
                         <h4 className="summary-heading">Energy Spectrum Summary</h4>
                         <p>
                           Based on your answers, your energy fields reveal specific somatic blockages under the <strong>{selectedCategory}</strong> spectrum.
-                          {selectedCategory === "Anxiety" && " This is primarily draining your Root and Solar Plexus chakras, resulting in overthinking, anxiety triggers, and a lack of baseline physical security."}
-                          {selectedCategory === "Stress" && " Stress vectors are currently congesting your Solar Plexus and Heart chakras. You might experience chronic tiredness, sleep disruptions, and difficulties resting deeply."}
-                          {selectedCategory === "Loss" && " Grief and loss are restricting your Heart and Crown chakras, causing emotional numbness, isolation, and a feeling of disconnection from overall life path purpose."}
-                          {selectedCategory === "Health" && " Your Root and Sacral energy readings are severely constrained. Physical discomforts, tension, or energy fatigue are causing disruptions in cellular peace."}
+                          {getDbCategory(selectedCategory) === "Anxiety" && " This is primarily draining your Root and Solar Plexus chakras, resulting in overthinking, anxiety triggers, and a lack of baseline physical security."}
+                          {getDbCategory(selectedCategory) === "Stress" && " Stress vectors are currently congesting your Solar Plexus and Heart chakras. You might experience chronic tiredness, sleep disruptions, and difficulties resting deeply."}
+                          {getDbCategory(selectedCategory) === "Loss" && " Grief and loss are restricting your Heart and Crown chakras, causing emotional numbness, isolation, and a feeling of disconnection from overall life path purpose."}
+                          {getDbCategory(selectedCategory) === "Health" && " Your Root and Sacral energy readings are severely constrained. Physical discomforts, tension, or energy fatigue are causing disruptions in cellular peace."}
                         </p>
                       </div>
 
@@ -1108,6 +1181,199 @@ export default function Home() {
       </div>
 
       <style jsx>{`
+        #section-landing {
+          background: transparent;
+          color: hsl(var(--text-cream));
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          position: relative;
+          padding-top: 15px; /* Pushed close to header as requested */
+        }
+        #section-landing .hero-banner {
+          background: radial-gradient(circle at center, rgba(168, 85, 247, 0.08) 0%, transparent 75%);
+          width: 100%;
+          height: 100%;
+          padding: 12px 24px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        }
+        #section-landing .hero-content {
+          max-width: 950px;
+          width: 100%;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          position: relative;
+          padding-bottom: 15px; /* space for overlapping arrow */
+        }
+        #section-landing .hero-title {
+          font-size: 2.2rem;
+          margin-bottom: 6px;
+          background: linear-gradient(135deg, #db2777 0%, #7c3aed 60%, #2563eb 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          text-shadow: 0 0 40px rgba(168, 85, 247, 0.1);
+          font-family: var(--font-serif);
+          text-align: center;
+        }
+        #section-landing .hero-subtitle {
+          font-size: 0.95rem;
+          color: hsl(var(--text-muted));
+          margin-bottom: 20px;
+          text-align: center;
+        }
+        #section-landing .landing-grid {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 12px;
+          width: 100%;
+          margin-bottom: 20px;
+        }
+        #section-landing .grid-item-card {
+          background: rgba(255, 255, 255, 0.75);
+          backdrop-filter: blur(20px);
+          border: 1px solid var(--gold-border);
+          border-radius: 16px;
+          padding: 12px 10px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 8px;
+          color: #4c1d95;
+          cursor: pointer;
+          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          outline: none;
+        }
+        #section-landing .grid-item-card:hover {
+          background: #ffffff;
+          border-color: #7c3aed;
+          box-shadow: 0 10px 25px rgba(168, 85, 247, 0.12), 0 0 15px var(--gold-glow);
+          transform: translateY(-2px);
+        }
+        #section-landing .grid-item-icon {
+          color: #7c3aed;
+          transition: transform 0.3s;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        #section-landing .grid-item-card:hover .grid-item-icon {
+          transform: scale(1.1);
+        }
+        #section-landing .grid-item-text {
+          font-size: 0.85rem;
+          font-weight: 600;
+          text-align: center;
+          font-family: var(--font-sans);
+        }
+
+        /* Search Input */
+        #section-landing .search-bar-form {
+          width: 100%;
+          max-width: 750px;
+          margin-bottom: 24px;
+        }
+        #section-landing .search-input-wrapper {
+          position: relative;
+          display: flex;
+          align-items: center;
+          width: 100%;
+          background: rgba(255, 255, 255, 0.95);
+          backdrop-filter: blur(12px);
+          border: 1.5px solid var(--gold-border);
+          border-radius: 99px;
+          padding: 12px 28px;
+          box-shadow: 0 8px 32px rgba(0,0,0,0.03), 0 0 20px var(--gold-glow);
+          transition: var(--transition-smooth);
+        }
+        #section-landing .search-input-wrapper:focus-within {
+          border-color: #7c3aed;
+          box-shadow: 0 8px 40px rgba(0,0,0,0.05), 0 0 30px rgba(168, 85, 247, 0.3);
+        }
+        #section-landing .search-icon {
+          color: #7c3aed;
+          margin-right: 12px;
+        }
+        #section-landing .search-input {
+          flex: 1;
+          background: transparent;
+          border: none;
+          outline: none;
+          color: #1e293b;
+          font-size: 1.15rem;
+          font-family: var(--font-sans);
+        }
+        #section-landing .search-input::placeholder {
+          color: rgba(0, 0, 0, 0.4);
+        }
+
+        /* Stats Section */
+        #section-landing .stats-divider-line {
+          width: 100%;
+          height: 1px;
+          background: rgba(168, 85, 247, 0.15);
+          margin-bottom: 16px;
+        }
+        #section-landing .landing-stats-row {
+          display: grid;
+          grid-template-columns: 1fr 1fr 1fr;
+          width: 100%;
+          margin-bottom: 12px;
+        }
+        #section-landing .stat-column {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 6px 0;
+        }
+        #section-landing .stat-column:not(:last-child) {
+          border-right: 1px solid rgba(168, 85, 247, 0.15);
+        }
+        #section-landing .stat-value {
+          font-size: 1.45rem;
+          font-weight: 700;
+          color: #7c3aed;
+          font-family: var(--font-serif);
+        }
+        #section-landing .stat-label {
+          font-size: 0.78rem;
+          color: hsl(var(--text-muted));
+          margin-top: 2px;
+        }
+
+        @media (max-width: 768px) {
+          #section-landing .hero-title {
+            font-size: 1.8rem !important;
+            text-align: center;
+          }
+          #section-landing .hero-subtitle {
+            font-size: 0.95rem !important;
+            text-align: center;
+          }
+          #section-landing .landing-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 12px !important;
+          }
+          #section-landing .grid-item-card {
+            padding: 16px 12px !important;
+            gap: 8px !important;
+          }
+          #section-landing .landing-stats-row {
+            grid-template-columns: 1fr !important;
+            gap: 16px !important;
+          }
+          #section-landing .stat-column:not(:last-child) {
+            border-right: none !important;
+            border-bottom: 1px solid rgba(168, 85, 247, 0.15) !important;
+            padding-bottom: 16px !important;
+          }
+        }
+
         /* Dynamic shake animation for input error */
         @keyframes shake {
           0%, 100% { transform: translateX(0); }

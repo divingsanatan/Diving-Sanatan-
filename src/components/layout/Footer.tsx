@@ -53,8 +53,9 @@ export const Footer: React.FC = () => {
             <li><Link href="/" className="footer-link">Home</Link></li>
             <li><Link href="/search" className="footer-link">Services</Link></li>
             <li><Link href="/about" className="footer-link">About Healers</Link></li>
+            <li><Link href="/team" className="footer-link">Our Team</Link></li>
             <li><Link href="/blog" className="footer-link">Spiritual Blog</Link></li>
-            <li><Link href="/reviews" className="footer-link">Testimonials</Link></li>
+            <li><Link href="/reviews" className="footer-link">Reviews</Link></li>
           </ul>
         </div>
 
@@ -64,7 +65,7 @@ export const Footer: React.FC = () => {
           <ul className="footer-links-list">
             <li><Link href="/contact" className="footer-link">Contact Us</Link></li>
             <li><Link href="/privacy" className="footer-link">Privacy Policy</Link></li>
-            <li><Link href="/admin" className="footer-link">Admin Dashboard</Link></li>
+            <li><Link href="/admin" className="footer-link">Admin Panel</Link></li>
           </ul>
         </div>
 

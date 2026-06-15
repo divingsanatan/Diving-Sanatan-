@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Card } from "@/components/ui/Card";
@@ -106,10 +107,14 @@ export default function AboutPage() {
               {practitioners.map(prac => (
                 <Card key={prac.id} variant="glass" className="prac-card">
                   <div className="prac-avatar-container">
-                    {/* Placeholder luxury avatar */}
-                    <div className="prac-placeholder-avatar">
-                      {prac.name.split(" ").map(n => n[0]).join("")}
-                    </div>
+                    {/* Render actual uploaded photo if available, fallback to initials */}
+                    {prac.image && prac.image.startsWith("/") ? (
+                      <img src={prac.image} alt={prac.name} className="prac-img-avatar" />
+                    ) : (
+                      <div className="prac-placeholder-avatar">
+                        {prac.name.split(" ").map(n => n[0]).join("")}
+                      </div>
+                    )}
                   </div>
                   
                   <div className="prac-card-info">
@@ -118,10 +123,14 @@ export default function AboutPage() {
                     
                     <div className="prac-rating">
                       <span className="stars">★ ★ ★ ★ ★</span>
-                      <span className="score">{prac.rating} ({prac.reviewsCount} Reviews)</span>
+                      <span className="score">{prac.rating.toFixed(1)} ({prac.reviewsCount} Reviews)</span>
                     </div>
 
-                    <p className="prac-bio">{prac.bio}</p>
+                    <p className="prac-bio">{prac.bio.length > 140 ? `${prac.bio.substring(0, 140)}...` : prac.bio}</p>
+                    
+                    <Link href={`/team/${prac.id}`} className="prac-view-profile-link">
+                      View Full Profile →
+                    </Link>
                   </div>
                 </Card>
               ))}
@@ -221,6 +230,14 @@ export default function AboutPage() {
         .prac-avatar-container {
           flex-shrink: 0;
         }
+        .prac-img-avatar {
+          width: 80px;
+          height: 80px;
+          border-radius: 50%;
+          object-fit: cover;
+          border: 2px solid var(--gold-border);
+          box-shadow: 0 4px 15px rgba(168,85,247,0.1);
+        }
         .prac-placeholder-avatar {
           width: 80px;
           height: 80px;
@@ -235,6 +252,19 @@ export default function AboutPage() {
           color: #4c1d95;
           font-size: 1.5rem;
           box-shadow: 0 4px 15px rgba(168,85,247,0.1);
+        }
+        .prac-view-profile-link {
+          font-family: var(--font-serif);
+          font-size: 0.8rem;
+          color: #7c3aed;
+          text-decoration: none;
+          font-weight: 600;
+          margin-top: 8px;
+          display: inline-block;
+          transition: color 0.2s;
+        }
+        .prac-view-profile-link:hover {
+          color: #d4af37;
         }
         .prac-card-info {
           display: flex;
