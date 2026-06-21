@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { Logo } from "./Logo";
 
 export const Footer: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -21,9 +22,7 @@ export const Footer: React.FC = () => {
         {/* Brand */}
         <div className="footer-brand">
           <div className="footer-logo-row">
-            <svg viewBox="0 0 50 50" width="30" height="30" fill="var(--header-logo-fill)">
-              <path d="M25 5C25 5 18 18 12 22C10 23.5 7 24 5 24C3 24 2.5 25 3 26C4 28 10 29 15 28C21 27 24 35 25 45C26 35 29 27 35 28C40 29 46 28 47 26C47.5 25 47 24 45 24C43 24 40 23.5 38 22C32 18 25 5 25 5Z" />
-            </svg>
+            <Logo size={30} />
             <span className="footer-brand-title">Diving Sanatan</span>
           </div>
           <p className="footer-brand-desc">

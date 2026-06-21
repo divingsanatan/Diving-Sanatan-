@@ -119,6 +119,7 @@ export default function CheckoutPage() {
   };
 
   const validateForm = () => {
+    if (totalCost === 0) return true;
     const errors: Record<string, string> = {};
     if (paymentOption === "card") {
       if (!cardholderName.trim()) {
@@ -234,107 +235,125 @@ export default function CheckoutPage() {
               <form onSubmit={handlePaymentSubmit} noValidate className="payment-card-panel glass-panel">
                 <h3 className="checkout-section-title">Payment Details</h3>
 
-                {/* Options selector (From Slide 1) */}
-                <div className="payment-options-row">
-                  <button 
-                    type="button" 
-                    className={`pay-opt-btn ${paymentOption === "card" ? "active" : ""}`}
-                    onClick={() => setPaymentOption("card")}
-                  >
-                    💳 Credit Card
-                  </button>
-                  <button 
-                    type="button" 
-                    className={`pay-opt-btn ${paymentOption === "paypal" ? "active" : ""}`}
-                    onClick={() => setPaymentOption("paypal")}
-                  >
-                    🅿️ PayPal
-                  </button>
-                  <button 
-                    type="button" 
-                    className={`pay-opt-btn ${paymentOption === "apple" ? "active" : ""}`}
-                    onClick={() => setPaymentOption("apple")}
-                  >
-                    🍎 Apple Pay
-                  </button>
-                </div>
-
-                {paymentOption === "card" ? (
-                  <div className="payment-form-fields">
-                    <div className="form-group">
-                      <label>Cardholder Name</label>
-                      <input 
-                        type="text" 
-                        className={`glass-input ${formErrors.name ? "input-border-error" : ""}`} 
-                        placeholder="e.g. Sumeet" 
-                        value={cardholderName}
-                        onChange={(e) => {
-                          setCardholderName(e.target.value);
-                          if (formErrors.name) setFormErrors({ ...formErrors, name: "" });
-                        }}
-                      />
-                      {formErrors.name && <span className="inline-error-msg">{formErrors.name}</span>}
-                    </div>
-
-                    <div className="form-group">
-                      <label>Card Number</label>
-                      <input 
-                        type="text" 
-                        className={`glass-input ${formErrors.cardNumber ? "input-border-error" : ""}`} 
-                        placeholder="1111 - 2222 - 3333 - 4444" 
-                        maxLength={19}
-                        value={cardNumber}
-                        onChange={handleCardNumberChange}
-                      />
-                      {formErrors.cardNumber && <span className="inline-error-msg">{formErrors.cardNumber}</span>}
-                    </div>
-
-                    <div className="form-row">
-                      <div className="form-group" style={{ flex: 1 }}>
-                        <label>Expiry Date</label>
-                        <input 
-                          type="text" 
-                          className={`glass-input ${formErrors.expiry ? "input-border-error" : ""}`} 
-                          placeholder="MM/YY" 
-                          maxLength={5}
-                          value={expiry}
-                          onChange={handleExpiryChange}
-                        />
-                        {formErrors.expiry && <span className="inline-error-msg">{formErrors.expiry}</span>}
-                      </div>
-                      <div className="form-group" style={{ flex: 1 }}>
-                        <label>CVV</label>
-                        <input 
-                          type="password" 
-                          className={`glass-input ${formErrors.cvv ? "input-border-error" : ""}`} 
-                          placeholder="•••" 
-                          maxLength={3}
-                          value={cvv}
-                          onChange={handleCvvChange}
-                        />
-                        {formErrors.cvv && <span className="inline-error-msg">{formErrors.cvv}</span>}
-                      </div>
-                    </div>
-
-                    <div className="form-group">
-                      <label>Billing Address</label>
-                      <input 
-                        type="text" 
-                        className={`glass-input ${formErrors.billingAddress ? "input-border-error" : ""}`} 
-                        placeholder="777 Ethereal Pathway, Zen City, CA" 
-                        value={billingAddress}
-                        onChange={(e) => {
-                          setBillingAddress(e.target.value);
-                          if (formErrors.billingAddress) setFormErrors({ ...formErrors, billingAddress: "" });
-                        }}
-                      />
-                      {formErrors.billingAddress && <span className="inline-error-msg">{formErrors.billingAddress}</span>}
-                    </div>
+                {totalCost === 0 ? (
+                  <div className="free-session-notice-box" style={{
+                    background: "rgba(168, 85, 247, 0.05)",
+                    border: "1px solid rgba(168, 85, 247, 0.2)",
+                    borderRadius: "12px",
+                    padding: "20px",
+                    marginBottom: "16px",
+                    color: "hsl(var(--text-cream))",
+                    textAlign: "center"
+                  }}>
+                    <span style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}>✨</span>
+                    <h4 style={{ color: "#a855f7", fontWeight: "700", marginBottom: "6px" }}>Complimentary Session</h4>
+                    <p style={{ fontSize: "0.88rem", color: "hsl(var(--text-muted))" }}>This session is completely free. No payment details or credit cards are required to secure your appointment.</p>
                   </div>
                 ) : (
-                  <div className="mock-payment-message">
-                    <p>Redirecting transaction telemetry through secure {paymentOption === "paypal" ? "PayPal Vault" : "Apple Pay Gateway"} on confirmation click.</p>
-                  </div>
+                  <>
+                    {/* Options selector (From Slide 1) */}
+                    <div className="payment-options-row">
+                      <button 
+                        type="button" 
+                        className={`pay-opt-btn ${paymentOption === "card" ? "active" : ""}`}
+                        onClick={() => setPaymentOption("card")}
+                      >
+                        💳 Credit Card
+                      </button>
+                      <button 
+                        type="button" 
+                        className={`pay-opt-btn ${paymentOption === "paypal" ? "active" : ""}`}
+                        onClick={() => setPaymentOption("paypal")}
+                      >
+                        🅿️ PayPal
+                      </button>
+                      <button 
+                        type="button" 
+                        className={`pay-opt-btn ${paymentOption === "apple" ? "active" : ""}`}
+                        onClick={() => setPaymentOption("apple")}
+                      >
+                        🍎 Apple Pay
+                      </button>
+                    </div>
+
+                    {paymentOption === "card" ? (
+                      <div className="payment-form-fields">
+                        <div className="form-group">
+                          <label>Cardholder Name</label>
+                          <input 
+                            type="text" 
+                            className={`glass-input ${formErrors.name ? "input-border-error" : ""}`} 
+                            placeholder="e.g. Sumeet" 
+                            value={cardholderName}
+                            onChange={(e) => {
+                              setCardholderName(e.target.value);
+                              if (formErrors.name) setFormErrors({ ...formErrors, name: "" });
+                            }}
+                          />
+                          {formErrors.name && <span className="inline-error-msg">{formErrors.name}</span>}
+                        </div>
+
+                        <div className="form-group">
+                          <label>Card Number</label>
+                          <input 
+                            type="text" 
+                            className={`glass-input ${formErrors.cardNumber ? "input-border-error" : ""}`} 
+                            placeholder="1111 - 2222 - 3333 - 4444" 
+                            maxLength={19}
+                            value={cardNumber}
+                            onChange={handleCardNumberChange}
+                          />
+                          {formErrors.cardNumber && <span className="inline-error-msg">{formErrors.cardNumber}</span>}
+                        </div>
+
+                        <div className="form-row">
+                          <div className="form-group" style={{ flex: 1 }}>
+                            <label>Expiry Date</label>
+                            <input 
+                              type="text" 
+                              className={`glass-input ${formErrors.expiry ? "input-border-error" : ""}`} 
+                              placeholder="MM/YY" 
+                              maxLength={5}
+                              value={expiry}
+                              onChange={handleExpiryChange}
+                            />
+                            {formErrors.expiry && <span className="inline-error-msg">{formErrors.expiry}</span>}
+                          </div>
+                          <div className="form-group" style={{ flex: 1 }}>
+                            <label>CVV</label>
+                            <input 
+                              type="password" 
+                              className={`glass-input ${formErrors.cvv ? "input-border-error" : ""}`} 
+                              placeholder="•••" 
+                              maxLength={3}
+                              value={cvv}
+                              onChange={handleCvvChange}
+                            />
+                            {formErrors.cvv && <span className="inline-error-msg">{formErrors.cvv}</span>}
+                          </div>
+                        </div>
+
+                        <div className="form-group">
+                          <label>Billing Address</label>
+                          <input 
+                            type="text" 
+                            className={`glass-input ${formErrors.billingAddress ? "input-border-error" : ""}`} 
+                            placeholder="777 Ethereal Pathway, Zen City, CA" 
+                            value={billingAddress}
+                            onChange={(e) => {
+                              setBillingAddress(e.target.value);
+                              if (formErrors.billingAddress) setFormErrors({ ...formErrors, billingAddress: "" });
+                            }}
+                          />
+                          {formErrors.billingAddress && <span className="inline-error-msg">{formErrors.billingAddress}</span>}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="mock-payment-message">
+                        <p>Redirecting transaction telemetry through secure {paymentOption === "paypal" ? "PayPal Vault" : "Apple Pay Gateway"} on confirmation click.</p>
+                      </div>
+                    )}
+                  </>
                 )}
 
                 <Button 
@@ -343,7 +362,7 @@ export default function CheckoutPage() {
                   disabled={processing || selections.length === 0}
                   style={{ width: "100%", marginTop: "24px" }}
                 >
-                  {processing ? "Securing Transaction..." : `Complete Payment - ${formatCurrency(totalCost)}`}
+                  {processing ? "Securing Transaction..." : totalCost === 0 ? "Confirm Complimentary Booking" : `Complete Payment - ${formatCurrency(totalCost)}`}
                 </Button>
               </form>
             </div>

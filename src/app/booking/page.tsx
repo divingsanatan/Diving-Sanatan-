@@ -43,7 +43,7 @@ function BookingContent() {
   const [selectedPractitioner, setSelectedPractitioner] = useState<Practitioner | null>(null);
   const [selectedDate, setSelectedDate] = useState<number | null>(14); // Default to June 14
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>("10:00 AM");
-  
+
   // Hover popup for practitioner bio
   const [showBioPopup, setShowBioPopup] = useState(false);
 
@@ -54,7 +54,7 @@ function BookingContent() {
   const [clientNotes, setClientNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState("");
-  
+
   // Validation states
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
@@ -87,7 +87,7 @@ function BookingContent() {
       try {
         const sRes = await fetch("/api/services");
         const sJson = await sRes.json();
-        
+
         const pRes = await fetch("/api/practitioners");
         const pJson = await pRes.json();
 
@@ -207,7 +207,7 @@ function BookingContent() {
         const activeSelections = [selectedService];
         window.localStorage.setItem("divingsanatan_selections", JSON.stringify(activeSelections));
         window.localStorage.setItem("active_booking_id", json.data.id);
-        
+
         router.push("/checkout");
       } else {
         setMessage(`Booking error: ${json.error}`);
@@ -225,7 +225,7 @@ function BookingContent() {
       <Header />
 
       <main className="booking-container">
-        
+
         {/* Page title */}
         <section className="booking-header">
           <h2 className="booking-header-title">Booking/Calendar Page</h2>
@@ -235,17 +235,17 @@ function BookingContent() {
         </section>
 
         <form onSubmit={handleBookingSubmit} noValidate className="booking-grid">
-          
+
           {/* Calendar, Services & Healer Columns */}
           <div className="booking-controls-col">
-            
+
             {/* Service & Practitioner selections */}
             <Card variant="glass" style={{ marginBottom: "24px", padding: "24px", display: "flex", flexDirection: "column", gap: "16px" }}>
               <div className="selector-group">
                 <label>Select Healing Session</label>
-                <select 
-                  className="glass-input" 
-                  value={selectedService?.id || ""} 
+                <select
+                  className="glass-input"
+                  value={selectedService?.id || ""}
                   onChange={handleServiceChange}
                 >
                   {services.map(s => (
@@ -261,7 +261,7 @@ function BookingContent() {
                     <h4 className="prac-name">{selectedPractitioner.name}</h4>
                     <span className="prac-spec">{selectedPractitioner.specialty}</span>
                   </div>
-                  <button 
+                  <button
                     type="button"
                     className="view-bio-trigger-btn"
                     onClick={() => setShowBioPopup(true)}
@@ -341,9 +341,9 @@ function BookingContent() {
               {/* Inputs */}
               <div className="form-group">
                 <label>Full Name</label>
-                <input 
-                  type="text" 
-                  className={`glass-input ${formErrors.name ? "input-border-error" : ""}`} 
+                <input
+                  type="text"
+                  className={`glass-input ${formErrors.name ? "input-border-error" : ""}`}
                   placeholder="e.g. Sumeet"
                   value={clientName}
                   onChange={(e) => {
@@ -356,9 +356,9 @@ function BookingContent() {
 
               <div className="form-group">
                 <label>Email Address</label>
-                <input 
-                  type="email" 
-                  className={`glass-input ${formErrors.email ? "input-border-error" : ""}`} 
+                <input
+                  type="email"
+                  className={`glass-input ${formErrors.email ? "input-border-error" : ""}`}
                   placeholder="e.g. sumeet@example.com"
                   value={clientEmail}
                   onChange={(e) => {
@@ -371,9 +371,9 @@ function BookingContent() {
 
               <div className="form-group">
                 <label>Phone Number</label>
-                <input 
-                  type="tel" 
-                  className={`glass-input ${formErrors.phone ? "input-border-error" : ""}`} 
+                <input
+                  type="tel"
+                  className={`glass-input ${formErrors.phone ? "input-border-error" : ""}`}
                   placeholder="e.g. +1 (555) 019-2834"
                   value={clientPhone}
                   onChange={(e) => {
@@ -386,8 +386,8 @@ function BookingContent() {
 
               <div className="form-group">
                 <label>Somatic Notes (Optional)</label>
-                <textarea 
-                  className="glass-input text-area-input" 
+                <textarea
+                  className="glass-input text-area-input"
                   placeholder="Tell us what you're experiencing..."
                   value={clientNotes}
                   onChange={(e) => setClientNotes(e.target.value)}
@@ -421,11 +421,10 @@ function BookingContent() {
 
               {message && <p className="error-message">{message}</p>}
 
-              <Button 
-                variant="gold" 
-                type="submit" 
-                disabled={submitting} 
-                style={{ width: "100%", marginTop: "12px" }}
+              <Button
+                variant="gold"
+                type="submit"
+                disabled={submitting}
               >
                 {submitting ? "Securing Session..." : "Confirm Booking"}
               </Button>
@@ -444,7 +443,7 @@ function BookingContent() {
               <h3 className="modal-title">Practitioner Bio</h3>
               <p className="modal-spec">{selectedPractitioner.specialty}</p>
             </div>
-            
+
             <div className="bio-modal-body">
               <h4 className="modal-prac-name">{selectedPractitioner.name}</h4>
               <div className="modal-stars-row">
@@ -455,7 +454,7 @@ function BookingContent() {
                 {selectedPractitioner.bio}
               </p>
             </div>
-            
+
             <div className="modal-actions-footer">
               <Button variant="gold" size="sm" onClick={() => setShowBioPopup(false)}>
                 Back to Scheduling

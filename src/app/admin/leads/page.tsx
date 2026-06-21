@@ -20,6 +20,9 @@ interface LeadProfile {
   category: string;
   created_at: string;
   user_answers?: LeadAnswer[];
+  report_sent?: boolean;
+  report_content?: string;
+  chakra_scores?: Record<string, number>;
 }
 
 export default function LeadsAdmin() {
@@ -28,6 +31,14 @@ export default function LeadsAdmin() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
   const [expandedLeadId, setExpandedLeadId] = useState<string | null>(null);
+
+  const [editingSubject, setEditingSubject] = useState("");
+  const [editingContent, setEditingContent] = useState("");
+  const [editingChakras, setEditingChakras] = useState<Record<string, number>>({
+    Root: 70, Sacral: 70, Solar: 70, Heart: 70, Throat: 70, ThirdEye: 70, Crown: 70
+  });
+  const [sendingReport, setSendingReport] = useState(false);
+  const [sendStatus, setSendStatus] = useState("");
 
   const categories = ["all", "Anxiety", "Stress", "Loss", "Health"];
 
@@ -50,8 +61,102 @@ export default function LeadsAdmin() {
     }
   };
 
-  const toggleExpandLead = (id: string) => {
-    setExpandedLeadId(expandedLeadId === id ? null : id);
+  const toggleExpandLead = (lead: LeadProfile) => {
+    if (expandedLeadId === lead.id) {
+      setExpandedLeadId(null);
+    } else {
+      setExpandedLeadId(lead.id);
+      setSendStatus("");
+      
+      setEditingSubject(`Your Personalized Soul Report & Somatic Alignment - Diving Sanatan`);
+      
+      const defaultChakras = {
+        Root: 70, Sacral: 70, Solar: 70, Heart: 70, Throat: 70, ThirdEye: 70, Crown: 70
+      };
+      if (lead.chakra_scores) {
+        Object.assign(defaultChakras, lead.chakra_scores);
+      } else {
+        const cat = lead.category.toLowerCase();
+        if (cat.includes("anxi")) {
+          defaultChakras.Root = 35;
+          defaultChakras.Solar = 45;
+        } else if (cat.includes("stress")) {
+          defaultChakras.Solar = 30;
+          defaultChakras.Heart = 45;
+        } else if (cat.includes("loss") || cat.includes("pain") || cat.includes("partner")) {
+          defaultChakras.Heart = 30;
+          defaultChakras.Crown = 50;
+        } else if (cat.includes("health")) {
+          defaultChakras.Root = 30;
+          defaultChakras.Sacral = 35;
+        }
+      }
+      setEditingChakras(defaultChakras);
+
+      if (lead.report_content) {
+        setEditingContent(lead.report_content);
+      } else {
+        setEditingContent(`Dear ${lead.name},
+
+Thank you for completing your Somatic Alignment check on Diving Sanatan. Our wellness practitioners have manually analyzed your responses to map out your energetic profile.
+
+Here is your customized alignment summary:
+
+EMOTIONAL RESISTANCE PROFILE:
+- Focus Focus: ${lead.category}
+- Somatic State: ${lead.category.toLowerCase().includes("anxi") ? "Overactive nervous system with grounded safety depletion." : lead.category.toLowerCase().includes("stress") ? "Congested adrenal flow resulting in chronic fatigue and heart constriction." : "Blocked heart/vitality flows requiring somatic release."}
+
+MANUAL CHAKRA MAPPING:
+- Sahasrara (Crown Chakra): ${defaultChakras.Crown}%
+- Ajna (Third Eye): ${defaultChakras.ThirdEye}%
+- Vishuddha (Throat Chakra): ${defaultChakras.Throat}%
+- Anahata (Heart Chakra): ${defaultChakras.Heart}%
+- Manipura (Solar Plexus): ${defaultChakras.Solar}%
+- Svadhisthana (Sacral Chakra): ${defaultChakras.Sacral}%
+- Muladhara (Root Chakra): ${defaultChakras.Root}%
+
+[ADD HEALER CLINICAL OBSERVATION AND ADVICE HERE]
+
+RECOMMENDED ALIGNMENT PLAN:
+We highly recommend booking your complimentary 15-minute Live Video Consultation with our team to walk through these blocks and begin active sound / crystal therapy.
+
+In addition, we recommend starting a specialized program like Aura Balancing or Chakra Clearing to address the specific depleted nodes above.
+
+In light & healing,
+Diving Sanatan Wellness Team`);
+      }
+    }
+  };
+
+  const handleSendReport = async (leadId: string) => {
+    try {
+      setSendingReport(true);
+      setSendStatus("");
+      
+      const res = await fetch("/api/leads/send-report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          leadId,
+          subject: editingSubject,
+          content: editingContent,
+          chakraScores: editingChakras
+        })
+      });
+
+      const json = await res.json();
+      if (json.success) {
+        setSendStatus("success");
+        fetchLeads();
+      } else {
+        setSendStatus(`Error: ${json.error}`);
+      }
+    } catch (err: any) {
+      console.error(err);
+      setSendStatus(`Failed to connect: ${err.message}`);
+    } finally {
+      setSendingReport(false);
+    }
   };
 
   const formatDate = (dateStr: string) => {
@@ -133,7 +238,7 @@ export default function LeadsAdmin() {
             const isExpanded = expandedLeadId === lead.id;
             return (
               <Card key={lead.id} variant="glass" className={`lead-card ${isExpanded ? "expanded" : ""}`}>
-                <div className="lead-row" onClick={() => toggleExpandLead(lead.id)}>
+                <div className="lead-row" onClick={() => toggleExpandLead(lead)}>
                   <div className="lead-meta">
                     <span className="lead-date">{formatDate(lead.created_at)}</span>
                     <h3 className="lead-name">{lead.name}</h3>
@@ -190,6 +295,123 @@ export default function LeadsAdmin() {
                       ) : (
                         <p className="no-answers">No question responses logged for this profile.</p>
                       )}
+                    </div>
+
+                    {/* Manual Report Designer */}
+                    <div className="manual-report-section" style={{ marginTop: "24px", paddingTop: "24px", borderTop: "1px solid rgba(0,0,0,0.06)" }}>
+                      <h4 className="answers-title" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span>Manually Design & Send Soul Report</span>
+                        {lead.report_sent ? (
+                          <span style={{ fontSize: "0.85rem", padding: "4px 8px", background: "rgba(34, 197, 94, 0.08)", border: "1px solid rgba(34, 197, 94, 0.2)", color: "#15803d", borderRadius: "6px", fontWeight: "700" }}>
+                            ✓ Report Sent
+                          </span>
+                        ) : (
+                          <span style={{ fontSize: "0.85rem", padding: "4px 8px", background: "rgba(239, 68, 68, 0.08)", border: "1px solid rgba(239, 68, 68, 0.2)", color: "#b91c1c", borderRadius: "6px", fontWeight: "700" }}>
+                            ✗ Pending Report
+                          </span>
+                        )}
+                      </h4>
+
+                      {lead.report_sent && lead.report_content && (
+                        <div className="sent-report-preview" style={{ background: "rgba(168, 85, 247, 0.03)", border: "1px solid rgba(168, 85, 247, 0.15)", borderRadius: "8px", padding: "16px", marginBottom: "16px" }}>
+                          <strong style={{ display: "block", marginBottom: "6px", fontSize: "0.85rem", color: "#475569" }}>Previously Sent Report Content:</strong>
+                          <pre style={{ whiteSpace: "pre-wrap", fontFamily: "inherit", fontSize: "0.9rem", color: "#334155", margin: 0 }}>{lead.report_content}</pre>
+                        </div>
+                      )}
+
+                      <div className="report-designer-form" style={{ display: "flex", flexDirection: "column", gap: "16px", background: "#ffffff", border: "1px solid rgba(0,0,0,0.06)", borderRadius: "12px", padding: "20px" }}>
+                        
+                        {/* Chakra sliders */}
+                        <div>
+                          <strong style={{ fontSize: "0.9rem", color: "#334155", display: "block", marginBottom: "12px" }}>Set Chakra Flow Alignment Score (%)</strong>
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "12px" }}>
+                            {Object.keys(editingChakras).map((chakra) => (
+                              <div key={chakra} style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                                <label style={{ fontSize: "0.75rem", textTransform: "uppercase", color: "#64748b", fontWeight: "600" }}>
+                                  {chakra}: {editingChakras[chakra]}%
+                                </label>
+                                <input
+                                  type="range"
+                                  min="10"
+                                  max="100"
+                                  value={editingChakras[chakra]}
+                                  onChange={(e) => {
+                                    const val = Number(e.target.value);
+                                    setEditingChakras({ ...editingChakras, [chakra]: val });
+                                    
+                                    // Update the score value dynamically in the text editor
+                                    const regex = new RegExp(`(- ${chakra}[^:]*:\\s*)\\d+%`, "g");
+                                    if (regex.test(editingContent)) {
+                                      setEditingContent(editingContent.replace(regex, `$1${val}%`));
+                                    }
+                                  }}
+                                  style={{ accentColor: "#7c3aed" }}
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Subject */}
+                        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                          <label style={{ fontSize: "0.8rem", textTransform: "uppercase", color: "#64748b", fontWeight: "600" }}>Email Subject</label>
+                          <input
+                            type="text"
+                            className="search-input"
+                            style={{ width: "100%", padding: "10px 14px", fontSize: "0.9rem" }}
+                            value={editingSubject}
+                            onChange={(e) => setEditingSubject(e.target.value)}
+                          />
+                        </div>
+
+                        {/* Textarea for report content */}
+                        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                          <label style={{ fontSize: "0.8rem", textTransform: "uppercase", color: "#64748b", fontWeight: "600" }}>Report Body / Email Content</label>
+                          <textarea
+                            rows={12}
+                            style={{ width: "100%", padding: "14px", border: "1px solid rgba(0,0,0,0.1)", borderRadius: "8px", fontSize: "0.9rem", resize: "vertical", fontFamily: "inherit" }}
+                            value={editingContent}
+                            onChange={(e) => setEditingContent(e.target.value)}
+                          />
+                        </div>
+
+                        {/* Status message */}
+                        {sendStatus === "success" && (
+                          <div style={{ padding: "10px 14px", background: "rgba(34, 197, 94, 0.08)", border: "1px solid rgba(34, 197, 94, 0.2)", color: "#15803d", borderRadius: "8px", fontSize: "0.88rem" }}>
+                            ✓ Soul Report successfully saved and sent/simulated via email!
+                          </div>
+                        )}
+                        {sendStatus && sendStatus !== "success" && (
+                          <div style={{ padding: "10px 14px", background: "rgba(239, 68, 68, 0.08)", border: "1px solid rgba(239, 68, 68, 0.2)", color: "#b91c1c", borderRadius: "8px", fontSize: "0.88rem" }}>
+                            {sendStatus}
+                          </div>
+                        )}
+
+                        {/* Submit Button */}
+                        <button
+                          type="button"
+                          className="filter-btn"
+                          disabled={sendingReport || !editingSubject || !editingContent}
+                          onClick={() => handleSendReport(lead.id)}
+                          style={{
+                            background: "linear-gradient(135deg, #7c3aed 0%, #4c1d95 100%)",
+                            color: "#ffffff",
+                            border: "none",
+                            padding: "12px 24px",
+                            fontSize: "0.9rem",
+                            fontWeight: "600",
+                            borderRadius: "8px",
+                            cursor: "pointer",
+                            width: "fit-content",
+                            alignSelf: "flex-end",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px"
+                          }}
+                        >
+                          {sendingReport ? "Sending..." : lead.report_sent ? "Resend Soul Report" : "Send Soul Report"} ➔
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )}

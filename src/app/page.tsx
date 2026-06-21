@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { gsap } from "gsap";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/Button";
@@ -19,149 +18,14 @@ export default function Home() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [faqOpen, setFaqOpen] = useState(false);
-  const [transitioning, setTransitioning] = useState(false);
+  const [featuredHealer, setFeaturedHealer] = useState<any>(null);
+
 
   // Multi-step Quiz Flow States
   const [activeStep, setActiveStep] = useState<1 | 2 | 3 | 4>(1);
 
-  const triggerStepTransition = async (nextStep: number) => {
-    // Determine the selector for the current active section to capture
-    let activeSectionId = "";
-    if (activeStep === 1) activeSectionId = "#section-landing";
-    else if (activeStep === 2) activeSectionId = "#section-quiz";
-    else if (activeStep === 3) activeSectionId = "#section-profile";
-    else if (activeStep === 4) activeSectionId = "#section-report";
-
-    const captureEl = document.querySelector(activeSectionId) as HTMLElement;
-
-    if (!captureEl) {
-      setActiveStep(nextStep as 1 | 2 | 3 | 4);
-      return;
-    }
-
-    setTransitioning(true);
-
-    try {
-      const html2canvas = (await import("html2canvas")).default;
-
-      // Capture the element
-      const originalCanvas = await html2canvas(captureEl, {
-        backgroundColor: "#ffffff",
-        logging: false,
-        useCORS: true
-      });
-
-      const width = originalCanvas.width;
-      const height = originalCanvas.height;
-
-      // Performance optimization: scale down for calculations
-      const scale = Math.min(1, 600 / width);
-      const scaledWidth = Math.floor(width * scale);
-      const scaledHeight = Math.floor(height * scale);
-
-      const scaledCanvas = document.createElement("canvas");
-      scaledCanvas.width = scaledWidth;
-      scaledCanvas.height = scaledHeight;
-      const scaledCtx = scaledCanvas.getContext("2d");
-      if (scaledCtx) {
-        scaledCtx.drawImage(originalCanvas, 0, 0, scaledWidth, scaledHeight);
-      }
-
-      const ctx = scaledCanvas.getContext("2d");
-      if (!ctx) throw new Error("Could not get 2d context");
-
-      const imageData = ctx.getImageData(0, 0, scaledWidth, scaledHeight);
-
-      const COUNT = 45; // Number of particle layers (balance speed & visuals)
-      const REPEAT_COUNT = 2; // Pixel duplication factor
-
-      let dataList: ImageData[] = [];
-      for (let i = 0; i < COUNT; i++) {
-        dataList.push(ctx.createImageData(scaledWidth, scaledHeight));
-      }
-
-      // Distribute pixels randomly across data lists
-      for (let x = 0; x < scaledWidth; x++) {
-        for (let y = 0; y < scaledHeight; y++) {
-          for (let l = 0; l < REPEAT_COUNT; l++) {
-            const index = (x + y * scaledWidth) * 4;
-            const dataIndex = Math.floor(
-              (COUNT * (Math.random() + (2 * x) / scaledWidth)) / 3
-            );
-            if (dataList[dataIndex]) {
-              for (let p = 0; p < 4; p++) {
-                dataList[dataIndex].data[index + p] = imageData.data[index + p];
-              }
-            }
-          }
-        }
-      }
-
-      // Container for all capture canvas particles
-      const transitionContainer = document.querySelector(".disintegration-transition-container");
-      if (!transitionContainer) {
-        setActiveStep(nextStep as 1 | 2 | 3 | 4);
-        setTransitioning(false);
-        return;
-      }
-
-      const rect = captureEl.getBoundingClientRect();
-
-      // Append and animate each particle canvas
-      const animPromises = dataList.map((data, i) => {
-        return new Promise<void>((resolve) => {
-          let clonedCanvas = document.createElement("canvas");
-          clonedCanvas.width = scaledWidth;
-          clonedCanvas.height = scaledHeight;
-          const clonedCtx = clonedCanvas.getContext("2d");
-          if (clonedCtx) {
-            clonedCtx.putImageData(data, 0, 0);
-          }
-          clonedCanvas.className = "capture-canvas";
-
-          // Match the size and position of the original captured element relative to the viewport
-          clonedCanvas.style.width = `${captureEl.offsetWidth}px`;
-          clonedCanvas.style.height = `${captureEl.offsetHeight}px`;
-          clonedCanvas.style.position = "absolute";
-          clonedCanvas.style.top = `${rect.top}px`;
-          clonedCanvas.style.left = `${rect.left}px`;
-
-          transitionContainer.appendChild(clonedCanvas);
-
-          const randomAngle = (Math.random() - 0.5) * 2 * Math.PI;
-          const randomRotationAngle = 35 * (Math.random() - 0.5);
-
-          // Animate particle canvas drifting away
-          gsap.to(clonedCanvas, {
-            duration: 1.3,
-            rotate: randomRotationAngle,
-            x: 80 * Math.sin(randomAngle),
-            y: -120 - (120 * Math.random()), // Float upwards and disperse
-            opacity: 0,
-            delay: (i / dataList.length) * 0.9,
-            ease: "power1.out",
-            onComplete: () => {
-              clonedCanvas.remove();
-              resolve();
-            }
-          });
-        });
-      });
-
-      // Change step in the background immediately as disintegration begins
-      setActiveStep(nextStep as 1 | 2 | 3 | 4);
-
-      // Wait for all particles to disperse before completing transition
-      Promise.all(animPromises).then(() => {
-        setTransitioning(false);
-      });
-
-    } catch (err) {
-      console.error("Disintegration transition error:", err);
-      // Fallback in case of failure
-      setActiveStep(nextStep as 1 | 2 | 3 | 4);
-      setTransitioning(false);
-    }
+  const triggerStepTransition = (nextStep: number) => {
+    setActiveStep(nextStep as 1 | 2 | 3 | 4);
   };
   const getDbCategory = (cat: string): string => {
     const mapping: Record<string, string> = {
@@ -231,48 +95,54 @@ export default function Home() {
     }
   }, []);
 
+  // Handle incoming search query parameter on mount to auto-start quiz
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const query = params.get("search");
+      if (query) {
+        const decodedQuery = decodeURIComponent(query);
+        setSearchQuery(decodedQuery);
+        
+        // Match the category based on query contents
+        const q = decodedQuery.toLowerCase();
+        let category = "Stress";
+        if (q.includes("anxi") || q.includes("worry") || q.includes("fear") || q.includes("panic") || q.includes("social") || q.includes("overthink")) {
+          category = "Anxiety & overthinking";
+        } else if (q.includes("stress") || q.includes("fatigue") || q.includes("tired") || q.includes("burnout") || q.includes("work") || q.includes("job") || q.includes("crisis")) {
+          category = "Financial stress";
+        } else if (q.includes("loss") || q.includes("grief") || q.includes("sad") || q.includes("depress") || q.includes("lonely") || q.includes("death") || q.includes("relationship")) {
+          category = "Relationship pain";
+        } else if (q.includes("direction") || q.includes("lost") || q.includes("career") || q.includes("purpose")) {
+          category = "No life direction";
+        }
+        
+        startQuiz(category);
+        
+        // Clean up the URL query params so it doesn't re-trigger on reload
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, document.title, newUrl);
+      }
+    }
+  }, []);
+
+  // Fetch featured healer for homepage display
+  useEffect(() => {
+    async function loadFeaturedHealer() {
+      try {
+        const res = await fetch("/api/practitioners");
+        const json = await res.json();
+        if (json.success && json.data && json.data.length > 0) {
+          setFeaturedHealer(json.data[0]);
+        }
+      } catch (err) {
+        console.error("Failed to load featured healer:", err);
+      }
+    }
+    loadFeaturedHealer();
+  }, []);
+
   const sliderRef = useRef<HTMLDivElement>(null);
-  const timelineRef = useRef<HTMLDivElement>(null);
-  const timelineLineRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (sliderRef.current) {
-      gsap.to(sliderRef.current, {
-        yPercent: -(activeStep - 1) * 25,
-        duration: 0.8,
-        ease: "power2.inOut",
-        force3D: true
-      });
-    }
-  }, [activeStep]);
-
-  useEffect(() => {
-    if (activeStep === 1 && timelineRef.current && timelineLineRef.current) {
-      const stepNodes = timelineRef.current.querySelectorAll(".timeline-step");
-      const lineFill = timelineLineRef.current;
-
-      gsap.killTweensOf([lineFill, stepNodes]);
-
-      gsap.set(lineFill, { scaleX: 0, transformOrigin: "left center" });
-      gsap.set(stepNodes, { opacity: 0, y: 15 });
-
-      const tl = gsap.timeline({ delay: 0.2 });
-
-      tl.to(lineFill, {
-        scaleX: 1,
-        duration: 1.2,
-        ease: "power2.inOut"
-      });
-
-      tl.to(stepNodes, {
-        opacity: 1,
-        y: 0,
-        duration: 0.6,
-        stagger: 0.15,
-        ease: "back.out(1.5)"
-      }, "-=0.8");
-    }
-  }, [activeStep]);
 
   // Fetch services and categories from API
   useEffect(() => {
@@ -604,13 +474,14 @@ export default function Home() {
         </button>
       </div>
 
-      {/* Particle Disintegration Transition Overlay */}
-      {transitioning && (
-        <div className="disintegration-transition-container"></div>
-      )}
+
 
       <div className="slider-container">
-        <div ref={sliderRef} className="steps-slider">
+        <div
+          ref={sliderRef}
+          className="steps-slider"
+          style={{ transform: `translateY(-${(activeStep - 1) * 25}%)` }}
+        >
 
           {/* 1. Landing Viewport (Redesigned Dark Theme Layout) */}
           <section id="section-landing" className="viewport-section landing-view">
@@ -755,6 +626,135 @@ export default function Home() {
                   </div>
                 </div>
 
+                {/* Featured Healer Card Section */}
+                {featuredHealer && (
+                  <div className="featured-healer-homepage" style={{
+                    marginTop: "48px",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: "16px",
+                    width: "100%",
+                    maxWidth: "500px",
+                    marginLeft: "auto",
+                    marginRight: "auto"
+                  }}>
+                    <h3 style={{
+                      fontFamily: "var(--font-serif)",
+                      fontSize: "1.5rem",
+                      color: "#4c1d95",
+                      fontWeight: 700,
+                      letterSpacing: "0.03em"
+                    }}>Featured Spiritual Guide</h3>
+                    
+                    <div className="healer-card-home glass-panel" style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "20px",
+                      padding: "20px",
+                      borderRadius: "20px",
+                      background: "rgba(255, 255, 255, 0.8)",
+                      border: "1px solid var(--gold-border)",
+                      boxShadow: "0 8px 30px rgba(168, 85, 247, 0.04)",
+                      width: "100%",
+                      textAlign: "left"
+                    }}>
+                      <div className="healer-photo-wrapper" style={{
+                        width: "90px",
+                        height: "90px",
+                        borderRadius: "50%",
+                        overflow: "hidden",
+                        flexShrink: 0,
+                        border: "2px solid var(--gold-border)",
+                        boxShadow: "0 4px 15px rgba(168,85,247,0.1)"
+                      }}>
+                        <img 
+                          src={featuredHealer.image && (featuredHealer.image.startsWith("http") || featuredHealer.image.startsWith("/")) ? featuredHealer.image : "/images/anara.png"} 
+                          alt={featuredHealer.name} 
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover"
+                          }}
+                        />
+                      </div>
+                      
+                      <div className="healer-details" style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "6px",
+                        flexGrow: 1
+                      }}>
+                        <h4 style={{
+                          fontFamily: "var(--font-serif)",
+                          fontSize: "1.25rem",
+                          color: "#4c1d95",
+                          margin: 0,
+                          fontWeight: 700
+                        }}>{featuredHealer.name}</h4>
+                        
+                        <span style={{
+                          fontSize: "0.8rem",
+                          color: "#0d9488",
+                          fontWeight: 600,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.02em"
+                        }}>{featuredHealer.specialty}</span>
+                        
+                        <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginTop: "2px" }}>
+                          {(featuredHealer.expertise || ["Chakra-Healing", "Reiki-Master"]).slice(0, 3).map((exp: string, idx: number) => (
+                            <span key={idx} style={{
+                              fontSize: "0.7rem",
+                              background: "rgba(168, 85, 247, 0.08)",
+                              color: "#6d28d9",
+                              padding: "2px 6px",
+                              borderRadius: "6px",
+                              fontWeight: 600
+                            }}>/{exp}</span>
+                          ))}
+                        </div>
+
+                        <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
+                          <Link 
+                            href={`/team/${featuredHealer.id}`}
+                            style={{
+                              display: "inline-block",
+                              backgroundColor: "#4c1d95",
+                              color: "white",
+                              padding: "8px 16px",
+                              borderRadius: "8px",
+                              fontSize: "0.78rem",
+                              fontWeight: 700,
+                              textDecoration: "none",
+                              boxShadow: "0 4px 10px rgba(76,29,149,0.15)",
+                              transition: "all 0.2s ease"
+                            }}
+                          >
+                            VIEW PROFILE
+                          </Link>
+                          <Link 
+                            href="/booking"
+                            style={{
+                              display: "inline-block",
+                              backgroundColor: "white",
+                              color: "#4c1d95",
+                              padding: "7px 16px",
+                              borderRadius: "8px",
+                              fontSize: "0.78rem",
+                              fontWeight: 700,
+                              border: "1.5px solid #4c1d95",
+                              textDecoration: "none",
+                              transition: "all 0.2s ease"
+                            }}
+                          >
+                            BOOK SESSION
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
 
 
               </div>
@@ -765,7 +765,7 @@ export default function Home() {
           <section id="section-quiz" className="viewport-section quiz-view">
             <div className="section-container">
               {activeStep === 2 && currentQuestions.length > 0 && currentQuestion && (
-                <div className="quiz-card glass-panel animation-gsap">
+                <div className="quiz-card glass-panel">
                   <div className="quiz-header">
                     <span className="category-tag-header">{selectedCategory} Query</span>
                     <span className="progress-label">
@@ -847,7 +847,7 @@ export default function Home() {
           <section id="section-profile" className="viewport-section profile-view">
             <div className="section-container">
               {activeStep === 3 && (
-                <Card variant="glass" className="profile-capture-card glass-panel animation-gsap">
+                <Card variant="glass" className="profile-capture-card glass-panel">
                   <h2 className="profile-title gold-text-gradient">Personalize Your Soul Report</h2>
                   <p className="profile-subtitle">We need a few details to build your customized energy profile</p>
 
@@ -958,168 +958,79 @@ export default function Home() {
                   {/* Top part: Two Column Layout */}
                   <div className="report-columns-grid">
 
-                    {/* Left Column: Visual Chakras */}
-                    <div className="report-left-column glass-panel">
-                      <h3 className="visualizer-heading">Your Spiritual Alignment</h3>
-                      <div className="chakra-interactive-visualizer">
+                    {/* Left Column: Visual Chakras (Scanner) */}
+                    <div className="report-left-column glass-panel" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
+                      <h3 className="visualizer-heading" style={{ marginBottom: "20px", color: "hsl(var(--text-cream))", fontFamily: "var(--font-serif)" }}>Somatic Scanner</h3>
+                      <div className="chakra-interactive-visualizer" style={{ position: "relative", width: "100%", display: "flex", justifyContent: "center" }}>
 
                         {/* SVG spinal channel with glowing nodes */}
-                        <div className="spinal-svg-wrapper">
-                          <svg className="spinal-channel" width="80" height="500" viewBox="0 0 80 500">
-                            <line x1="40" y1="20" x2="40" y2="480" stroke="rgba(168, 85, 247, 0.15)" strokeWidth="6" strokeDasharray="8 6" />
+                        <div className="spinal-svg-wrapper" style={{ position: "relative", height: "460px" }}>
+                          <svg className="spinal-channel" width="80" height="460" viewBox="0 0 80 460" style={{ overflow: "visible" }}>
+                            <line x1="40" y1="20" x2="40" y2="440" stroke="rgba(168, 85, 247, 0.15)" strokeWidth="6" strokeDasharray="8 6" />
 
-                            <circle cx="40" cy="40" r="18" className="chakra-crown node-pulse" />
-                            <circle cx="40" cy="110" r="18" className="chakra-thirdeye node-pulse" />
-                            <circle cx="40" cy="180" r="18" className="chakra-throat node-pulse" />
-                            <circle cx="40" cy="250" r="18" className="chakra-heart node-pulse" />
-                            <circle cx="40" cy="320" r="18" className="chakra-solar" />
-                            <circle cx="40" cy="390" r="18" className="chakra-sacral" />
-                            <circle cx="40" cy="460" r="18" className="chakra-root" />
+                            <circle cx="40" cy="40" r="18" className="chakra-crown" style={{ fill: "rgba(168, 85, 247, 0.2)", stroke: "#a855f7", strokeWidth: "2" }} />
+                            <circle cx="40" cy="100" r="18" className="chakra-thirdeye" style={{ fill: "rgba(99, 102, 241, 0.2)", stroke: "#6366f1", strokeWidth: "2" }} />
+                            <circle cx="40" cy="160" r="18" className="chakra-throat" style={{ fill: "rgba(56, 189, 248, 0.2)", stroke: "#38bdf8", strokeWidth: "2" }} />
+                            <circle cx="40" cy="220" r="18" className="chakra-heart" style={{ fill: "rgba(34, 197, 94, 0.2)", stroke: "#22c55e", strokeWidth: "2" }} />
+                            <circle cx="40" cy="280" r="18" className="chakra-solar" style={{ fill: "rgba(234, 179, 8, 0.2)", stroke: "#eab308", strokeWidth: "2" }} />
+                            <circle cx="40" cy="340" r="18" className="chakra-sacral" style={{ fill: "rgba(249, 115, 22, 0.2)", stroke: "#f97316", strokeWidth: "2" }} />
+                            <circle cx="40" cy="400" r="18" className="chakra-root" style={{ fill: "rgba(239, 68, 68, 0.2)", stroke: "#ef4444", strokeWidth: "2" }} />
+
+                            {/* Scanner Line */}
+                            <line x1="5" y1="20" x2="75" y2="20" stroke="#db2777" strokeWidth="3" className="scanner-line" style={{ filter: "drop-shadow(0 0 8px #db2777)" }} />
                           </svg>
                         </div>
+                      </div>
 
-                        {/* Chakra List with scores and lines pointing to the right */}
-                        <div className="chakra-visualizer-labels">
-                          <div className="visualizer-label-item crown">
-                            <span className="dot-line"></span>
-                            <div className="label-content">
-                              <span className="chakra-name-sanskrit">Sahasrara</span>
-                              <span className="chakra-name-english">Crown Chakra</span>
-                              <span className="chakra-score-val">{chakraScores.Crown}%</span>
-                            </div>
-                          </div>
-
-                          <div className="visualizer-label-item thirdeye">
-                            <span className="dot-line"></span>
-                            <div className="label-content">
-                              <span className="chakra-name-sanskrit">Ajna</span>
-                              <span className="chakra-name-english">Third Eye</span>
-                              <span className="chakra-score-val">{chakraScores.ThirdEye}%</span>
-                            </div>
-                          </div>
-
-                          <div className="visualizer-label-item throat">
-                            <span className="dot-line"></span>
-                            <div className="label-content">
-                              <span className="chakra-name-sanskrit">Vishuddha</span>
-                              <span className="chakra-name-english">Throat Chakra</span>
-                              <span className="chakra-score-val">{chakraScores.Throat}%</span>
-                            </div>
-                          </div>
-
-                          <div className="visualizer-label-item heart">
-                            <span className="dot-line"></span>
-                            <div className="label-content">
-                              <span className="chakra-name-sanskrit">Anahata</span>
-                              <span className="chakra-name-english">Heart Chakra</span>
-                              <span className="chakra-score-val">{chakraScores.Heart}%</span>
-                            </div>
-                          </div>
-
-                          <div className="visualizer-label-item solar">
-                            <span className="dot-line"></span>
-                            <div className="label-content">
-                              <span className="chakra-name-sanskrit">Manipura</span>
-                              <span className="chakra-name-english">Solar Plexus</span>
-                              <span className="chakra-score-val">{chakraScores.Solar}%</span>
-                            </div>
-                          </div>
-
-                          <div className="visualizer-label-item sacral">
-                            <span className="dot-line"></span>
-                            <div className="label-content">
-                              <span className="chakra-name-sanskrit">Svadhisthana</span>
-                              <span className="chakra-name-english">Sacral Chakra</span>
-                              <span className="chakra-score-val">{chakraScores.Sacral}%</span>
-                            </div>
-                          </div>
-
-                          <div className="visualizer-label-item root">
-                            <span className="dot-line"></span>
-                            <div className="label-content">
-                              <span className="chakra-name-sanskrit">Muladhara</span>
-                              <span className="chakra-name-english">Root Chakra</span>
-                              <span className="chakra-score-val">{chakraScores.Root}%</span>
-                            </div>
-                          </div>
-                        </div>
+                      <div className="scanner-status" style={{ marginTop: "24px", color: "hsl(var(--text-muted))", fontSize: "0.85rem", letterSpacing: "0.05em", textTransform: "uppercase", display: "flex", gap: "8px", alignItems: "center" }}>
+                        <span className="scanning-dot" style={{ display: "inline-block", width: "8px", height: "8px", borderRadius: "50%", background: "#a855f7" }}></span>
+                        Analyzing Somatic Resonances...
                       </div>
                     </div>
 
-                    {/* Right Column: Detailed Report Text & Analysis */}
-                    <div className="report-right-column glass-panel">
-                      <div className="report-header">
-                        <span className="report-status-badge">Alignment Profile Generated</span>
-                        <h2 className="report-title gold-text-gradient">Resonance & Chakra Report</h2>
-                        <p className="report-owner">Prepared for <strong>{profileForm.name}</strong> • Mapped Focus: <strong>{selectedCategory}</strong></p>
+                    {/* Right Column: In Progress Details */}
+                    <div className="report-right-column glass-panel" style={{ display: "flex", flexDirection: "column", gap: "20px", padding: "32px" }}>
+                      <div className="report-header" style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", paddingBottom: "16px" }}>
+                        <span className="report-status-badge" style={{ background: "rgba(219, 39, 119, 0.1)", border: "1px solid rgba(219, 39, 119, 0.2)", color: "#db2777", fontSize: "0.75rem", fontWeight: "700", padding: "4px 10px", borderRadius: "6px", textTransform: "uppercase" }}>Preparation in Progress</span>
+                        <h2 className="report-title gold-text-gradient" style={{ fontSize: "2rem", margin: "12px 0 6px", fontFamily: "var(--font-serif)" }}>Your Custom Soul Report</h2>
+                        <p className="report-owner" style={{ fontSize: "0.9rem", color: "hsl(var(--text-muted))" }}>Prepared for <strong>{profileForm.name}</strong> • Focus Category: <strong>{selectedCategory}</strong></p>
                       </div>
 
-                      <div className="soul-report-summary">
-                        <h4 className="summary-heading">Energy Spectrum Summary</h4>
-                        <p>
-                          Based on your answers, your energy fields reveal specific somatic blockages under the <strong>{selectedCategory}</strong> spectrum.
-                          {getDbCategory(selectedCategory) === "Anxiety" && " This is primarily draining your Root and Solar Plexus chakras, resulting in overthinking, anxiety triggers, and a lack of baseline physical security."}
-                          {getDbCategory(selectedCategory) === "Stress" && " Stress vectors are currently congesting your Solar Plexus and Heart chakras. You might experience chronic tiredness, sleep disruptions, and difficulties resting deeply."}
-                          {getDbCategory(selectedCategory) === "Loss" && " Grief and loss are restricting your Heart and Crown chakras, causing emotional numbness, isolation, and a feeling of disconnection from overall life path purpose."}
-                          {getDbCategory(selectedCategory) === "Health" && " Your Root and Sacral energy readings are severely constrained. Physical discomforts, tension, or energy fatigue are causing disruptions in cellular peace."}
+                      <div className="soul-report-summary" style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                        <p style={{ lineHeight: "1.6", color: "hsl(var(--text-cream))", fontSize: "0.95rem" }}>
+                          Thank you for completing your Somatic Alignment check. Your responses have been submitted to our wellness practitioners.
+                        </p>
+                        <p style={{ lineHeight: "1.6", color: "hsl(var(--text-cream))", fontSize: "0.95rem" }}>
+                          Instead of generating a generic, automated template, our certified energy healers are manually analyzing your specific answers, mapping your chakra flow, and constructing a customized spiritual alignment plan.
+                        </p>
+                        <p style={{ lineHeight: "1.6", color: "hsl(var(--text-cream))", fontSize: "0.95rem" }}>
+                          Your completed report will be sent to your email (<strong>{profileForm.email}</strong>) within 24 hours.
                         </p>
                       </div>
 
-                      {/* Critical points list */}
-                      <div className="blocked-chakra-analysis">
-                        <h4 className="analysis-heading">Critical Energy Points</h4>
-                        <div className="critical-points-list">
-                          {Object.entries(chakraScores)
-                            .filter(([name, val]) => val < 60)
-                            .map(([name, val]) => (
-                              <div key={name} className={`critical-point-item ${name.toLowerCase()}`}>
-                                <span className="status-marker">⚠️ Blocked</span>
-                                <div className="point-info">
-                                  <strong>{name} Chakra ({val}%)</strong>
-                                  <p>Requires immediate vibrational support and somatic centering therapies to release locked stress patterns.</p>
-                                </div>
-                              </div>
-                            ))}
-                          {Object.values(chakraScores).every(val => val >= 60) && (
-                            <div className="critical-point-item safe">
-                              <span className="status-marker normal">✨ Moderate</span>
-                              <div className="point-info">
-                                <strong>All Chakras in Moderate Flow</strong>
-                                <p>No critical blockages detected. Gentle maintenance therapies will help sustain your current alignment.</p>
-                              </div>
-                            </div>
-                          )}
-                        </div>
+                      <div style={{ marginTop: "12px", background: "linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(219, 39, 119, 0.1) 100%)", border: "1px solid rgba(168, 85, 247, 0.2)", borderRadius: "16px", padding: "24px", display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" }}>
+                        <h4 style={{ color: "#a855f7", fontWeight: "700", margin: 0, textTransform: "uppercase", fontSize: "0.8rem", letterSpacing: "0.05em" }}>Next Alignment Step</h4>
+                        <h3 style={{ color: "hsl(var(--text-cream))", fontSize: "1.2rem", textAlign: "center", margin: 0, fontFamily: "var(--font-serif)" }}>Book a Free 15-Minute Diagnostic Session</h3>
+                        <p style={{ color: "hsl(var(--text-muted))", fontSize: "0.85rem", textAlign: "center", margin: "0 0 10px", lineHeight: "1.4" }}>
+                          Schedule a live video call with Dr. Elara Vance to scan your auric fields and map blockages.
+                        </p>
+                        <Button variant="gold" onClick={() => router.push("/booking?service=srv-free")} style={{ width: "100%", padding: "14px 28px", fontSize: "0.95rem", fontWeight: "600", letterSpacing: "0.02em" }}>
+                          🔮 Book Free Energy Session
+                        </Button>
                       </div>
-
-                      <button className="restart-btn" onClick={restartFlow}>
-                        🔄 Start Wellness Check Again
-                      </button>
                     </div>
                   </div>
 
-                  {/* Bottom Section: Book Session Block */}
+                  {/* Bottom Section: Paid related sessions */}
                   <div className="report-bottom-section glass-panel">
                     <div className="bottom-section-header">
-                      <h3 className="bottom-section-title">Schedule Your Alignment Plan</h3>
-                      <p className="bottom-section-subtitle">Take the next step in your spiritual journey and remove somatic blocks.</p>
+                      <h3 className="bottom-section-title">Explore Custom Somatic Therapies</h3>
+                      <p className="bottom-section-subtitle">Below are the recommended paid sessions to target somatic blocks in your {selectedCategory} category.</p>
                     </div>
 
-                    <div className="booking-options-grid">
-                      {/* Option 1: Power Session Call */}
-                      <div className="consultation-cta-card power-session-card">
-                        <span className="power-tag">Power Session</span>
-                        <h3 className="consult-title">Stage 2: Live Consultation</h3>
-                        <p className="consult-desc">Activate your custom 15-minute guided session with a certified spiritual therapist to map out your Aura alignment.</p>
-                        <Button variant="gold" onClick={() => router.push("/contact")} >
-                          Schedule Live Call (Free)
-                        </Button>
-                      </div>
-
-                      {/* Option 2 & 3: Recommended Services list */}
-                      <div className="therapies-recommendation-card">
-                        <h4 className="recommend-services-title">Recommended Custom Therapies</h4>
-                        <div className="recommended-services-grid-layout">
+                    <div className="booking-options-grid" style={{ display: "block" }}>
+                      <div className="therapies-recommendation-card" style={{ width: "100%" }}>
+                        <div className="recommended-services-grid-layout" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "20px" }}>
                           {getRecommendedServices().map((srv) => (
                             <Card key={srv.id} className="recommend-service-card" variant="glowing">
                               <div className="card-top-row">
@@ -1131,7 +1042,7 @@ export default function Home() {
                               <Button
                                 variant="gold-outline"
                                 onClick={() => router.push(`/booking?service=${srv.id}`)}
-
+                                style={{ width: "100%", marginTop: "12px" }}
                               >
                                 Book This Session
                               </Button>
@@ -1411,6 +1322,23 @@ export default function Home() {
           margin-bottom: 16px;
           text-align: center;
           animation: fadeSlideIn 0.3s ease-out;
+        }
+
+        @keyframes scan {
+          0% { transform: translateY(0); opacity: 0.3; }
+          50% { transform: translateY(380px); opacity: 1; }
+          100% { transform: translateY(0); opacity: 0.3; }
+        }
+        .scanner-line {
+          animation: scan 4s linear infinite;
+        }
+        @keyframes pulse-dot {
+          0% { transform: scale(0.9); opacity: 0.5; }
+          50% { transform: scale(1.1); opacity: 1; }
+          100% { transform: scale(0.9); opacity: 0.5; }
+        }
+        .scanning-dot {
+          animation: pulse-dot 1.5s ease-in-out infinite;
         }
 
         /* 4. Restructured Report View Layout */
@@ -1810,22 +1738,7 @@ export default function Home() {
           min-height: 100vh;
         }
 
-        /* Disintegration Transition Styles */
-        .disintegration-transition-container {
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100vw;
-          height: 100vh;
-          z-index: 99999;
-          pointer-events: none;
-          overflow: hidden;
-        }
-        .capture-canvas {
-          position: absolute;
-          will-change: transform, opacity;
-          pointer-events: none;
-        }
+
 
         /* Power Session Consultation Card Styling */
         .power-session-card {
@@ -1869,6 +1782,7 @@ export default function Home() {
           display: flex;
           flex-direction: column;
           will-change: transform;
+          transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .viewport-section {
           width: 100%;

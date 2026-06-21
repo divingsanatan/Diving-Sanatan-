@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { Logo } from "@/components/layout/Logo";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -34,9 +35,7 @@ export default function AdminLoginPage() {
     <div className="login-overlay">
       <Card variant="glass" className="login-card">
         <div className="login-logo-row">
-          <svg viewBox="0 0 50 50" width="36" height="36" fill="var(--header-logo-fill)">
-            <path d="M25 5C25 5 18 18 12 22C10 23.5 7 24 5 24C3 24 2.5 25 3 26C4 28 10 29 15 28C21 27 24 35 25 45C26 35 29 27 35 28C40 29 46 28 47 26C47.5 25 47 24 45 24C43 24 40 23.5 38 22C32 18 25 5 25 5Z" />
-          </svg>
+          <Logo size={36} />
           <h1 className="login-title">Diving Sanatan Gateway</h1>
         </div>
         <p className="login-subtitle">Enter passcode to authorize logistics dashboard.</p>

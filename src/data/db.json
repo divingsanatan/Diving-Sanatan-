@@ -65,6 +65,17 @@
       "category": "Counseling",
       "image": "spiritual_counseling",
       "description": "One-on-one psychological-spiritual integration to discuss career blockages, inner child transitions, and overall life path alignment."
+    },
+    {
+      "id": "srv-free",
+      "name": "Free Energy Session",
+      "price": 0,
+      "duration": "15 Minutes",
+      "rating": 5.0,
+      "practitioner": "Dr. Elara Vance",
+      "category": "Energy",
+      "image": "aura_balancing",
+      "description": "A complimentary 15-minute diagnostic session to scan your aura fields and map somatic blockages."
     }
   ],
   "practitioners": [

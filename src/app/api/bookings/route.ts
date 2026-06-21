@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
       date, timeSlot, price, clientName, clientEmail, clientPhone, notes 
     } = body;
     
-    if (!serviceId || !serviceName || !practitionerId || !practitionerName || !date || !timeSlot || !price || !clientName || !clientEmail || !clientPhone) {
+    if (!serviceId || !serviceName || !practitionerId || !practitionerName || !date || !timeSlot || (price === undefined || price === null) || !clientName || !clientEmail || !clientPhone) {
       return NextResponse.json({ success: false, error: "Missing required booking details" }, { status: 400 });
     }
     

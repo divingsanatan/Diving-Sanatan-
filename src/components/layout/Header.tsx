@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { Logo } from "./Logo";
 
 export const Header: React.FC = () => {
   const [cartCount, setCartCount] = useState(0);
@@ -40,12 +41,9 @@ export const Header: React.FC = () => {
     <>
       <header className="header-nav">
         <div className="nav-container">
-          {/* Glowing Lotus Brand Logo */}
+          {/* Stylized Brand Logo */}
           <Link href="/" className="logo-brand">
-            <svg className="lotus-logo" viewBox="0 0 50 50" width="36" height="36" xmlns="http://www.w3.org/2000/svg">
-              <path d="M25 5C25 5 18 18 12 22C10 23.5 7 24 5 24C3 24 2.5 25 3 26C4 28 10 29 15 28C21 27 24 35 25 45C26 35 29 27 35 28C40 29 46 28 47 26C47.5 25 47 24 45 24C43 24 40 23.5 38 22C32 18 25 5 25 5Z" />
-              <path d="M25 12C25 12 21 21 16 24C14.5 25 12 25.5 10 25.5C8.5 25.5 8 26.2 8.5 27C9.5 28.5 14 29 18 28.5C22.5 28 24.5 33.5 25 41C25.5 33.5 27.5 28 32 28.5C36 29 40.5 28.5 41.5 27C42 26.2 41.5 25.5 40 25.5C38 25.5 35.5 25 34 24C29 21 25 12 25 12Z" opacity="0.8" />
-            </svg>
+            <Logo size={36} />
             <span className="brand-text">DIVING SANATAN</span>
           </Link>
 
@@ -111,14 +109,6 @@ export const Header: React.FC = () => {
           align-items: center;
           gap: 12px;
           text-decoration: none !important;
-        }
-        .lotus-logo {
-          fill: var(--header-logo-fill);
-          filter: drop-shadow(0 0 8px var(--header-logo-shadow));
-          transition: var(--transition-smooth);
-        }
-        .logo-brand:hover .lotus-logo {
-          transform: rotate(15deg) scale(1.05);
         }
         .brand-text {
           font-family: var(--font-serif);

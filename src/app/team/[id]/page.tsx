@@ -1,25 +1,98 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Card } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
-import { Practitioner, Service, Review } from "@/types/database";
 import { formatCurrency } from "@/utils/formatters";
+
+interface Practitioner {
+  id: string;
+  name: string;
+  specialty: string;
+  bio: string;
+  rating: number;
+  reviewsCount: number;
+  image: string;
+  video_url?: string;
+  certifications?: string[];
+  expertise?: string[];
+}
+
+interface Service {
+  id: string;
+  name: string;
+  description: string;
+  image: string;
+  duration: string;
+  price: number;
+  practitioner: string;
+}
+
+interface Review {
+  id: string;
+  serviceName?: string;
+  practitionerId?: string;
+  practitionerName: string;
+  clientName: string;
+  rating: number;
+  comment: string;
+  date: string;
+}
 
 export default function HealerDetailPage() {
   const params = useParams();
   const router = useRouter();
   const healerId = params?.id as string;
 
+
+
   const [healer, setHealer] = useState<Practitioner | null>(null);
+  console.log("HEALER DATA IN CLIENT:", healer);
   const [services, setServices] = useState<Service[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [isVideoOpen, setIsVideoOpen] = useState(false);
+
+  // Services scroll ref
+  const servicesScrollRef = useRef<HTMLDivElement>(null);
+
+  // Certifications Modal Lightbox State
+  const [activeCertUrl, setActiveCertUrl] = useState<string | null>(null);
+
+  // Helper to generate dynamic title & description for certifications
+  const getCertInfo = (url: string, index: number) => {
+    if (url.includes("cert_1")) {
+      return {
+        title: "Certified Usui Reiki Master",
+        description: "Accredited Reiki master certification in energetic realignment and chakra healing resonance."
+      };
+    }
+    if (url.includes("cert_2")) {
+      return {
+        title: "Advanced Chakra Therapist",
+        description: "Professional qualification in chakra energy balancing, aura diagnostics, and sound therapy."
+      };
+    }
+    const fallbacks = [
+      {
+        title: "Certified Usui Reiki Master",
+        description: "Accredited Reiki master certification in energetic realignment and chakra healing resonance."
+      },
+      {
+        title: "Advanced Chakra Therapist",
+        description: "Professional qualification in chakra energy balancing, aura diagnostics, and sound therapy."
+      },
+      {
+        title: "Cosmic Consciousness Guide",
+        description: "Specialized certification in past life regression, akashic records, and spiritual counseling."
+      }
+    ];
+    return fallbacks[index % fallbacks.length];
+  };
 
   useEffect(() => {
     if (!healerId) return;
@@ -40,7 +113,7 @@ export default function HealerDetailPage() {
         const healerData = hJson.data as Practitioner;
         setHealer(healerData);
 
-        // 2. Fetch all services and reviews to filter
+        // 2. Fetch all services and reviews
         const [servicesRes, reviewsRes] = await Promise.all([
           fetch("/api/services"),
           fetch("/api/reviews")
@@ -76,8 +149,64 @@ export default function HealerDetailPage() {
     loadHealerDetails();
   }, [healerId]);
 
-  const getFileName = (url: string) => {
-    return url.split("/").pop() || "Document";
+  // Services scroll handler
+  const scrollServices = (direction: "left" | "right") => {
+    if (servicesScrollRef.current) {
+      const scrollAmount = 340;
+      servicesScrollRef.current.scrollBy({
+        left: direction === "left" ? -scrollAmount : scrollAmount,
+        behavior: "smooth",
+      });
+    }
+  };
+
+  const selectSuggestion = (val: string) => {
+    window.location.href = `/?search=${encodeURIComponent(val)}`;
+  };
+
+  // Helper to parse bio text and convert tokens starting with / into interactive tags
+  const renderBioText = (text: string) => {
+    if (!text) return null;
+    const parts = text.split(/(\/[A-Za-z0-9\-]+)/g);
+    return parts.map((part, index) => {
+      if (part.startsWith("/")) {
+        const cleanTag = part.replace("/", "").replace(/-/g, " ");
+        return (
+          <span
+            key={index}
+            className="highlight-text"
+            onClick={() => selectSuggestion(cleanTag)}
+          >
+            {part}
+          </span>
+        );
+      }
+      return part;
+    });
+  };
+
+  // Resolve service image mapping
+  const getServiceImage = (imgName: string) => {
+    const mappings: Record<string, string> = {
+      "aura_balancing": "/images/service_chakra.png",
+      "crystal_healing": "/images/service_regression.png",
+      "chakra_clearing": "/images/service_akashic.png",
+      "mindfulness_meditation": "/images/service_chakra.png",
+      "anxiety_release": "/images/service_regression.png",
+      "spiritual_counseling": "/images/service_akashic.png",
+    };
+    return mappings[imgName] || "/images/service_chakra.png";
+  };
+
+  const getPractitionerImage = (img: string) => {
+    if (!img) return "/images/anara.png";
+    if (img.startsWith("http") || img.startsWith("/")) return img;
+    const mappings: Record<string, string> = {
+      "elara_vance": "/images/anara.png",
+      "master_zephyr": "/images/anara.png",
+      "celeste_thorne": "/images/anara.png",
+    };
+    return mappings[img] || "/images/anara.png";
   };
 
   if (loading) {
@@ -104,8 +233,8 @@ export default function HealerDetailPage() {
           .spinner {
             width: 40px;
             height: 40px;
-            border: 3px solid rgba(212, 175, 55, 0.1);
-            border-top-color: #d4af37;
+            border: 3px solid rgba(168, 85, 247, 0.1);
+            border-top-color: #7c3aed;
             border-radius: 50%;
             animation: spin 1s infinite linear;
           }
@@ -124,9 +253,22 @@ export default function HealerDetailPage() {
         <main className="error-state-wrapper">
           <h2>⚠️ Registry Search Terminated</h2>
           <p>{error || "The requested practitioner profile was not found."}</p>
-          <Button variant="gold" onClick={() => router.push("/team")} style={{ marginTop: "16px" }}>
+          <button 
+            onClick={() => router.push("/team")} 
+            style={{
+              marginTop: "20px",
+              backgroundColor: "#4c1d95",
+              color: "white",
+              padding: "12px 24px",
+              borderRadius: "12px",
+              fontWeight: 700,
+              border: "none",
+              cursor: "pointer",
+              boxShadow: "0 4px 10px rgba(76,29,149,0.15)"
+            }}
+          >
             Return to Team List
-          </Button>
+          </button>
         </main>
         <Footer />
         <style jsx>{`
@@ -154,159 +296,319 @@ export default function HealerDetailPage() {
     );
   }
 
+  const certificationsList = healer.certifications && healer.certifications.length > 0 
+    ? healer.certifications 
+    : ["/images/cert_2.png", "/images/cert_1.png"];
+
   return (
-    <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+    <div className="about-page-wrapper">
       <Header />
 
-      <main className="profile-details-container animate-fade-in">
+      <main className="about-layout-container">
+        
         {/* Breadcrumbs */}
         <div className="breadcrumbs-row">
-          <span className="breadcrumb-link" onClick={() => router.push("/")}>Home</span>
+          <Link href="/">Home</Link>
           <span className="breadcrumb-divider">/</span>
-          <span className="breadcrumb-link" onClick={() => router.push("/team")}>Our Team</span>
+          <Link href="/team">Our Healers</Link>
           <span className="breadcrumb-divider">/</span>
           <span className="breadcrumb-active">{healer.name}</span>
         </div>
 
-        {/* Layout Split: Left column sidebar (image, expertise, certs) + Right column main (bio, video, services, reviews) */}
-        <div className="profile-split-layout">
+        <div className="about-grid" style={{ marginTop: "24px" }}>
           
-          {/* Sidebar Column */}
-          <div className="profile-sidebar-col">
-            <Card variant="glowing" className="sidebar-info-card">
-              <div className="avatar-frame">
-                {healer.image && healer.image.startsWith("/") ? (
-                  <img src={healer.image} alt={healer.name} className="profile-large-img" />
-                ) : (
-                  <div className="profile-large-placeholder">
-                    {healer.name.split(" ").map(n => n[0]).join("")}
+          {/* ==================== LEFT COLUMN ==================== */}
+          <div className="left-column">
+            
+            {/* Intro Grid: Card & Bio side-by-side */}
+            <div className="intro-grid">
+              
+              {/* Featured Healer Card */}
+              <div className="anara-card glass-panel">
+                <div className="anara-photo-wrapper">
+                  <img 
+                    src={getPractitionerImage(healer.image)} 
+                    alt={healer.name} 
+                    className="anara-photo" 
+                  />
+                </div>
+                
+                <div className="anara-info">
+                  <h2 className="anara-name">{healer.name}</h2>
+                  <p className="anara-title">{healer.specialty}</p>
+                  
+                  <div className="anara-meta">
+                    <span className="meta-exp">Practicing Since 2010</span>
+                  </div>
+
+                  <div className="tag-list">
+                    {healer.expertise && healer.expertise.length > 0 ? (
+                      healer.expertise.map((exp, i) => (
+                        <span key={i} className="tag-badge">/{exp}</span>
+                      ))
+                    ) : (
+                      <>
+                        <span className="tag-badge">/Chakra-Healing</span>
+                        <span className="tag-badge">/Reiki-Master</span>
+                        <span className="tag-badge">/Past-Life</span>
+                        <span className="tag-badge">/Sound-Therapy</span>
+                        <span className="tag-badge">/Aura-Imaging</span>
+                      </>
+                    )}
+                  </div>
+
+                  <div className="anara-actions">
+                    <Link 
+                      href={`/booking?practitioner=${healer.id}`} 
+                      className="btn-book"
+                      style={{
+                        display: "block",
+                        width: "100%",
+                        textAlign: "center",
+                        backgroundColor: "#4c1d95",
+                        color: "white",
+                        padding: "12px",
+                        borderRadius: "12px",
+                        fontWeight: 700,
+                        fontSize: "0.85rem",
+                        letterSpacing: "0.08em",
+                        boxShadow: "0 4px 12px rgba(76, 29, 149, 0.15)",
+                        textDecoration: "none",
+                        cursor: "pointer",
+                        transition: "all 0.2s ease"
+                      }}
+                    >
+                      BOOK A SESSION
+                    </Link>
+                    <Link 
+                      href="/?search=resonance" 
+                      className="btn-quiz"
+                      style={{
+                        display: "block",
+                        width: "100%",
+                        textAlign: "center",
+                        backgroundColor: "white",
+                        color: "#4c1d95",
+                        padding: "11px",
+                        borderRadius: "12px",
+                        fontWeight: 700,
+                        fontSize: "0.85rem",
+                        letterSpacing: "0.08em",
+                        border: "1.5px solid #4c1d95",
+                        textDecoration: "none",
+                        cursor: "pointer",
+                        transition: "all 0.2s ease"
+                      }}
+                    >
+                      TAKE SOUL QUIZ
+                    </Link>
+                    <Link 
+                      href="/team" 
+                      style={{
+                        display: "block",
+                        width: "100%",
+                        textAlign: "center",
+                        color: "#7c3aed",
+                        fontSize: "0.82rem",
+                        fontWeight: 600,
+                        marginTop: "8px",
+                        textDecoration: "underline",
+                        cursor: "pointer"
+                      }}
+                    >
+                      Back to healer list
+                    </Link>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bio & Video Section */}
+              <div className="bio-video-section">
+                <h1 className="main-title gold-text-gradient">A Journey into Wholeness</h1>
+                
+                <div className="bio-paragraphs">
+                  {healer.bio.split("\n\n").map((para, idx) => (
+                    <p key={idx}>{renderBioText(para)}</p>
+                  ))}
+                </div>
+
+                {/* Video Playback Slot */}
+                {healer.video_url && (
+                  <div className="video-slot glass-panel" onClick={() => setIsVideoOpen(true)}>
+                    <img src="/images/anara_video.png" alt="Meet healer video preview" className="video-thumb" />
+                    <div className="video-overlay">
+                      <span className="video-title">Meet {healer.name.split(" ")[0]} | A Gentle Introduction to Healing</span>
+                      <svg className="share-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="20" height="20">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 10.748a3.001 3.001 0 110 2.504l5.244 3.032a3.001 3.001 0 11-.482 1.488l-5.245-3.033a3.001 3.001 0 110-3.483l5.245-3.033a3.001 3.001 0 11.482 1.487l-5.244 3.033z" />
+                      </svg>
+                    </div>
+                    <div className="play-button-outer">
+                      <div className="play-button-inner">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                          <polygon points="8 5 8 19 19 12 8 5" />
+                        </svg>
+                      </div>
+                    </div>
                   </div>
                 )}
-                <div className="profile-glowing-ring"></div>
               </div>
 
-              <h2 className="profile-name">{healer.name}</h2>
-              <span className="profile-specialty">{healer.specialty}</span>
-
-              <div className="rating-metrics">
-                <span className="stars">★ ★ ★ ★ ★</span>
-                <span className="metrics-text">{healer.rating.toFixed(1)} ({healer.reviewsCount} Reviews)</span>
-              </div>
-
-              {/* Area of Expertise */}
-              {healer.expertise && healer.expertise.length > 0 && (
-                <div className="sidebar-section">
-                  <h4 className="sidebar-section-title">Areas of Expertise</h4>
-                  <div className="expertise-tags-container">
-                    {healer.expertise.map((exp, idx) => (
-                      <span key={idx} className="expertise-pill">{exp}</span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Certifications list */}
-              {healer.certifications && healer.certifications.length > 0 && (
-                <div className="sidebar-section">
-                  <h4 className="sidebar-section-title">Credentials & Certifications</h4>
-                  <div className="certs-listing">
-                    {healer.certifications.map((url, idx) => (
-                      <a 
-                        key={idx} 
-                        href={url} 
-                        target="_blank" 
-                        rel="noopener noreferrer" 
-                        className="cert-link-item"
-                      >
-                        <span className="cert-icon">📜</span>
-                        <span className="cert-file-name" title={getFileName(url)}>{getFileName(url)}</span>
-                      </a>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </Card>
-          </div>
-
-          {/* Main Content Column */}
-          <div className="profile-main-col">
-            
-            {/* Biography */}
-            <Card variant="glass" className="main-content-card">
-              <h3 className="section-title">Sacred Biography</h3>
-              <p className="healer-bio-text">{healer.bio}</p>
-            </Card>
-
-            {/* Video Bio */}
-            {healer.video_url && (
-              <Card variant="glass" className="main-content-card video-card-wrapper">
-                <h3 className="section-title">Video Introduction</h3>
-                <p className="section-desc">Listen directly to {healer.name} discuss their healing lineage and approach.</p>
-                <div className="video-player-container">
-                  <video src={healer.video_url} controls className="embedded-video-player" />
-                </div>
-              </Card>
-            )}
-
-            {/* Services Offered */}
-            <div className="section-block">
-              <h3 className="section-title-outer">Therapies Offered</h3>
-              {services.length === 0 ? (
-                <Card variant="glass" style={{ padding: "24px", color: "hsl(var(--text-muted))" }}>
-                  There are currently no active therapies listed under {healer.name}'s guidance.
-                </Card>
-              ) : (
-                <div className="services-list-grid">
-                  {services.map(srv => (
-                    <Card key={srv.id} variant="glass" className="service-offer-card">
-                      <div className="service-card-header">
-                        <div>
-                          <h4>{srv.name}</h4>
-                          <span className="duration-tag">⏱️ {srv.duration}</span>
-                        </div>
-                        <div className="price-tag">{formatCurrency(srv.price)}</div>
-                      </div>
-                      <p className="service-desc-preview">
-                        {srv.description.length > 120 ? `${srv.description.substring(0, 120)}...` : srv.description}
-                      </p>
-                      <div className="service-card-action">
-                        <Link href={`/services/${srv.id}`} className="view-therapy-btn">
-                          View Therapy Details
-                        </Link>
-                        <Link href={`/booking?service=${srv.id}`} className="book-therapy-btn">
-                          Book Session
-                        </Link>
-                      </div>
-                    </Card>
-                  ))}
-                </div>
-              )}
             </div>
 
-            {/* Reviews / Testimonials */}
-            <div className="section-block">
-              <h3 className="section-title-outer">Client Testimonials ({reviews.length})</h3>
-              {reviews.length === 0 ? (
-                <Card variant="glass" style={{ padding: "24px", textAlign: "center", color: "hsl(var(--text-muted))" }}>
-                  No testimonials recorded for {healer.name} yet.
-                </Card>
-              ) : (
-                <div className="reviews-stack">
-                  {reviews.map(rev => (
-                    <Card key={rev.id} variant="glass" className="review-card-item">
-                      <div className="review-header">
-                        <div>
-                          <span className="reviewer-name">{rev.clientName}</span>
-                          <span className="review-rating-stars">{"★".repeat(rev.rating)}{"☆".repeat(5 - rev.rating)}</span>
-                        </div>
-                        {rev.serviceName && <span className="review-service-badge">{rev.serviceName}</span>}
-                      </div>
-                      <p className="review-comment">"{rev.comment}"</p>
-                      <span className="review-date">{new Date(rev.date).toLocaleDateString()}</span>
-                    </Card>
-                  ))}
+            {/* Curated Services Carousel */}
+            <div className="curated-services-section">
+              <div className="section-header-row">
+                <h2 className="section-heading">Therapies Guided</h2>
+                <div className="carousel-nav-arrows">
+                  <button className="nav-arrow-btn" onClick={() => scrollServices("left")}>
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="20" height="20">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+                  <button className="nav-arrow-btn" onClick={() => scrollServices("right")}>
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="20" height="20">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
                 </div>
-              )}
+              </div>
+
+              <div className="services-carousel-wrapper" ref={servicesScrollRef}>
+                <div className="services-carousel-track">
+                  {services.length > 0 ? (
+                    services.map((srv) => (
+                      <div key={srv.id} className="service-slide-card glass-card">
+                        <div className="service-image-box">
+                          <img src={getServiceImage(srv.image)} alt={srv.name} />
+                        </div>
+                        <div className="service-card-body">
+                          <h3>{srv.name}</h3>
+                          <p>{srv.description.length > 110 ? `${srv.description.substring(0, 110)}...` : srv.description}</p>
+                          <Link href={`/booking?service=${srv.id}`} className="service-link">
+                            Book Session ({formatCurrency(srv.price)}) →
+                          </Link>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <Card variant="glass" style={{ padding: "20px", width: "300px", color: "hsl(var(--text-muted))" }}>
+                      No active therapies listed under {healer.name}'s guidance.
+                    </Card>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Google Ad Banner Space */}
+            <div className="google-ad-horizontal-wrapper">
+              <span className="ad-label">Ad by Google</span>
+              <div className="google-ad-banner">
+                <div className="ad-logo">G</div>
+                <div className="ad-text-content">
+                  <h4>Looking for Inner Peace?</h4>
+                  <p>Discover personalized healing sessions tailored specifically to your spiritual requirements.</p>
+                </div>
+                <Link href="/" className="ad-cta">Learn More</Link>
+              </div>
+            </div>
+
+          </div>
+
+          {/* ==================== RIGHT COLUMN (SIDEBAR) ==================== */}
+          <div className="right-column">
+            
+            {/* Insights & Guidance Section: Testimonials */}
+            <div className="sidebar-section glass-panel">
+              <h2 className="sidebar-heading">CLIENT TESTIMONIALS</h2>
+              
+              <div className="insights-list">
+                {reviews.length > 0 ? (
+                  reviews.slice(0, 4).map((rev) => (
+                    <div key={rev.id} className="insight-card" style={{ flexDirection: "column", alignItems: "flex-start", gap: "6px" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", width: "100%", alignItems: "center" }}>
+                        <span style={{ fontWeight: 700, color: "#4c1d95", fontSize: "0.92rem" }}>{rev.clientName}</span>
+                        <span style={{ color: "#d4af37", fontSize: "0.75rem" }}>{"★".repeat(rev.rating)}</span>
+                      </div>
+                      {rev.serviceName && (
+                        <span style={{
+                          fontSize: "0.72rem",
+                          background: "rgba(13, 148, 136, 0.08)",
+                          color: "#0d9488",
+                          padding: "2px 6px",
+                          borderRadius: "4px",
+                          fontWeight: 500
+                        }}>{rev.serviceName}</span>
+                      )}
+                      <p style={{
+                        fontSize: "0.82rem",
+                        color: "hsl(var(--text-cream))",
+                        lineHeight: 1.5,
+                        fontStyle: "italic",
+                        margin: "4px 0"
+                      }}>"{rev.comment}"</p>
+                      <span style={{ fontSize: "0.7rem", color: "hsl(var(--text-muted))" }}>
+                        {new Date(rev.date).toLocaleDateString()}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <p style={{ color: "hsl(var(--text-muted))", fontStyle: "italic" }}>No client testimonials recorded for {healer.name} yet.</p>
+                )}
+              </div>
+            </div>
+
+            {/* Google Ad Box Space */}
+            <div className="google-ad-vertical-wrapper">
+              <span className="ad-label">Ad by Google</span>
+              <div className="google-ad-box">
+                <div className="ad-box-content">
+                  <div className="ad-box-logo">G</div>
+                  <h5>Diving Sanatan Sessions</h5>
+                  <p>Certified master therapists online. Book today.</p>
+                  <Link href="/booking" className="ad-box-btn">Book Now</Link>
+                </div>
+              </div>
+            </div>
+
+            {/* Certification Showcase */}
+            <div className="sidebar-section glass-panel">
+              <h2 className="sidebar-heading">CREDENTIALS SHOWCASE</h2>
+              
+              <div className="insights-list">
+                {certificationsList.map((certUrl, idx) => {
+                  const certInfo = getCertInfo(certUrl, idx);
+                  return (
+                    <div 
+                      key={idx} 
+                      className="insight-card" 
+                      style={{ cursor: "pointer" }} 
+                      onClick={() => setActiveCertUrl(certUrl)}
+                    >
+                      <div className="insight-img-wrapper" style={{ border: "1px solid rgba(168, 85, 247, 0.1)" }}>
+                        <img src={certUrl} alt={certInfo.title} />
+                      </div>
+                      <div className="insight-content">
+                        <h4 style={{
+                          fontFamily: "var(--font-sans)",
+                          fontSize: "0.95rem",
+                          color: "#4c1d95",
+                          fontWeight: 700,
+                          lineHeight: 1.35
+                        }}>{certInfo.title}</h4>
+                        <p style={{
+                          fontSize: "0.8rem",
+                          color: "hsl(var(--text-muted))",
+                          lineHeight: 1.4,
+                          margin: "2px 0 0 0"
+                        }}>{certInfo.description}</p>
+                        <span className="insight-read-link" style={{ fontSize: "0.8rem", color: "#7c3aed", fontWeight: 600, marginTop: "4px" }}>
+                          View Certificate →
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
 
           </div>
@@ -314,457 +616,868 @@ export default function HealerDetailPage() {
         </div>
       </main>
 
+      {/* Video Modal Overlay */}
+      {isVideoOpen && healer.video_url && (
+        <div className="video-modal-overlay" onClick={() => setIsVideoOpen(false)}>
+          <div className="video-modal-content glass-panel" onClick={(e) => e.stopPropagation()}>
+            <button className="close-modal-btn" onClick={() => setIsVideoOpen(false)}>×</button>
+            <div className="iframe-wrapper">
+              <iframe 
+                width="100%" 
+                height="100%" 
+                src={healer.video_url.includes("embed") ? healer.video_url : "https://www.youtube.com/embed/77ZozI0rw7w?autoplay=1"} 
+                title="Meet Healer - Video Introduction" 
+                frameBorder="0" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                allowFullScreen
+              ></iframe>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Certification Image Modal Overlay */}
+      {activeCertUrl && (
+        <div className="video-modal-overlay" onClick={() => setActiveCertUrl(null)}>
+          <div className="video-modal-content glass-panel" style={{ maxWidth: "600px" }} onClick={(e) => e.stopPropagation()}>
+            <button className="close-modal-btn" onClick={() => setActiveCertUrl(null)}>×</button>
+            <div style={{ width: "100%", borderRadius: "14px", overflow: "hidden", background: "white", padding: "10px", boxShadow: "inset 0 0 10px rgba(0,0,0,0.05)" }}>
+              <img src={activeCertUrl} alt="Certification Certificate" style={{ width: "100%", height: "auto", display: "block", borderRadius: "8px" }} />
+            </div>
+          </div>
+        </div>
+      )}
+
       <Footer />
 
       <style jsx>{`
-        .profile-details-container {
-          max-width: 1200px;
-          margin: 0 auto;
-          padding: 40px 24px 80px;
+        .about-page-wrapper {
           display: flex;
           flex-direction: column;
-          gap: 24px;
+          min-height: 100vh;
+          background: transparent;
+        }
+
+        .about-layout-container {
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 40px 24px 100px;
           width: 100%;
-          flex-grow: 1;
         }
 
         .breadcrumbs-row {
           display: flex;
           align-items: center;
           gap: 8px;
-          font-size: 0.82rem;
+          font-size: 0.85rem;
           color: hsl(var(--text-muted));
+          font-weight: 500;
         }
 
-        .breadcrumb-link {
-          cursor: pointer;
+        .breadcrumbs-row :global(a) {
+          text-decoration: none;
+          color: hsl(var(--text-muted));
           transition: var(--transition-fast);
         }
 
-        .breadcrumb-link:hover {
-          color: #d4af37;
+        .breadcrumbs-row :global(a):hover {
+          color: #7c3aed;
         }
 
         .breadcrumb-divider {
-          color: rgba(255, 255, 255, 0.1);
+          color: rgba(0, 0, 0, 0.1);
         }
 
         .breadcrumb-active {
-          color: #ecd3b6;
+          color: #4c1d95;
           font-weight: 600;
         }
 
-        .profile-split-layout {
+        .about-grid {
           display: grid;
-          grid-template-columns: 1fr 2fr;
+          grid-template-columns: 1.8fr 1fr;
           gap: 40px;
           align-items: start;
         }
 
-        /* Sidebar column styling */
-        .profile-sidebar-col {
+        /* ==================== COLUMN STRETCH BUG FIXES ==================== */
+        .left-column {
           display: flex;
           flex-direction: column;
-          gap: 24px;
+          gap: 50px;
+          min-width: 0;
         }
 
-        :global(.sidebar-info-card) {
-          padding: 40px 32px !important;
+        .right-column {
           display: flex;
           flex-direction: column;
-          align-items: center;
-          text-align: center;
-          background: rgba(15, 12, 28, 0.5) !important;
-          border: 1px solid rgba(212, 175, 55, 0.15) !important;
+          gap: 40px;
+          min-width: 0;
         }
 
-        .avatar-frame {
-          position: relative;
-          width: 160px;
-          height: 160px;
-          margin-bottom: 24px;
-        }
-
-        .profile-large-img {
-          width: 160px;
-          height: 160px;
-          border-radius: 50%;
-          object-fit: cover;
-          position: relative;
-          z-index: 2;
-          border: 2px solid var(--gold-border);
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-        }
-
-        .profile-large-placeholder {
-          width: 160px;
-          height: 160px;
-          border-radius: 50%;
-          background: linear-gradient(135deg, rgba(124, 58, 237, 0.2) 0%, rgba(212, 175, 55, 0.2) 100%);
-          border: 2px solid var(--gold-border);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-family: var(--font-serif);
-          font-weight: 700;
-          color: #ecd3b6;
-          font-size: 2.8rem;
-          position: relative;
-          z-index: 2;
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-        }
-
-        .profile-glowing-ring {
-          position: absolute;
-          top: -8px;
-          left: -8px;
-          right: -8px;
-          bottom: -8px;
-          border-radius: 50%;
-          border: 1.5px dashed rgba(212, 175, 55, 0.35);
-          z-index: 1;
-        }
-
-        .profile-name {
-          font-family: var(--font-serif);
-          font-size: 1.8rem;
-          color: #ffffff;
-          margin-bottom: 6px;
-        }
-
-        .profile-specialty {
-          font-size: 0.9rem;
-          color: #d4af37;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.1em;
-          margin-bottom: 16px;
-        }
-
-        .rating-metrics {
-          display: flex;
-          flex-direction: column;
-          gap: 6px;
-          align-items: center;
-          margin-bottom: 24px;
-        }
-
-        .stars {
-          color: #d4af37;
-          font-size: 0.95rem;
-          letter-spacing: 2px;
-        }
-
-        .metrics-text {
-          font-size: 0.8rem;
-          color: hsl(var(--text-muted));
-        }
-
-        .sidebar-section {
-          width: 100%;
-          border-top: 1px solid rgba(255, 255, 255, 0.06);
-          padding-top: 24px;
-          margin-top: 12px;
-          text-align: left;
-        }
-
-        .sidebar-section-title {
-          font-family: var(--font-serif);
-          font-size: 0.95rem;
-          color: #ecd3b6;
-          text-transform: uppercase;
-          letter-spacing: 0.08em;
-          margin-bottom: 14px;
-          font-weight: 600;
-        }
-
-        .expertise-tags-container {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 6px;
-        }
-
-        .expertise-pill {
-          font-size: 0.75rem;
-          background: rgba(255, 255, 255, 0.03);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          color: #e2e8f0;
-          padding: 6px 12px;
-          border-radius: 6px;
-          font-weight: 500;
-        }
-
-        .certs-listing {
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-        }
-
-        .cert-link-item {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          padding: 8px 12px;
-          background: rgba(255, 255, 255, 0.02);
-          border: 1px solid rgba(255, 255, 255, 0.06);
-          border-radius: 8px;
-          text-decoration: none;
-          color: #cbd5e1;
-          font-size: 0.8rem;
-          transition: background-color 0.2s, border-color 0.2s;
-        }
-
-        .cert-link-item:hover {
-          background: rgba(212, 175, 55, 0.05);
-          border-color: rgba(212, 175, 55, 0.2);
-          color: #ffffff;
-        }
-
-        .cert-icon {
-          font-size: 1.1rem;
-        }
-
-        .cert-file-name {
-          text-overflow: ellipsis;
-          overflow: hidden;
-          white-space: nowrap;
-          max-width: 180px;
-        }
-
-        /* Main column styling */
-        .profile-main-col {
-          display: flex;
-          flex-direction: column;
+        .intro-grid {
+          display: grid;
+          grid-template-columns: 1fr 1.3fr;
           gap: 32px;
+          align-items: stretch;
         }
 
-        :global(.main-content-card) {
-          padding: 36px !important;
-          background: rgba(15, 12, 28, 0.35) !important;
-          border: 1px solid rgba(255, 255, 255, 0.05) !important;
+        .intro-grid > div {
+          min-width: 0;
         }
 
-        .section-title {
-          font-family: var(--font-serif);
-          font-size: 1.5rem;
-          color: #ecd3b6;
-          margin-bottom: 18px;
-          border-bottom: 1.5px solid rgba(212, 175, 55, 0.15);
-          padding-bottom: 8px;
-          width: max-content;
-        }
-
-        .healer-bio-text {
-          font-size: 1.02rem;
-          line-height: 1.8;
-          color: #e2e8f0;
-          white-space: pre-line;
-        }
-
-        .section-desc {
-          font-size: 0.9rem;
-          color: hsl(var(--text-muted));
-          margin-top: -8px;
-          margin-bottom: 20px;
-        }
-
-        /* Video style */
-        .video-player-container {
-          position: relative;
-          background: #000000;
-          border-radius: 16px;
+        /* Healer Profile Card */
+        .anara-card {
+          padding: 24px;
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+          border-radius: 24px;
           overflow: hidden;
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-          aspect-ratio: 16/9;
-          max-width: 100%;
+          background: rgba(255, 255, 255, 0.8);
+          border: 1px solid var(--gold-border);
+          box-shadow: 0 8px 30px rgba(168, 85, 247, 0.04);
         }
 
-        .embedded-video-player {
+        .anara-photo-wrapper {
+          width: 100%;
+          border-radius: 18px;
+          overflow: hidden;
+          aspect-ratio: 1 / 1.1;
+          min-height: 250px;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+          border: 1px solid rgba(168, 85, 247, 0.1);
+          background: rgba(168, 85, 247, 0.03);
+        }
+
+        .anara-photo {
           width: 100%;
           height: 100%;
-          display: block;
-          object-fit: contain;
-          outline: none;
+          object-fit: cover;
+          transition: var(--transition-smooth);
         }
 
-        /* Services offer grid */
-        .section-title-outer {
-          font-family: var(--font-serif);
-          font-size: 1.6rem;
-          color: #ffffff;
-          margin-bottom: 20px;
+        .anara-card:hover .anara-photo {
+          transform: scale(1.03);
         }
 
-        .section-block {
-          width: 100%;
-        }
-
-        .services-list-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-          gap: 24px;
-        }
-
-        :global(.service-offer-card) {
-          padding: 24px !important;
+        .anara-info {
           display: flex;
           flex-direction: column;
           gap: 12px;
-          background: rgba(15, 12, 28, 0.3) !important;
-          border: 1px solid rgba(255, 255, 255, 0.05) !important;
         }
 
-        .service-card-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          gap: 12px;
-        }
-
-        .service-card-header h4 {
+        .anara-name {
           font-family: var(--font-serif);
-          font-size: 1.2rem;
-          color: #ffffff;
+          font-size: 1.6rem;
+          color: #4c1d95;
+          line-height: 1.2;
+          font-weight: 700;
         }
 
-        .duration-tag {
-          font-size: 0.72rem;
-          color: #ecd3b6;
-          display: block;
-          margin-top: 4px;
+        .anara-title {
+          font-size: 0.95rem;
+          color: #0d9488;
+          font-weight: 600;
+          letter-spacing: 0.05em;
+          text-transform: uppercase;
+          margin-top: -4px;
+        }
+
+        .anara-meta {
+          font-size: 0.85rem;
+          color: hsl(var(--text-muted));
           font-weight: 500;
         }
 
-        .price-tag {
-          font-size: 1.2rem;
-          font-weight: 700;
-          color: #d4af37;
-          font-family: var(--font-serif);
-        }
-
-        .service-desc-preview {
-          font-size: 0.88rem;
-          color: #cbd5e1;
-          line-height: 1.5;
-          flex-grow: 1;
-        }
-
-        .service-card-action {
-          display: grid;
-          grid-template-columns: 1.2fr 1fr;
-          gap: 12px;
-          margin-top: 8px;
-        }
-
-        .view-therapy-btn {
+        .tag-list {
           display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 10px;
+          flex-wrap: wrap;
+          gap: 8px;
+          margin-top: 6px;
+        }
+
+        .tag-badge {
+          background: rgba(168, 85, 247, 0.08);
+          color: #6d28d9;
+          font-size: 0.78rem;
+          padding: 4px 10px;
           border-radius: 8px;
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          color: #ffffff;
-          font-size: 0.8rem;
-          text-decoration: none;
           font-weight: 600;
-          transition: background-color 0.2s;
+          letter-spacing: 0.02em;
+          border: 1px solid rgba(168, 85, 247, 0.1);
         }
 
-        .view-therapy-btn:hover {
-          background: rgba(255, 255, 255, 0.05);
-        }
-
-        .book-therapy-btn {
+        .anara-actions {
           display: flex;
+          flex-direction: column;
+          gap: 10px;
+          margin-top: 14px;
+        }
+
+        /* Bio and Video block */
+        .bio-video-section {
+          display: flex;
+          flex-direction: column;
+          gap: 24px;
+          height: 100%;
+        }
+
+        .main-title {
+          font-family: var(--font-serif);
+          font-size: 2.6rem;
+          color: #4c1d95;
+          line-height: 1.15;
+          margin-bottom: 4px;
+        }
+
+        .bio-paragraphs {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+
+        .bio-paragraphs p {
+          font-size: 1.05rem;
+          line-height: 1.75;
+          color: hsl(var(--text-cream));
+        }
+
+        .highlight-text {
+          color: #7c3aed;
+          font-weight: 600;
+          cursor: pointer;
+          border-bottom: 1.5px dashed rgba(124, 58, 237, 0.4);
+          padding: 0 2px;
+          transition: var(--transition-fast);
+        }
+
+        .highlight-text:hover {
+          color: #d4af37;
+          border-bottom-color: rgba(212, 175, 55, 0.8);
+          background: rgba(124, 58, 237, 0.03);
+        }
+
+        /* Video slot styling */
+        .video-slot {
+          position: relative;
+          width: 100%;
+          border-radius: 20px;
+          overflow: hidden;
+          aspect-ratio: 16 / 9;
+          cursor: pointer;
+          border: 1px solid var(--gold-border);
+          box-shadow: 0 8px 30px rgba(0,0,0,0.03);
+          transition: var(--transition-smooth);
+          margin-top: auto;
+        }
+
+        .video-slot:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 12px 40px rgba(168,85,247,0.08);
+          border-color: rgba(168, 85, 247, 0.4);
+        }
+
+        .video-thumb {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        .video-overlay {
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          padding: 16px 20px;
+          background: linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, transparent 100%);
+          display: flex;
+          justify-content: space-between;
           align-items: center;
-          justify-content: center;
-          padding: 10px;
-          border-radius: 8px;
-          background: var(--btn-gold-bg);
-          color: var(--btn-gold-text);
-          font-size: 0.8rem;
-          text-decoration: none;
-          font-weight: 700;
+          color: white;
+          z-index: 2;
+        }
+
+        .video-title {
+          font-weight: 600;
+          font-size: 0.95rem;
+          letter-spacing: 0.02em;
+        }
+
+        .share-icon {
+          cursor: pointer;
+          opacity: 0.85;
           transition: opacity 0.2s;
         }
 
-        .book-therapy-btn:hover {
-          filter: brightness(1.1);
+        .share-icon:hover {
+          opacity: 1;
         }
 
-        /* Reviews Stack */
-        .reviews-stack {
+        .play-button-outer {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          width: 68px;
+          height: 68px;
+          border-radius: 50%;
+          background: rgba(255, 255, 255, 0.25);
+          backdrop-filter: blur(8px);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: var(--transition-smooth);
+          box-shadow: 0 0 30px rgba(0,0,0,0.1);
+          border: 1px solid rgba(255,255,255,0.4);
+          z-index: 2;
+        }
+
+        .play-button-inner {
+          width: 50px;
+          height: 50px;
+          border-radius: 50%;
+          background: white;
+          color: #4c1d95;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: var(--transition-smooth);
+          padding-left: 3px;
+        }
+
+        .video-slot:hover .play-button-outer {
+          transform: translate(-50%, -50%) scale(1.1);
+          background: rgba(255, 255, 255, 0.4);
+        }
+
+        .video-slot:hover .play-button-inner {
+          color: #db2777;
+          box-shadow: 0 0 15px rgba(219,39,119,0.3);
+        }
+
+        /* Therapies Guided Carousel */
+        .curated-services-section {
           display: flex;
           flex-direction: column;
-          gap: 16px;
+          gap: 24px;
         }
 
-        :global(.review-card-item) {
-          padding: 24px !important;
-          background: rgba(15, 12, 28, 0.25) !important;
-          border: 1px solid rgba(255, 255, 255, 0.05) !important;
-        }
-
-        .review-header {
+        .section-header-row {
           display: flex;
           justify-content: space-between;
-          align-items: flex-start;
-          gap: 16px;
-          margin-bottom: 12px;
+          align-items: center;
+          border-bottom: 1.5px solid rgba(168, 85, 247, 0.1);
+          padding-bottom: 12px;
         }
 
-        .reviewer-name {
-          font-weight: 600;
-          color: #ffffff;
-          display: block;
-          font-size: 0.95rem;
+        .section-heading {
+          font-family: var(--font-serif);
+          font-size: 2rem;
+          color: #4c1d95;
         }
 
-        .review-rating-stars {
-          color: #d4af37;
-          font-size: 0.8rem;
-          letter-spacing: 1.5px;
-          margin-top: 2px;
-          display: block;
+        .carousel-nav-arrows {
+          display: flex;
+          gap: 12px;
         }
 
-        .review-service-badge {
-          font-size: 0.72rem;
-          background: rgba(212, 175, 55, 0.08);
-          border: 1px solid rgba(212, 175, 55, 0.15);
-          color: #d4af37;
-          padding: 2px 8px;
-          border-radius: 4px;
-          font-weight: 500;
+        .nav-arrow-btn {
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          border: 1px solid rgba(168, 85, 247, 0.2);
+          background: white;
+          color: #4c1d95;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: var(--transition-fast);
+          box-shadow: 0 2px 8px rgba(0,0,0,0.02);
         }
 
-        .review-comment {
-          font-size: 0.9rem;
+        .nav-arrow-btn:hover {
+          background: #4c1d95;
+          color: white;
+          border-color: #4c1d95;
+          transform: scale(1.05);
+        }
+
+        .services-carousel-wrapper {
+          overflow-x: auto;
+          scroll-behavior: smooth;
+          padding: 8px 4px 20px;
+          scrollbar-width: none;
+        }
+
+        .services-carousel-wrapper::-webkit-scrollbar {
+          display: none;
+        }
+
+        .services-carousel-track {
+          display: flex;
+          gap: 24px;
+          width: max-content;
+        }
+
+        .service-slide-card {
+          width: 300px;
+          flex-shrink: 0;
+          display: flex;
+          flex-direction: column;
+          border-radius: 20px;
+          overflow: hidden;
+          background: rgba(255,255,255,0.85);
+          box-shadow: 0 8px 24px rgba(0,0,0,0.015);
+          border: 1px solid var(--border-glass);
+          transition: var(--transition-smooth);
+        }
+
+        .service-slide-card:hover {
+          transform: translateY(-4px);
+          border-color: var(--gold-border);
+          box-shadow: 0 12px 30px rgba(168,85,247,0.04), 0 0 20px rgba(168,85,247,0.05);
+        }
+
+        .service-image-box {
+          width: 100%;
+          height: 180px;
+          overflow: hidden;
+          position: relative;
+        }
+
+        .service-image-box img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          transition: var(--transition-smooth);
+        }
+
+        .service-slide-card:hover .service-image-box img {
+          transform: scale(1.05);
+        }
+
+        .service-card-body {
+          padding: 20px;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          flex-grow: 1;
+        }
+
+        .service-card-body h3 {
+          font-family: var(--font-serif);
+          font-size: 1.3rem;
+          color: #4c1d95;
+        }
+
+        .service-card-body p {
+          font-size: 0.88rem;
           line-height: 1.6;
-          color: #cbd5e1;
-          font-style: italic;
-          margin-bottom: 8px;
-        }
-
-        .review-date {
-          font-size: 0.72rem;
           color: hsl(var(--text-muted));
-          display: block;
-          text-align: right;
+          flex-grow: 1;
         }
 
-        .animate-fade-in {
-          animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+        .service-link {
+          font-family: var(--font-serif);
+          font-size: 0.9rem;
+          font-weight: 700;
+          color: #7c3aed;
+          text-decoration: none;
+          display: inline-block;
+          margin-top: 6px;
+          transition: color 0.2s;
         }
 
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
+        .service-link:hover {
+          color: #d4af37;
         }
 
-        @media (max-width: 960px) {
-          .profile-split-layout {
+        /* Google Ad Banner */
+        .google-ad-horizontal-wrapper {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          margin-top: 10px;
+        }
+
+        .ad-label {
+          font-size: 0.72rem;
+          text-transform: uppercase;
+          color: hsl(var(--text-muted));
+          letter-spacing: 0.05em;
+          font-weight: 600;
+        }
+
+        .google-ad-banner {
+          display: flex;
+          align-items: center;
+          gap: 20px;
+          background: rgba(240, 240, 240, 0.45);
+          border: 1px dashed rgba(0, 0, 0, 0.12);
+          border-radius: 16px;
+          padding: 16px 24px;
+          position: relative;
+        }
+
+        .ad-logo {
+          width: 38px;
+          height: 38px;
+          border-radius: 8px;
+          background: #4285f4;
+          color: white;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: 800;
+          font-size: 1.25rem;
+          box-shadow: 0 2px 8px rgba(66, 133, 244, 0.3);
+        }
+
+        .ad-text-content {
+          flex-grow: 1;
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+        }
+
+        .ad-text-content h4 {
+          font-family: var(--font-sans);
+          font-size: 0.95rem;
+          color: #334155;
+          font-weight: 700;
+        }
+
+        .ad-text-content p {
+          font-size: 0.82rem;
+          color: #64748b;
+          line-height: 1.4;
+        }
+
+        .ad-cta {
+          background: white;
+          border: 1px solid rgba(0,0,0,0.1);
+          color: #334155 !important;
+          padding: 8px 16px;
+          border-radius: 10px;
+          font-size: 0.8rem;
+          font-weight: 700;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+          transition: var(--transition-fast);
+        }
+
+        .ad-cta:hover {
+          background: #f8fafc;
+          border-color: rgba(0,0,0,0.18);
+        }
+
+        /* ==================== RIGHT COLUMN (SIDEBAR) ==================== */
+        .sidebar-section {
+          padding: 24px;
+          background: rgba(255, 255, 255, 0.7);
+          border: 1px solid var(--gold-border);
+          border-radius: 24px;
+          box-shadow: 0 8px 30px rgba(0,0,0,0.015);
+        }
+
+        .sidebar-heading {
+          font-family: var(--font-serif);
+          font-size: 1.35rem;
+          letter-spacing: 0.05em;
+          color: #4c1d95;
+          border-bottom: 1.5px solid rgba(168, 85, 247, 0.1);
+          padding-bottom: 10px;
+          margin-bottom: 20px;
+          font-weight: 700;
+        }
+
+        /* Testimonials List */
+        .insights-list {
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+        }
+
+        .insight-card {
+          display: flex;
+          gap: 16px;
+          align-items: center;
+          padding-bottom: 16px;
+          border-bottom: 1px solid rgba(0,0,0,0.04);
+        }
+
+        .insight-img-wrapper {
+          width: 70px;
+          height: 70px;
+          border-radius: 12px;
+          overflow: hidden;
+          flex-shrink: 0;
+          position: relative;
+        }
+
+        .insight-img-wrapper img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        .insight-card:last-child {
+          border-bottom: none;
+          padding-bottom: 0;
+        }
+
+        /* Google Ad Box */
+        .google-ad-vertical-wrapper {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+
+        .google-ad-box {
+          background: rgba(240, 240, 240, 0.45);
+          border: 1px dashed rgba(0, 0, 0, 0.12);
+          border-radius: 20px;
+          padding: 28px 24px;
+          text-align: center;
+        }
+
+        .ad-box-content {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 12px;
+        }
+
+        .ad-box-logo {
+          width: 32px;
+          height: 32px;
+          border-radius: 6px;
+          background: #4285f4;
+          color: white;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: 800;
+          font-size: 1.1rem;
+        }
+
+        .ad-box-content h5 {
+          font-family: var(--font-sans);
+          font-size: 0.95rem;
+          color: #334155;
+          font-weight: 700;
+        }
+
+        .ad-box-content p {
+          font-size: 0.8rem;
+          color: #64748b;
+          line-height: 1.4;
+          max-width: 200px;
+        }
+
+        .ad-box-btn {
+          background: #334155;
+          color: white !important;
+          font-size: 0.78rem;
+          font-weight: 700;
+          padding: 8px 20px;
+          border-radius: 8px;
+          letter-spacing: 0.03em;
+          transition: background 0.2s;
+        }
+
+        .ad-box-btn:hover {
+          background: #1e293b;
+        }
+
+        /* Certification Showcase Slider */
+        .cert-slider {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          position: relative;
+        }
+
+        .cert-frame {
+          flex-grow: 1;
+          border-radius: 16px;
+          overflow: hidden;
+          position: relative;
+          aspect-ratio: 1.4 / 1;
+          box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+          border: 1px solid rgba(168, 85, 247, 0.1);
+        }
+
+        .cert-img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        .cert-title-overlay {
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%);
+          padding: 12px 16px;
+          color: white;
+          font-size: 0.8rem;
+          font-weight: 600;
+          letter-spacing: 0.01em;
+          text-align: center;
+        }
+
+        .cert-nav-btn {
+          width: 28px;
+          height: 28px;
+          border-radius: 50%;
+          background: white;
+          color: #4c1d95;
+          border: 1px solid rgba(168, 85, 247, 0.15);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          font-size: 0.7rem;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+          transition: var(--transition-fast);
+        }
+
+        .cert-nav-btn:hover {
+          background: #4c1d95;
+          color: white;
+          border-color: #4c1d95;
+        }
+
+        .cert-dots {
+          display: flex;
+          justify-content: center;
+          gap: 6px;
+          margin-top: 14px;
+        }
+
+        .cert-dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: rgba(168, 85, 247, 0.2);
+          cursor: pointer;
+          transition: var(--transition-fast);
+        }
+
+        .cert-dot.active {
+          background: #4c1d95;
+          width: 16px;
+          border-radius: 4px;
+        }
+
+        /* Video Modal overlay */
+        .video-modal-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(76, 29, 149, 0.15);
+          backdrop-filter: blur(10px);
+          z-index: 1000;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 24px;
+        }
+
+        .video-modal-content {
+          width: 100%;
+          max-width: 900px;
+          background: rgba(255, 255, 255, 0.9);
+          border: 1px solid var(--gold-border);
+          border-radius: 24px;
+          padding: 20px;
+          position: relative;
+          box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+        }
+
+        .close-modal-btn {
+          position: absolute;
+          top: -16px;
+          right: -16px;
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          background: #4c1d95;
+          color: white;
+          border: none;
+          font-size: 1.5rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+          transition: background 0.2s;
+          z-index: 10;
+        }
+
+        .close-modal-btn:hover {
+          background: #db2777;
+        }
+
+        .iframe-wrapper {
+          width: 100%;
+          aspect-ratio: 16 / 9;
+          border-radius: 14px;
+          overflow: hidden;
+          background: black;
+          box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+        }
+
+        /* ==================== RESPONSIVE MEDIA QUERIES ==================== */
+        @media (max-width: 1024px) {
+          .about-grid {
             grid-template-columns: 1fr;
+            gap: 50px;
+          }
+
+          .right-column {
+            gap: 32px;
+          }
+        }
+
+        @media (max-width: 768px) {
+          .about-layout-container {
+            padding: 30px 16px 120px;
+          }
+
+          .intro-grid {
+            grid-template-columns: 1fr;
+            gap: 32px;
+          }
+
+          .main-title {
+            font-size: 2.2rem;
+            text-align: center;
+          }
+
+          .bio-paragraphs p {
+            text-align: center;
+          }
+
+          .anara-card {
+            max-width: 420px;
+            margin: 0 auto;
+          }
+
+          .google-ad-banner {
+            flex-direction: column;
+            text-align: center;
+            padding: 20px;
+          }
+
+          .ad-cta {
+            width: 100%;
+            text-align: center;
           }
         }
       `}</style>

@@ -72,33 +72,33 @@
 
   /* Header Styles (Pastel/Soothing Light Theme) */
   --header-bg: rgba(255, 255, 255, 0.85);
-  --header-logo-fill: #db2777; /* Soothing Pink */
-  --header-logo-shadow: rgba(219, 39, 119, 0.2);
-  --header-brand-color: #4c1d95; /* Soothing Violet/Lavender */
-  --header-brand-shadow: rgba(168, 85, 247, 0.05);
+  --header-logo-fill: #9f1239; /* Deep Crimson */
+  --header-logo-shadow: rgba(159, 18, 57, 0.25);
+  --header-brand-color: #9f1239; /* Deep Crimson */
+  --header-brand-shadow: rgba(159, 18, 57, 0.05);
   --header-link-color: #475569; /* Slate-600 */
-  --header-link-hover-color: #db2777; /* Pink */
-  --header-link-hover-shadow: rgba(219, 39, 119, 0.2);
+  --header-link-hover-color: #e11d48; /* Vibrant Rose-Red */
+  --header-link-hover-shadow: rgba(225, 29, 72, 0.25);
   
-  --cart-badge-bg: rgba(236, 72, 153, 0.08);
-  --cart-badge-border: rgba(236, 72, 153, 0.3);
-  --cart-badge-text: #db2777; /* Deep Pink */
-  --cart-pulse-color: #ec4899;
+  --cart-badge-bg: rgba(159, 18, 57, 0.08);
+  --cart-badge-border: rgba(159, 18, 57, 0.3);
+  --cart-badge-text: #9f1239; /* Deep Crimson */
+  --cart-pulse-color: #e11d48;
   
-  --admin-cta-bg: rgba(168, 85, 247, 0.04);
-  --admin-cta-border: rgba(168, 85, 247, 0.4);
-  --admin-cta-text: #6d28d9;
-  --admin-cta-shadow: rgba(168, 85, 247, 0.05);
+  --admin-cta-bg: rgba(159, 18, 57, 0.04);
+  --admin-cta-border: rgba(159, 18, 57, 0.3);
+  --admin-cta-text: #9f1239;
+  --admin-cta-shadow: rgba(159, 18, 57, 0.05);
   
-  --admin-cta-hover-bg: rgba(168, 85, 247, 0.08);
-  --admin-cta-hover-border: #6d28d9;
-  --admin-cta-hover-shadow: rgba(168, 85, 247, 0.15);
+  --admin-cta-hover-bg: rgba(159, 18, 57, 0.08);
+  --admin-cta-hover-border: #e11d48;
+  --admin-cta-hover-shadow: rgba(159, 18, 57, 0.15);
 
   /* Footer Styles (Pastel/Soothing Light Theme) */
   --footer-bg: #FAF9F6; /* Warm off-white */
-  --footer-brand-color: #4c1d95; /* Deep Violet */
+  --footer-brand-color: #9f1239; /* Deep Crimson */
   --footer-title-color: #1e1b4b; /* Deep Indigo */
-  --footer-link-hover-color: #db2777; /* Soothing Pink */
+  --footer-link-hover-color: #e11d48; /* Vibrant Rose-Red */
   --newsletter-success-color: #059669; /* Soothing Mint Green */
 }
 
