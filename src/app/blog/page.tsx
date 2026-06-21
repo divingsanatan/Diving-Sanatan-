@@ -1,8 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import Link from "next/link";
@@ -60,94 +58,83 @@ export default function BlogListingPage() {
   const categories = ["all", "Crystals", "Energy Healing", "Mindfulness"];
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
-      <Header />
+    <div className="blog-posts-page">
+      {/* Header */}
+      <section className="blog-header">
+        <h1 className="blog-title">Spiritual Guidance Blog</h1>
+        <p className="blog-subtitle">
+          Exploring the metaphysics of energy nodes, sound meditation rhythms, and natural mineral properties.
+        </p>
 
-      <main className="blog-container">
+        {/* Search bar */}
+        <div className="blog-search-wrapper">
+          <input
+            type="text"
+            placeholder="Search articles..."
+            className="glass-input search-input"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+      </section>
 
-        {/* Header */}
-        <section className="blog-header">
-          <h1 className="blog-title">Spiritual Guidance Blog</h1>
-          <p className="blog-subtitle">
-            Exploring the metaphysics of energy nodes, sound meditation rhythms, and natural mineral properties.
-          </p>
+      {/* Categories Tabs */}
+      <section className="blog-tabs-section">
+        <div className="blog-tabs">
+          {categories.map(cat => (
+            <button
+              key={cat}
+              className={`blog-tab-btn ${activeTab === cat ? "active" : ""}`}
+              onClick={() => setActiveTab(cat)}
+            >
+              {cat === "all" ? "All Writings" : cat}
+            </button>
+          ))}
+        </div>
+      </section>
 
-          {/* Search bar */}
-          <div className="blog-search-wrapper">
-            <input
-              type="text"
-              placeholder="Search articles..."
-              className="glass-input search-input"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+      {/* Listings Grid */}
+      <section className="blog-grid-section">
+        {loading ? (
+          <p style={{ textAlign: "center" }}>Retrieving sacred scrolls...</p>
+        ) : filteredBlogs.length === 0 ? (
+          <div className="empty-state glass-card" style={{ padding: "40px", textAlign: "center" }}>
+            <p>No articles found matching your query metrics.</p>
           </div>
-        </section>
+        ) : (
+          <div className="blog-cards-grid">
+            {filteredBlogs.map(post => (
+              <Card key={post.id} className="blog-card" variant="glass">
+                <div className="blog-card-meta">
+                  <span className="blog-card-cat">{post.category}</span>
+                  <span className="blog-card-time">{post.readTime}</span>
+                </div>
 
-        {/* Categories Tabs */}
-        <section className="blog-tabs-section">
-          <div className="blog-tabs">
-            {categories.map(cat => (
-              <button
-                key={cat}
-                className={`blog-tab-btn ${activeTab === cat ? "active" : ""}`}
-                onClick={() => setActiveTab(cat)}
-              >
-                {cat === "all" ? "All Writings" : cat}
-              </button>
+                <h3 className="blog-card-title">{post.title}</h3>
+                <p className="blog-card-excerpt">
+                  {post.content.substring(0, 150)}...
+                </p>
+
+                <div className="blog-card-footer">
+                  <span className="blog-card-author">By {post.author}</span>
+                  <span className="blog-card-date">{post.date}</span>
+                </div>
+
+                <div className="blog-card-action">
+                  <Link href={`/blog/${post.id}`}>
+                    <Button variant="gold-outline" size="sm">
+                      Read Article
+                    </Button>
+                  </Link>
+                </div>
+              </Card>
             ))}
           </div>
-        </section>
-
-        {/* Listings Grid */}
-        <section className="blog-grid-section">
-          {loading ? (
-            <p style={{ textAlign: "center" }}>Retrieving sacred scrolls...</p>
-          ) : filteredBlogs.length === 0 ? (
-            <div className="empty-state glass-card" style={{ padding: "40px", textAlign: "center" }}>
-              <p>No articles found matching your query metrics.</p>
-            </div>
-          ) : (
-            <div className="blog-cards-grid">
-              {filteredBlogs.map(post => (
-                <Card key={post.id} className="blog-card" variant="glass">
-                  <div className="blog-card-meta">
-                    <span className="blog-card-cat">{post.category}</span>
-                    <span className="blog-card-time">{post.readTime}</span>
-                  </div>
-
-                  <h3 className="blog-card-title">{post.title}</h3>
-                  <p className="blog-card-excerpt">
-                    {post.content.substring(0, 150)}...
-                  </p>
-
-                  <div className="blog-card-footer">
-                    <span className="blog-card-author">By {post.author}</span>
-                    <span className="blog-card-date">{post.date}</span>
-                  </div>
-
-                  <div className="blog-card-action">
-                    <Link href={`/blog/${post.id}`} passHref legacyBehavior>
-                      <Button variant="gold-outline" size="sm">
-                        Read Article
-                      </Button>
-                    </Link>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          )}
-        </section>
-
-      </main>
-
-      <Footer />
+        )}
+      </section>
 
       <style jsx>{`
-        .blog-container {
-          max-width: 1200px;
-          margin: 0 auto;
-          padding: 60px 24px 40px;
+        .blog-posts-page {
           display: flex;
           flex-direction: column;
           gap: 40px;
@@ -216,7 +203,7 @@ export default function BlogListingPage() {
         }
         .blog-cards-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+          grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
           gap: 32px;
         }
         .blog-card {

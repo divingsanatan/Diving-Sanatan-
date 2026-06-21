@@ -2,8 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 
@@ -51,76 +49,69 @@ export default function BlogDetailsPage() {
   }, [id]);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
-      <Header />
-
-      <main className="blog-detail-container">
-        {loading ? (
-          <p style={{ textAlign: "center", padding: "80px 0" }}>Unrolling manuscript...</p>
-        ) : error || !blog ? (
-          <div className="error-card glass-panel" style={{ padding: "40px", textAlign: "center" }}>
-            <h3>Error Resolving Article</h3>
-            <p style={{ margin: "16px 0", color: "hsl(var(--text-muted))" }}>{error}</p>
-            <Button variant="gold" onClick={() => router.push("/blog")}>Back to Blog</Button>
+    <div className="blog-detail-page">
+      {loading ? (
+        <p style={{ textAlign: "center", padding: "80px 0" }}>Unrolling manuscript...</p>
+      ) : error || !blog ? (
+        <div className="error-card glass-panel" style={{ padding: "40px", textAlign: "center" }}>
+          <h3>Error Resolving Article</h3>
+          <p style={{ margin: "16px 0", color: "hsl(var(--text-muted))" }}>{error}</p>
+          <Button variant="gold" onClick={() => router.push("/blog")}>Back to Blog</Button>
+        </div>
+      ) : (
+        <article className="blog-article-content">
+          
+          {/* Header info */}
+          <div className="article-header">
+            <span className="article-category">{blog.category}</span>
+            <h1 className="article-title">{blog.title}</h1>
+            <div className="article-meta">
+              <span>Written by: <strong>{blog.author}</strong></span>
+              <span>•</span>
+              <span>Released: <strong>{blog.date}</strong></span>
+              <span>•</span>
+              <span>Reading estimate: <strong>{blog.readTime}</strong></span>
+            </div>
           </div>
-        ) : (
-          <article className="blog-article-content">
-            
-            {/* Header info */}
-            <div className="article-header">
-              <span className="article-category">{blog.category}</span>
-              <h1 className="article-title">{blog.title}</h1>
-              <div className="article-meta">
-                <span>Written by: <strong>{blog.author}</strong></span>
-                <span>•</span>
-                <span>Released: <strong>{blog.date}</strong></span>
-                <span>•</span>
-                <span>Reading estimate: <strong>{blog.readTime}</strong></span>
+
+          {/* Content panel */}
+          <Card variant="glass" className="article-body-card">
+            <div className="article-paragraph-wrapper">
+              <p className="first-paragraph-dropcap">
+                {blog.content}
+              </p>
+              
+              {/* Visual quote spacer */}
+              <div className="article-blockquote">
+                <span className="quote-mark">“</span>
+                <p>Energy flow balances are the foundational blueprint of physical comfort. Maintain your aura, and your mind will follow.</p>
               </div>
+
+              <p>
+                Somatic therapies remind us that blockades within our chakras aren't just mystical constructs. They represent chemical blockades in our nervous pathways. By introducing sound bowls vibrating at specific frequencies (e.g. 528Hz for DNA repair or 432Hz for deep meditation), we assist our bodies in aligning these frequencies, which stabilizes cortisol flow and reduces tension. Ensure you discuss layout sessions with a certified practitioner to customize crystals based on your current physical conditions.
+              </p>
             </div>
 
-            {/* Content panel */}
-            <Card variant="glass" className="article-body-card">
-              <div className="article-paragraph-wrapper">
-                <p className="first-paragraph-dropcap">
-                  {blog.content}
-                </p>
-                
-                {/* Visual quote spacer */}
-                <div className="article-blockquote">
-                  <span className="quote-mark">“</span>
-                  <p>Energy flow balances are the foundational blueprint of physical comfort. Maintain your aura, and your mind will follow.</p>
-                </div>
+            {/* Actions footer */}
+            <div className="article-footer-actions">
+              <Button variant="gold-outline" onClick={() => router.push("/blog")}>
+                ← Back to Listings
+              </Button>
+              
+              <Button variant="gold" onClick={() => router.push(`/search?query=${encodeURIComponent(blog.category)}`)}>
+                Book Related Sessions
+              </Button>
+            </div>
+          </Card>
 
-                <p>
-                  Somatic therapies remind us that blockades within our chakras aren't just mystical constructs. They represent chemical blockades in our nervous pathways. By introducing sound bowls vibrating at specific frequencies (e.g. 528Hz for DNA repair or 432Hz for deep meditation), we assist our bodies in aligning these frequencies, which stabilizes cortisol flow and reduces tension. Ensure you discuss layout sessions with a certified practitioner to customize crystals based on your current physical conditions.
-                </p>
-              </div>
-
-              {/* Actions footer */}
-              <div className="article-footer-actions">
-                <Button variant="gold-outline" onClick={() => router.push("/blog")}>
-                  ← Back to Listings
-                </Button>
-                
-                <Button variant="gold" onClick={() => router.push(`/search?query=${encodeURIComponent(blog.category)}`)}>
-                  Book Related Sessions
-                </Button>
-              </div>
-            </Card>
-
-          </article>
-        )}
-      </main>
-
-      <Footer />
+        </article>
+      )}
 
       <style jsx>{`
-        .blog-detail-container {
+        .blog-detail-page {
+          width: 100%;
           max-width: 800px;
           margin: 0 auto;
-          padding: 60px 24px 40px;
-          width: 100%;
         }
         .article-header {
           text-align: center;
