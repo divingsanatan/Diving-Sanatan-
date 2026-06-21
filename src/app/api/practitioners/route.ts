@@ -14,6 +14,7 @@ function mapPractitionerToCamelCase(p: any): Practitioner {
     video_url: p.video_url || "",
     certifications: p.certifications || [],
     expertise: p.expertise || [],
+    social_links: p.social_links || {},
   };
 }
 
@@ -61,7 +62,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { name, specialty, bio, image, video_url, certifications, expertise } = body;
+    const { name, specialty, bio, image, video_url, certifications, expertise, social_links } = body;
     
     if (!name || !specialty || !bio) {
       return NextResponse.json({ success: false, error: "Missing required practitioner fields" }, { status: 400 });
@@ -78,6 +79,7 @@ export async function POST(req: NextRequest) {
       video_url: video_url || "",
       certifications: certifications || [],
       expertise: expertise || [],
+      social_links: social_links || {},
     };
     
     const { data, error } = await supabaseServer
@@ -102,7 +104,7 @@ export async function POST(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   try {
     const body = await req.json();
-    const { id, name, specialty, bio, image, video_url, certifications, expertise } = body;
+    const { id, name, specialty, bio, image, video_url, certifications, expertise, social_links } = body;
     
     if (!id) {
       return NextResponse.json({ success: false, error: "Practitioner ID is required" }, { status: 400 });
@@ -116,6 +118,7 @@ export async function PUT(req: NextRequest) {
     if (video_url !== undefined) updates.video_url = video_url;
     if (certifications !== undefined) updates.certifications = certifications;
     if (expertise !== undefined) updates.expertise = expertise;
+    if (social_links !== undefined) updates.social_links = social_links;
     
     const { data, error } = await supabaseServer
       .from("practitioners")

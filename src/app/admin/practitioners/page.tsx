@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Practitioner, Expertise } from "@/types/database";
+import { ImageCropperModal } from "@/components/ui/ImageCropperModal";
 
 export default function AdminPractitionersPage() {
   const [practitioners, setPractitioners] = useState<Practitioner[]>([]);
@@ -19,6 +20,15 @@ export default function AdminPractitionersPage() {
   const [pracVideo, setPracVideo] = useState("");
   const [pracCertifications, setPracCertifications] = useState<string[]>([]);
   const [pracExpertise, setPracExpertise] = useState<string[]>([]);
+
+  // Social Links States
+  const [socialFacebook, setSocialFacebook] = useState("");
+  const [socialInstagram, setSocialInstagram] = useState("");
+  const [socialLinkedin, setSocialLinkedin] = useState("");
+  const [socialYoutube, setSocialYoutube] = useState("");
+
+  // Crop State
+  const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
 
   // Inline expertise creation state
   const [newExpertiseName, setNewExpertiseName] = useState("");
@@ -69,7 +79,11 @@ export default function AdminPractitionersPage() {
     setPracVideo(p.video_url || "");
     setPracCertifications(p.certifications || []);
     setPracExpertise(p.expertise || []);
-    
+    setSocialFacebook(p.social_links?.facebook || "");
+    setSocialInstagram(p.social_links?.instagram || "");
+    setSocialLinkedin(p.social_links?.linkedin || "");
+    setSocialYoutube(p.social_links?.youtube || "");
+
     // Scroll to form on mobile/small screen
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -83,6 +97,10 @@ export default function AdminPractitionersPage() {
     setPracVideo("");
     setPracCertifications([]);
     setPracExpertise([]);
+    setSocialFacebook("");
+    setSocialInstagram("");
+    setSocialLinkedin("");
+    setSocialYoutube("");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -100,6 +118,12 @@ export default function AdminPractitionersPage() {
       video_url: pracVideo,
       certifications: pracCertifications,
       expertise: pracExpertise,
+      social_links: {
+        facebook: socialFacebook,
+        instagram: socialInstagram,
+        linkedin: socialLinkedin,
+        youtube: socialYoutube,
+      },
     };
 
     try {
@@ -179,15 +203,30 @@ export default function AdminPractitionersPage() {
     }
   };
 
-  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setCropImageSrc(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  };
+
+  const handleCropComplete = async (croppedFile: File) => {
+    setCropImageSrc(null);
     setUploadingPhoto(true);
-    const url = await uploadFile(file);
+    const url = await uploadFile(croppedFile);
     if (url) {
       setPracImage(url);
     }
     setUploadingPhoto(false);
+  };
+
+  const handleCropCancel = () => {
+    setCropImageSrc(null);
   };
 
   const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -218,7 +257,7 @@ export default function AdminPractitionersPage() {
   };
 
   const handleExpertiseChange = (name: string) => {
-    setPracExpertise(prev => 
+    setPracExpertise(prev =>
       prev.includes(name) ? prev.filter(x => x !== name) : [...prev, name]
     );
   };
@@ -295,14 +334,14 @@ export default function AdminPractitionersPage() {
                           </div>
                         )}
                       </div>
-                      
+
                       <div className="item-card-details">
                         <h4>{p.name}</h4>
                         <span className="badge-span">{p.specialty}</span>
                         <div className="rating-row" style={{ fontSize: "0.8rem", color: "#d4af37", marginTop: "4px" }}>
                           ★ {p.rating.toFixed(1)} ({p.reviewsCount} Reviews)
                         </div>
-                        
+
                         {/* Expertise display */}
                         {p.expertise && p.expertise.length > 0 && (
                           <div className="card-expertise-list">
@@ -313,12 +352,17 @@ export default function AdminPractitionersPage() {
                         )}
 
                         <p className="item-desc" style={{ marginTop: "8px" }}>{p.bio}</p>
-                        
+
                         {/* Media markers */}
                         <div className="media-markers-row">
                           {p.video_url && <span className="media-marker">📺 Video Bio</span>}
                           {p.certifications && p.certifications.length > 0 && (
                             <span className="media-marker">📜 {p.certifications.length} Certifications</span>
+                          )}
+                          {p.social_links && Object.values(p.social_links).some(link => !!link) && (
+                            <span className="media-marker" style={{ color: "#7c3aed", background: "rgba(124, 58, 237, 0.05)", borderColor: "rgba(124, 58, 237, 0.15)" }}>
+                              🌐 Socials Linked
+                            </span>
                           )}
                         </div>
                       </div>
@@ -340,7 +384,7 @@ export default function AdminPractitionersPage() {
 
           {/* Form */}
           <div className="split-form-col">
-            <Card variant="glass" style={{ padding: "28px" }}>
+            <Card variant="glass" >
               <div className="form-header-row">
                 <h3 className="column-title">
                   {editingId ? "Edit Healer Profile" : "Register Healer"}
@@ -353,13 +397,13 @@ export default function AdminPractitionersPage() {
               </div>
 
               <form onSubmit={handleSubmit} className="admin-catalog-form">
-                
+
                 <div className="form-group">
                   <label>Healer Name</label>
-                  <input 
-                    type="text" 
-                    className="glass-input" 
-                    required 
+                  <input
+                    type="text"
+                    className="glass-input"
+                    required
                     placeholder="e.g. Master Sumeet"
                     value={pracName}
                     onChange={(e) => setPracName(e.target.value)}
@@ -368,10 +412,10 @@ export default function AdminPractitionersPage() {
 
                 <div className="form-group">
                   <label>Specialty Specialty</label>
-                  <input 
-                    type="text" 
-                    className="glass-input" 
-                    required 
+                  <input
+                    type="text"
+                    className="glass-input"
+                    required
                     placeholder="e.g. Reiki Master & Sound Therapist"
                     value={pracSpecialty}
                     onChange={(e) => setPracSpecialty(e.target.value)}
@@ -393,19 +437,19 @@ export default function AdminPractitionersPage() {
                 <div className="form-group">
                   <label>Profile Photo</label>
                   <div className="file-upload-row">
-                    <input 
-                      type="text" 
-                      className="glass-input" 
+                    <input
+                      type="text"
+                      className="glass-input"
                       placeholder="URL or Upload picture..."
                       value={pracImage}
                       onChange={(e) => setPracImage(e.target.value)}
                     />
                     <label className="upload-file-btn">
                       {uploadingPhoto ? "..." : "Upload File"}
-                      <input 
-                        type="file" 
-                        accept="image/*" 
-                        style={{ display: "none" }} 
+                      <input
+                        type="file"
+                        accept="image/*"
+                        style={{ display: "none" }}
                         onChange={handlePhotoUpload}
                         disabled={uploadingPhoto}
                       />
@@ -423,19 +467,19 @@ export default function AdminPractitionersPage() {
                 <div className="form-group">
                   <label>Introductory Video Bio</label>
                   <div className="file-upload-row">
-                    <input 
-                      type="text" 
-                      className="glass-input" 
+                    <input
+                      type="text"
+                      className="glass-input"
                       placeholder="Direct video URL or Upload MP4..."
                       value={pracVideo}
                       onChange={(e) => setPracVideo(e.target.value)}
                     />
                     <label className="upload-file-btn">
                       {uploadingVideo ? "..." : "Upload Video"}
-                      <input 
-                        type="file" 
-                        accept="video/*" 
-                        style={{ display: "none" }} 
+                      <input
+                        type="file"
+                        accept="video/*"
+                        style={{ display: "none" }}
                         onChange={handleVideoUpload}
                         disabled={uploadingVideo}
                       />
@@ -444,7 +488,6 @@ export default function AdminPractitionersPage() {
                   {pracVideo && (
                     <div className="video-preview-row">
                       <video src={pracVideo} controls className="thumbnail-video" />
-                      <button type="button" className="remove-thumbnail-btn" onClick={() => setPracVideo("")}>✕ Remove</button>
                     </div>
                   )}
                 </div>
@@ -454,10 +497,10 @@ export default function AdminPractitionersPage() {
                   <label>Certifications (Multiple Uploads)</label>
                   <label className="upload-block-btn">
                     {uploadingCert ? "Uploading Certification File..." : "➕ Add Certification File"}
-                    <input 
-                      type="file" 
-                      accept="image/*,application/pdf" 
-                      style={{ display: "none" }} 
+                    <input
+                      type="file"
+                      accept="image/*,application/pdf"
+                      style={{ display: "none" }}
                       onChange={handleCertUpload}
                       disabled={uploadingCert}
                     />
@@ -473,6 +516,59 @@ export default function AdminPractitionersPage() {
                     </div>
                   )}
                 </div>
+
+                {/* SOCIAL LINKS */}
+                <div className="form-group">
+                  <label>Social Media Links</label>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px", background: "rgba(0,0,0,0.02)", padding: "12px", borderRadius: "8px", border: "1px dashed rgba(0,0,0,0.08)" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <span style={{ fontSize: "0.8rem", width: "90px", color: "hsl(var(--text-muted))", fontWeight: 600 }}>Facebook</span>
+                      <input 
+                        type="text" 
+                        className="glass-input" 
+                        placeholder="https://facebook.com/username"
+                        value={socialFacebook}
+                        onChange={(e) => setSocialFacebook(e.target.value)}
+                        style={{ flexGrow: 1, padding: "8px 12px", fontSize: "0.85rem" }}
+                      />
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <span style={{ fontSize: "0.8rem", width: "90px", color: "hsl(var(--text-muted))", fontWeight: 600 }}>Instagram</span>
+                      <input 
+                        type="text" 
+                        className="glass-input" 
+                        placeholder="https://instagram.com/username"
+                        value={socialInstagram}
+                        onChange={(e) => setSocialInstagram(e.target.value)}
+                        style={{ flexGrow: 1, padding: "8px 12px", fontSize: "0.85rem" }}
+                      />
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <span style={{ fontSize: "0.8rem", width: "90px", color: "hsl(var(--text-muted))", fontWeight: 600 }}>LinkedIn</span>
+                      <input 
+                        type="text" 
+                        className="glass-input" 
+                        placeholder="https://linkedin.com/in/username"
+                        value={socialLinkedin}
+                        onChange={(e) => setSocialLinkedin(e.target.value)}
+                        style={{ flexGrow: 1, padding: "8px 12px", fontSize: "0.85rem" }}
+                      />
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <span style={{ fontSize: "0.8rem", width: "90px", color: "hsl(var(--text-muted))", fontWeight: 600 }}>YouTube</span>
+                      <input 
+                        type="text" 
+                        className="glass-input" 
+                        placeholder="https://youtube.com/channel-or-user"
+                        value={socialYoutube}
+                        onChange={(e) => setSocialYoutube(e.target.value)}
+                        style={{ flexGrow: 1, padding: "8px 12px", fontSize: "0.85rem" }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+
 
                 {/* AREAS OF EXPERTISE & DYNAMIC ADDITION */}
                 <div className="form-group">
@@ -505,13 +601,21 @@ export default function AdminPractitionersPage() {
                   </div>
                 </div>
 
-                <Button variant="gold" type="submit" style={{ width: "100%", marginTop: "16px" }}>
+                <Button variant="gold" type="submit" >
                   {editingId ? "Update Healer Profile" : "Register Healer"}
                 </Button>
               </form>
             </Card>
           </div>
         </div>
+      )}
+
+      {cropImageSrc && (
+        <ImageCropperModal
+          imageSrc={cropImageSrc}
+          onCropComplete={handleCropComplete}
+          onCancel={handleCropCancel}
+        />
       )}
 
       <style jsx>{`

@@ -4,6 +4,13 @@ export interface Category {
   createdAt?: string;
 }
 
+export interface SocialLinks {
+  facebook?: string;
+  instagram?: string;
+  linkedin?: string;
+  youtube?: string;
+}
+
 export interface Practitioner {
   id: string;
   name: string;
@@ -16,7 +23,9 @@ export interface Practitioner {
   video_url?: string;
   certifications?: string[];
   expertise?: string[];
+  social_links?: SocialLinks;
 }
+
 
 export interface Expertise {
   id: string;

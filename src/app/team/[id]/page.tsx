@@ -19,6 +19,12 @@ interface Practitioner {
   video_url?: string;
   certifications?: string[];
   expertise?: string[];
+  social_links?: {
+    facebook?: string;
+    instagram?: string;
+    linkedin?: string;
+    youtube?: string;
+  };
 }
 
 interface Service {
@@ -56,6 +62,41 @@ export default function HealerDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isVideoOpen, setIsVideoOpen] = useState(false);
+
+  // Helper to resolve YouTube embed URL or direct video file URL
+  const getEmbedUrl = (url: string) => {
+    if (!url) return null;
+    
+    // Check if it is a direct video file
+    const isVideoFile = url.match(/\.(mp4|webm|ogg|mov|mkv)($|\?)/i) || url.includes("/storage/v1/object/public/");
+    if (isVideoFile) {
+      return null;
+    }
+    
+    // YouTube Shorts
+    if (url.includes("youtube.com/shorts/")) {
+      const parts = url.split("youtube.com/shorts/");
+      const id = parts[1]?.split(/[?&]/)[0];
+      if (id) {
+        return `https://www.youtube.com/embed/${id}?autoplay=1`;
+      }
+    }
+    
+    // Regular YouTube
+    const ytRegExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const match = url.match(ytRegExp);
+    
+    if (match && match[2].length === 11) {
+      return `https://www.youtube.com/embed/${match[2]}?autoplay=1`;
+    }
+    
+    if (url.includes("embed")) {
+      return url;
+    }
+    
+    return null;
+  };
+
 
   // Services scroll ref
   const servicesScrollRef = useRef<HTMLDivElement>(null);
@@ -341,6 +382,31 @@ export default function HealerDetailPage() {
                     <span className="meta-exp">Practicing Since 2010</span>
                   </div>
 
+                  {healer.social_links && Object.values(healer.social_links).some(link => !!link) && (
+                    <div className="healer-socials">
+                      {healer.social_links.facebook && (
+                        <a href={healer.social_links.facebook} target="_blank" rel="noopener noreferrer" className="social-icon" title="Facebook">
+                          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                        </a>
+                      )}
+                      {healer.social_links.instagram && (
+                        <a href={healer.social_links.instagram} target="_blank" rel="noopener noreferrer" className="social-icon" title="Instagram">
+                          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+                        </a>
+                      )}
+                      {healer.social_links.linkedin && (
+                        <a href={healer.social_links.linkedin} target="_blank" rel="noopener noreferrer" className="social-icon" title="LinkedIn">
+                          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.779-1.75-1.75s.784-1.75 1.75-1.75 1.75.779 1.75 1.75-.784 1.75-1.75 1.75zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+                        </a>
+                      )}
+                      {healer.social_links.youtube && (
+                        <a href={healer.social_links.youtube} target="_blank" rel="noopener noreferrer" className="social-icon" title="YouTube">
+                          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                        </a>
+                      )}
+                    </div>
+                  )}
+
                   <div className="tag-list">
                     {healer.expertise && healer.expertise.length > 0 ? (
                       healer.expertise.map((exp, i) => (
@@ -433,24 +499,31 @@ export default function HealerDetailPage() {
                 </div>
 
                 {/* Video Playback Slot */}
-                {healer.video_url && (
-                  <div className="video-slot glass-panel" onClick={() => setIsVideoOpen(true)}>
-                    <img src="/images/anara_video.png" alt="Meet healer video preview" className="video-thumb" />
-                    <div className="video-overlay">
-                      <span className="video-title">Meet {healer.name.split(" ")[0]} | A Gentle Introduction to Healing</span>
-                      <svg className="share-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="20" height="20">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 10.748a3.001 3.001 0 110 2.504l5.244 3.032a3.001 3.001 0 11-.482 1.488l-5.245-3.033a3.001 3.001 0 110-3.483l5.245-3.033a3.001 3.001 0 11.482 1.487l-5.244 3.033z" />
-                      </svg>
+                {healer.video_url && (() => {
+                  const embedUrl = getEmbedUrl(healer.video_url);
+                  return (
+                    <div className="video-slot glass-panel" style={{ cursor: "default" }}>
+                      {embedUrl ? (
+                        <iframe 
+                          width="100%" 
+                          height="100%" 
+                          src={embedUrl.replace("?autoplay=1", "")} 
+                          title="Meet Healer - Video Introduction" 
+                          frameBorder="0" 
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                          allowFullScreen
+                          style={{ border: "none", width: "100%", height: "100%" }}
+                        ></iframe>
+                      ) : (
+                        <video 
+                          src={healer.video_url} 
+                          controls 
+                          style={{ width: "100%", height: "100%", objectFit: "contain", outline: "none", background: "black" }}
+                        />
+                      )}
                     </div>
-                    <div className="play-button-outer">
-                      <div className="play-button-inner">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                          <polygon points="8 5 8 19 19 12 8 5" />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                  );
+                })()}
               </div>
 
             </div>
@@ -617,24 +690,37 @@ export default function HealerDetailPage() {
       </main>
 
       {/* Video Modal Overlay */}
-      {isVideoOpen && healer.video_url && (
-        <div className="video-modal-overlay" onClick={() => setIsVideoOpen(false)}>
-          <div className="video-modal-content glass-panel" onClick={(e) => e.stopPropagation()}>
-            <button className="close-modal-btn" onClick={() => setIsVideoOpen(false)}>×</button>
-            <div className="iframe-wrapper">
-              <iframe 
-                width="100%" 
-                height="100%" 
-                src={healer.video_url.includes("embed") ? healer.video_url : "https://www.youtube.com/embed/77ZozI0rw7w?autoplay=1"} 
-                title="Meet Healer - Video Introduction" 
-                frameBorder="0" 
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                allowFullScreen
-              ></iframe>
+      {isVideoOpen && healer.video_url && (() => {
+        const embedUrl = getEmbedUrl(healer.video_url);
+        return (
+          <div className="video-modal-overlay" onClick={() => setIsVideoOpen(false)}>
+            <div className="video-modal-content glass-panel" onClick={(e) => e.stopPropagation()}>
+              <button className="close-modal-btn" onClick={() => setIsVideoOpen(false)}>×</button>
+              <div className="iframe-wrapper" style={{ display: "flex", justifyContent: "center", alignItems: "center", width: "100%", height: "100%", minHeight: "350px", background: "black" }}>
+                {embedUrl ? (
+                  <iframe 
+                    width="100%" 
+                    height="100%" 
+                    src={embedUrl} 
+                    title="Meet Healer - Video Introduction" 
+                    frameBorder="0" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                    allowFullScreen
+                    style={{ border: "none" }}
+                  ></iframe>
+                ) : (
+                  <video 
+                    src={healer.video_url} 
+                    controls 
+                    autoPlay 
+                    style={{ width: "100%", maxHeight: "500px", borderRadius: "14px", objectFit: "contain", outline: "none" }}
+                  />
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Certification Image Modal Overlay */}
       {activeCertUrl && (
@@ -656,6 +742,31 @@ export default function HealerDetailPage() {
           flex-direction: column;
           min-height: 100vh;
           background: transparent;
+        }
+
+        .healer-socials {
+          display: flex;
+          gap: 10px;
+          margin-top: 8px;
+          margin-bottom: 4px;
+        }
+
+        .social-icon {
+          color: #7c3aed;
+          transition: all 0.2s ease;
+          display: flex;
+          align-items: center;
+          background: rgba(124, 58, 237, 0.05);
+          border: 1px solid rgba(124, 58, 237, 0.15);
+          padding: 6px;
+          border-radius: 50%;
+        }
+
+        .social-icon:hover {
+          color: #d4af37;
+          background: rgba(212, 175, 55, 0.08);
+          border-color: rgba(212, 175, 55, 0.3);
+          transform: translateY(-2px);
         }
 
         .about-layout-container {
