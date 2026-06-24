@@ -113,13 +113,16 @@ export default function VideoTranscriptsPage() {
 
   return (
     <div className="transcripts-page">
+      {/* Header */}
       <div className="transcripts-header">
         <h1 className="page-title">Video Transcripts & Guides</h1>
         <p className="page-subtitle">
           Watch guided video segments and review precise, time-synced transcript notes.
         </p>
+      </div>
 
-        {/* Video selector */}
+      {/* Control panel (Video selector inside glass panel) */}
+      <section className="transcripts-controls-section glass-panel">
         <div className="video-tabs">
           {VIDEOS.map((vid) => (
             <button
@@ -131,7 +134,7 @@ export default function VideoTranscriptsPage() {
             </button>
           ))}
         </div>
-      </div>
+      </section>
 
       <div className="player-transcript-grid">
         {/* Left: Custom Video Player */}
@@ -256,58 +259,62 @@ export default function VideoTranscriptsPage() {
         .transcripts-page {
           display: flex;
           flex-direction: column;
-          gap: 40px;
+          gap: 36px;
           width: 100%;
         }
         .transcripts-header {
           text-align: center;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 16px;
+          padding: 8px 0 0;
         }
         .page-title {
-          font-size: 2.8rem;
+          font-size: 2.4rem;
           color: #4c1d95;
+          margin-bottom: 8px;
+          font-weight: 700;
+          letter-spacing: -0.01em;
         }
         .page-subtitle {
-          font-size: 1.05rem;
+          font-size: 1rem;
           color: hsl(var(--text-muted));
           max-width: 650px;
+          margin: 0 auto;
+        }
+        .transcripts-controls-section {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          padding: 12px 24px;
+          border-radius: 20px;
+          width: 100%;
         }
         .video-tabs {
           display: flex;
-          gap: 12px;
-          margin-top: 10px;
-          border-bottom: 1.5px solid rgba(0,0,0,0.05);
-          padding-bottom: 16px;
+          gap: 8px;
+          align-items: center;
         }
         .video-tab-btn {
           background: transparent;
-          border: none;
+          border: 1px solid transparent;
           color: hsl(var(--text-muted));
           font-family: var(--font-serif);
-          font-size: 0.95rem;
+          font-size: 0.85rem;
           font-weight: 600;
-          padding: 8px 16px;
+          padding: 6px 14px;
+          border-radius: 30px;
           cursor: pointer;
+          letter-spacing: 0.03em;
+          text-transform: uppercase;
           transition: var(--transition-fast);
-          position: relative;
         }
         .video-tab-btn:hover {
           color: #7c3aed;
+          background: rgba(168, 85, 247, 0.04);
         }
         .video-tab-btn.active {
           color: #7c3aed;
-        }
-        .video-tab-btn.active::after {
-          content: '';
-          position: absolute;
-          bottom: -17.5px;
-          left: 0;
-          right: 0;
-          height: 2px;
-          background: #7c3aed;
+          background: linear-gradient(135deg, rgba(251, 207, 232, 0.25) 0%, rgba(233, 213, 255, 0.25) 100%);
+          border-color: rgba(168, 85, 247, 0.2);
+          box-shadow: 0 4px 10px rgba(168, 85, 247, 0.05);
         }
         .player-transcript-grid {
           display: grid;

@@ -149,23 +149,30 @@ export default function QuoraQAPage() {
 
   return (
     <div className="quora-qa-page">
+      {/* Header */}
       <div className="qa-header">
         <h1 className="page-title">Community Q&A Board</h1>
         <p className="page-subtitle">
           Ask our certified practitioners questions about energy alignment, sound therapy, and crystals.
         </p>
+      </div>
 
-        {/* Search */}
+      {/* Control panel (Search inside glass panel) */}
+      <section className="qa-controls-section glass-panel">
         <div className="qa-search-wrapper">
+          <svg className="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
           <input
             type="text"
             placeholder="Search community questions..."
-            className="glass-input qa-search-input"
+            className="search-input"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-      </div>
+      </section>
 
       <div className="qa-grid">
         {/* Left: Ask Question & Questions List */}
@@ -292,35 +299,62 @@ export default function QuoraQAPage() {
         .quora-qa-page {
           display: flex;
           flex-direction: column;
-          gap: 40px;
+          gap: 36px;
           width: 100%;
         }
         .qa-header {
           text-align: center;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 16px;
+          padding: 8px 0 0;
         }
         .page-title {
-          font-size: 2.8rem;
+          font-size: 2.4rem;
           color: #4c1d95;
+          margin-bottom: 8px;
+          font-weight: 700;
+          letter-spacing: -0.01em;
         }
         .page-subtitle {
-          font-size: 1.05rem;
+          font-size: 1rem;
           color: hsl(var(--text-muted));
           max-width: 650px;
+          margin: 0 auto;
         }
-        .qa-search-wrapper {
-          width: 100%;
+        .qa-controls-section {
           display: flex;
           justify-content: center;
+          align-items: center;
+          padding: 12px 24px;
+          border-radius: 20px;
+          width: 100%;
         }
-        .qa-search-input {
-          max-width: 480px;
-          border-radius: 99px;
-          text-align: center;
-          border: 1px solid var(--gold-border);
+        .qa-search-wrapper {
+          display: flex;
+          align-items: center;
+          position: relative;
+          width: 320px;
+        }
+        .search-icon {
+          position: absolute;
+          left: 12px;
+          color: hsl(var(--text-muted));
+          pointer-events: none;
+        }
+        .qa-search-wrapper :global(.search-input) {
+          width: 100%;
+          padding: 8px 12px 8px 36px;
+          border-radius: 30px;
+          background: rgba(255, 255, 255, 0.6);
+          border: 1px solid var(--border-glass);
+          color: hsl(var(--text-cream));
+          font-family: var(--font-sans);
+          font-size: 0.85rem;
+          outline: none;
+          transition: var(--transition-smooth);
+        }
+        .qa-search-wrapper :global(.search-input):focus {
+          background: rgba(255, 255, 255, 0.95);
+          border-color: #7c3aed;
+          box-shadow: 0 0 10px rgba(124, 58, 237, 0.15);
         }
         .qa-grid {
           display: grid;

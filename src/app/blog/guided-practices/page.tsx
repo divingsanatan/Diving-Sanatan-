@@ -235,22 +235,27 @@ export default function GuidedPracticesPage() {
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 16px;
+          gap: 12px;
           z-index: 995;
           position: relative;
+          padding: 8px 0 0;
         }
         .page-title {
-          font-size: 2.8rem;
+          font-size: 2.4rem;
           color: #4c1d95;
+          margin-bottom: 8px;
+          font-weight: 700;
+          letter-spacing: -0.01em;
           transition: color 0.4s;
         }
         .focus-mode-active .page-title {
           color: #c084fc;
         }
         .page-subtitle {
-          font-size: 1.05rem;
+          font-size: 1rem;
           color: hsl(var(--text-muted));
           max-width: 650px;
+          margin: 0 auto;
         }
         .focus-mode-active .page-subtitle {
           color: #a78bfa;

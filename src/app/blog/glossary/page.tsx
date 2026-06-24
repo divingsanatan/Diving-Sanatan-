@@ -94,24 +94,30 @@ export default function GlossaryPage() {
 
   return (
     <div className="glossary-page">
+      {/* Header */}
       <div className="glossary-header">
         <h1 className="glossary-title">Metaphysical Glossary</h1>
         <p className="glossary-subtitle">
           An A-Z dictionary index of spiritual terms, alignments, and vibrational practices.
         </p>
+      </div>
 
-        {/* Search */}
+      {/* Control panel (Search & Alphabet combined) */}
+      <section className="glossary-controls-section glass-panel">
         <div className="glossary-search-wrapper">
+          <svg className="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
           <input
             type="text"
-            placeholder="Search your feeling or term..."
-            className="glass-input glossary-search-input"
+            placeholder="Search terms or definitions..."
+            className="search-input"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
 
-        {/* Alphabet Bar */}
         <div className="alphabet-bar">
           <button
             className={`letter-btn ${activeLetter === "all" ? "active" : ""}`}
@@ -133,7 +139,7 @@ export default function GlossaryPage() {
             );
           })}
         </div>
-      </div>
+      </section>
 
       <div className="terms-container">
         {filteredTerms.length === 0 ? (
@@ -228,45 +234,71 @@ export default function GlossaryPage() {
         .glossary-page {
           display: flex;
           flex-direction: column;
-          gap: 40px;
+          gap: 36px;
           width: 100%;
         }
         .glossary-header {
           text-align: center;
+          padding: 8px 0 0;
+        }
+        .glossary-title {
+          font-size: 2.4rem;
+          color: #4c1d95;
+          margin-bottom: 8px;
+          font-weight: 700;
+          letter-spacing: -0.01em;
+        }
+        .glossary-subtitle {
+          font-size: 1rem;
+          color: hsl(var(--text-muted));
+          max-width: 650px;
+          margin: 0 auto;
+        }
+        .glossary-controls-section {
           display: flex;
           flex-direction: column;
           align-items: center;
           gap: 16px;
-        }
-        .glossary-title {
-          font-size: 2.8rem;
-          color: #4c1d95;
-        }
-        .glossary-subtitle {
-          font-size: 1.05rem;
-          color: hsl(var(--text-muted));
-          max-width: 650px;
+          padding: 16px 24px;
+          border-radius: 20px;
+          width: 100%;
         }
         .glossary-search-wrapper {
-          width: 100%;
           display: flex;
-          justify-content: center;
+          align-items: center;
+          position: relative;
+          width: 320px;
         }
-        .glossary-search-input {
-          max-width: 480px;
-          border-radius: 99px;
-          text-align: center;
-          border: 1px solid var(--gold-border);
+        .search-icon {
+          position: absolute;
+          left: 12px;
+          color: hsl(var(--text-muted));
+          pointer-events: none;
+        }
+        .glossary-search-wrapper :global(.search-input) {
+          width: 100%;
+          padding: 8px 12px 8px 36px;
+          border-radius: 30px;
+          background: rgba(255, 255, 255, 0.6);
+          border: 1px solid var(--border-glass);
+          color: hsl(var(--text-cream));
+          font-family: var(--font-sans);
+          font-size: 0.85rem;
+          outline: none;
+          transition: var(--transition-smooth);
+        }
+        .glossary-search-wrapper :global(.search-input):focus {
+          background: rgba(255, 255, 255, 0.95);
+          border-color: #7c3aed;
+          box-shadow: 0 0 10px rgba(124, 58, 237, 0.15);
         }
         .alphabet-bar {
           display: flex;
           flex-wrap: wrap;
           justify-content: center;
           gap: 6px;
+          width: 100%;
           max-width: 720px;
-          margin-top: 10px;
-          border-bottom: 1.5px solid rgba(0, 0, 0, 0.05);
-          padding-bottom: 20px;
         }
         .letter-btn {
           width: 32px;

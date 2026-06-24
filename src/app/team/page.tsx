@@ -36,7 +36,7 @@ export default function TeamPage() {
         {/* Header Section */}
         <section className="team-header animate-fade-in">
           <span className="section-label">Divine Sanctuary Team</span>
-          <h1 className="team-title">Our Certified Healers & Guides</h1>
+          <h1 className="team-title gold-text-gradient">Our Certified Healers & Guides</h1>
           <p className="team-subtitle">
             Meet our master practitioners committed to your cosmic balance, energetic alignment, and mental tranquility.
           </p>
@@ -139,16 +139,13 @@ export default function TeamPage() {
           font-size: 0.85rem;
           text-transform: uppercase;
           letter-spacing: 0.2em;
-          color: #d4af37;
+          color: #7c3aed;
           font-weight: 700;
         }
 
         .team-title {
           font-family: var(--font-serif);
           font-size: 3rem;
-          background: linear-gradient(135deg, #ffffff 0%, #ecd3b6 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
           line-height: 1.15;
           margin: 4px 0 12px;
         }
@@ -182,14 +179,15 @@ export default function TeamPage() {
           flex-direction: column;
           align-items: center;
           text-align: center;
-          background: rgba(15, 12, 28, 0.45) !important;
-          border: 1px solid rgba(255, 255, 255, 0.05) !important;
+          background: rgba(255, 255, 255, 0.8) !important;
+          border: 1px solid var(--gold-border) !important;
+          box-shadow: 0 8px 30px rgba(168, 85, 247, 0.04) !important;
         }
 
         :global(.team-card:hover) {
           transform: translateY(-8px);
-          box-shadow: 0 20px 40px rgba(124, 58, 237, 0.15) !important;
-          border-color: rgba(212, 175, 55, 0.2) !important;
+          box-shadow: 0 20px 40px rgba(124, 58, 237, 0.1) !important;
+          border-color: rgba(168, 85, 247, 0.4) !important;
         }
 
         .card-top-accent {
@@ -215,7 +213,7 @@ export default function TeamPage() {
           object-fit: cover;
           position: relative;
           z-index: 2;
-          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+          box-shadow: 0 8px 24px rgba(168, 85, 247, 0.1);
         }
 
         .prac-initial-avatar {
@@ -223,17 +221,17 @@ export default function TeamPage() {
           height: 120px;
           border-radius: 50%;
           background: linear-gradient(135deg, rgba(124, 58, 237, 0.15) 0%, rgba(212, 175, 55, 0.15) 100%);
-          border: 2px solid rgba(212, 175, 55, 0.4);
+          border: 2px solid rgba(168, 85, 247, 0.4);
           display: flex;
           align-items: center;
           justify-content: center;
           font-family: var(--font-serif);
           font-weight: 700;
-          color: #ecd3b6;
+          color: #4c1d95;
           font-size: 2rem;
           position: relative;
           z-index: 2;
-          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+          box-shadow: 0 8px 24px rgba(168, 85, 247, 0.1);
         }
 
         .avatar-ring {
@@ -243,7 +241,7 @@ export default function TeamPage() {
           right: -6px;
           bottom: -6px;
           border-radius: 50%;
-          border: 1px dashed rgba(212, 175, 55, 0.3);
+          border: 1px dashed rgba(124, 58, 237, 0.3);
           z-index: 1;
           animation: spin-clockwise 40s linear infinite;
         }
@@ -259,13 +257,13 @@ export default function TeamPage() {
         .prac-name {
           font-family: var(--font-serif);
           font-size: 1.5rem;
-          color: #ffffff;
+          color: #4c1d95;
           margin-bottom: 6px;
         }
 
         .prac-specialty {
           font-size: 0.85rem;
-          color: #d4af37;
+          color: #0d9488;
           font-weight: 600;
           text-transform: uppercase;
           letter-spacing: 0.1em;
@@ -300,9 +298,9 @@ export default function TeamPage() {
 
         .expertise-badge {
           font-size: 0.72rem;
-          background: rgba(255, 255, 255, 0.03);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          color: #e2e8f0;
+          background: rgba(168, 85, 247, 0.05);
+          border: 1px solid rgba(168, 85, 247, 0.15);
+          color: #6d28d9;
           padding: 4px 10px;
           border-radius: 6px;
           font-weight: 500;
@@ -311,9 +309,9 @@ export default function TeamPage() {
 
         .expertise-badge-more {
           font-size: 0.72rem;
-          background: rgba(124, 58, 237, 0.15);
-          border: 1px solid rgba(124, 58, 237, 0.3);
-          color: #ecd3b6;
+          background: rgba(124, 58, 237, 0.1);
+          border: 1px solid rgba(124, 58, 237, 0.2);
+          color: #4c1d95;
           padding: 4px 8px;
           border-radius: 6px;
           font-weight: 600;
@@ -322,7 +320,7 @@ export default function TeamPage() {
         .prac-bio-preview {
           font-size: 0.9rem;
           line-height: 1.6;
-          color: #cbd5e1;
+          color: #475569;
           margin-bottom: 28px;
           height: 80px;
           overflow: hidden;
@@ -334,12 +332,12 @@ export default function TeamPage() {
         .view-profile-btn {
           font-family: var(--font-serif);
           font-size: 0.8rem;
-          color: #ecd3b6;
+          color: #7c3aed;
           text-transform: uppercase;
           letter-spacing: 0.1em;
           text-decoration: none;
           font-weight: 700;
-          border-bottom: 1.5px solid #d4af37;
+          border-bottom: 1.5px solid #7c3aed;
           padding-bottom: 4px;
           transition: border-color 0.2s, color 0.2s, padding-left 0.2s;
           display: flex;
@@ -352,8 +350,8 @@ export default function TeamPage() {
         }
 
         .view-profile-btn:hover {
-          color: #ffffff;
-          border-color: #ffffff;
+          color: #d4af37;
+          border-color: #d4af37;
         }
 
         .view-profile-btn:hover span {
@@ -374,8 +372,8 @@ export default function TeamPage() {
         .spinner {
           width: 50px;
           height: 50px;
-          border: 3px solid rgba(212, 175, 55, 0.1);
-          border-top-color: #d4af37;
+          border: 3px solid rgba(124, 58, 237, 0.1);
+          border-top-color: #7c3aed;
           border-radius: 50%;
           animation: spin 1s infinite linear;
         }

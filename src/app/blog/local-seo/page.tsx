@@ -109,7 +109,8 @@ export default function LocalSEOPage() {
 
   return (
     <div className="local-seo-page">
-      <div className="location-selector-bar glass-panel">
+      {/* Control panel (Region Selector tabs inside glass panel) */}
+      <section className="location-selector-bar glass-panel">
         <label className="selector-label">Select Your Region:</label>
         <div className="city-buttons">
           {Object.keys(CITY_DATABASE).map((cityName) => (
@@ -122,7 +123,7 @@ export default function LocalSEOPage() {
             </button>
           ))}
         </div>
-      </div>
+      </section>
 
       <div className="local-main-grid">
         {/* Left: SEO Content & Testimonials */}
@@ -233,38 +234,41 @@ export default function LocalSEOPage() {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 16px 24px;
-          border-radius: 16px;
+          padding: 12px 24px;
+          border-radius: 20px;
         }
         .selector-label {
           font-weight: 700;
           font-family: var(--font-serif);
-          font-size: 1.1rem;
+          font-size: 0.95rem;
           color: #4c1d95;
+          letter-spacing: 0.02em;
         }
         .city-buttons {
           display: flex;
-          gap: 10px;
+          gap: 8px;
+          align-items: center;
         }
         .city-select-btn {
           background: transparent;
-          border: 1px solid rgba(0, 0, 0, 0.05);
-          padding: 8px 16px;
-          border-radius: 8px;
+          border: 1px solid transparent;
+          padding: 6px 14px;
+          border-radius: 30px;
           cursor: pointer;
           font-weight: 600;
           color: hsl(var(--text-muted));
           transition: var(--transition-fast);
+          font-size: 0.85rem;
         }
         .city-select-btn:hover {
-          border-color: rgba(168, 85, 247, 0.3);
           color: #7c3aed;
+          background: rgba(168, 85, 247, 0.04);
         }
         .city-select-btn.active {
-          background: #7c3aed;
-          color: #ffffff;
-          border-color: #7c3aed;
-          box-shadow: 0 4px 10px rgba(124, 58, 237, 0.2);
+          color: #7c3aed;
+          background: linear-gradient(135deg, rgba(251, 207, 232, 0.25) 0%, rgba(233, 213, 255, 0.25) 100%);
+          border-color: rgba(168, 85, 247, 0.2);
+          box-shadow: 0 4px 10px rgba(168, 85, 247, 0.05);
         }
         .local-main-grid {
           display: grid;
@@ -283,12 +287,14 @@ export default function LocalSEOPage() {
           gap: 12px;
         }
         .location-title {
-          font-size: 2.5rem;
+          font-size: 2.2rem;
           color: #4c1d95;
           line-height: 1.25;
+          font-weight: 700;
+          letter-spacing: -0.01em;
         }
         .location-desc {
-          font-size: 1.05rem;
+          font-size: 1rem;
           line-height: 1.7;
           color: hsl(var(--text-muted));
         }

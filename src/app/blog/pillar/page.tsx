@@ -313,8 +313,11 @@ export default function PillarPage() {
           gap: 12px;
         }
         .intro-title {
-          font-size: 2.8rem;
+          font-size: 2.4rem;
           color: #4c1d95;
+          margin-bottom: 8px;
+          font-weight: 700;
+          letter-spacing: -0.01em;
         }
         .intro-meta {
           font-size: 0.82rem;

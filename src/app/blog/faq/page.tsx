@@ -83,179 +83,184 @@ export default function FAQPage() {
 
   return (
     <div className="faq-page-container">
+      {/* Header */}
       <div className="faq-header">
         <h1 className="faq-page-title">Frequently Asked Questions</h1>
-        <p className="faq-page-subtitle">
-          Find instant answers to common questions about aura scanning, chakra balancing, and crystal gems.
-        </p>
+      </div>
 
-        {/* Search */}
+      {/* Control panel (Tabs & Search combined) */}
+      <section className="faq-controls-section glass-panel">
+        <div className="faq-tabs">
+          {categories.map((cat) => (
+            <button
+              key={cat}
+              className={`faq-tab-btn ${selectedCategory === cat ? "active" : ""}`}
+              onClick={() => setSelectedCategory(cat)}
+            >
+              {cat === "all" ? "All Questions" : cat}
+            </button>
+          ))}
+        </div>
+
         <div className="faq-search-wrapper">
+          <svg className="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
           <input
             type="text"
             placeholder="Type your question..."
-            className="glass-input faq-search-input"
+            className="search-input"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-      </div>
+      </section>
 
-      <div className="faq-content-grid">
-        {/* Left: Category Navigation */}
-        <div className="faq-categories-card glass-panel">
-          <h3 className="categories-card-title">Categories</h3>
-          <div className="categories-list">
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                className={`category-btn ${selectedCategory === cat ? "active" : ""}`}
-                onClick={() => setSelectedCategory(cat)}
-              >
-                <span className="bullet">✦</span>
-                <span className="cat-name">{cat === "all" ? "All Questions" : cat}</span>
-              </button>
-            ))}
+      {/* Accordions List */}
+      <div className="faq-accordions-list">
+        {filteredFAQs.length === 0 ? (
+          <div className="faq-empty glass-card">
+            <p>No questions found matching your criteria. Try refining your search query.</p>
           </div>
-        </div>
-
-        {/* Right: Accordions List */}
-        <div className="faq-accordions-list">
-          {filteredFAQs.length === 0 ? (
-            <div className="faq-empty glass-card">
-              <p>No questions found matching your criteria. Try refining your search query.</p>
-            </div>
-          ) : (
-            filteredFAQs.map((faq) => {
-              const isOpen = !!openAccordions[faq.id];
-              return (
-                <Card
-                  key={faq.id}
-                  variant="glass"
-                  className={`faq-accordion-card ${isOpen ? "accordion-open" : ""}`}
+        ) : (
+          filteredFAQs.map((faq) => {
+            const isOpen = !!openAccordions[faq.id];
+            return (
+              <Card
+                key={faq.id}
+                variant="glass"
+                className={`faq-accordion-card ${isOpen ? "accordion-open" : ""}`}
+              >
+                <button
+                  className="faq-trigger"
+                  onClick={() => toggleAccordion(faq.id)}
+                  aria-expanded={isOpen}
                 >
-                  <button
-                    className="faq-trigger"
-                    onClick={() => toggleAccordion(faq.id)}
-                    aria-expanded={isOpen}
-                  >
-                    <div className="faq-trigger-left">
-                      <span className="faq-category-badge">{faq.category}</span>
-                      <span className="faq-question-text">{faq.question}</span>
-                    </div>
-                    <span className={`faq-arrow-icon ${isOpen ? "rotate" : ""}`}>
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="6 9 12 15 18 9" />
-                      </svg>
-                    </span>
-                  </button>
+                  <div className="faq-trigger-left">
+                    <span className="faq-category-badge">{faq.category}</span>
+                    <span className="faq-question-text">{faq.question}</span>
+                  </div>
+                  <span className={`faq-arrow-icon ${isOpen ? "rotate" : ""}`}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="6 9 12 15 18 9" />
+                    </svg>
+                  </span>
+                </button>
 
-                  <div className={`faq-content-wrapper ${isOpen ? "expanded" : "collapsed"}`}>
-                    <div className="faq-content-inner">
-                      <p className="faq-answer-text">{faq.answer}</p>
-                      
-                      <div className="faq-item-meta">
-                        {faq.verified && (
-                          <div className="verified-badge">
-                            <span className="check-icon">✓</span>
-                            <span>Expert Verified Answer</span>
-                          </div>
-                        )}
-                        <Button variant="gold-outline" size="sm" onClick={() => alert("Helpful count updated!")}>
-                          Helpful (0)
-                        </Button>
-                      </div>
+                <div className={`faq-content-wrapper ${isOpen ? "expanded" : "collapsed"}`}>
+                  <div className="faq-content-inner">
+                    <p className="faq-answer-text">{faq.answer}</p>
+
+                    <div className="faq-item-meta">
+                      {faq.verified && (
+                        <div className="verified-badge">
+                          <span className="check-icon">✓</span>
+                          <span>Expert Verified Answer</span>
+                        </div>
+                      )}
+                      <Button variant="gold-outline" size="sm" onClick={() => alert("Helpful count updated!")}>
+                        Helpful (0)
+                      </Button>
                     </div>
                   </div>
-                </Card>
-              );
-            })
-          )}
-        </div>
+                </div>
+              </Card>
+            );
+          })
+        )}
       </div>
 
       <style jsx>{`
         .faq-page-container {
           display: flex;
           flex-direction: column;
-          gap: 40px;
+          gap: 36px;
           width: 100%;
         }
         .faq-header {
           text-align: center;
+          padding: 8px 0 0;
         }
         .faq-page-title {
-          font-size: 2.8rem;
+          font-size: 2.4rem;
           color: #4c1d95;
-          margin-bottom: 12px;
+          margin-bottom: 8px;
+          font-weight: 700;
+          letter-spacing: -0.01em;
         }
         .faq-page-subtitle {
-          font-size: 1.05rem;
+          font-size: 1rem;
           color: hsl(var(--text-muted));
           max-width: 650px;
-          margin: 0 auto 32px;
+          margin: 0 auto;
+        }
+        .faq-controls-section {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 24px;
+          padding: 12px 24px;
+          border-radius: 20px;
+          width: 100%;
+        }
+        .faq-tabs {
+          display: flex;
+          gap: 8px;
+          align-items: center;
+        }
+        .faq-tab-btn {
+          background: transparent;
+          border: 1px solid transparent;
+          color: hsl(var(--text-muted));
+          font-family: var(--font-serif);
+          font-size: 0.85rem;
+          font-weight: 600;
+          padding: 6px 14px;
+          border-radius: 30px;
+          cursor: pointer;
+          letter-spacing: 0.03em;
+          text-transform: uppercase;
+          transition: var(--transition-fast);
+        }
+        .faq-tab-btn:hover {
+          color: #7c3aed;
+          background: rgba(168, 85, 247, 0.04);
+        }
+        .faq-tab-btn.active {
+          color: #7c3aed;
+          background: linear-gradient(135deg, rgba(251, 207, 232, 0.25) 0%, rgba(233, 213, 255, 0.25) 100%);
+          border-color: rgba(168, 85, 247, 0.2);
+          box-shadow: 0 4px 10px rgba(168, 85, 247, 0.05);
         }
         .faq-search-wrapper {
           display: flex;
-          justify-content: center;
-        }
-        .faq-search-input {
-          max-width: 480px;
-          border-radius: 99px;
-          text-align: center;
-          border: 1px solid var(--gold-border);
-        }
-        .faq-content-grid {
-          display: grid;
-          grid-template-columns: 280px 1fr;
-          gap: 32px;
-          align-items: flex-start;
-        }
-        .faq-categories-card {
-          padding: 24px;
-          border-radius: 20px;
-        }
-        .categories-card-title {
-          font-size: 1.25rem;
-          color: #4c1d95;
-          margin-bottom: 18px;
-          border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-          padding-bottom: 8px;
-        }
-        .categories-list {
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-        }
-        .category-btn {
-          display: flex;
           align-items: center;
-          gap: 10px;
-          background: transparent;
-          border: none;
-          text-align: left;
+          position: relative;
+          width: 260px;
+        }
+        .search-icon {
+          position: absolute;
+          left: 12px;
           color: hsl(var(--text-muted));
-          font-size: 0.95rem;
-          cursor: pointer;
-          transition: var(--transition-fast);
-          padding: 6px 4px;
-          border-radius: 6px;
+          pointer-events: none;
         }
-        .category-btn:hover {
-          color: #7c3aed;
-          padding-left: 8px;
+        .faq-search-wrapper :global(.search-input) {
+          width: 100%;
+          padding: 8px 12px 8px 36px;
+          border-radius: 30px;
+          background: rgba(255, 255, 255, 0.6);
+          border: 1px solid var(--border-glass);
+          color: hsl(var(--text-cream));
+          font-family: var(--font-sans);
+          font-size: 0.85rem;
+          outline: none;
+          transition: var(--transition-smooth);
         }
-        .category-btn.active {
-          color: #7c3aed;
-          font-weight: 600;
-          padding-left: 8px;
-        }
-        .bullet {
-          color: rgba(168, 85, 247, 0.4);
-          font-size: 0.8rem;
-        }
-        .category-btn.active .bullet {
-          color: #7c3aed;
+        .faq-search-wrapper :global(.search-input):focus {
+          background: rgba(255, 255, 255, 0.95);
+          border-color: #7c3aed;
+          box-shadow: 0 0 10px rgba(124, 58, 237, 0.15);
         }
         .faq-accordions-list {
           display: flex;
@@ -365,9 +370,25 @@ export default function FAQPage() {
           padding: 40px !important;
           color: hsl(var(--text-muted));
         }
-        @media (max-width: 860px) {
-          .faq-content-grid {
-            grid-template-columns: 1fr;
+        @media (max-width: 968px) {
+          .faq-controls-section {
+            flex-direction: column;
+            gap: 16px;
+            align-items: stretch;
+            padding: 16px;
+          }
+          .faq-tabs {
+            justify-content: center;
+            flex-wrap: wrap;
+          }
+          .faq-search-wrapper {
+            width: 100%;
+          }
+        }
+        @media (max-width: 640px) {
+          .faq-tab-btn {
+            font-size: 0.78rem;
+            padding: 5px 10px;
           }
         }
       `}</style>

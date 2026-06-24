@@ -100,5 +100,7 @@ export interface Blog {
   date: string;
   readTime: string;
   image: string;
+  images?: string[];
+  videos?: string[];
   createdAt?: string;
 }

@@ -61,6 +61,7 @@ export default function ComparisonPage() {
 
   return (
     <div className="comparison-page">
+      {/* Header */}
       <div className="comp-header">
         <h1 className="page-title">Healing Modal Comparison</h1>
         <p className="page-subtitle">
@@ -167,19 +168,22 @@ export default function ComparisonPage() {
         .comparison-page {
           display: flex;
           flex-direction: column;
-          gap: 40px;
+          gap: 36px;
           width: 100%;
         }
         .comp-header {
           text-align: center;
+          padding: 8px 0 0;
         }
         .page-title {
-          font-size: 2.8rem;
+          font-size: 2.4rem;
           color: #4c1d95;
-          margin-bottom: 12px;
+          margin-bottom: 8px;
+          font-weight: 700;
+          letter-spacing: -0.01em;
         }
         .page-subtitle {
-          font-size: 1.05rem;
+          font-size: 1rem;
           color: hsl(var(--text-muted));
           max-width: 650px;
           margin: 0 auto;

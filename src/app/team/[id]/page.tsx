@@ -56,6 +56,7 @@ export default function HealerDetailPage() {
 
 
   const [healer, setHealer] = useState<Practitioner | null>(null);
+  const [isBioExpanded, setIsBioExpanded] = useState(false);
   console.log("HEALER DATA IN CLIENT:", healer);
   const [services, setServices] = useState<Service[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -66,13 +67,13 @@ export default function HealerDetailPage() {
   // Helper to resolve YouTube embed URL or direct video file URL
   const getEmbedUrl = (url: string) => {
     if (!url) return null;
-    
+
     // Check if it is a direct video file
     const isVideoFile = url.match(/\.(mp4|webm|ogg|mov|mkv)($|\?)/i) || url.includes("/storage/v1/object/public/");
     if (isVideoFile) {
       return null;
     }
-    
+
     // YouTube Shorts
     if (url.includes("youtube.com/shorts/")) {
       const parts = url.split("youtube.com/shorts/");
@@ -81,19 +82,19 @@ export default function HealerDetailPage() {
         return `https://www.youtube.com/embed/${id}?autoplay=1`;
       }
     }
-    
+
     // Regular YouTube
     const ytRegExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
     const match = url.match(ytRegExp);
-    
+
     if (match && match[2].length === 11) {
       return `https://www.youtube.com/embed/${match[2]}?autoplay=1`;
     }
-    
+
     if (url.includes("embed")) {
       return url;
     }
-    
+
     return null;
   };
 
@@ -165,7 +166,7 @@ export default function HealerDetailPage() {
 
         if (sJson.success) {
           // Filter services led by this healer
-          const filteredServices = sJson.data.filter((s: Service) => 
+          const filteredServices = sJson.data.filter((s: Service) =>
             s.practitioner.toLowerCase() === healerData.name.toLowerCase()
           );
           setServices(filteredServices);
@@ -173,7 +174,7 @@ export default function HealerDetailPage() {
 
         if (rJson.success) {
           // Filter reviews mentioning this healer
-          const filteredReviews = rJson.data.filter((r: Review) => 
+          const filteredReviews = rJson.data.filter((r: Review) =>
             r.practitionerId === healerData.id || r.practitionerName.toLowerCase() === healerData.name.toLowerCase()
           );
           setReviews(filteredReviews);
@@ -203,6 +204,35 @@ export default function HealerDetailPage() {
 
   const selectSuggestion = (val: string) => {
     window.location.href = `/?search=${encodeURIComponent(val)}`;
+  };
+
+  // Helper to truncate bio text safely without breaking tag tokens starting with '/'
+  const getTruncatedBio = (text: string, limit: number = 380) => {
+    if (!text || text.length <= limit) return { text, isLong: false };
+
+    let cutIndex = limit;
+    // Look back for a space or punctuation to cut cleanly
+    for (let i = limit; i > limit - 45; i--) {
+      if (text[i] === " " || text[i] === "." || text[i] === ",") {
+        // Ensure we are not cutting inside a tag (e.g. /Reiki-Master)
+        const sub = text.substring(0, i);
+        const lastSlash = sub.lastIndexOf("/");
+        const lastSpace = sub.lastIndexOf(" ");
+        if (lastSlash > lastSpace) {
+          continue; // skip if we cut inside a tag
+        }
+        cutIndex = i;
+        break;
+      }
+    }
+    let truncated = text.substring(0, cutIndex).trim();
+    if (truncated.endsWith(".")) {
+      truncated = truncated.slice(0, -1);
+    }
+    return {
+      text: truncated + "...",
+      isLong: true
+    };
   };
 
   // Helper to parse bio text and convert tokens starting with / into interactive tags
@@ -294,8 +324,8 @@ export default function HealerDetailPage() {
         <main className="error-state-wrapper">
           <h2>⚠️ Registry Search Terminated</h2>
           <p>{error || "The requested practitioner profile was not found."}</p>
-          <button 
-            onClick={() => router.push("/team")} 
+          <button
+            onClick={() => router.push("/team")}
             style={{
               marginTop: "20px",
               backgroundColor: "#4c1d95",
@@ -337,8 +367,8 @@ export default function HealerDetailPage() {
     );
   }
 
-  const certificationsList = healer.certifications && healer.certifications.length > 0 
-    ? healer.certifications 
+  const certificationsList = healer.certifications && healer.certifications.length > 0
+    ? healer.certifications
     : ["/images/cert_2.png", "/images/cert_1.png"];
 
   return (
@@ -346,38 +376,29 @@ export default function HealerDetailPage() {
       <Header />
 
       <main className="about-layout-container">
-        
-        {/* Breadcrumbs */}
-        <div className="breadcrumbs-row">
-          <Link href="/">Home</Link>
-          <span className="breadcrumb-divider">/</span>
-          <Link href="/team">Our Healers</Link>
-          <span className="breadcrumb-divider">/</span>
-          <span className="breadcrumb-active">{healer.name}</span>
-        </div>
 
-        <div className="about-grid" style={{ marginTop: "24px" }}>
-          
+        <div className="about-grid">
+
           {/* ==================== LEFT COLUMN ==================== */}
           <div className="left-column">
-            
+
             {/* Intro Grid: Card & Bio side-by-side */}
             <div className="intro-grid">
-              
+
               {/* Featured Healer Card */}
               <div className="anara-card glass-panel">
                 <div className="anara-photo-wrapper">
-                  <img 
-                    src={getPractitionerImage(healer.image)} 
-                    alt={healer.name} 
-                    className="anara-photo" 
+                  <img
+                    src={getPractitionerImage(healer.image)}
+                    alt={healer.name}
+                    className="anara-photo"
                   />
                 </div>
-                
+
                 <div className="anara-info">
                   <h2 className="anara-name">{healer.name}</h2>
                   <p className="anara-title">{healer.specialty}</p>
-                  
+
                   <div className="anara-meta">
                     <span className="meta-exp">Practicing Since 2010</span>
                   </div>
@@ -386,22 +407,22 @@ export default function HealerDetailPage() {
                     <div className="healer-socials">
                       {healer.social_links.facebook && (
                         <a href={healer.social_links.facebook} target="_blank" rel="noopener noreferrer" className="social-icon" title="Facebook">
-                          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" /></svg>
                         </a>
                       )}
                       {healer.social_links.instagram && (
                         <a href={healer.social_links.instagram} target="_blank" rel="noopener noreferrer" className="social-icon" title="Instagram">
-                          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+                          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" /></svg>
                         </a>
                       )}
                       {healer.social_links.linkedin && (
                         <a href={healer.social_links.linkedin} target="_blank" rel="noopener noreferrer" className="social-icon" title="LinkedIn">
-                          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.779-1.75-1.75s.784-1.75 1.75-1.75 1.75.779 1.75 1.75-.784 1.75-1.75 1.75zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+                          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.779-1.75-1.75s.784-1.75 1.75-1.75 1.75.779 1.75 1.75-.784 1.75-1.75 1.75zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" /></svg>
                         </a>
                       )}
                       {healer.social_links.youtube && (
                         <a href={healer.social_links.youtube} target="_blank" rel="noopener noreferrer" className="social-icon" title="YouTube">
-                          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" /></svg>
                         </a>
                       )}
                     </div>
@@ -424,8 +445,8 @@ export default function HealerDetailPage() {
                   </div>
 
                   <div className="anara-actions">
-                    <Link 
-                      href={`/booking?practitioner=${healer.id}`} 
+                    <Link
+                      href={`/booking?practitioner=${healer.id}`}
                       className="btn-book"
                       style={{
                         display: "block",
@@ -446,8 +467,8 @@ export default function HealerDetailPage() {
                     >
                       BOOK A SESSION
                     </Link>
-                    <Link 
-                      href="/?search=resonance" 
+                    <Link
+                      href="/?search=resonance"
                       className="btn-quiz"
                       style={{
                         display: "block",
@@ -468,8 +489,8 @@ export default function HealerDetailPage() {
                     >
                       TAKE SOUL QUIZ
                     </Link>
-                    <Link 
-                      href="/team" 
+                    <Link
+                      href="/team"
                       style={{
                         display: "block",
                         width: "100%",
@@ -491,11 +512,31 @@ export default function HealerDetailPage() {
               {/* Bio & Video Section */}
               <div className="bio-video-section">
                 <h1 className="main-title gold-text-gradient">A Journey into Wholeness</h1>
-                
+
                 <div className="bio-paragraphs">
-                  {healer.bio.split("\n\n").map((para, idx) => (
-                    <p key={idx}>{renderBioText(para)}</p>
-                  ))}
+                  {(() => {
+                    const { text: truncatedBioText, isLong: isBioLong } = getTruncatedBio(healer.bio);
+                    const bioToRender = (!isBioExpanded && isBioLong) ? truncatedBioText : healer.bio;
+                    const paragraphs = bioToRender.split("\n\n");
+
+                    return paragraphs.map((para, idx) => {
+                      const isLast = idx === paragraphs.length - 1;
+                      return (
+                        <p key={idx}>
+                          {renderBioText(para)}
+                          {isLast && isBioLong && (
+                            <button
+                              onClick={() => setIsBioExpanded(!isBioExpanded)}
+                              className="toggle-bio-btn"
+                              aria-expanded={isBioExpanded}
+                            >
+                              {isBioExpanded ? "..less" : "..more"}
+                            </button>
+                          )}
+                        </p>
+                      );
+                    });
+                  })()}
                 </div>
 
                 {/* Video Playback Slot */}
@@ -504,20 +545,20 @@ export default function HealerDetailPage() {
                   return (
                     <div className="video-slot glass-panel" style={{ cursor: "default" }}>
                       {embedUrl ? (
-                        <iframe 
-                          width="100%" 
-                          height="100%" 
-                          src={embedUrl.replace("?autoplay=1", "")} 
-                          title="Meet Healer - Video Introduction" 
-                          frameBorder="0" 
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                        <iframe
+                          width="100%"
+                          height="100%"
+                          src={embedUrl.replace("?autoplay=1", "")}
+                          title="Meet Healer - Video Introduction"
+                          frameBorder="0"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                           allowFullScreen
                           style={{ border: "none", width: "100%", height: "100%" }}
                         ></iframe>
                       ) : (
-                        <video 
-                          src={healer.video_url} 
-                          controls 
+                        <video
+                          src={healer.video_url}
+                          controls
                           style={{ width: "100%", height: "100%", objectFit: "contain", outline: "none", background: "black" }}
                         />
                       )}
@@ -589,11 +630,11 @@ export default function HealerDetailPage() {
 
           {/* ==================== RIGHT COLUMN (SIDEBAR) ==================== */}
           <div className="right-column">
-            
+
             {/* Insights & Guidance Section: Testimonials */}
             <div className="sidebar-section glass-panel">
               <h2 className="sidebar-heading">CLIENT TESTIMONIALS</h2>
-              
+
               <div className="insights-list">
                 {reviews.length > 0 ? (
                   reviews.slice(0, 4).map((rev) => (
@@ -646,15 +687,15 @@ export default function HealerDetailPage() {
             {/* Certification Showcase */}
             <div className="sidebar-section glass-panel">
               <h2 className="sidebar-heading">CREDENTIALS SHOWCASE</h2>
-              
+
               <div className="insights-list">
                 {certificationsList.map((certUrl, idx) => {
                   const certInfo = getCertInfo(certUrl, idx);
                   return (
-                    <div 
-                      key={idx} 
-                      className="insight-card" 
-                      style={{ cursor: "pointer" }} 
+                    <div
+                      key={idx}
+                      className="insight-card"
+                      style={{ cursor: "pointer" }}
                       onClick={() => setActiveCertUrl(certUrl)}
                     >
                       <div className="insight-img-wrapper" style={{ border: "1px solid rgba(168, 85, 247, 0.1)" }}>
@@ -698,21 +739,21 @@ export default function HealerDetailPage() {
               <button className="close-modal-btn" onClick={() => setIsVideoOpen(false)}>×</button>
               <div className="iframe-wrapper" style={{ display: "flex", justifyContent: "center", alignItems: "center", width: "100%", height: "100%", minHeight: "350px", background: "black" }}>
                 {embedUrl ? (
-                  <iframe 
-                    width="100%" 
-                    height="100%" 
-                    src={embedUrl} 
-                    title="Meet Healer - Video Introduction" 
-                    frameBorder="0" 
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                  <iframe
+                    width="100%"
+                    height="100%"
+                    src={embedUrl}
+                    title="Meet Healer - Video Introduction"
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
                     style={{ border: "none" }}
                   ></iframe>
                 ) : (
-                  <video 
-                    src={healer.video_url} 
-                    controls 
-                    autoPlay 
+                  <video
+                    src={healer.video_url}
+                    controls
+                    autoPlay
                     style={{ width: "100%", maxHeight: "500px", borderRadius: "14px", objectFit: "contain", outline: "none" }}
                   />
                 )}
@@ -830,7 +871,7 @@ export default function HealerDetailPage() {
           display: grid;
           grid-template-columns: 1fr 1.3fr;
           gap: 32px;
-          align-items: stretch;
+          align-items: start;
         }
 
         .intro-grid > div {
@@ -930,7 +971,7 @@ export default function HealerDetailPage() {
         .bio-video-section {
           display: flex;
           flex-direction: column;
-          gap: 24px;
+          gap: 12px;
           height: 100%;
         }
 
@@ -969,6 +1010,24 @@ export default function HealerDetailPage() {
           background: rgba(124, 58, 237, 0.03);
         }
 
+        .toggle-bio-btn {
+          background: none;
+          border: none;
+          color: #7c3aed;
+          font-weight: 700;
+          cursor: pointer;
+          padding: 0;
+          margin-left: 6px;
+          font-size: 0.95rem;
+          text-decoration: underline;
+          display: inline;
+          transition: var(--transition-fast);
+        }
+
+        .toggle-bio-btn:hover {
+          color: #d4af37;
+        }
+
         /* Video slot styling */
         .video-slot {
           position: relative;
@@ -980,7 +1039,7 @@ export default function HealerDetailPage() {
           border: 1px solid var(--gold-border);
           box-shadow: 0 8px 30px rgba(0,0,0,0.03);
           transition: var(--transition-smooth);
-          margin-top: auto;
+          margin-top: 4px;
         }
 
         .video-slot:hover {
@@ -1554,16 +1613,16 @@ export default function HealerDetailPage() {
           .right-column {
             gap: 32px;
           }
+
+          .intro-grid {
+            grid-template-columns: 1fr;
+            gap: 32px;
+          }
         }
 
         @media (max-width: 768px) {
           .about-layout-container {
             padding: 30px 16px 120px;
-          }
-
-          .intro-grid {
-            grid-template-columns: 1fr;
-            gap: 32px;
           }
 
           .main-title {
