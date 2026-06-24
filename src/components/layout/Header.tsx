@@ -7,9 +7,10 @@ import { Logo } from "./Logo";
 export const Header: React.FC = () => {
   const [cartCount, setCartCount] = useState(0);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
-    // Keep check on local selections and admin auth state
+    // Keep check on local selections, admin auth, and user session states
     const checkState = () => {
       try {
         const item = window.localStorage.getItem("divingsanatan_selections");
@@ -28,6 +29,17 @@ export const Header: React.FC = () => {
         setIsAdmin(auth === "true");
       } catch (err) {
         setIsAdmin(false);
+      }
+
+      try {
+        const session = window.localStorage.getItem("divingsanatan_user_session");
+        if (session) {
+          setUser(JSON.parse(session));
+        } else {
+          setUser(null);
+        }
+      } catch (err) {
+        setUser(null);
       }
     };
 
@@ -63,13 +75,19 @@ export const Header: React.FC = () => {
                 <span className="cart-text">Cart ({cartCount})</span>
               </Link>
             )}
-            {isAdmin ? (
+            {isAdmin && (
               <Link href="/admin" className="admin-cta-btn">
-                Dashboard
+                Admin Panel
+              </Link>
+            )}
+            {user ? (
+              <Link href="/profile" className="user-profile-btn">
+                <span className="user-avatar-icon">👤</span>
+                <span className="user-name-text">{user.name}</span>
               </Link>
             ) : (
-              <Link href="/admin/login" className="admin-cta-btn">
-                Login
+              <Link href="/profile" className="user-profile-btn login">
+                Sign In
               </Link>
             )}
           </div>
@@ -154,7 +172,7 @@ export const Header: React.FC = () => {
         .nav-actions {
           display: flex;
           align-items: center;
-          gap: 20px;
+          gap: 16px;
         }
         .cart-badge-container {
           display: flex;
@@ -179,14 +197,14 @@ export const Header: React.FC = () => {
         }
         .admin-cta-btn {
           font-family: var(--font-serif);
-          font-size: 0.75rem;
+          font-size: 0.72rem;
           font-weight: 700;
           letter-spacing: 0.08em;
           text-transform: uppercase;
           background: var(--admin-cta-bg);
           border: 1.5px solid var(--admin-cta-border);
           color: var(--admin-cta-text);
-          padding: 10px 20px;
+          padding: 8px 16px;
           border-radius: 10px;
           text-decoration: none !important;
           transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -198,6 +216,45 @@ export const Header: React.FC = () => {
           box-shadow: 0 6px 16px var(--admin-cta-hover-shadow);
           transform: translateY(-1px);
         }
+        .user-profile-btn {
+          font-family: var(--font-sans);
+          font-size: 0.8rem;
+          font-weight: 600;
+          color: #6d28d9;
+          background: rgba(168, 85, 247, 0.06);
+          border: 1.5px solid rgba(168, 85, 247, 0.25);
+          padding: 8px 16px;
+          border-radius: 10px;
+          text-decoration: none !important;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .user-profile-btn:hover {
+          background: rgba(168, 85, 247, 0.12);
+          border-color: rgba(168, 85, 247, 0.5);
+          transform: translateY(-1px);
+        }
+        .user-profile-btn.login {
+          color: #475569;
+          background: rgba(0, 0, 0, 0.03);
+          border-color: rgba(0, 0, 0, 0.08);
+        }
+        .user-profile-btn.login:hover {
+          background: rgba(0, 0, 0, 0.06);
+          border-color: rgba(0, 0, 0, 0.15);
+          color: #1e293b;
+        }
+        .user-avatar-icon {
+          font-size: 0.95rem;
+        }
+        .user-name-text {
+          max-width: 110px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
         @keyframes badgeGlow {
           0%, 100% { transform: scale(1); opacity: 0.8; }
           50% { transform: scale(1.4); opacity: 1; }
@@ -207,7 +264,7 @@ export const Header: React.FC = () => {
             display: none;
           }
           .nav-actions {
-            gap: 12px;
+            gap: 10px;
           }
           .brand-text {
             font-size: 1rem;
@@ -217,8 +274,8 @@ export const Header: React.FC = () => {
             padding: 4px 8px;
             font-size: 0.72rem;
           }
-          .admin-cta-btn {
-            padding: 8px 14px;
+          .admin-cta-btn, .user-profile-btn {
+            padding: 6px 12px;
             font-size: 0.7rem;
           }
         }
