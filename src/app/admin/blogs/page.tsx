@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Blog, Practitioner } from "@/types/database";
@@ -31,12 +31,17 @@ export default function AdminBlogsPage() {
   const [readTime, setReadTime] = useState("");
   const [image, setImage] = useState("");
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [section, setSection] = useState("");
 
   // Multiple media states
   const [galleryImages, setGalleryImages] = useState<string[]>([]);
   const [blogVideos, setBlogVideos] = useState<string[]>([]);
   const [uploadingGalleryIdx, setUploadingGalleryIdx] = useState<number | null>(null);
   const [uploadingVideoIdx, setUploadingVideoIdx] = useState<number | null>(null);
+
+  // Rich text editor ref
+  const editorRef = useRef<HTMLDivElement>(null);
+  const [editorReady, setEditorReady] = useState(false);
 
   const categories = ["Crystals", "Energy Healing", "Mindfulness", "Other"];
 
@@ -89,6 +94,7 @@ export default function AdminBlogsPage() {
     setImage("");
     setGalleryImages([]);
     setBlogVideos([]);
+    setSection("");
     setEditMode(false);
     setEditBlogId(null);
   };
@@ -131,14 +137,45 @@ export default function AdminBlogsPage() {
     setImage(blog.image || "");
     setGalleryImages(blog.images || []);
     setBlogVideos(blog.videos || []);
+    setSection(blog.section || "");
     setIsModalOpen(true);
   };
 
   const handleContentChange = (val: string) => {
     setContent(val);
-    const words = val.trim().split(/\s+/).filter(Boolean).length;
+    const words = val.replace(/<[^>]*>/g, " ").trim().split(/\s+/).filter(Boolean).length;
     const computed = Math.max(1, Math.ceil(words / 200)) + " Min Read";
     setReadTime(computed);
+  };
+
+  // Sync editor innerHTML → content state
+  const syncEditorContent = useCallback(() => {
+    if (editorRef.current) {
+      handleContentChange(editorRef.current.innerHTML);
+    }
+  }, []);
+
+  // Populate editor when modal opens
+  useEffect(() => {
+    if (isModalOpen && editorRef.current) {
+      editorRef.current.innerHTML = content || "";
+      setEditorReady(true);
+    }
+    if (!isModalOpen) {
+      setEditorReady(false);
+    }
+  }, [isModalOpen]);
+
+  // RTE exec helper
+  const execCmd = (cmd: string, value?: string) => {
+    document.execCommand(cmd, false, value);
+    editorRef.current?.focus();
+    syncEditorContent();
+  };
+
+  const insertLink = () => {
+    const url = window.prompt("Enter URL:", "https://");
+    if (url) execCmd("createLink", url);
   };
 
   const handleCategoryChange = (val: string) => {
@@ -278,7 +315,8 @@ export default function AdminBlogsPage() {
       readTime,
       image: image.trim(),
       images: galleryImages.filter(img => img.trim() !== ""),
-      videos: blogVideos.filter(vid => vid.trim() !== "")
+      videos: blogVideos.filter(vid => vid.trim() !== ""),
+      section: section || null
     };
 
     try {
@@ -374,6 +412,7 @@ export default function AdminBlogsPage() {
                   <tr>
                     <th>Article Details</th>
                     <th>Category</th>
+                    <th>Featured Section</th>
                     <th>Author</th>
                     <th>Read Estimate</th>
                     <th>Date</th>
@@ -400,6 +439,13 @@ export default function AdminBlogsPage() {
                         </td>
                         <td>
                           <span className="category-chip">{b.category}</span>
+                        </td>
+                        <td>
+                          {b.section ? (
+                            <span className="section-badge">{b.section}</span>
+                          ) : (
+                            <span style={{ color: "hsl(var(--text-muted))", fontSize: "0.8rem", fontStyle: "italic" }}>Regular Feed</span>
+                          )}
                         </td>
                         <td>
                           <span className="duration-text">{b.author}</span>
@@ -571,6 +617,20 @@ export default function AdminBlogsPage() {
                   </div>
                 </div>
 
+                <div className="form-group">
+                  <label>Featured Section (Homepage Layout Placement)</label>
+                  <select
+                    className="glass-input"
+                    value={section}
+                    onChange={(e) => setSection(e.target.value)}
+                  >
+                    <option value="">None (Regular Feed)</option>
+                    <option value="recommended">Recommended Blogs</option>
+                    <option value="practice">"Practice with us" Carousel</option>
+                    <option value="discuss">"Discuss with us" Carousel</option>
+                  </select>
+                </div>
+
                 {/* Main Cover Image */}
                 <div className="form-group">
                   <label>Article Cover Image URL (Featured Layout)</label>
@@ -695,17 +755,62 @@ export default function AdminBlogsPage() {
 
                 <div className="form-group">
                   <label>Article Content *</label>
-                  <textarea
-                    className="glass-input desc-area"
-                    required
-                    rows={12}
-                    placeholder="Draft the article text. Use double-newlines to separate paragraphs..."
-                    value={content}
-                    onChange={(e) => handleContentChange(e.target.value)}
-                    style={{ minHeight: "220px", height: "auto" }}
-                  />
+
+                  {/* ── Rich Text Editor ── */}
+                  <div className="rte-wrapper">
+
+                    {/* Toolbar */}
+                    <div className="rte-toolbar">
+                      <div className="rte-toolbar-group">
+                        <button type="button" className="rte-btn" title="Bold" onMouseDown={(e) => { e.preventDefault(); execCmd("bold"); }}><b>B</b></button>
+                        <button type="button" className="rte-btn" title="Italic" onMouseDown={(e) => { e.preventDefault(); execCmd("italic"); }}><i>I</i></button>
+                        <button type="button" className="rte-btn" title="Underline" onMouseDown={(e) => { e.preventDefault(); execCmd("underline"); }}><u>U</u></button>
+                        <button type="button" className="rte-btn" title="Strikethrough" onMouseDown={(e) => { e.preventDefault(); execCmd("strikeThrough"); }}><s>S</s></button>
+                      </div>
+                      <div className="rte-toolbar-divider" />
+                      <div className="rte-toolbar-group">
+                        <button type="button" className="rte-btn rte-btn-text" title="Heading 2" onMouseDown={(e) => { e.preventDefault(); execCmd("formatBlock", "H2"); }}>H2</button>
+                        <button type="button" className="rte-btn rte-btn-text" title="Heading 3" onMouseDown={(e) => { e.preventDefault(); execCmd("formatBlock", "H3"); }}>H3</button>
+                        <button type="button" className="rte-btn rte-btn-text" title="Paragraph" onMouseDown={(e) => { e.preventDefault(); execCmd("formatBlock", "P"); }}>¶</button>
+                      </div>
+                      <div className="rte-toolbar-divider" />
+                      <div className="rte-toolbar-group">
+                        <button type="button" className="rte-btn" title="Bullet List" onMouseDown={(e) => { e.preventDefault(); execCmd("insertUnorderedList"); }}>≡</button>
+                        <button type="button" className="rte-btn" title="Numbered List" onMouseDown={(e) => { e.preventDefault(); execCmd("insertOrderedList"); }}>1.</button>
+                        <button type="button" className="rte-btn" title="Blockquote" onMouseDown={(e) => { e.preventDefault(); execCmd("formatBlock", "BLOCKQUOTE"); }}>"</button>
+                      </div>
+                      <div className="rte-toolbar-divider" />
+                      <div className="rte-toolbar-group">
+                        <button type="button" className="rte-btn" title="Insert Link" onMouseDown={(e) => { e.preventDefault(); insertLink(); }}>🔗</button>
+                        <button type="button" className="rte-btn" title="Unlink" onMouseDown={(e) => { e.preventDefault(); execCmd("unlink"); }}>🚫</button>
+                        <button type="button" className="rte-btn rte-btn-danger" title="Clear Formatting" onMouseDown={(e) => { e.preventDefault(); execCmd("removeFormat"); }}>✕</button>
+                      </div>
+                    </div>
+
+                    {/* Editable area */}
+                    <div
+                      ref={editorRef}
+                      className="rte-editable"
+                      contentEditable
+                      suppressContentEditableWarning
+                      onInput={syncEditorContent}
+                      onBlur={syncEditorContent}
+                      data-placeholder="Draft the article content here — use the toolbar above for formatting..."
+                    />
+
+                    {/* Hidden input to satisfy required validation */}
+                    <input
+                      type="text"
+                      required
+                      value={content}
+                      onChange={() => {}}
+                      tabIndex={-1}
+                      style={{ opacity: 0, height: 0, position: "absolute", pointerEvents: "none" }}
+                    />
+                  </div>
+
                   <small style={{ display: "block", color: "hsl(var(--text-muted))", fontSize: "0.75rem", marginTop: "4px" }}>
-                    Word Count: {content.trim().split(/\s+/).filter(Boolean).length} words
+                    Word Count: {content.replace(/<[^>]*>/g, " ").trim().split(/\s+/).filter(Boolean).length} words
                   </small>
                 </div>
 
@@ -1108,12 +1213,151 @@ export default function AdminBlogsPage() {
           font-style: italic;
           text-align: center;
         }
+        .section-badge {
+          background: rgba(217, 119, 6, 0.08);
+          border: 1px solid rgba(217, 119, 6, 0.2);
+          color: #d97706;
+          padding: 3px 8px;
+          border-radius: 99px;
+          font-size: 0.75rem;
+          font-weight: 600;
+          white-space: nowrap;
+          text-transform: capitalize;
+          display: inline-block;
+        }
         @media (max-width: 640px) {
           .form-row {
             flex-direction: column;
             gap: 16px;
           }
         }
+
+        /* ── Rich Text Editor ── */
+        .rte-wrapper {
+          border: 1.5px solid var(--border-glass);
+          border-radius: 12px;
+          overflow: hidden;
+          background: rgba(255, 255, 255, 0.85);
+          box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+          transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .rte-wrapper:focus-within {
+          border-color: #a855f7;
+          box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1);
+        }
+        .rte-toolbar {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          gap: 2px;
+          padding: 8px 10px;
+          background: rgba(248, 245, 255, 0.9);
+          border-bottom: 1.5px solid rgba(168, 85, 247, 0.1);
+        }
+        .rte-toolbar-group {
+          display: flex;
+          align-items: center;
+          gap: 2px;
+        }
+        .rte-toolbar-divider {
+          width: 1px;
+          height: 20px;
+          background: rgba(0,0,0,0.1);
+          margin: 0 6px;
+          flex-shrink: 0;
+        }
+        .rte-btn {
+          background: transparent;
+          border: 1px solid transparent;
+          border-radius: 6px;
+          width: 30px;
+          height: 28px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 0.85rem;
+          color: #475569;
+          cursor: pointer;
+          transition: all 0.15s ease;
+          padding: 0;
+          line-height: 1;
+        }
+        .rte-btn-text {
+          width: auto;
+          padding: 0 7px;
+          font-size: 0.75rem;
+          font-weight: 700;
+          letter-spacing: 0.02em;
+        }
+        .rte-btn:hover {
+          background: rgba(124, 58, 237, 0.08);
+          border-color: rgba(124, 58, 237, 0.2);
+          color: #7c3aed;
+        }
+        .rte-btn-danger:hover {
+          background: rgba(239, 68, 68, 0.08);
+          border-color: rgba(239, 68, 68, 0.2);
+          color: #ef4444;
+        }
+        .rte-editable {
+          min-height: 260px;
+          max-height: 500px;
+          overflow-y: auto;
+          padding: 16px 18px;
+          font-family: var(--font-sans);
+          font-size: 0.92rem;
+          line-height: 1.8;
+          color: #1e293b;
+          outline: none;
+          word-break: break-word;
+        }
+        .rte-editable:empty:before {
+          content: attr(data-placeholder);
+          color: #94a3b8;
+          pointer-events: none;
+          font-style: italic;
+        }
+        /* Typography inside editor */
+        .rte-editable h2 {
+          font-size: 1.35rem;
+          font-weight: 700;
+          color: #4c1d95;
+          margin: 14px 0 6px;
+          font-family: var(--font-serif);
+        }
+        .rte-editable h3 {
+          font-size: 1.1rem;
+          font-weight: 700;
+          color: #5b21b6;
+          margin: 12px 0 4px;
+        }
+        .rte-editable blockquote {
+          border-left: 3px solid #7c3aed;
+          margin: 10px 0;
+          padding: 8px 16px;
+          background: rgba(168, 85, 247, 0.04);
+          border-radius: 0 8px 8px 0;
+          color: #4c1d95;
+          font-style: italic;
+        }
+        .rte-editable ul {
+          list-style: disc;
+          padding-left: 24px;
+          margin: 8px 0;
+        }
+        .rte-editable ol {
+          list-style: decimal;
+          padding-left: 24px;
+          margin: 8px 0;
+        }
+        .rte-editable a {
+          color: #7c3aed;
+          text-decoration: underline;
+        }
+        .rte-editable b, .rte-editable strong { font-weight: 700; }
+        .rte-editable i, .rte-editable em { font-style: italic; }
+        .rte-editable u { text-decoration: underline; }
+        .rte-editable s { text-decoration: line-through; }
       `}</style>
     </div>
   );

@@ -4,6 +4,8 @@ import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import Link from "next/link";
+import { useBlog } from "./BlogContext";
+import { Carousel } from "@/components/ui/Carousel";
 
 interface Blog {
   id: string;
@@ -16,6 +18,7 @@ interface Blog {
   image: string;
   images?: string[];
   videos?: string[];
+  section?: string | null;
 }
 
 export const getBlogImage = (img: string) => {
@@ -34,8 +37,7 @@ export const getBlogImage = (img: string) => {
 export default function BlogListingPage() {
   const [blogs, setBlogs] = useState<Blog[]>([]);
   const [filteredBlogs, setFilteredBlogs] = useState<Blog[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [activeTab, setActiveTab] = useState("all");
+  const { searchQuery, activeCategory, setActiveCategory } = useBlog();
   const [loading, setLoading] = useState(true);
 
   // Load blogs
@@ -57,23 +59,70 @@ export default function BlogListingPage() {
     loadBlogs();
   }, []);
 
-  // Filter blogs
+  // Filter blogs based on category & search query
   useEffect(() => {
     let result = [...blogs];
-    if (activeTab !== "all") {
-      result = result.filter(b => b.category.toLowerCase() === activeTab.toLowerCase());
+    if (activeCategory !== "all") {
+      result = result.filter(b => b.category.toLowerCase() === activeCategory.toLowerCase());
     }
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       result = result.filter(b => b.title.toLowerCase().includes(q) || b.content.toLowerCase().includes(q));
     }
     setFilteredBlogs(result);
-  }, [blogs, activeTab, searchQuery]);
+  }, [blogs, activeCategory, searchQuery]);
 
   const categories = [
     "all",
     ...Array.from(new Set(blogs.map((b) => b.category).filter(Boolean)))
   ];
+
+  // Separate blogs into sections for the default landing state (when no filter is active)
+  const recommendedBlogs = blogs.filter(b => b.section === "recommended");
+  const practiceBlogs = blogs.filter(b => b.section === "practice");
+  const discussBlogs = blogs.filter(b => b.section === "discuss");
+  const regularBlogs = blogs.filter(
+    b => !b.section || (b.section !== "recommended" && b.section !== "practice" && b.section !== "discuss")
+  );
+
+  const renderBlogCard = (post: Blog) => (
+    <Card key={post.id} className="blog-card" variant="glass">
+      <div className="blog-card-image-container">
+        <img
+          src={getBlogImage(post.image)}
+          alt={post.title}
+          className="blog-card-img"
+        />
+        <span className="blog-card-badge">{post.category}</span>
+      </div>
+
+      <div className="blog-card-content">
+        <div className="blog-card-header-info">
+          <span className="blog-card-time">⏱️ {post.readTime}</span>
+        </div>
+
+        <h3 className="blog-card-title">{post.title}</h3>
+        <p className="blog-card-excerpt">
+          {post.content.substring(0, 120)}...
+        </p>
+
+        <div className="blog-card-footer">
+          <span className="blog-card-author">By <strong>{post.author}</strong></span>
+          <span className="blog-card-date">{post.date}</span>
+        </div>
+
+        <div className="blog-card-action">
+          <Link href={`/blog/${post.id}`}>
+            <Button variant="gold-outline" size="sm">
+              Read Article
+            </Button>
+          </Link>
+        </div>
+      </div>
+    </Card>
+  );
+
+  const isFilteringActive = activeCategory !== "all" || searchQuery !== "";
 
   return (
     <div className="blog-posts-page">
@@ -82,81 +131,94 @@ export default function BlogListingPage() {
         <h1 className="blog-title">Spiritual Guidance Blog</h1>
       </section>
 
-      {/* Control panel (Tabs & Search combined) */}
+      {/* Top Categories Filter */}
       <section className="blog-controls-section glass-panel">
         <div className="blog-tabs">
           {categories.map(cat => (
             <button
               key={cat}
-              className={`blog-tab-btn ${activeTab === cat ? "active" : ""}`}
-              onClick={() => setActiveTab(cat)}
+              className={`blog-tab-btn ${activeCategory === cat ? "active" : ""}`}
+              onClick={() => setActiveCategory(cat)}
             >
               {cat === "all" ? "All Writings" : cat}
             </button>
           ))}
         </div>
-
-        <div className="blog-search-wrapper">
-          <svg className="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="11" cy="11" r="8"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-          </svg>
-          <input
-            type="text"
-            placeholder="Search articles..."
-            className="search-input"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
       </section>
 
       {/* Listings Grid */}
-      <section className="blog-grid-section">
+      <section className="blog-content-section">
         {loading ? (
-          <p style={{ textAlign: "center", color: "hsl(var(--text-muted))", padding: "40px 0" }}>Retrieving sacred scrolls...</p>
-        ) : filteredBlogs.length === 0 ? (
-          <div className="empty-state glass-card" style={{ padding: "40px", textAlign: "center" }}>
-            <p>No articles found matching your query metrics.</p>
+          <p style={{ textAlign: "center", color: "hsl(var(--text-muted))", padding: "80px 0" }}>Retrieving sacred scrolls...</p>
+        ) : isFilteringActive ? (
+          // FILTERED LISTING VIEW (Flat Grid)
+          <div className="filtered-results-wrapper">
+            <div className="results-header">
+              <h2 className="section-title">
+                {searchQuery
+                  ? `Search Results for "${searchQuery}"`
+                  : `${activeCategory.toUpperCase()} Articles`
+                }
+              </h2>
+              <span className="results-count">({filteredBlogs.length} articles found)</span>
+            </div>
+
+            {filteredBlogs.length === 0 ? (
+              <div className="empty-state glass-card" style={{ padding: "40px", textAlign: "center" }}>
+                <p>No articles found matching your query metrics.</p>
+              </div>
+            ) : (
+              <div className="blog-cards-grid">
+                {filteredBlogs.map(post => renderBlogCard(post))}
+              </div>
+            )}
           </div>
         ) : (
-          <div className="blog-cards-grid">
-            {filteredBlogs.map(post => (
-              <Card key={post.id} className="blog-card" variant="glass">
-                <div className="blog-card-image-container">
-                  <img
-                    src={getBlogImage(post.image)}
-                    alt={post.title}
-                    className="blog-card-img"
-                  />
-                  <span className="blog-card-badge">{post.category}</span>
+          // DYNAMIC HOME SECTIONS VIEW
+          <div className="dashboard-sections-wrapper">
+            {/* Recommended Blogs Section */}
+            {recommendedBlogs.length > 0 && (
+              <section className="blog-showcase-section">
+                <h2 className="section-title">Recommended Readings</h2>
+                <div className="blog-cards-grid">
+                  {recommendedBlogs.map(post => renderBlogCard(post))}
                 </div>
+              </section>
+            )}
 
-                <div className="blog-card-content">
-                  <div className="blog-card-header-info">
-                    <span className="blog-card-time">⏱️ {post.readTime}</span>
-                  </div>
+            {/* Practice with us Carousel */}
+            {practiceBlogs.length > 0 && (
+              <section className="blog-showcase-section">
+                <Carousel title="Practice With Us">
+                  {practiceBlogs.map(post => renderBlogCard(post))}
+                </Carousel>
+              </section>
+            )}
 
-                  <h3 className="blog-card-title">{post.title}</h3>
-                  <p className="blog-card-excerpt">
-                    {post.content.substring(0, 130)}...
-                  </p>
+            {/* Discuss with us Carousel */}
+            {discussBlogs.length > 0 && (
+              <section className="blog-showcase-section">
+                <Carousel title="Discuss With Us">
+                  {discussBlogs.map(post => renderBlogCard(post))}
+                </Carousel>
+              </section>
+            )}
 
-                  <div className="blog-card-footer">
-                    <span className="blog-card-author">By <strong>{post.author}</strong></span>
-                    <span className="blog-card-date">{post.date}</span>
-                  </div>
-
-                  <div className="blog-card-action">
-                    <Link href={`/blog/${post.id}`}>
-                      <Button variant="gold-outline" size="sm">
-                        Read Article
-                      </Button>
-                    </Link>
-                  </div>
+            {/* General Feed */}
+            {regularBlogs.length > 0 && (
+              <section className="blog-showcase-section">
+                <h2 className="section-title">Latest Wisdom</h2>
+                <div className="blog-cards-grid">
+                  {regularBlogs.map(post => renderBlogCard(post))}
                 </div>
-              </Card>
-            ))}
+              </section>
+            )}
+
+            {blogs.length === 0 && (
+              <div className="empty-state glass-card" style={{ padding: "40px", textAlign: "center" }}>
+                <p>No articles currently published in the catalog.</p>
+              </div>
+            )}
           </div>
         )}
       </section>
@@ -165,7 +227,7 @@ export default function BlogListingPage() {
         .blog-posts-page {
           display: flex;
           flex-direction: column;
-          gap: 36px;
+          gap: 32px;
           width: 100%;
         }
         .blog-header {
@@ -173,26 +235,18 @@ export default function BlogListingPage() {
           padding: 8px 0 0;
         }
         .blog-title {
-          font-size: 2.4rem;
+          font-size: 2.2rem;
           color: #4c1d95;
-          margin-bottom: 8px;
+          margin-bottom: 4px;
           text-align: center;
           font-weight: 700;
           letter-spacing: -0.01em;
         }
-        .blog-subtitle {
-          font-size: 1rem;
-          color: hsl(var(--text-muted));
-          text-align: center;
-          max-width: 650px;
-          margin: 0 auto;
-        }
         .blog-controls-section {
           display: flex;
-          justify-content: space-between;
+          justify-content: center;
           align-items: center;
-          gap: 24px;
-          padding: 12px 24px;
+          padding: 10px 20px;
           border-radius: 20px;
           width: 100%;
         }
@@ -200,6 +254,8 @@ export default function BlogListingPage() {
           display: flex;
           gap: 8px;
           align-items: center;
+          flex-wrap: wrap;
+          justify-content: center;
         }
         .blog-tab-btn {
           background: transparent;
@@ -208,7 +264,7 @@ export default function BlogListingPage() {
           font-family: var(--font-serif);
           font-size: 0.85rem;
           font-weight: 600;
-          padding: 6px 14px;
+          padding: 6px 16px;
           border-radius: 30px;
           cursor: pointer;
           letter-spacing: 0.03em;
@@ -225,63 +281,58 @@ export default function BlogListingPage() {
           border-color: rgba(168, 85, 247, 0.2);
           box-shadow: 0 4px 10px rgba(168, 85, 247, 0.05);
         }
-        .blog-search-wrapper {
+        .results-header {
           display: flex;
-          align-items: center;
-          position: relative;
-          width: 260px;
+          align-items: baseline;
+          gap: 12px;
+          margin-bottom: 20px;
         }
-        .search-icon {
-          position: absolute;
-          left: 12px;
-          color: hsl(var(--text-muted));
-          pointer-events: none;
-        }
-        .blog-search-wrapper :global(.search-input) {
-          width: 100%;
-          padding: 8px 12px 8px 36px;
-          border-radius: 30px;
-          background: rgba(255, 255, 255, 0.6);
-          border: 1px solid var(--border-glass);
-          color: hsl(var(--text-cream));
-          font-family: var(--font-sans);
+        .results-count {
           font-size: 0.85rem;
-          outline: none;
-          transition: var(--transition-smooth);
+          color: hsl(var(--text-muted));
         }
-        .blog-search-wrapper :global(.search-input):focus {
-          background: rgba(255, 255, 255, 0.95);
-          border-color: #7c3aed;
-          box-shadow: 0 0 10px rgba(124, 58, 237, 0.15);
+        .section-title {
+          font-family: var(--font-serif);
+          font-size: 1.6rem;
+          color: #4c1d95;
+          margin-bottom: 16px;
+          font-weight: 700;
+        }
+        .blog-showcase-section {
+          margin-bottom: 40px;
+        }
+        .blog-showcase-section:last-child {
+          margin-bottom: 0;
         }
         .blog-cards-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-          gap: 28px;
+          grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+          gap: 24px;
         }
-        .blog-card {
+        :global(.blog-card) {
           display: flex;
           flex-direction: column;
           overflow: hidden;
           padding: 0 !important;
-          border-radius: 20px;
+          border-radius: 16px;
+          height: 100%;
         }
-        .blog-card-image-container {
+        :global(.blog-card-image-container) {
           position: relative;
           width: 100%;
-          height: 180px;
+          height: 160px;
           overflow: hidden;
         }
-        .blog-card-img {
+        :global(.blog-card-img) {
           width: 100%;
           height: 100%;
           object-fit: cover;
           transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        .blog-card:hover .blog-card-img {
+        :global(.blog-card:hover .blog-card-img) {
           transform: scale(1.06);
         }
-        .blog-card-badge {
+        :global(.blog-card-badge) {
           position: absolute;
           top: 12px;
           left: 12px;
@@ -289,7 +340,7 @@ export default function BlogListingPage() {
           backdrop-filter: blur(4px);
           border: 1px solid rgba(168, 85, 247, 0.2);
           color: #7c3aed;
-          font-size: 0.7rem;
+          font-size: 0.68rem;
           font-weight: 700;
           padding: 3px 8px;
           border-radius: 6px;
@@ -297,79 +348,64 @@ export default function BlogListingPage() {
           letter-spacing: 0.05em;
           box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
         }
-        .blog-card-content {
-          padding: 20px;
+        :global(.blog-card-content) {
+          padding: 16px;
           display: flex;
           flex-direction: column;
           flex: 1;
         }
-        .blog-card-header-info {
+        :global(.blog-card-header-info) {
           display: flex;
           justify-content: flex-end;
-          margin-bottom: 8px;
+          margin-bottom: 6px;
         }
-        .blog-card-time {
-          font-size: 0.72rem;
+        :global(.blog-card-time) {
+          font-size: 0.7rem;
           color: hsl(var(--text-muted));
           font-weight: 500;
         }
-        .blog-card-title {
+        :global(.blog-card-title) {
           font-family: var(--font-serif);
-          font-size: 1.25rem;
+          font-size: 1.15rem;
           color: #4c1d95;
-          margin-bottom: 10px;
+          margin-bottom: 8px;
           line-height: 1.35;
           font-weight: 600;
           display: -webkit-box;
           -webkit-line-clamp: 2;
           -webkit-box-orient: vertical;
           overflow: hidden;
+          min-height: 3.1em;
         }
-        .blog-card-excerpt {
-          font-size: 0.85rem;
-          line-height: 1.5;
+        :global(.blog-card-excerpt) {
+          font-size: 0.8rem;
+          line-height: 1.45;
           color: hsl(var(--text-muted));
-          margin-bottom: 16px;
+          margin-bottom: 12px;
           flex: 1;
           display: -webkit-box;
           -webkit-line-clamp: 3;
           -webkit-box-orient: vertical;
           overflow: hidden;
         }
-        .blog-card-footer {
+        :global(.blog-card-footer) {
           display: flex;
           justify-content: space-between;
-          font-size: 0.75rem;
+          font-size: 0.72rem;
           color: hsl(var(--text-muted));
           border-top: 1px solid rgba(0, 0, 0, 0.05);
-          padding-top: 10px;
-          margin-bottom: 14px;
+          padding-top: 8px;
+          margin-bottom: 12px;
         }
-        .blog-card-author {
+        :global(.blog-card-author) {
           font-weight: 500;
         }
-        .blog-card-action {
+        :global(.blog-card-action) {
           width: 100%;
         }
         @media (max-width: 968px) {
           .blog-controls-section {
-            flex-direction: column;
-            gap: 16px;
-            align-items: stretch;
-            padding: 16px;
-          }
-          .blog-tabs {
-            justify-content: center;
-            flex-wrap: wrap;
-          }
-          .blog-search-wrapper {
-            width: 100%;
-          }
-        }
-        @media (max-width: 640px) {
-          .blog-tab-btn {
-            font-size: 0.78rem;
-            padding: 5px 10px;
+            padding: 12px;
           }
         }
       `}</style>

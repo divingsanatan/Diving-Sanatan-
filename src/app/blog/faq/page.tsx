@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { useBlog } from "../BlogContext";
 
 interface FAQItem {
   id: string;
@@ -58,7 +59,7 @@ const FAQ_DATA: FAQItem[] = [
 ];
 
 export default function FAQPage() {
-  const [searchQuery, setSearchQuery] = useState("");
+  const { searchQuery } = useBlog(); // ← sidebar search drives this page
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [openAccordions, setOpenAccordions] = useState<Record<string, boolean>>({
     "faq-1": true, // open first by default
@@ -88,7 +89,7 @@ export default function FAQPage() {
         <h1 className="faq-page-title">Frequently Asked Questions</h1>
       </div>
 
-      {/* Control panel (Tabs & Search combined) */}
+      {/* Control panel (Category Tabs only — search is via sidebar) */}
       <section className="faq-controls-section glass-panel">
         <div className="faq-tabs">
           {categories.map((cat) => (
@@ -102,19 +103,15 @@ export default function FAQPage() {
           ))}
         </div>
 
-        <div className="faq-search-wrapper">
-          <svg className="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="11" cy="11" r="8"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-          </svg>
-          <input
-            type="text"
-            placeholder="Type your question..."
-            className="search-input"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
+        {searchQuery && (
+          <div className="faq-active-search-badge">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <span>&ldquo;{searchQuery}&rdquo;</span>
+          </div>
+        )}
       </section>
 
       {/* Accordions List */}
@@ -208,6 +205,20 @@ export default function FAQPage() {
           display: flex;
           gap: 8px;
           align-items: center;
+          flex-wrap: wrap;
+        }
+        .faq-active-search-badge {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          background: rgba(124, 58, 237, 0.07);
+          border: 1px solid rgba(124, 58, 237, 0.2);
+          color: #7c3aed;
+          font-size: 0.8rem;
+          font-weight: 600;
+          padding: 5px 12px;
+          border-radius: 20px;
+          white-space: nowrap;
         }
         .faq-tab-btn {
           background: transparent;

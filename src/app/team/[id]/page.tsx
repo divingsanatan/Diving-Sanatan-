@@ -206,29 +206,38 @@ export default function HealerDetailPage() {
     window.location.href = `/?search=${encodeURIComponent(val)}`;
   };
 
-  // Helper to truncate bio text safely without breaking tag tokens starting with '/'
-  const getTruncatedBio = (text: string, limit: number = 380) => {
-    if (!text || text.length <= limit) return { text, isLong: false };
+  // Helper to truncate bio text safely based on word count, preserving tag tokens starting with '/'
+  const getTruncatedBio = (text: string, maxWords: number = 350) => {
+    if (!text) return { text: "", isLong: false };
 
-    let cutIndex = limit;
-    // Look back for a space or punctuation to cut cleanly
-    for (let i = limit; i > limit - 45; i--) {
-      if (text[i] === " " || text[i] === "." || text[i] === ",") {
-        // Ensure we are not cutting inside a tag (e.g. /Reiki-Master)
-        const sub = text.substring(0, i);
-        const lastSlash = sub.lastIndexOf("/");
-        const lastSpace = sub.lastIndexOf(" ");
-        if (lastSlash > lastSpace) {
-          continue; // skip if we cut inside a tag
+    const words = text.split(/(\s+)/); // split by whitespace but keep spaces so we can reconstruct
+
+    // Count actual non-whitespace words
+    let wordCount = 0;
+    let cutIndex = -1;
+
+    for (let i = 0; i < words.length; i++) {
+      if (words[i].trim().length > 0) {
+        wordCount++;
+        if (wordCount === maxWords) {
+          cutIndex = i;
+          break;
         }
-        cutIndex = i;
-        break;
       }
     }
-    let truncated = text.substring(0, cutIndex).trim();
+
+    // If the text has fewer or equal words than the limit, don't truncate
+    if (wordCount < maxWords || cutIndex === -1) {
+      return { text, isLong: false };
+    }
+
+    // Reconstruct the truncated text up to the cutIndex
+    let truncated = words.slice(0, cutIndex + 1).join("").trim();
+
     if (truncated.endsWith(".")) {
       truncated = truncated.slice(0, -1);
     }
+
     return {
       text: truncated + "...",
       isLong: true
@@ -377,259 +386,193 @@ export default function HealerDetailPage() {
 
       <main className="about-layout-container">
 
-        <div className="about-grid">
+        {/* Top Profile Section: 3-Column Grid */}
+        <div className="profile-top-grid">
 
-          {/* ==================== LEFT COLUMN ==================== */}
-          <div className="left-column">
+          {/* Featured Healer Card */}
+          <div className="anara-card glass-panel">
+            <div className="anara-photo-wrapper">
+              <img
+                src={getPractitionerImage(healer.image)}
+                alt={healer.name}
+                className="anara-photo"
+              />
+            </div>
 
-            {/* Intro Grid: Card & Bio side-by-side */}
-            <div className="intro-grid">
+            <div className="anara-info">
+              <h2 className="anara-name">{healer.name}</h2>
+              <p className="anara-title">{healer.specialty}</p>
 
-              {/* Featured Healer Card */}
-              <div className="anara-card glass-panel">
-                <div className="anara-photo-wrapper">
-                  <img
-                    src={getPractitionerImage(healer.image)}
-                    alt={healer.name}
-                    className="anara-photo"
-                  />
-                </div>
-
-                <div className="anara-info">
-                  <h2 className="anara-name">{healer.name}</h2>
-                  <p className="anara-title">{healer.specialty}</p>
-
-                  <div className="anara-meta">
-                    <span className="meta-exp">Practicing Since 2010</span>
-                  </div>
-
-                  {healer.social_links && Object.values(healer.social_links).some(link => !!link) && (
-                    <div className="healer-socials">
-                      {healer.social_links.facebook && (
-                        <a href={healer.social_links.facebook} target="_blank" rel="noopener noreferrer" className="social-icon" title="Facebook">
-                          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" /></svg>
-                        </a>
-                      )}
-                      {healer.social_links.instagram && (
-                        <a href={healer.social_links.instagram} target="_blank" rel="noopener noreferrer" className="social-icon" title="Instagram">
-                          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" /></svg>
-                        </a>
-                      )}
-                      {healer.social_links.linkedin && (
-                        <a href={healer.social_links.linkedin} target="_blank" rel="noopener noreferrer" className="social-icon" title="LinkedIn">
-                          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.779-1.75-1.75s.784-1.75 1.75-1.75 1.75.779 1.75 1.75-.784 1.75-1.75 1.75zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" /></svg>
-                        </a>
-                      )}
-                      {healer.social_links.youtube && (
-                        <a href={healer.social_links.youtube} target="_blank" rel="noopener noreferrer" className="social-icon" title="YouTube">
-                          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" /></svg>
-                        </a>
-                      )}
-                    </div>
-                  )}
-
-                  <div className="tag-list">
-                    {healer.expertise && healer.expertise.length > 0 ? (
-                      healer.expertise.map((exp, i) => (
-                        <span key={i} className="tag-badge">/{exp}</span>
-                      ))
-                    ) : (
-                      <>
-                        <span className="tag-badge">/Chakra-Healing</span>
-                        <span className="tag-badge">/Reiki-Master</span>
-                        <span className="tag-badge">/Past-Life</span>
-                        <span className="tag-badge">/Sound-Therapy</span>
-                        <span className="tag-badge">/Aura-Imaging</span>
-                      </>
-                    )}
-                  </div>
-
-                  <div className="anara-actions">
-                    <Link
-                      href={`/booking?practitioner=${healer.id}`}
-                      className="btn-book"
-                      style={{
-                        display: "block",
-                        width: "100%",
-                        textAlign: "center",
-                        backgroundColor: "#4c1d95",
-                        color: "white",
-                        padding: "12px",
-                        borderRadius: "12px",
-                        fontWeight: 700,
-                        fontSize: "0.85rem",
-                        letterSpacing: "0.08em",
-                        boxShadow: "0 4px 12px rgba(76, 29, 149, 0.15)",
-                        textDecoration: "none",
-                        cursor: "pointer",
-                        transition: "all 0.2s ease"
-                      }}
-                    >
-                      BOOK A SESSION
-                    </Link>
-                    <Link
-                      href="/?search=resonance"
-                      className="btn-quiz"
-                      style={{
-                        display: "block",
-                        width: "100%",
-                        textAlign: "center",
-                        backgroundColor: "white",
-                        color: "#4c1d95",
-                        padding: "11px",
-                        borderRadius: "12px",
-                        fontWeight: 700,
-                        fontSize: "0.85rem",
-                        letterSpacing: "0.08em",
-                        border: "1.5px solid #4c1d95",
-                        textDecoration: "none",
-                        cursor: "pointer",
-                        transition: "all 0.2s ease"
-                      }}
-                    >
-                      TAKE SOUL QUIZ
-                    </Link>
-                    <Link
-                      href="/team"
-                      style={{
-                        display: "block",
-                        width: "100%",
-                        textAlign: "center",
-                        color: "#7c3aed",
-                        fontSize: "0.82rem",
-                        fontWeight: 600,
-                        marginTop: "8px",
-                        textDecoration: "underline",
-                        cursor: "pointer"
-                      }}
-                    >
-                      Back to healer list
-                    </Link>
-                  </div>
-                </div>
+              <div className="anara-meta">
+                <span className="meta-exp">Practicing Since 2010</span>
               </div>
 
-              {/* Bio & Video Section */}
-              <div className="bio-video-section">
-                <h1 className="main-title gold-text-gradient">A Journey into Wholeness</h1>
-
-                <div className="bio-paragraphs">
-                  {(() => {
-                    const { text: truncatedBioText, isLong: isBioLong } = getTruncatedBio(healer.bio);
-                    const bioToRender = (!isBioExpanded && isBioLong) ? truncatedBioText : healer.bio;
-                    const paragraphs = bioToRender.split("\n\n");
-
-                    return paragraphs.map((para, idx) => {
-                      const isLast = idx === paragraphs.length - 1;
-                      return (
-                        <p key={idx}>
-                          {renderBioText(para)}
-                          {isLast && isBioLong && (
-                            <button
-                              onClick={() => setIsBioExpanded(!isBioExpanded)}
-                              className="toggle-bio-btn"
-                              aria-expanded={isBioExpanded}
-                            >
-                              {isBioExpanded ? "..less" : "..more"}
-                            </button>
-                          )}
-                        </p>
-                      );
-                    });
-                  })()}
+              {healer.social_links && Object.values(healer.social_links).some(link => !!link) && (
+                <div className="healer-socials">
+                  {healer.social_links.facebook && (
+                    <a href={healer.social_links.facebook} target="_blank" rel="noopener noreferrer" className="social-icon" title="Facebook">
+                      <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" /></svg>
+                    </a>
+                  )}
+                  {healer.social_links.instagram && (
+                    <a href={healer.social_links.instagram} target="_blank" rel="noopener noreferrer" className="social-icon" title="Instagram">
+                      <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" /></svg>
+                    </a>
+                  )}
+                  {healer.social_links.linkedin && (
+                    <a href={healer.social_links.linkedin} target="_blank" rel="noopener noreferrer" className="social-icon" title="LinkedIn">
+                      <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.779-1.75-1.75s.784-1.75 1.75-1.75 1.75.779 1.75 1.75-.784 1.75-1.75 1.75zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" /></svg>
+                    </a>
+                  )}
+                  {healer.social_links.youtube && (
+                    <a href={healer.social_links.youtube} target="_blank" rel="noopener noreferrer" className="social-icon" title="YouTube">
+                      <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" /></svg>
+                    </a>
+                  )}
                 </div>
+              )}
 
-                {/* Video Playback Slot */}
-                {healer.video_url && (() => {
-                  const embedUrl = getEmbedUrl(healer.video_url);
+              <div className="tag-list">
+                {healer.expertise && healer.expertise.length > 0 ? (
+                  healer.expertise.map((exp, i) => (
+                    <span key={i} className="tag-badge">/{exp}</span>
+                  ))
+                ) : (
+                  <>
+                    <span className="tag-badge">/Chakra-Healing</span>
+                    <span className="tag-badge">/Reiki-Master</span>
+                    <span className="tag-badge">/Past-Life</span>
+                    <span className="tag-badge">/Sound-Therapy</span>
+                    <span className="tag-badge">/Aura-Imaging</span>
+                  </>
+                )}
+              </div>
+
+              <div className="anara-actions">
+                <Link
+                  href={`/booking?practitioner=${healer.id}`}
+                  className="btn-book"
+                  style={{
+                    display: "block",
+                    width: "100%",
+                    textAlign: "center",
+                    backgroundColor: "#4c1d95",
+                    color: "white",
+                    padding: "12px",
+                    borderRadius: "12px",
+                    fontWeight: 700,
+                    fontSize: "0.85rem",
+                    letterSpacing: "0.08em",
+                    boxShadow: "0 4px 12px rgba(76, 29, 149, 0.15)",
+                    textDecoration: "none",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease"
+                  }}
+                >
+                  BOOK A SESSION
+                </Link>
+                <Link
+                  href="/?search=resonance"
+                  className="btn-quiz"
+                  style={{
+                    display: "block",
+                    width: "100%",
+                    textAlign: "center",
+                    backgroundColor: "white",
+                    color: "#4c1d95",
+                    padding: "11px",
+                    borderRadius: "12px",
+                    fontWeight: 700,
+                    fontSize: "0.85rem",
+                    letterSpacing: "0.08em",
+                    border: "1.5px solid #4c1d95",
+                    textDecoration: "none",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease"
+                  }}
+                >
+                  TAKE SOUL QUIZ
+                </Link>
+                <Link
+                  href="/team"
+                  style={{
+                    display: "block",
+                    width: "100%",
+                    textAlign: "center",
+                    color: "#7c3aed",
+                    fontSize: "0.82rem",
+                    fontWeight: 600,
+                    marginTop: "8px",
+                    textDecoration: "underline",
+                    cursor: "pointer"
+                  }}
+                >
+                  Back to healer list
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          {/* Bio & Video Section */}
+          <div className="bio-video-section">
+            <h1 className="main-title gold-text-gradient">A Journey into Wholeness</h1>
+
+            <div className="bio-paragraphs">
+              {(() => {
+                const { text: truncatedBioText, isLong: isBioLong } = getTruncatedBio(healer.bio);
+                const bioToRender = (!isBioExpanded && isBioLong) ? truncatedBioText : healer.bio;
+                const paragraphs = bioToRender.split("\n\n");
+
+                return paragraphs.map((para, idx) => {
+                  const isLast = idx === paragraphs.length - 1;
                   return (
-                    <div className="video-slot glass-panel" style={{ cursor: "default" }}>
-                      {embedUrl ? (
-                        <iframe
-                          width="100%"
-                          height="100%"
-                          src={embedUrl.replace("?autoplay=1", "")}
-                          title="Meet Healer - Video Introduction"
-                          frameBorder="0"
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                          allowFullScreen
-                          style={{ border: "none", width: "100%", height: "100%" }}
-                        ></iframe>
-                      ) : (
-                        <video
-                          src={healer.video_url}
-                          controls
-                          style={{ width: "100%", height: "100%", objectFit: "contain", outline: "none", background: "black" }}
-                        />
+                    <p key={idx}>
+                      {renderBioText(para)}
+                      {isLast && isBioLong && (
+                        <button
+                          onClick={() => setIsBioExpanded(!isBioExpanded)}
+                          className="toggle-bio-btn"
+                          aria-expanded={isBioExpanded}
+                        >
+                          {isBioExpanded ? "..less" : "..more"}
+                        </button>
                       )}
-                    </div>
+                    </p>
                   );
-                })()}
-              </div>
-
+                });
+              })()}
             </div>
 
-            {/* Curated Services Carousel */}
-            <div className="curated-services-section">
-              <div className="section-header-row">
-                <h2 className="section-heading">Therapies Guided</h2>
-                <div className="carousel-nav-arrows">
-                  <button className="nav-arrow-btn" onClick={() => scrollServices("left")}>
-                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="20" height="20">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" />
-                    </svg>
-                  </button>
-                  <button className="nav-arrow-btn" onClick={() => scrollServices("right")}>
-                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="20" height="20">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-
-              <div className="services-carousel-wrapper" ref={servicesScrollRef}>
-                <div className="services-carousel-track">
-                  {services.length > 0 ? (
-                    services.map((srv) => (
-                      <div key={srv.id} className="service-slide-card glass-card">
-                        <div className="service-image-box">
-                          <img src={getServiceImage(srv.image)} alt={srv.name} />
-                        </div>
-                        <div className="service-card-body">
-                          <h3>{srv.name}</h3>
-                          <p>{srv.description.length > 110 ? `${srv.description.substring(0, 110)}...` : srv.description}</p>
-                          <Link href={`/booking?service=${srv.id}`} className="service-link">
-                            Book Session ({formatCurrency(srv.price)}) →
-                          </Link>
-                        </div>
-                      </div>
-                    ))
+            {/* Video Playback Slot */}
+            {healer.video_url && (() => {
+              const embedUrl = getEmbedUrl(healer.video_url);
+              return (
+                <div className="video-slot glass-panel" style={{ cursor: "default", marginTop: "auto" }}>
+                  {embedUrl ? (
+                    <iframe
+                      width="100%"
+                      height="100%"
+                      src={embedUrl.replace("?autoplay=1", "")}
+                      title="Meet Healer - Video Introduction"
+                      frameBorder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      style={{ border: "none", width: "100%", height: "100%" }}
+                    ></iframe>
                   ) : (
-                    <Card variant="glass" style={{ padding: "20px", width: "300px", color: "hsl(var(--text-muted))" }}>
-                      No active therapies listed under {healer.name}'s guidance.
-                    </Card>
+                    <video
+                      src={healer.video_url}
+                      controls
+                      style={{ width: "100%", height: "100%", objectFit: "contain", outline: "none", background: "black" }}
+                    />
                   )}
                 </div>
-              </div>
-            </div>
-
-            {/* Google Ad Banner Space */}
-            <div className="google-ad-horizontal-wrapper">
-              <span className="ad-label">Ad by Google</span>
-              <div className="google-ad-banner">
-                <div className="ad-logo">G</div>
-                <div className="ad-text-content">
-                  <h4>Looking for Inner Peace?</h4>
-                  <p>Discover personalized healing sessions tailored specifically to your spiritual requirements.</p>
-                </div>
-                <Link href="/" className="ad-cta">Learn More</Link>
-              </div>
-            </div>
-
+              );
+            })()}
           </div>
 
           {/* ==================== RIGHT COLUMN (SIDEBAR) ==================== */}
-          <div className="right-column">
+          <div className="profile-sidebar-column">
 
             {/* Insights & Guidance Section: Testimonials */}
             <div className="sidebar-section glass-panel">
@@ -685,7 +628,7 @@ export default function HealerDetailPage() {
             </div>
 
             {/* Certification Showcase */}
-            <div className="sidebar-section glass-panel">
+            <div className="sidebar-section glass-panel" style={{ marginTop: "auto" }}>
               <h2 className="sidebar-heading">CREDENTIALS SHOWCASE</h2>
 
               <div className="insights-list">
@@ -727,6 +670,63 @@ export default function HealerDetailPage() {
 
           </div>
 
+        </div>
+
+        {/* Curated Services Carousel — Full Width below the grid */}
+        <div className="curated-services-section">
+          <div className="section-header-row">
+            <h2 className="section-heading">Therapies Guided</h2>
+            <div className="carousel-nav-arrows">
+              <button className="nav-arrow-btn" onClick={() => scrollServices("left")}>
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="20" height="20">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              <button className="nav-arrow-btn" onClick={() => scrollServices("right")}>
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="20" height="20">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div className="services-carousel-wrapper" ref={servicesScrollRef}>
+            <div className="services-carousel-track">
+              {services.length > 0 ? (
+                services.map((srv) => (
+                  <div key={srv.id} className="service-slide-card glass-card">
+                    <div className="service-image-box">
+                      <img src={getServiceImage(srv.image)} alt={srv.name} />
+                    </div>
+                    <div className="service-card-body">
+                      <h3>{srv.name}</h3>
+                      <p>{srv.description.length > 110 ? `${srv.description.substring(0, 110)}...` : srv.description}</p>
+                      <Link href={`/booking?service=${srv.id}`} className="service-link">
+                        Book Session ({formatCurrency(srv.price)}) →
+                      </Link>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <Card variant="glass" style={{ padding: "20px", width: "300px", color: "hsl(var(--text-muted))" }}>
+                  No active therapies listed under {healer.name}'s guidance.
+                </Card>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Google Ad Banner Space — Full Width */}
+        <div className="google-ad-horizontal-wrapper">
+          <span className="ad-label">Ad by Google</span>
+          <div className="google-ad-banner">
+            <div className="ad-logo">G</div>
+            <div className="ad-text-content">
+              <h4>Looking for Inner Peace?</h4>
+              <p>Discover personalized healing sessions tailored specifically to your spiritual requirements.</p>
+            </div>
+            <Link href="/" className="ad-cta">Learn More</Link>
+          </div>
         </div>
       </main>
 
@@ -845,33 +845,19 @@ export default function HealerDetailPage() {
           font-weight: 600;
         }
 
-        .about-grid {
+        .profile-top-grid {
           display: grid;
-          grid-template-columns: 1.8fr 1fr;
-          gap: 40px;
-          align-items: start;
-        }
-
-        /* ==================== COLUMN STRETCH BUG FIXES ==================== */
-        .left-column {
-          display: flex;
-          flex-direction: column;
-          gap: 50px;
-          min-width: 0;
-        }
-
-        .right-column {
-          display: flex;
-          flex-direction: column;
-          gap: 40px;
-          min-width: 0;
-        }
-
-        .intro-grid {
-          display: grid;
-          grid-template-columns: 1fr 1.3fr;
+          grid-template-columns: 1fr 1.25fr 1fr;
           gap: 32px;
-          align-items: start;
+          align-items: stretch;
+        }
+
+        .profile-sidebar-column {
+          display: flex;
+          flex-direction: column;
+          gap: 32px;
+          min-width: 0;
+          height: 100%;
         }
 
         .intro-grid > div {
@@ -1131,6 +1117,7 @@ export default function HealerDetailPage() {
           display: flex;
           flex-direction: column;
           gap: 24px;
+          margin-top: 60px;
         }
 
         .section-header-row {
@@ -1269,7 +1256,7 @@ export default function HealerDetailPage() {
           display: flex;
           flex-direction: column;
           gap: 6px;
-          margin-top: 10px;
+          margin-top: 50px;
         }
 
         .ad-label {
@@ -1605,18 +1592,21 @@ export default function HealerDetailPage() {
 
         /* ==================== RESPONSIVE MEDIA QUERIES ==================== */
         @media (max-width: 1024px) {
-          .about-grid {
+          .profile-top-grid {
             grid-template-columns: 1fr;
-            gap: 50px;
+            gap: 40px;
           }
 
-          .right-column {
+          .profile-sidebar-column {
             gap: 32px;
           }
 
-          .intro-grid {
-            grid-template-columns: 1fr;
-            gap: 32px;
+          .video-slot {
+            margin-top: 16px !important;
+          }
+
+          .sidebar-section {
+            margin-top: 0 !important;
           }
         }
 

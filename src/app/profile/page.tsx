@@ -10,10 +10,10 @@ import { Card } from "@/components/ui/Card";
 export default function UserProfilePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  
+
   // Auth view mode: "login" or "signup"
   const [authMode, setAuthMode] = useState<"login" | "signup">("login");
-  
+
   // Session User
   const [sessionUser, setSessionUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -73,7 +73,7 @@ export default function UserProfilePage() {
       const json = await res.json();
       if (json.success) {
         setProfileData(json.data);
-        
+
         // Populate edit form states
         setEditName(json.data.name || "");
         setEditPhone(json.data.phone || "");
@@ -93,7 +93,7 @@ export default function UserProfilePage() {
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError("");
-    
+
     if (!loginEmail.trim() || !loginPassword) {
       setLoginError("Please enter both email and password.");
       return;
@@ -112,7 +112,7 @@ export default function UserProfilePage() {
         window.localStorage.setItem("divingsanatan_user_session", JSON.stringify(json.data));
         setSessionUser(json.data);
         loadFullProfile(json.data.id);
-        
+
         // Handle redirect parameter if exists
         const redirect = searchParams.get("redirect");
         if (redirect) {
@@ -165,14 +165,14 @@ export default function UserProfilePage() {
         window.localStorage.setItem("divingsanatan_user_session", JSON.stringify(json.data));
         setSessionUser(json.data);
         loadFullProfile(json.data.id);
-        
+
         // Clear inputs
         setSignupName("");
         setSignupEmail("");
         setSignupPhone("");
         setSignupDob("");
         setSignupPassword("");
-        
+
         // Redirect if needed
         const redirect = searchParams.get("redirect");
         if (redirect) {
@@ -228,12 +228,12 @@ export default function UserProfilePage() {
       if (json.success) {
         setEditSuccess("Profile details updated successfully!");
         setEditPassword("");
-        
+
         // Update local session
         const updatedSession = { ...sessionUser, name: editName };
         window.localStorage.setItem("divingsanatan_user_session", JSON.stringify(updatedSession));
         setSessionUser(updatedSession);
-        
+
         // Refresh full profile details
         loadFullProfile(sessionUser.id);
       } else {
@@ -279,7 +279,7 @@ export default function UserProfilePage() {
           <span className="chakra-node-percentage">{score}% Flow</span>
         </div>
         <div className="chakra-progress-bar-container">
-          <div 
+          <div
             className={`chakra-progress-bar-fill ${colorClass}`}
             style={{ width: `${score}%` }}
           />
@@ -324,7 +324,7 @@ export default function UserProfilePage() {
 
             <Card variant="glass" className="auth-form-card">
               <div className="auth-tabs">
-                <button 
+                <button
                   className={`auth-tab-btn ${authMode === "login" ? "active" : ""}`}
                   onClick={() => {
                     setAuthMode("login");
@@ -333,7 +333,7 @@ export default function UserProfilePage() {
                 >
                   Log In
                 </button>
-                <button 
+                <button
                   className={`auth-tab-btn ${authMode === "signup" ? "active" : ""}`}
                   onClick={() => {
                     setAuthMode("signup");
@@ -349,15 +349,15 @@ export default function UserProfilePage() {
                 <form onSubmit={handleLoginSubmit} className="auth-form">
                   <h3 className="auth-section-title">Welcome Back</h3>
                   <p className="auth-section-desc">Log in to view your diagnostic files and comment on blogs.</p>
-                  
+
                   {loginError && <div className="alert-message error">{loginError}</div>}
 
                   <div className="input-group">
                     <label htmlFor="login-email">Email Address</label>
-                    <input 
+                    <input
                       id="login-email"
-                      type="email" 
-                      className="glass-input" 
+                      type="email"
+                      className="glass-input"
                       placeholder="you@example.com"
                       value={loginEmail}
                       onChange={(e) => setLoginEmail(e.target.value)}
@@ -367,10 +367,10 @@ export default function UserProfilePage() {
 
                   <div className="input-group">
                     <label htmlFor="login-password">Password</label>
-                    <input 
+                    <input
                       id="login-password"
-                      type="password" 
-                      className="glass-input" 
+                      type="password"
+                      className="glass-input"
                       placeholder="••••••••"
                       value={loginPassword}
                       onChange={(e) => setLoginPassword(e.target.value)}
@@ -389,17 +389,17 @@ export default function UserProfilePage() {
                   <p className="auth-section-desc">
                     Register with the email you used during the quiz or booking to instantly pull your reports.
                   </p>
-                  
+
                   {signupError && <div className="alert-message error">{signupError}</div>}
                   {signupSuccess && <div className="alert-message success">{signupSuccess}</div>}
 
                   <div className="form-row">
                     <div className="input-group">
                       <label htmlFor="signup-name">Full Name</label>
-                      <input 
+                      <input
                         id="signup-name"
-                        type="text" 
-                        className="glass-input" 
+                        type="text"
+                        className="glass-input"
                         placeholder="John Doe"
                         value={signupName}
                         onChange={(e) => setSignupName(e.target.value)}
@@ -409,10 +409,10 @@ export default function UserProfilePage() {
 
                     <div className="input-group">
                       <label htmlFor="signup-email">Email Address</label>
-                      <input 
+                      <input
                         id="signup-email"
-                        type="email" 
-                        className="glass-input" 
+                        type="email"
+                        className="glass-input"
                         placeholder="you@example.com"
                         value={signupEmail}
                         onChange={(e) => setSignupEmail(e.target.value)}
@@ -424,10 +424,10 @@ export default function UserProfilePage() {
                   <div className="form-row">
                     <div className="input-group">
                       <label htmlFor="signup-phone">Phone / WhatsApp</label>
-                      <input 
+                      <input
                         id="signup-phone"
-                        type="tel" 
-                        className="glass-input" 
+                        type="tel"
+                        className="glass-input"
                         placeholder="+91 XXXXX XXXXX"
                         value={signupPhone}
                         onChange={(e) => setSignupPhone(e.target.value)}
@@ -437,9 +437,9 @@ export default function UserProfilePage() {
 
                     <div className="input-group">
                       <label htmlFor="signup-gender">Gender</label>
-                      <select 
+                      <select
                         id="signup-gender"
-                        className="glass-input" 
+                        className="glass-input"
                         value={signupGender}
                         onChange={(e) => setSignupGender(e.target.value)}
                       >
@@ -453,10 +453,10 @@ export default function UserProfilePage() {
                   <div className="form-row">
                     <div className="input-group">
                       <label htmlFor="signup-dob">Date of Birth</label>
-                      <input 
+                      <input
                         id="signup-dob"
-                        type="date" 
-                        className="glass-input" 
+                        type="date"
+                        className="glass-input"
                         value={signupDob}
                         onChange={(e) => setSignupDob(e.target.value)}
                         required
@@ -465,10 +465,10 @@ export default function UserProfilePage() {
 
                     <div className="input-group">
                       <label htmlFor="signup-password">Create Password</label>
-                      <input 
+                      <input
                         id="signup-password"
-                        type="password" 
-                        className="glass-input" 
+                        type="password"
+                        className="glass-input"
                         placeholder="Min 6 characters"
                         value={signupPassword}
                         onChange={(e) => setSignupPassword(e.target.value)}
@@ -487,7 +487,7 @@ export default function UserProfilePage() {
         ) : (
           /* ================= LOGGED-IN VIEW (DASHBOARD) ================= */
           <div className="dashboard-layout">
-            
+
             {/* Left/Sidebar navigation */}
             <div className="dashboard-sidebar">
               <Card variant="glass" className="user-summary-card">
@@ -496,15 +496,15 @@ export default function UserProfilePage() {
                 </div>
                 <h2 className="user-sidebar-name">{sessionUser.name}</h2>
                 <span className="user-sidebar-email">{sessionUser.email}</span>
-                
+
                 <div className="dashboard-nav-menu">
-                  <button 
+                  <button
                     className={`dash-nav-btn ${activeTab === "report" ? "active" : ""}`}
                     onClick={() => setActiveTab("report")}
                   >
                     <span>📜</span> My Soul Report
                   </button>
-                  <button 
+                  <button
                     className={`dash-nav-btn ${activeTab === "profile" ? "active" : ""}`}
                     onClick={() => setActiveTab("profile")}
                   >
@@ -538,10 +538,10 @@ export default function UserProfilePage() {
 
                     <div className="input-group disabled-group">
                       <label htmlFor="edit-email">Email Address (Locked)</label>
-                      <input 
+                      <input
                         id="edit-email"
-                        type="email" 
-                        className="glass-input disabled" 
+                        type="email"
+                        className="glass-input disabled"
                         value={profileData?.email || sessionUser.email}
                         disabled
                       />
@@ -551,10 +551,10 @@ export default function UserProfilePage() {
                     <div className="form-row">
                       <div className="input-group">
                         <label htmlFor="edit-name">Full Name</label>
-                        <input 
+                        <input
                           id="edit-name"
-                          type="text" 
-                          className="glass-input" 
+                          type="text"
+                          className="glass-input"
                           value={editName}
                           onChange={(e) => setEditName(e.target.value)}
                           required
@@ -563,10 +563,10 @@ export default function UserProfilePage() {
 
                       <div className="input-group">
                         <label htmlFor="edit-phone">Phone / WhatsApp</label>
-                        <input 
+                        <input
                           id="edit-phone"
-                          type="tel" 
-                          className="glass-input" 
+                          type="tel"
+                          className="glass-input"
                           value={editPhone}
                           onChange={(e) => setEditPhone(e.target.value)}
                           required
@@ -577,9 +577,9 @@ export default function UserProfilePage() {
                     <div className="form-row">
                       <div className="input-group">
                         <label htmlFor="edit-gender">Gender</label>
-                        <select 
+                        <select
                           id="edit-gender"
-                          className="glass-input" 
+                          className="glass-input"
                           value={editGender}
                           onChange={(e) => setEditGender(e.target.value)}
                         >
@@ -591,10 +591,10 @@ export default function UserProfilePage() {
 
                       <div className="input-group">
                         <label htmlFor="edit-dob">Date of Birth</label>
-                        <input 
+                        <input
                           id="edit-dob"
-                          type="date" 
-                          className="glass-input" 
+                          type="date"
+                          className="glass-input"
                           value={editDob}
                           onChange={(e) => setEditDob(e.target.value)}
                           required
@@ -604,17 +604,17 @@ export default function UserProfilePage() {
 
                     <div className="input-group" style={{ marginTop: "16px" }}>
                       <label htmlFor="edit-password">Update Password (Optional)</label>
-                      <input 
+                      <input
                         id="edit-password"
-                        type="password" 
-                        className="glass-input" 
+                        type="password"
+                        className="glass-input"
                         placeholder="Leave blank to keep current password"
                         value={editPassword}
                         onChange={(e) => setEditPassword(e.target.value)}
                       />
                     </div>
 
-                    <Button variant="gold" type="submit" disabled={editSubmitting} style={{ marginTop: "16px", width: "fit-content", alignSelf: "flex-end" }}>
+                    <Button variant="gold" type="submit" disabled={editSubmitting} >
                       {editSubmitting ? "Saving Changes..." : "Save Profile Details"}
                     </Button>
                   </form>
@@ -622,103 +622,8 @@ export default function UserProfilePage() {
               ) : (
                 /* Reports Tab */
                 <div className="reports-tab-content" style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-                  
-                  {/* Master Practitioner Report Card */}
-                  <Card variant="glass" className="dashboard-main-card somatic-report-card">
-                    <div className="report-header-badge">
-                      <span>✨ PERSONALIZED ALIGNMENT SHEET</span>
-                    </div>
-                    
-                    <h2 className="dash-card-title">Somatic Diagnosis & Recommendations</h2>
-                    
-                    <div className="report-meta-row">
-                      <div className="meta-block">
-                        <span className="meta-label">PATIENT</span>
-                        <strong className="meta-value">{profileData?.name}</strong>
-                      </div>
-                      <div className="meta-block">
-                        <span className="meta-label">FOCUS BLOCKAGE</span>
-                        <strong className="meta-value text-highlight">{profileData?.category || "Stress"}</strong>
-                      </div>
-                      <div className="meta-block">
-                        <span className="meta-label">RECORD DATE</span>
-                        <strong className="meta-value">{profileData ? formatDateString(profileData.created_at) : "Pending"}</strong>
-                      </div>
-                    </div>
 
-                    <div className="report-divider"></div>
 
-                    {profileData?.report_sent && profileData?.report_content ? (
-                      <div className="report-practitioner-block">
-                        <h4 className="report-sub-title">Practitioner Analysis & Guidance</h4>
-                        <div className="report-text-render">
-                          {profileData.report_content.split("\n").map((line: string, i: number) => (
-                            <p key={i} className="report-text-paragraph">{line}</p>
-                          ))}
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="pending-report-view">
-                        <div className="pending-indicator-icon">🌀</div>
-                        <h4>Aura Diagnostic Scan in Progress</h4>
-                        <p>
-                          Our practitioners are currently mapping your emotional responses and analyzing your bio-energy nodes.
-                          A detailed, custom-tailored recommendation guide will appear here shortly. In the meantime, see your initial chakra calculations below.
-                        </p>
-                      </div>
-                    )}
-                  </Card>
-
-                  {/* Chakra Flow Alignment Card */}
-                  <Card variant="glass" className="dashboard-main-card">
-                    <h3 className="dash-card-title" style={{ fontSize: "1.4rem" }}>Your Chakra Aura Alignment</h3>
-                    <p className="dash-card-desc">Calculated flow capacity based on somatic response questions. Levels below 50% indicate blockages or energetic congestions.</p>
-
-                    <div className="chakra-nodes-grid" style={{ display: "flex", flexDirection: "column", gap: "16px", marginTop: "24px" }}>
-                      {profileData?.chakra_scores ? (
-                        Object.keys(profileData.chakra_scores).map((chakra) => {
-                          const score = profileData.chakra_scores[chakra];
-                          const colorClass = `chakra-${chakra.toLowerCase()}`;
-                          const meaning = getChakraMeaning(chakra);
-                          return renderChakraNode(chakra, score, colorClass, meaning);
-                        })
-                      ) : (
-                        // Fallbacks if no score calculated
-                        <>
-                          {renderChakraNode("Crown", 80, "chakra-crown", getChakraMeaning("Crown"))}
-                          {renderChakraNode("ThirdEye", 75, "chakra-thirdeye", getChakraMeaning("ThirdEye"))}
-                          {renderChakraNode("Throat", 70, "chakra-throat", getChakraMeaning("Throat"))}
-                          {renderChakraNode("Heart", 85, "chakra-heart", getChakraMeaning("Heart"))}
-                          {renderChakraNode("Solar", 70, "chakra-solar", getChakraMeaning("Solar"))}
-                          {renderChakraNode("Sacral", 75, "chakra-sacral", getChakraMeaning("Sacral"))}
-                          {renderChakraNode("Root", 80, "chakra-root", getChakraMeaning("Root"))}
-                        </>
-                      )}
-                    </div>
-                  </Card>
-
-                  {/* Quiz Answers Card */}
-                  <Card variant="glass" className="dashboard-main-card">
-                    <h3 className="dash-card-title" style={{ fontSize: "1.4rem" }}>Submitted Somatic Responses</h3>
-                    <p className="dash-card-desc">The answers you logged during your emotional diagnostic check.</p>
-
-                    <div className="submitted-answers-list" style={{ display: "flex", flexDirection: "column", gap: "16px", marginTop: "20px" }}>
-                      {profileData?.user_answers && profileData.user_answers.length > 0 ? (
-                        profileData.user_answers.map((ans: any, idx: number) => (
-                          <div key={ans.id} className="user-qa-block" style={{ paddingBottom: "12px", borderBottom: "1.5px solid rgba(0,0,0,0.03)" }}>
-                            <h4 style={{ fontSize: "0.95rem", color: "#4c1d95", fontWeight: "600" }}>
-                              <span style={{ color: "#7c3aed" }}>Q{idx + 1}: </span> {ans.question_text}
-                            </h4>
-                            <p style={{ fontSize: "0.9rem", color: "#475569", marginTop: "6px" }}>
-                              <strong>Your Answer:</strong> {ans.answer_text}
-                            </p>
-                          </div>
-                        ))
-                      ) : (
-                        <p style={{ fontStyle: "italic", color: "#94a3b8" }}>No quiz logs found for this profile. Complete a home page diagnostic to populate answers.</p>
-                      )}
-                    </div>
-                  </Card>
                 </div>
               )}
             </div>

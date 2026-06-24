@@ -102,5 +102,6 @@ export interface Blog {
   image: string;
   images?: string[];
   videos?: string[];
+  section?: string | null;
   createdAt?: string;
 }

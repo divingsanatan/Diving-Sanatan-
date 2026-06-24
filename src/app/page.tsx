@@ -6,7 +6,6 @@ import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { formatCurrency } from "@/utils/formatters";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { Service, Category } from "@/types/database";
@@ -18,7 +17,6 @@ export default function Home() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [faqOpen, setFaqOpen] = useState(false);
-  const [featuredHealer, setFeaturedHealer] = useState<any>(null);
 
 
   // Multi-step Quiz Flow States
@@ -124,22 +122,6 @@ export default function Home() {
         window.history.replaceState({}, document.title, newUrl);
       }
     }
-  }, []);
-
-  // Fetch featured healer for homepage display
-  useEffect(() => {
-    async function loadFeaturedHealer() {
-      try {
-        const res = await fetch("/api/practitioners");
-        const json = await res.json();
-        if (json.success && json.data && json.data.length > 0) {
-          setFeaturedHealer(json.data[0]);
-        }
-      } catch (err) {
-        console.error("Failed to load featured healer:", err);
-      }
-    }
-    loadFeaturedHealer();
   }, []);
 
   const sliderRef = useRef<HTMLDivElement>(null);
@@ -625,138 +607,6 @@ export default function Home() {
                     <div className="stat-label">Sessions via Google Meet</div>
                   </div>
                 </div>
-
-                {/* Featured Healer Card Section */}
-                {featuredHealer && (
-                  <div className="featured-healer-homepage" style={{
-                    marginTop: "48px",
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    gap: "16px",
-                    width: "100%",
-                    maxWidth: "500px",
-                    marginLeft: "auto",
-                    marginRight: "auto"
-                  }}>
-                    <h3 style={{
-                      fontFamily: "var(--font-serif)",
-                      fontSize: "1.5rem",
-                      color: "#4c1d95",
-                      fontWeight: 700,
-                      letterSpacing: "0.03em"
-                    }}>Featured Spiritual Guide</h3>
-                    
-                    <div className="healer-card-home glass-panel" style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "20px",
-                      padding: "20px",
-                      borderRadius: "20px",
-                      background: "rgba(255, 255, 255, 0.8)",
-                      border: "1px solid var(--gold-border)",
-                      boxShadow: "0 8px 30px rgba(168, 85, 247, 0.04)",
-                      width: "100%",
-                      textAlign: "left"
-                    }}>
-                      <div className="healer-photo-wrapper" style={{
-                        width: "90px",
-                        height: "90px",
-                        borderRadius: "50%",
-                        overflow: "hidden",
-                        flexShrink: 0,
-                        border: "2px solid var(--gold-border)",
-                        boxShadow: "0 4px 15px rgba(168,85,247,0.1)"
-                      }}>
-                        <img 
-                          src={featuredHealer.image && (featuredHealer.image.startsWith("http") || featuredHealer.image.startsWith("/")) ? featuredHealer.image : "/images/anara.png"} 
-                          alt={featuredHealer.name} 
-                          style={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover"
-                          }}
-                        />
-                      </div>
-                      
-                      <div className="healer-details" style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: "6px",
-                        flexGrow: 1
-                      }}>
-                        <h4 style={{
-                          fontFamily: "var(--font-serif)",
-                          fontSize: "1.25rem",
-                          color: "#4c1d95",
-                          margin: 0,
-                          fontWeight: 700
-                        }}>{featuredHealer.name}</h4>
-                        
-                        <span style={{
-                          fontSize: "0.8rem",
-                          color: "#0d9488",
-                          fontWeight: 600,
-                          textTransform: "uppercase",
-                          letterSpacing: "0.02em"
-                        }}>{featuredHealer.specialty}</span>
-                        
-                        <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginTop: "2px" }}>
-                          {(featuredHealer.expertise || ["Chakra-Healing", "Reiki-Master"]).slice(0, 3).map((exp: string, idx: number) => (
-                            <span key={idx} style={{
-                              fontSize: "0.7rem",
-                              background: "rgba(168, 85, 247, 0.08)",
-                              color: "#6d28d9",
-                              padding: "2px 6px",
-                              borderRadius: "6px",
-                              fontWeight: 600
-                            }}>/{exp}</span>
-                          ))}
-                        </div>
-
-                        <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
-                          <Link 
-                            href={`/team/${featuredHealer.id}`}
-                            style={{
-                              display: "inline-block",
-                              backgroundColor: "#4c1d95",
-                              color: "white",
-                              padding: "8px 16px",
-                              borderRadius: "8px",
-                              fontSize: "0.78rem",
-                              fontWeight: 700,
-                              textDecoration: "none",
-                              boxShadow: "0 4px 10px rgba(76,29,149,0.15)",
-                              transition: "all 0.2s ease"
-                            }}
-                          >
-                            VIEW PROFILE
-                          </Link>
-                          <Link 
-                            href="/booking"
-                            style={{
-                              display: "inline-block",
-                              backgroundColor: "white",
-                              color: "#4c1d95",
-                              padding: "7px 16px",
-                              borderRadius: "8px",
-                              fontSize: "0.78rem",
-                              fontWeight: 700,
-                              border: "1.5px solid #4c1d95",
-                              textDecoration: "none",
-                              transition: "all 0.2s ease"
-                            }}
-                          >
-                            BOOK SESSION
-                          </Link>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-
-
               </div>
             </div>
           </section>

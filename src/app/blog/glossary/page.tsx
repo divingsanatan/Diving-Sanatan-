@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { useBlog } from "../BlogContext";
 
 interface GlossaryTerm {
   word: string;
@@ -66,7 +67,7 @@ const GLOSSARY_TERMS: GlossaryTerm[] = [
 ];
 
 export default function GlossaryPage() {
-  const [searchQuery, setSearchQuery] = useState("");
+  const { searchQuery } = useBlog(); // ← sidebar search drives this page
   const [activeLetter, setActiveLetter] = useState("all");
 
   const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
@@ -102,21 +103,17 @@ export default function GlossaryPage() {
         </p>
       </div>
 
-      {/* Control panel (Search & Alphabet combined) */}
+      {/* Control panel (Alphabet + active search badge — search is via sidebar) */}
       <section className="glossary-controls-section glass-panel">
-        <div className="glossary-search-wrapper">
-          <svg className="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="11" cy="11" r="8"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-          </svg>
-          <input
-            type="text"
-            placeholder="Search terms or definitions..."
-            className="search-input"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
+        {searchQuery && (
+          <div className="glossary-active-search-badge">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <span>&ldquo;{searchQuery}&rdquo;</span>
+          </div>
+        )}
 
         <div className="alphabet-bar">
           <button
@@ -263,34 +260,18 @@ export default function GlossaryPage() {
           border-radius: 20px;
           width: 100%;
         }
-        .glossary-search-wrapper {
+        .glossary-active-search-badge {
           display: flex;
           align-items: center;
-          position: relative;
-          width: 320px;
-        }
-        .search-icon {
-          position: absolute;
-          left: 12px;
-          color: hsl(var(--text-muted));
-          pointer-events: none;
-        }
-        .glossary-search-wrapper :global(.search-input) {
-          width: 100%;
-          padding: 8px 12px 8px 36px;
-          border-radius: 30px;
-          background: rgba(255, 255, 255, 0.6);
-          border: 1px solid var(--border-glass);
-          color: hsl(var(--text-cream));
-          font-family: var(--font-sans);
-          font-size: 0.85rem;
-          outline: none;
-          transition: var(--transition-smooth);
-        }
-        .glossary-search-wrapper :global(.search-input):focus {
-          background: rgba(255, 255, 255, 0.95);
-          border-color: #7c3aed;
-          box-shadow: 0 0 10px rgba(124, 58, 237, 0.15);
+          gap: 6px;
+          background: rgba(124, 58, 237, 0.07);
+          border: 1px solid rgba(124, 58, 237, 0.2);
+          color: #7c3aed;
+          font-size: 0.8rem;
+          font-weight: 600;
+          padding: 5px 12px;
+          border-radius: 20px;
+          white-space: nowrap;
         }
         .alphabet-bar {
           display: flex;

@@ -39,7 +39,7 @@ export default function BlogDetailsPage() {
   const [blog, setBlog] = useState<Blog | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [activeMediaIndex, setActiveMediaIndex] = useState(0);
 
   // User session
   const [user, setUser] = useState<any>(null);
@@ -73,14 +73,22 @@ export default function BlogDetailsPage() {
   const [modalSubmitting, setModalSubmitting] = useState(false);
   const [pendingActionAfterAuth, setPendingActionAfterAuth] = useState<"like" | "comment" | null>(null);
 
-  const nextImage = () => {
-    if (!blog || !blog.images || blog.images.length === 0) return;
-    setActiveImageIndex((prev) => (prev + 1) % blog.images!.length);
+  // Build combined media array: images first, then videos
+  const getMediaItems = (b: Blog) => {
+    const imgs = (b.images || []).map((src) => ({ type: "image" as const, src }));
+    const vids = (b.videos || []).map((src) => ({ type: "video" as const, src }));
+    return [...imgs, ...vids];
   };
 
-  const prevImage = () => {
-    if (!blog || !blog.images || blog.images.length === 0) return;
-    setActiveImageIndex((prev) => (prev - 1 + blog.images!.length) % blog.images!.length);
+  const isVideoUrl = (url: string) =>
+    /\.(mp4|webm|ogg|mov)$/i.test(url) || url.includes("video");
+
+  const nextMedia = (total: number) => {
+    setActiveMediaIndex((prev) => (prev + 1) % total);
+  };
+
+  const prevMedia = (total: number) => {
+    setActiveMediaIndex((prev) => (prev - 1 + total) % total);
   };
 
   // 1. Fetch user session on mount
@@ -98,7 +106,7 @@ export default function BlogDetailsPage() {
   // 2. Fetch blog details
   useEffect(() => {
     if (!id) return;
-    
+
     async function loadBlogDetail() {
       try {
         setLoading(true);
@@ -122,7 +130,7 @@ export default function BlogDetailsPage() {
   // 3. Fetch likes count & status
   useEffect(() => {
     if (!id) return;
-    
+
     async function loadLikes() {
       try {
         setLoadingLikes(true);
@@ -139,14 +147,14 @@ export default function BlogDetailsPage() {
         setLoadingLikes(false);
       }
     }
-    
+
     loadLikes();
   }, [id, user]);
 
   // 4. Fetch comments
   useEffect(() => {
     if (!id) return;
-    
+
     async function loadComments() {
       try {
         setLoadingComments(true);
@@ -161,7 +169,7 @@ export default function BlogDetailsPage() {
         setLoadingComments(false);
       }
     }
-    
+
     loadComments();
   }, [id]);
 
@@ -249,7 +257,7 @@ export default function BlogDetailsPage() {
   const handleModalLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setModalAuthError("");
-    
+
     if (!modalEmail.trim() || !modalPassword) {
       setModalAuthError("Please enter both email and password.");
       return;
@@ -268,7 +276,7 @@ export default function BlogDetailsPage() {
         window.localStorage.setItem("divingsanatan_user_session", JSON.stringify(json.data));
         setUser(json.data);
         setShowAuthModal(false);
-        
+
         // Execute pending actions
         if (pendingActionAfterAuth === "like") {
           toggleLikeForUser(json.data.id);
@@ -317,7 +325,7 @@ export default function BlogDetailsPage() {
         setModalAuthSuccess(json.message || "Registration completed successfully!");
         window.localStorage.setItem("divingsanatan_user_session", JSON.stringify(json.data));
         setUser(json.data);
-        
+
         setTimeout(() => {
           setShowAuthModal(false);
           if (pendingActionAfterAuth === "like") {
@@ -362,7 +370,7 @@ export default function BlogDetailsPage() {
     }
   };
 
-  const paragraphs = blog ? blog.content.split(/\r?\n\r?\n/).filter(p => p.trim().length > 0) : [];
+  const isHtmlContent = (c: string) => /^\s*<[a-z]/.test(c);
 
   return (
     <div className="blog-detail-page">
@@ -376,7 +384,7 @@ export default function BlogDetailsPage() {
         </div>
       ) : (
         <article className="blog-article-content">
-          
+
           {/* Header info */}
           <div className="article-header">
             <span className="article-category">{blog.category}</span>
@@ -392,109 +400,127 @@ export default function BlogDetailsPage() {
 
           {/* Cover image banner */}
           <div className="article-cover-wrapper">
-            <img 
-              src={getBlogImage(blog.image)} 
-              alt={blog.title} 
-              className="article-cover-img" 
+            <img
+              src={getBlogImage(blog.image)}
+              alt={blog.title}
+              className="article-cover-img"
             />
           </div>
 
           {/* Content panel */}
           <Card variant="glass" className="article-body-card">
             <div className="article-paragraph-wrapper">
-              {paragraphs.map((para, index) => (
-                <p key={index} className={index === 0 ? "first-paragraph-dropcap" : ""}>
-                  {para.trim()}
-                </p>
-              ))}
-              
-              {paragraphs.length <= 1 && (
-                <>
-                  {/* Visual quote spacer */}
-                  <div className="article-blockquote">
-                    <span className="quote-mark">“</span>
-                    <p>Energy flow balances are the foundational blueprint of physical comfort. Maintain your aura, and your mind will follow.</p>
-                  </div>
 
-                  <p>
-                    Somatic therapies remind us that blockades within our chakras aren't just mystical constructs. They represent chemical blockades in our nervous pathways. By introducing sound bowls vibrating at specific frequencies (e.g. 528Hz for DNA repair or 432Hz for deep meditation), we assist our bodies in aligning these frequencies, which stabilizes cortisol flow and reduces tension. Ensure you discuss layout sessions with a certified practitioner to customize crystals based on your current physical conditions.
-                  </p>
+              {blog && isHtmlContent(blog.content) ? (
+                /* Rich HTML content from RTE */
+                <div
+                  className="article-rich-content"
+                  dangerouslySetInnerHTML={{ __html: blog.content }}
+                />
+              ) : (
+                /* Legacy plain-text paragraph rendering */
+                <>
+                  {blog?.content.split(/\r?\n\r?\n/).filter(p => p.trim().length > 0).map((para, index) => (
+                    <p key={index} className={index === 0 ? "first-paragraph-dropcap" : ""}>
+                      {para.trim()}
+                    </p>
+                  ))}
+
+                  {(blog?.content.split(/\r?\n\r?\n/).filter(p => p.trim().length > 0).length ?? 0) <= 1 && (
+                    <>
+                      {/* Visual quote spacer */}
+                      <div className="article-blockquote">
+                        <span className="quote-mark">“</span>
+                        <p>Energy flow balances are the foundational blueprint of physical comfort. Maintain your aura, and your mind will follow.</p>
+                      </div>
+
+                      <p>
+                        Somatic therapies remind us that blockades within our chakras aren’t just mystical constructs. They represent chemical blockades in our nervous pathways. By introducing sound bowls vibrating at specific frequencies (e.g. 528Hz for DNA repair or 432Hz for deep meditation), we assist our bodies in aligning these frequencies, which stabilizes cortisol flow and reduces tension. Ensure you discuss layout sessions with a certified practitioner to customize crystals based on your current physical conditions.
+                      </p>
+                    </>
+                  )}
                 </>
               )}
             </div>
 
-            {/* Dynamic Gallery Carousel Showcase */}
-            {blog.images && blog.images.length > 0 && (
-              <div className="article-carousel-showcase">
-                <h4 className="media-section-title">✨ Sacred Gallery</h4>
-                
-                <div className="carousel-container glass-panel">
-                  {/* Viewport */}
-                  <div className="carousel-viewport">
-                    <img 
-                      src={getBlogImage(blog.images[activeImageIndex])} 
-                      alt={`${blog.title} slide ${activeImageIndex + 1}`} 
-                      className="carousel-active-slide-img"
-                      onClick={() => window.open(getBlogImage(blog.images![activeImageIndex]), "_blank")}
-                    />
-                  </div>
+            {/* Unified Media Carousel — images + videos combined */}
+            {(() => {
+              const mediaItems = getMediaItems(blog);
+              if (mediaItems.length === 0) return null;
+              const currentItem = mediaItems[activeMediaIndex];
+              return (
+                <div className="article-carousel-showcase">
+                  <h4 className="media-section-title">✨ Sacred Gallery</h4>
 
-                  {/* Navigation controls */}
-                  {blog.images.length > 1 && (
-                    <>
-                      <button type="button" className="carousel-control-btn prev" onClick={prevImage}>
-                        ‹
-                      </button>
-                      <button type="button" className="carousel-control-btn next" onClick={nextImage}>
-                        ›
-                      </button>
+                  <div className="carousel-container glass-panel">
+                    {/* Viewport */}
+                    <div className="carousel-viewport">
+                      {currentItem.type === "video" ? (
+                        <video
+                          key={currentItem.src}
+                          controls
+                          className="carousel-active-slide-video"
+                        >
+                          <source src={currentItem.src} type="video/mp4" />
+                          Your browser does not support the video tag.
+                        </video>
+                      ) : (
+                        <img
+                          src={getBlogImage(currentItem.src)}
+                          alt={`${blog.title} slide ${activeMediaIndex + 1}`}
+                          className="carousel-active-slide-img"
+                          onClick={() => window.open(getBlogImage(currentItem.src), "_blank")}
+                        />
+                      )}
 
-                      {/* Dot Indicators */}
-                      <div className="carousel-dots-indicator">
-                        {blog.images.map((_, idx) => (
-                          <button
-                            key={idx}
-                            type="button"
-                            className={`carousel-dot-btn ${activeImageIndex === idx ? "active" : ""}`}
-                            onClick={() => setActiveImageIndex(idx)}
-                            aria-label={`Jump to slide ${idx + 1}`}
-                          />
-                        ))}
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Dynamic Video Showcase */}
-            {blog.videos && blog.videos.length > 0 && (
-              <div className="article-video-showcase">
-                <h4 className="media-section-title">🎥 Video Transcriptions & Somatic Guides</h4>
-                <div className="videos-list">
-                  {blog.videos.map((vidUrl, index) => (
-                    <div key={index} className="video-player-wrapper glass-panel">
-                      <video controls className="showcase-video">
-                        <source src={vidUrl} type="video/mp4" />
-                        Your browser does not support the video tag.
-                      </video>
-                      <div className="video-info">
-                        <span className="video-badge">Session Video {index + 1}</span>
-                        <p className="video-url-label">{vidUrl.split('/').pop()}</p>
-                      </div>
+                      {/* Media type badge */}
+                      {currentItem.type === "video" && (
+                        <div className="carousel-media-badge">🎥 Video</div>
+                      )}
                     </div>
-                  ))}
+
+                    {/* Navigation controls */}
+                    {mediaItems.length > 1 && (
+                      <>
+                        <button type="button" className="carousel-control-btn prev" onClick={() => prevMedia(mediaItems.length)}>
+                          ‹
+                        </button>
+                        <button type="button" className="carousel-control-btn next" onClick={() => nextMedia(mediaItems.length)}>
+                          ›
+                        </button>
+
+                        {/* Dot Indicators */}
+                        <div className="carousel-dots-indicator">
+                          {mediaItems.map((item, idx) => (
+                            <button
+                              key={idx}
+                              type="button"
+                              className={`carousel-dot-btn ${item.type === "video" ? "video-dot" : ""} ${activeMediaIndex === idx ? "active" : ""}`}
+                              onClick={() => setActiveMediaIndex(idx)}
+                              aria-label={`Jump to ${item.type} slide ${idx + 1}`}
+                              title={item.type === "video" ? "Video" : "Image"}
+                            />
+                          ))}
+                        </div>
+                      </>
+                    )}
+
+                    {/* Slide counter */}
+                    <div className="carousel-counter">
+                      {activeMediaIndex + 1} / {mediaItems.length}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             {/* Interactive Likes, Share and Comments Sections */}
             <div className="article-interactions-section">
               <div className="interactions-bar glass-panel">
                 <div className="likes-interactive-trigger">
-                  <button 
-                    type="button" 
-                    className={`like-action-btn ${isLiked ? "liked" : ""}`} 
+                  <button
+                    type="button"
+                    className={`like-action-btn ${isLiked ? "liked" : ""}`}
                     onClick={handleLikeToggle}
                     disabled={loadingLikes}
                   >
@@ -506,8 +532,8 @@ export default function BlogDetailsPage() {
                 </div>
 
                 <div className="share-interactive-trigger">
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     className="share-action-btn"
                     onClick={() => setShowSharePopup(!showSharePopup)}
                   >
@@ -548,7 +574,7 @@ export default function BlogDetailsPage() {
                         className="comment-textarea"
                         required
                       />
-                      <Button variant="gold" type="submit" disabled={postingComment} style={{ alignSelf: "flex-end", marginTop: "12px" }}>
+                      <Button variant="gold" type="submit" disabled={postingComment}>
                         {postingComment ? "Posting reflection..." : "Publish Reflection"}
                       </Button>
                     </form>
@@ -588,7 +614,7 @@ export default function BlogDetailsPage() {
               <Button variant="gold-outline" onClick={() => router.push("/blog")}>
                 ← Back to Listings
               </Button>
-              
+
               <Button variant="gold" onClick={() => router.push(`/search?query=${encodeURIComponent(blog.category)}`)}>
                 Book Related Sessions
               </Button>
@@ -603,16 +629,16 @@ export default function BlogDetailsPage() {
         <div className="auth-modal-overlay" onClick={() => { setShowAuthModal(false); setPendingActionAfterAuth(null); }}>
           <div className="auth-modal-card glass-panel" onClick={(e) => e.stopPropagation()}>
             <button type="button" className="close-modal-btn" onClick={() => { setShowAuthModal(false); setPendingActionAfterAuth(null); }}>×</button>
-            
+
             <div className="modal-auth-tabs">
-              <button 
+              <button
                 type="button"
                 className={`modal-auth-tab-btn ${modalAuthMode === "login" ? "active" : ""}`}
                 onClick={() => { setModalAuthMode("login"); setModalAuthError(""); }}
               >
                 Log In
               </button>
-              <button 
+              <button
                 type="button"
                 className={`modal-auth-tab-btn ${modalAuthMode === "signup" ? "active" : ""}`}
                 onClick={() => { setModalAuthMode("signup"); setModalAuthError(""); }}
@@ -628,9 +654,9 @@ export default function BlogDetailsPage() {
               <form onSubmit={handleModalLoginSubmit} className="modal-auth-form">
                 <div className="modal-input-group">
                   <label>Email Address</label>
-                  <input 
-                    type="email" 
-                    placeholder="you@example.com" 
+                  <input
+                    type="email"
+                    placeholder="you@example.com"
                     value={modalEmail}
                     onChange={(e) => setModalEmail(e.target.value)}
                     className="modal-glass-input"
@@ -639,16 +665,16 @@ export default function BlogDetailsPage() {
                 </div>
                 <div className="modal-input-group">
                   <label>Password</label>
-                  <input 
-                    type="password" 
-                    placeholder="••••••••" 
+                  <input
+                    type="password"
+                    placeholder="••••••••"
                     value={modalPassword}
                     onChange={(e) => setModalPassword(e.target.value)}
                     className="modal-glass-input"
                     required
                   />
                 </div>
-                <Button variant="gold" type="submit" disabled={modalSubmitting} style={{ marginTop: "12px", width: "100%" }}>
+                <Button variant="gold" type="submit" disabled={modalSubmitting} >
                   {modalSubmitting ? "Authenticating..." : "Log In & Continue"}
                 </Button>
               </form>
@@ -656,9 +682,9 @@ export default function BlogDetailsPage() {
               <form onSubmit={handleModalSignupSubmit} className="modal-auth-form signup">
                 <div className="modal-input-group">
                   <label>Full Name</label>
-                  <input 
-                    type="text" 
-                    placeholder="John Doe" 
+                  <input
+                    type="text"
+                    placeholder="John Doe"
                     value={modalName}
                     onChange={(e) => setModalName(e.target.value)}
                     className="modal-glass-input"
@@ -667,9 +693,9 @@ export default function BlogDetailsPage() {
                 </div>
                 <div className="modal-input-group">
                   <label>Email Address</label>
-                  <input 
-                    type="email" 
-                    placeholder="you@example.com" 
+                  <input
+                    type="email"
+                    placeholder="you@example.com"
                     value={modalEmail}
                     onChange={(e) => setModalEmail(e.target.value)}
                     className="modal-glass-input"
@@ -678,9 +704,9 @@ export default function BlogDetailsPage() {
                 </div>
                 <div className="modal-input-group">
                   <label>Phone / WhatsApp</label>
-                  <input 
-                    type="tel" 
-                    placeholder="+91 XXXXX XXXXX" 
+                  <input
+                    type="tel"
+                    placeholder="+91 XXXXX XXXXX"
                     value={modalPhone}
                     onChange={(e) => setModalPhone(e.target.value)}
                     className="modal-glass-input"
@@ -698,8 +724,8 @@ export default function BlogDetailsPage() {
                   </div>
                   <div className="modal-input-group">
                     <label>Date of Birth</label>
-                    <input 
-                      type="date" 
+                    <input
+                      type="date"
                       value={modalDob}
                       onChange={(e) => setModalDob(e.target.value)}
                       className="modal-glass-input"
@@ -709,9 +735,9 @@ export default function BlogDetailsPage() {
                 </div>
                 <div className="modal-input-group">
                   <label>Create Password</label>
-                  <input 
-                    type="password" 
-                    placeholder="Min 6 characters" 
+                  <input
+                    type="password"
+                    placeholder="Min 6 characters"
                     value={modalPassword}
                     onChange={(e) => setModalPassword(e.target.value)}
                     className="modal-glass-input"
@@ -790,6 +816,69 @@ export default function BlogDetailsPage() {
           flex-direction: column;
           gap: 24px;
         }
+        /* Rich HTML content (from RTE) */
+        .article-rich-content {
+          font-size: 1.05rem;
+          line-height: 1.85;
+          color: hsl(var(--text-cream));
+        }
+        .article-rich-content p {
+          margin: 0 0 16px;
+          font-size: 1.05rem;
+          line-height: 1.85;
+          color: hsl(var(--text-cream));
+        }
+        .article-rich-content h2 {
+          font-family: var(--font-serif);
+          font-size: 1.55rem;
+          font-weight: 700;
+          color: #4c1d95;
+          margin: 28px 0 12px;
+          line-height: 1.3;
+        }
+        .article-rich-content h3 {
+          font-size: 1.2rem;
+          font-weight: 700;
+          color: #5b21b6;
+          margin: 22px 0 8px;
+        }
+        .article-rich-content blockquote {
+          border-left: 3px solid #7c3aed;
+          background: rgba(168, 85, 247, 0.04);
+          padding: 16px 24px;
+          border-radius: 0 16px 16px 0;
+          margin: 20px 0;
+          font-style: italic;
+          color: #4c1d95;
+          font-family: var(--font-serif);
+          font-size: 1.08rem;
+        }
+        .article-rich-content ul {
+          list-style: disc;
+          padding-left: 28px;
+          margin: 12px 0;
+        }
+        .article-rich-content ol {
+          list-style: decimal;
+          padding-left: 28px;
+          margin: 12px 0;
+        }
+        .article-rich-content li {
+          margin-bottom: 6px;
+          font-size: 1.02rem;
+          line-height: 1.7;
+          color: hsl(var(--text-cream));
+        }
+        .article-rich-content a {
+          color: #7c3aed;
+          text-decoration: underline;
+          transition: color 0.15s ease;
+        }
+        .article-rich-content a:hover { color: #5b21b6; }
+        .article-rich-content b, .article-rich-content strong { font-weight: 700; }
+        .article-rich-content i, .article-rich-content em { font-style: italic; }
+        .article-rich-content u { text-decoration: underline; }
+        .article-rich-content s { text-decoration: line-through; }
         .article-paragraph-wrapper p {
           font-size: 1.05rem;
           line-height: 1.8;
@@ -1283,48 +1372,56 @@ export default function BlogDetailsPage() {
           transform: scale(1.3);
           box-shadow: 0 0 8px #7c3aed;
         }
-        .videos-list {
-          display: flex;
-          flex-direction: column;
-          gap: 24px;
-          margin-bottom: 24px;
-        }
-        .video-player-wrapper {
-          border-radius: 20px;
-          overflow: hidden;
-          border: 1px solid var(--border-glass);
-          padding: 0 !important;
-          background: rgba(255, 255, 255, 0.8);
-          box-shadow: 0 8px 30px rgba(0,0,0,0.04);
-        }
-        .showcase-video {
+        /* Unified carousel video slide */
+        .carousel-active-slide-video {
           width: 100%;
-          max-height: 420px;
+          height: 100%;
+          object-fit: contain;
           background: #000;
           display: block;
         }
-        .video-info {
-          padding: 16px 20px;
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          border-top: 1px solid rgba(0,0,0,0.03);
-        }
-        .video-badge {
-          background: rgba(124, 58, 237, 0.08);
-          border: 1px solid rgba(124, 58, 237, 0.2);
-          color: #7c3aed;
-          font-size: 0.72rem;
+        /* Media type badge inside viewport */
+        .carousel-media-badge {
+          position: absolute;
+          top: 16px;
+          left: 16px;
+          background: rgba(0, 0, 0, 0.55);
+          backdrop-filter: blur(6px);
+          color: #fff;
+          font-size: 0.75rem;
           font-weight: 700;
-          padding: 4px 10px;
-          border-radius: 6px;
-          text-transform: uppercase;
+          padding: 5px 12px;
+          border-radius: 20px;
+          letter-spacing: 0.03em;
+          z-index: 10;
+          pointer-events: none;
         }
-        .video-url-label {
-          font-size: 0.82rem;
-          color: hsl(var(--text-muted));
-          margin: 0 !important;
-          font-weight: 500;
+        /* Slide counter top-right */
+        .carousel-counter {
+          position: absolute;
+          top: 16px;
+          right: 16px;
+          background: rgba(0, 0, 0, 0.45);
+          backdrop-filter: blur(6px);
+          color: rgba(255,255,255,0.9);
+          font-size: 0.75rem;
+          font-weight: 600;
+          padding: 5px 12px;
+          border-radius: 20px;
+          z-index: 10;
+          pointer-events: none;
+          letter-spacing: 0.03em;
+        }
+        /* Video dot style */
+        .carousel-dot-btn.video-dot {
+          border-radius: 4px;
+          width: 10px;
+          height: 10px;
+          background: rgba(255,255,255,0.55);
+        }
+        .carousel-dot-btn.video-dot.active {
+          background: #f59e0b;
+          box-shadow: 0 0 8px #f59e0b;
         }
       `}</style>
     </div>

@@ -121,7 +121,7 @@ html, body {
   color: hsl(var(--text-cream));
   font-family: var(--font-sans);
   min-height: 100vh;
-  overflow-x: hidden;
+  overflow-x: clip;
   scroll-behavior: smooth;
 }
 

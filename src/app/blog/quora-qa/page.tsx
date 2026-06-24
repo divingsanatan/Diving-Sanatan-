@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { useBlog } from "../BlogContext";
 
 interface QAnswer {
   id: string;
@@ -84,7 +85,7 @@ const QUESTIONS_DATA: QuestionItem[] = [
 
 export default function QuoraQAPage() {
   const [questions, setQuestions] = useState<QuestionItem[]>(QUESTIONS_DATA);
-  const [searchQuery, setSearchQuery] = useState("");
+  const { searchQuery } = useBlog(); // ← sidebar search drives this page
   const [selectedQuestionId, setSelectedQuestionId] = useState("q-1");
   const [newQuestionText, setNewQuestionText] = useState("");
 
@@ -157,22 +158,18 @@ export default function QuoraQAPage() {
         </p>
       </div>
 
-      {/* Control panel (Search inside glass panel) */}
-      <section className="qa-controls-section glass-panel">
-        <div className="qa-search-wrapper">
-          <svg className="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="11" cy="11" r="8"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-          </svg>
-          <input
-            type="text"
-            placeholder="Search community questions..."
-            className="search-input"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-      </section>
+      {/* Search indicator — actual search is done via the sidebar */}
+      {searchQuery && (
+        <section className="qa-controls-section glass-panel">
+          <div className="qa-active-search-badge">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <span>Filtering by &ldquo;{searchQuery}&rdquo;</span>
+          </div>
+        </section>
+      )}
 
       <div className="qa-grid">
         {/* Left: Ask Question & Questions List */}
@@ -323,38 +320,22 @@ export default function QuoraQAPage() {
           display: flex;
           justify-content: center;
           align-items: center;
-          padding: 12px 24px;
+          padding: 10px 24px;
           border-radius: 20px;
           width: 100%;
         }
-        .qa-search-wrapper {
+        .qa-active-search-badge {
           display: flex;
           align-items: center;
-          position: relative;
-          width: 320px;
-        }
-        .search-icon {
-          position: absolute;
-          left: 12px;
-          color: hsl(var(--text-muted));
-          pointer-events: none;
-        }
-        .qa-search-wrapper :global(.search-input) {
-          width: 100%;
-          padding: 8px 12px 8px 36px;
-          border-radius: 30px;
-          background: rgba(255, 255, 255, 0.6);
-          border: 1px solid var(--border-glass);
-          color: hsl(var(--text-cream));
-          font-family: var(--font-sans);
-          font-size: 0.85rem;
-          outline: none;
-          transition: var(--transition-smooth);
-        }
-        .qa-search-wrapper :global(.search-input):focus {
-          background: rgba(255, 255, 255, 0.95);
-          border-color: #7c3aed;
-          box-shadow: 0 0 10px rgba(124, 58, 237, 0.15);
+          gap: 6px;
+          background: rgba(124, 58, 237, 0.07);
+          border: 1px solid rgba(124, 58, 237, 0.2);
+          color: #7c3aed;
+          font-size: 0.8rem;
+          font-weight: 600;
+          padding: 5px 12px;
+          border-radius: 20px;
+          white-space: nowrap;
         }
         .qa-grid {
           display: grid;

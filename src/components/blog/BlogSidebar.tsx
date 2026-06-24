@@ -85,47 +85,12 @@ export const BlogSidebar: React.FC = () => {
       ),
     },
     {
-      name: "Local SEO Pages",
-      path: "/blog/local-seo",
-      description: "Regional guides & local booking",
-      icon: (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z" />
-          <circle cx="12" cy="10" r="3" />
-        </svg>
-      ),
-    },
-    {
-      name: "Pillar Pages",
-      path: "/blog/pillar",
-      description: "Comprehensive guide to 7 Chakras",
-      icon: (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M12 2L2 7l10 5 10-5-10-5z" />
-          <path d="M2 17l10 5 10-5" />
-          <path d="M2 12l10 5 10-5" />
-        </svg>
-      ),
-    },
-    {
       name: "Quora-Style Q&A",
       path: "/blog/quora-qa",
       description: "Expert answers to community FAQs",
       icon: (
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-        </svg>
-      ),
-    },
-    {
-      name: "Guided Practices",
-      path: "/blog/guided-practices",
-      description: "Interactive breathwork pacer",
-      icon: (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
-          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-          <path d="M2 12h20" />
         </svg>
       ),
     },
@@ -165,8 +130,6 @@ export const BlogSidebar: React.FC = () => {
         .blog-sidebar {
           padding: 12px;
           border-radius: 12px;
-          position: sticky;
-          top: 94px;
           display: flex;
           flex-direction: column;
           gap: 12px;
