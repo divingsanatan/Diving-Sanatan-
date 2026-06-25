@@ -243,7 +243,7 @@ export async function PUT(req: NextRequest) {
     if (process !== undefined) updates.process = process;
     
     // 1. Update basic fields
-    const { error: serviceError } = await runSupabaseQuery(() =>
+    const { error: serviceError } = await runSupabaseQuery(async () =>
       supabaseServer.from("services").update(updates).eq("id", id)
     );
       
@@ -259,7 +259,7 @@ export async function PUT(req: NextRequest) {
     
     // 2. Synchronize many-to-many categories mapping
     if (categoryIds && Array.isArray(categoryIds)) {
-      const { error: deleteError } = await runSupabaseQuery(() =>
+      const { error: deleteError } = await runSupabaseQuery(async () =>
         supabaseServer.from("service_categories").delete().eq("service_id", id)
       );
 
@@ -276,7 +276,7 @@ export async function PUT(req: NextRequest) {
           category_id: catId
         }));
         
-        const { error: relError } = await runSupabaseQuery(() =>
+        const { error: relError } = await runSupabaseQuery(async () =>
           supabaseServer.from("service_categories").insert(relations)
         );
           
@@ -290,7 +290,7 @@ export async function PUT(req: NextRequest) {
     }
     
     // 3. Fetch full updated service details
-    const { data: finalData, error: fetchError } = await runSupabaseQuery(() =>
+    const { data: finalData, error: fetchError } = await runSupabaseQuery(async () =>
       supabaseServer
         .from("services")
         .select(`
