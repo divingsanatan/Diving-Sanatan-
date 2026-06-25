@@ -2,6 +2,22 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/utils/supabaseServer";
 import { Service } from "@/types/database";
 
+async function runSupabaseQuery<T extends { error: { message?: string } | null }>(
+  operation: () => Promise<T>,
+  retries = 2
+): Promise<T> {
+  let lastResult: T | null = null;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    lastResult = await operation();
+    if (!lastResult.error) return lastResult;
+    const message = lastResult.error.message || "";
+    const isRetryable = message.toLowerCase().includes("fetch failed") || message.toLowerCase().includes("network");
+    if (!isRetryable || attempt === retries) return lastResult;
+    await new Promise((resolve) => setTimeout(resolve, 600 * (attempt + 1)));
+  }
+  return lastResult as T;
+}
+
 // Helper to map Supabase service with categories join to Service model
 function mapServiceCategories(s: any): Service {
   const relationLinks = s.service_categories || [];
@@ -210,12 +226,16 @@ export async function PUT(req: NextRequest) {
     if (!id) {
       return NextResponse.json({ success: false, error: "Service ID is required for updating" }, { status: 400 });
     }
+
+    if (!practitioner?.trim()) {
+      return NextResponse.json({ success: false, error: "A practitioner must be assigned to this service" }, { status: 400 });
+    }
     
-    const updates: any = {};
+    const updates: Record<string, unknown> = {};
     if (name) updates.name = name;
     if (price !== undefined) updates.price = Number(price);
     if (duration) updates.duration = duration;
-    if (practitioner) updates.practitioner = practitioner;
+    updates.practitioner = practitioner.trim();
     if (description) updates.description = description;
     if (image !== undefined) updates.image = image;
     if (video_url !== undefined) updates.video_url = video_url;
@@ -223,64 +243,100 @@ export async function PUT(req: NextRequest) {
     if (process !== undefined) updates.process = process;
     
     // 1. Update basic fields
-    if (Object.keys(updates).length > 0) {
-      const { error: serviceError } = await supabaseServer
-        .from("services")
-        .update(updates)
-        .eq("id", id);
-        
-      if (serviceError) {
-        return NextResponse.json({ success: false, error: serviceError.message }, { status: 500 });
-      }
+    const { error: serviceError } = await runSupabaseQuery(() =>
+      supabaseServer.from("services").update(updates).eq("id", id)
+    );
+      
+    if (serviceError) {
+      const message = serviceError.message || "Failed to update service";
+      return NextResponse.json({
+        success: false,
+        error: message.toLowerCase().includes("fetch failed")
+          ? "Database connection timed out. Please try saving again."
+          : message,
+      }, { status: 500 });
     }
     
     // 2. Synchronize many-to-many categories mapping
     if (categoryIds && Array.isArray(categoryIds)) {
-      // Delete existing relationships
-      await supabaseServer
-        .from("service_categories")
-        .delete()
-        .eq("service_id", id);
+      const { error: deleteError } = await runSupabaseQuery(() =>
+        supabaseServer.from("service_categories").delete().eq("service_id", id)
+      );
+
+      if (deleteError) {
+        return NextResponse.json({
+          success: false,
+          error: deleteError.message || "Failed to update service categories",
+        }, { status: 500 });
+      }
         
-      // Insert new ones
       if (categoryIds.length > 0) {
         const relations = categoryIds.map((catId: string) => ({
           service_id: id,
           category_id: catId
         }));
         
-        const { error: relError } = await supabaseServer
-          .from("service_categories")
-          .insert(relations);
+        const { error: relError } = await runSupabaseQuery(() =>
+          supabaseServer.from("service_categories").insert(relations)
+        );
           
         if (relError) {
-          console.error("Failed to update service category associations:", relError.message);
+          return NextResponse.json({
+            success: false,
+            error: relError.message || "Failed to save service categories",
+          }, { status: 500 });
         }
       }
     }
     
     // 3. Fetch full updated service details
-    const { data: finalData, error: fetchError } = await supabaseServer
-      .from("services")
-      .select(`
-        *,
-        service_categories (
-          categories (
-            id,
-            name
+    const { data: finalData, error: fetchError } = await runSupabaseQuery(() =>
+      supabaseServer
+        .from("services")
+        .select(`
+          *,
+          service_categories (
+            categories (
+              id,
+              name
+            )
           )
-        )
-      `)
-      .eq("id", id)
-      .single();
+        `)
+        .eq("id", id)
+        .single()
+    );
       
     if (fetchError || !finalData) {
-      return NextResponse.json({ success: false, error: "Failed to fetch updated service record" }, { status: 500 });
+      return NextResponse.json({
+        success: true,
+        data: {
+          id,
+          name: String(name || ""),
+          price: Number(price),
+          duration: String(duration || ""),
+          rating: 5,
+          practitioner: practitioner.trim(),
+          image: image || "aura_balancing",
+          description: String(description || ""),
+          categories: [],
+          categoryIds: categoryIds || [],
+          category: "Uncategorized",
+          video_url: video_url || "",
+          benefits: benefits || [],
+          process: process || [],
+        } satisfies Service,
+      });
     }
     
     return NextResponse.json({ success: true, data: mapServiceCategories(finalData) });
   } catch (error) {
-    return NextResponse.json({ success: false, error: "Failed to update service" }, { status: 500 });
+    const message = error instanceof Error ? error.message : "Failed to update service";
+    return NextResponse.json({
+      success: false,
+      error: message.toLowerCase().includes("fetch failed")
+        ? "Database connection timed out. Please try saving again."
+        : message,
+    }, { status: 500 });
   }
 }
 

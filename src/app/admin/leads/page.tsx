@@ -23,28 +23,35 @@ interface LeadProfile {
   report_sent?: boolean;
   report_content?: string;
   chakra_scores?: Record<string, number>;
+  has_auth?: boolean;
 }
+
+const PAGE_SIZE = 10;
+const categories = ["all", "Anxiety", "Stress", "Loss", "Health"];
 
 export default function LeadsAdmin() {
   const [leads, setLeads] = useState<LeadProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
-  const [expandedLeadId, setExpandedLeadId] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
+  const [viewingLead, setViewingLead] = useState<LeadProfile | null>(null);
   const [editingSubject, setEditingSubject] = useState("");
   const [editingContent, setEditingContent] = useState("");
   const [editingChakras, setEditingChakras] = useState<Record<string, number>>({
-    Root: 70, Sacral: 70, Solar: 70, Heart: 70, Throat: 70, ThirdEye: 70, Crown: 70
+    Root: 70, Sacral: 70, Solar: 70, Heart: 70, Throat: 70, ThirdEye: 70, Crown: 70,
   });
   const [sendingReport, setSendingReport] = useState(false);
   const [sendStatus, setSendStatus] = useState("");
 
-  const categories = ["all", "Anxiety", "Stress", "Loss", "Health"];
-
   useEffect(() => {
     fetchLeads();
   }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, activeCategory]);
 
   const fetchLeads = async () => {
     try {
@@ -61,42 +68,38 @@ export default function LeadsAdmin() {
     }
   };
 
-  const toggleExpandLead = (lead: LeadProfile) => {
-    if (expandedLeadId === lead.id) {
-      setExpandedLeadId(null);
-    } else {
-      setExpandedLeadId(lead.id);
-      setSendStatus("");
-      
-      setEditingSubject(`Your Personalized Soul Report & Somatic Alignment - Diving Sanatan`);
-      
-      const defaultChakras = {
-        Root: 70, Sacral: 70, Solar: 70, Heart: 70, Throat: 70, ThirdEye: 70, Crown: 70
-      };
-      if (lead.chakra_scores) {
-        Object.assign(defaultChakras, lead.chakra_scores);
-      } else {
-        const cat = lead.category.toLowerCase();
-        if (cat.includes("anxi")) {
-          defaultChakras.Root = 35;
-          defaultChakras.Solar = 45;
-        } else if (cat.includes("stress")) {
-          defaultChakras.Solar = 30;
-          defaultChakras.Heart = 45;
-        } else if (cat.includes("loss") || cat.includes("pain") || cat.includes("partner")) {
-          defaultChakras.Heart = 30;
-          defaultChakras.Crown = 50;
-        } else if (cat.includes("health")) {
-          defaultChakras.Root = 30;
-          defaultChakras.Sacral = 35;
-        }
-      }
-      setEditingChakras(defaultChakras);
+  const openViewModal = (lead: LeadProfile) => {
+    setViewingLead(lead);
+    setSendStatus("");
+    setEditingSubject(`Your Personalized Soul Report & Somatic Alignment - Diving Sanatan`);
 
-      if (lead.report_content) {
-        setEditingContent(lead.report_content);
-      } else {
-        setEditingContent(`Dear ${lead.name},
+    const defaultChakras = {
+      Root: 70, Sacral: 70, Solar: 70, Heart: 70, Throat: 70, ThirdEye: 70, Crown: 70,
+    };
+    if (lead.chakra_scores) {
+      Object.assign(defaultChakras, lead.chakra_scores);
+    } else {
+      const cat = lead.category.toLowerCase();
+      if (cat.includes("anxi")) {
+        defaultChakras.Root = 35;
+        defaultChakras.Solar = 45;
+      } else if (cat.includes("stress")) {
+        defaultChakras.Solar = 30;
+        defaultChakras.Heart = 45;
+      } else if (cat.includes("loss") || cat.includes("pain") || cat.includes("partner")) {
+        defaultChakras.Heart = 30;
+        defaultChakras.Crown = 50;
+      } else if (cat.includes("health")) {
+        defaultChakras.Root = 30;
+        defaultChakras.Sacral = 35;
+      }
+    }
+    setEditingChakras(defaultChakras);
+
+    if (lead.report_content) {
+      setEditingContent(lead.report_content);
+    } else {
+      setEditingContent(`Dear ${lead.name},
 
 Thank you for completing your Somatic Alignment check on Diving Sanatan. Our wellness practitioners have manually analyzed your responses to map out your energetic profile.
 
@@ -124,15 +127,19 @@ In addition, we recommend starting a specialized program like Aura Balancing or 
 
 In light & healing,
 Diving Sanatan Wellness Team`);
-      }
     }
+  };
+
+  const closeViewModal = () => {
+    setViewingLead(null);
+    setSendStatus("");
   };
 
   const handleSendReport = async (leadId: string) => {
     try {
       setSendingReport(true);
       setSendStatus("");
-      
+
       const res = await fetch("/api/leads/send-report", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -140,8 +147,8 @@ Diving Sanatan Wellness Team`);
           leadId,
           subject: editingSubject,
           content: editingContent,
-          chakraScores: editingChakras
-        })
+          chakraScores: editingChakras,
+        }),
       });
 
       const json = await res.json();
@@ -151,11 +158,28 @@ Diving Sanatan Wellness Team`);
       } else {
         setSendStatus(`Error: ${json.error}`);
       }
-    } catch (err: any) {
-      console.error(err);
-      setSendStatus(`Failed to connect: ${err.message}`);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Unknown error";
+      setSendStatus(`Failed to connect: ${message}`);
     } finally {
       setSendingReport(false);
+    }
+  };
+
+  const handleDeleteLead = async (id: string, name: string) => {
+    if (!confirm(`Delete user profile for "${name}"? This cannot be undone.`)) return;
+    try {
+      const res = await fetch(`/api/leads?id=${id}`, { method: "DELETE" });
+      const json = await res.json();
+      if (json.success) {
+        if (viewingLead?.id === id) closeViewModal();
+        fetchLeads();
+      } else {
+        alert("Delete failed: " + json.error);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Failed to delete profile.");
     }
   };
 
@@ -166,9 +190,9 @@ Diving Sanatan Wellness Team`);
         month: "short",
         day: "numeric",
         hour: "2-digit",
-        minute: "2-digit"
+        minute: "2-digit",
       });
-    } catch (e) {
+    } catch {
       return dateStr;
     }
   };
@@ -179,33 +203,43 @@ Diving Sanatan Wellness Team`);
       const difference = Date.now() - birthDate.getTime();
       const ageDate = new Date(difference);
       return Math.abs(ageDate.getUTCFullYear() - 1970);
-    } catch (e) {
+    } catch {
       return "";
     }
   };
 
   const filteredLeads = leads.filter((lead) => {
+    const q = searchQuery.toLowerCase();
     const matchesSearch =
-      lead.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      lead.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      lead.name.toLowerCase().includes(q) ||
+      lead.email.toLowerCase().includes(q) ||
       lead.phone.includes(searchQuery);
-
     const matchesCategory =
       activeCategory === "all" || lead.category === activeCategory;
-
     return matchesSearch && matchesCategory;
   });
 
+  const totalPages = Math.max(1, Math.ceil(filteredLeads.length / PAGE_SIZE));
+  const safePage = Math.min(currentPage, totalPages);
+  const paginatedLeads = filteredLeads.slice(
+    (safePage - 1) * PAGE_SIZE,
+    safePage * PAGE_SIZE
+  );
+
   return (
-    <div className="admin-container">
-      <div className="admin-header-row">
+    <div className="dashboard-content">
+      <div className="dashboard-header-row">
         <div>
-          <h1 className="admin-page-title">User Leads Profiles</h1>
-          <p className="admin-page-subtitle">Track and review patient emotional profiles, answers, and contacts</p>
+          <h2>User Profiles</h2>
+          <p className="admin-header-desc">
+            Unified leads &amp; auth users — one record per email, no duplicates.
+          </p>
         </div>
+        <button className="sync-btn" onClick={fetchLeads}>
+          🔄 Refresh
+        </button>
       </div>
 
-      {/* Filters Row */}
       <div className="filters-row">
         <input
           type="text"
@@ -214,7 +248,6 @@ Diving Sanatan Wellness Team`);
           onChange={(e) => setSearchQuery(e.target.value)}
           className="search-input"
         />
-        
         <div className="category-filters">
           {categories.map((cat) => (
             <button
@@ -229,221 +262,289 @@ Diving Sanatan Wellness Team`);
       </div>
 
       {loading ? (
-        <div className="loading-state">Loading leads profiles...</div>
-      ) : filteredLeads.length === 0 ? (
-        <div className="empty-state">No lead profiles found.</div>
+        <p className="admin-loading">Loading user profiles...</p>
       ) : (
-        <div className="leads-list">
-          {filteredLeads.map((lead) => {
-            const isExpanded = expandedLeadId === lead.id;
-            return (
-              <Card key={lead.id} variant="glass" className={`lead-card ${isExpanded ? "expanded" : ""}`}>
-                <div className="lead-row" onClick={() => toggleExpandLead(lead)}>
-                  <div className="lead-meta">
-                    <span className="lead-date">{formatDate(lead.created_at)}</span>
-                    <h3 className="lead-name">{lead.name}</h3>
-                    <span className="lead-email">{lead.email}</span>
-                  </div>
+        <Card variant="glass" className="admin-card-flush">
+          <div className="table-wrapper">
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>Date / Time</th>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Phone</th>
+                  <th>Category</th>
+                  <th>Answers</th>
+                  <th>Auth</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginatedLeads.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="empty-cell">No user profiles found.</td>
+                  </tr>
+                ) : (
+                  paginatedLeads.map((lead) => (
+                    <tr key={lead.id}>
+                      <td className="date-cell">{formatDate(lead.created_at)}</td>
+                      <td><strong>{lead.name}</strong></td>
+                      <td>{lead.email}</td>
+                      <td>{lead.phone}</td>
+                      <td>
+                        <span className="category-badge">{lead.category}</span>
+                      </td>
+                      <td>
+                        <span className="answers-count">
+                          {lead.user_answers?.length || 0}
+                        </span>
+                      </td>
+                      <td>
+                        <span className={`auth-badge ${lead.has_auth ? "registered" : "lead"}`}>
+                          {lead.has_auth ? "Registered" : "Lead Only"}
+                        </span>
+                      </td>
+                      <td>
+                        <div className="action-btns-group">
+                          <button className="tbl-btn view" onClick={() => openViewModal(lead)}>
+                            View
+                          </button>
+                          <button
+                            className="tbl-btn danger"
+                            onClick={() => handleDeleteLead(lead.id, lead.name)}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
 
-                  <div className="lead-stats">
-                    <span className="category-badge">{lead.category}</span>
-                    <span className="answers-count">
-                      📝 {lead.user_answers?.length || 0} Answers
-                    </span>
-                    <button className="expand-indicator">
-                      {isExpanded ? "▲" : "▼"}
-                    </button>
-                  </div>
+          {filteredLeads.length > 0 && (
+            <div className="pagination-bar">
+              <span className="pagination-info">
+                Showing {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, filteredLeads.length)} of {filteredLeads.length}
+              </span>
+              <div className="pagination-controls">
+                <button
+                  className="page-btn"
+                  disabled={safePage <= 1}
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                >
+                  ← Prev
+                </button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <button
+                    key={page}
+                    className={`page-btn ${page === safePage ? "active" : ""}`}
+                    onClick={() => setCurrentPage(page)}
+                  >
+                    {page}
+                  </button>
+                ))}
+                <button
+                  className="page-btn"
+                  disabled={safePage >= totalPages}
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                >
+                  Next →
+                </button>
+              </div>
+            </div>
+          )}
+        </Card>
+      )}
+
+      {/* Detail / Report Modal */}
+      {viewingLead && (
+        <div className="modal-overlay" onClick={closeViewModal}>
+          <div className="modal-panel" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <div>
+                <h3>{viewingLead.name}</h3>
+                <span className="modal-subtitle">{viewingLead.email}</span>
+              </div>
+              <button className="modal-close" onClick={closeViewModal}>✕</button>
+            </div>
+
+            <div className="modal-body">
+              <div className="profile-grid">
+                <div className="profile-field">
+                  <strong>WhatsApp / Phone</strong>
+                  <span>{viewingLead.phone}</span>
                 </div>
+                <div className="profile-field">
+                  <strong>Gender</strong>
+                  <span>{viewingLead.gender}</span>
+                </div>
+                <div className="profile-field">
+                  <strong>Date of Birth</strong>
+                  <span>{viewingLead.dob} ({calculateAge(viewingLead.dob)} yrs)</span>
+                </div>
+                <div className="profile-field">
+                  <strong>Category</strong>
+                  <span className="highlight">{viewingLead.category}</span>
+                </div>
+                <div className="profile-field">
+                  <strong>Auth Status</strong>
+                  <span className={viewingLead.has_auth ? "auth-yes" : "auth-no"}>
+                    {viewingLead.has_auth ? "Can log in" : "Lead only — signup will claim this profile"}
+                  </span>
+                </div>
+                <div className="profile-field">
+                  <strong>Joined</strong>
+                  <span>{formatDate(viewingLead.created_at)}</span>
+                </div>
+              </div>
 
-                {isExpanded && (
-                  <div className="lead-details">
-                    <div className="profile-grid">
-                      <div className="profile-field">
-                        <strong>WhatsApp / Phone:</strong>
-                        <span>{lead.phone}</span>
-                      </div>
-                      <div className="profile-field">
-                        <strong>Gender:</strong>
-                        <span>{lead.gender}</span>
-                      </div>
-                      <div className="profile-field">
-                        <strong>Date of Birth:</strong>
-                        <span>{lead.dob} ({calculateAge(lead.dob)} years old)</span>
-                      </div>
-                      <div className="profile-field">
-                        <strong>Problem Focus:</strong>
-                        <span className="highlight">{lead.category}</span>
-                      </div>
-                    </div>
-
-                    <div className="answers-section">
-                      <h4 className="answers-title">Quiz Question Responses</h4>
-                      {lead.user_answers && lead.user_answers.length > 0 ? (
-                        <div className="answers-list">
-                          {lead.user_answers.map((ans, idx) => (
-                            <div key={ans.id} className="answer-item">
-                              <div className="answer-q">
-                                <span className="q-number">Q{idx + 1}:</span> {ans.question_text}
-                              </div>
-                              <div className="answer-a">
-                                <strong>Answer:</strong> {ans.answer_text}
-                              </div>
-                            </div>
-                          ))}
+              <div className="answers-section">
+                <h4 className="section-title">Quiz Responses</h4>
+                {viewingLead.user_answers && viewingLead.user_answers.length > 0 ? (
+                  <div className="answers-list">
+                    {viewingLead.user_answers.map((ans, idx) => (
+                      <div key={ans.id} className="answer-item">
+                        <div className="answer-q">
+                          <span className="q-number">Q{idx + 1}:</span> {ans.question_text}
                         </div>
-                      ) : (
-                        <p className="no-answers">No question responses logged for this profile.</p>
-                      )}
-                    </div>
-
-                    {/* Manual Report Designer */}
-                    <div className="manual-report-section" style={{ marginTop: "24px", paddingTop: "24px", borderTop: "1px solid rgba(0,0,0,0.06)" }}>
-                      <h4 className="answers-title" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <span>Manually Design & Send Soul Report</span>
-                        {lead.report_sent ? (
-                          <span style={{ fontSize: "0.85rem", padding: "4px 8px", background: "rgba(34, 197, 94, 0.08)", border: "1px solid rgba(34, 197, 94, 0.2)", color: "#15803d", borderRadius: "6px", fontWeight: "700" }}>
-                            ✓ Report Sent
-                          </span>
-                        ) : (
-                          <span style={{ fontSize: "0.85rem", padding: "4px 8px", background: "rgba(239, 68, 68, 0.08)", border: "1px solid rgba(239, 68, 68, 0.2)", color: "#b91c1c", borderRadius: "6px", fontWeight: "700" }}>
-                            ✗ Pending Report
-                          </span>
-                        )}
-                      </h4>
-
-                      {lead.report_sent && lead.report_content && (
-                        <div className="sent-report-preview" style={{ background: "rgba(168, 85, 247, 0.03)", border: "1px solid rgba(168, 85, 247, 0.15)", borderRadius: "8px", padding: "16px", marginBottom: "16px" }}>
-                          <strong style={{ display: "block", marginBottom: "6px", fontSize: "0.85rem", color: "#475569" }}>Previously Sent Report Content:</strong>
-                          <pre style={{ whiteSpace: "pre-wrap", fontFamily: "inherit", fontSize: "0.9rem", color: "#334155", margin: 0 }}>{lead.report_content}</pre>
+                        <div className="answer-a">
+                          <strong>Answer:</strong> {ans.answer_text}
                         </div>
-                      )}
-
-                      <div className="report-designer-form" style={{ display: "flex", flexDirection: "column", gap: "16px", background: "#ffffff", border: "1px solid rgba(0,0,0,0.06)", borderRadius: "12px", padding: "20px" }}>
-                        
-                        {/* Chakra sliders */}
-                        <div>
-                          <strong style={{ fontSize: "0.9rem", color: "#334155", display: "block", marginBottom: "12px" }}>Set Chakra Flow Alignment Score (%)</strong>
-                          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "12px" }}>
-                            {Object.keys(editingChakras).map((chakra) => (
-                              <div key={chakra} style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                                <label style={{ fontSize: "0.75rem", textTransform: "uppercase", color: "#64748b", fontWeight: "600" }}>
-                                  {chakra}: {editingChakras[chakra]}%
-                                </label>
-                                <input
-                                  type="range"
-                                  min="10"
-                                  max="100"
-                                  value={editingChakras[chakra]}
-                                  onChange={(e) => {
-                                    const val = Number(e.target.value);
-                                    setEditingChakras({ ...editingChakras, [chakra]: val });
-                                    
-                                    // Update the score value dynamically in the text editor
-                                    const regex = new RegExp(`(- ${chakra}[^:]*:\\s*)\\d+%`, "g");
-                                    if (regex.test(editingContent)) {
-                                      setEditingContent(editingContent.replace(regex, `$1${val}%`));
-                                    }
-                                  }}
-                                  style={{ accentColor: "#7c3aed" }}
-                                />
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Subject */}
-                        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                          <label style={{ fontSize: "0.8rem", textTransform: "uppercase", color: "#64748b", fontWeight: "600" }}>Email Subject</label>
-                          <input
-                            type="text"
-                            className="search-input"
-                            style={{ width: "100%", padding: "10px 14px", fontSize: "0.9rem" }}
-                            value={editingSubject}
-                            onChange={(e) => setEditingSubject(e.target.value)}
-                          />
-                        </div>
-
-                        {/* Textarea for report content */}
-                        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                          <label style={{ fontSize: "0.8rem", textTransform: "uppercase", color: "#64748b", fontWeight: "600" }}>Report Body / Email Content</label>
-                          <textarea
-                            rows={12}
-                            style={{ width: "100%", padding: "14px", border: "1px solid rgba(0,0,0,0.1)", borderRadius: "8px", fontSize: "0.9rem", resize: "vertical", fontFamily: "inherit" }}
-                            value={editingContent}
-                            onChange={(e) => setEditingContent(e.target.value)}
-                          />
-                        </div>
-
-                        {/* Status message */}
-                        {sendStatus === "success" && (
-                          <div style={{ padding: "10px 14px", background: "rgba(34, 197, 94, 0.08)", border: "1px solid rgba(34, 197, 94, 0.2)", color: "#15803d", borderRadius: "8px", fontSize: "0.88rem" }}>
-                            ✓ Soul Report successfully saved and sent/simulated via email!
-                          </div>
-                        )}
-                        {sendStatus && sendStatus !== "success" && (
-                          <div style={{ padding: "10px 14px", background: "rgba(239, 68, 68, 0.08)", border: "1px solid rgba(239, 68, 68, 0.2)", color: "#b91c1c", borderRadius: "8px", fontSize: "0.88rem" }}>
-                            {sendStatus}
-                          </div>
-                        )}
-
-                        {/* Submit Button */}
-                        <button
-                          type="button"
-                          className="filter-btn"
-                          disabled={sendingReport || !editingSubject || !editingContent}
-                          onClick={() => handleSendReport(lead.id)}
-                          style={{
-                            background: "linear-gradient(135deg, #7c3aed 0%, #4c1d95 100%)",
-                            color: "#ffffff",
-                            border: "none",
-                            padding: "12px 24px",
-                            fontSize: "0.9rem",
-                            fontWeight: "600",
-                            borderRadius: "8px",
-                            cursor: "pointer",
-                            width: "fit-content",
-                            alignSelf: "flex-end",
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "8px"
-                          }}
-                        >
-                          {sendingReport ? "Sending..." : lead.report_sent ? "Resend Soul Report" : "Send Soul Report"} ➔
-                        </button>
                       </div>
-                    </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="no-answers">No quiz responses logged.</p>
+                )}
+              </div>
+
+              <div className="report-section">
+                <h4 className="section-title flex-between">
+                  <span>Soul Report</span>
+                  {viewingLead.report_sent ? (
+                    <span className="report-badge sent">✓ Sent</span>
+                  ) : (
+                    <span className="report-badge pending">✗ Pending</span>
+                  )}
+                </h4>
+
+                {viewingLead.report_sent && viewingLead.report_content && (
+                  <div className="sent-preview">
+                    <strong>Previously sent:</strong>
+                    <pre>{viewingLead.report_content}</pre>
                   </div>
                 )}
-              </Card>
-            );
-          })}
+
+                <div className="chakra-sliders-grid">
+                  {Object.keys(editingChakras).map((chakra) => (
+                    <div key={chakra} className="chakra-field">
+                      <label>{chakra}: {editingChakras[chakra]}%</label>
+                      <input
+                        type="range"
+                        min="10"
+                        max="100"
+                        value={editingChakras[chakra]}
+                        onChange={(e) => {
+                          const val = Number(e.target.value);
+                          setEditingChakras({ ...editingChakras, [chakra]: val });
+                          const regex = new RegExp(`(- ${chakra}[^:]*:\\s*)\\d+%`, "g");
+                          if (regex.test(editingContent)) {
+                            setEditingContent(editingContent.replace(regex, `$1${val}%`));
+                          }
+                        }}
+                        className="chakra-range"
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                <div className="report-field">
+                  <label>Email Subject</label>
+                  <input
+                    type="text"
+                    className="search-input full-width"
+                    value={editingSubject}
+                    onChange={(e) => setEditingSubject(e.target.value)}
+                  />
+                </div>
+
+                <div className="report-field">
+                  <label>Report Body</label>
+                  <textarea
+                    rows={10}
+                    className="report-textarea"
+                    value={editingContent}
+                    onChange={(e) => setEditingContent(e.target.value)}
+                  />
+                </div>
+
+                {sendStatus === "success" && (
+                  <div className="status-msg success">✓ Report sent successfully!</div>
+                )}
+                {sendStatus && sendStatus !== "success" && (
+                  <div className="status-msg error">{sendStatus}</div>
+                )}
+
+                <button
+                  type="button"
+                  className="send-report-btn"
+                  disabled={sendingReport || !editingSubject || !editingContent}
+                  onClick={() => handleSendReport(viewingLead.id)}
+                >
+                  {sendingReport ? "Sending..." : viewingLead.report_sent ? "Resend Report" : "Send Report"} ➔
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
       <style jsx>{`
-        .admin-container {
-          max-width: 1000px;
-          margin: 0 auto;
+        .dashboard-content {
+          display: flex;
+          flex-direction: column;
+          gap: 24px;
         }
-        .admin-header-row {
-          margin-bottom: 32px;
+        .dashboard-header-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
         }
-        .admin-page-title {
-          font-size: 2rem;
+        .dashboard-header-row h2 {
+          font-family: var(--font-serif);
           color: #4c1d95;
-          margin-bottom: 6px;
+          font-size: 1.8rem;
+          margin-bottom: 4px;
         }
-        .admin-page-subtitle {
+        .admin-header-desc {
           color: hsl(var(--text-muted));
-          font-size: 0.95rem;
+          font-size: 0.9rem;
+        }
+        .sync-btn {
+          background: rgba(0,0,0,0.02);
+          border: 1px solid rgba(0,0,0,0.08);
+          color: hsl(var(--text-cream));
+          padding: 10px 18px;
+          border-radius: 8px;
+          cursor: pointer;
+          font-size: 0.85rem;
+          font-weight: 600;
+          transition: var(--transition-fast);
+        }
+        .sync-btn:hover {
+          background: rgba(168, 85, 247, 0.08);
+          border-color: #7c3aed;
+          color: #7c3aed;
         }
         .filters-row {
           display: flex;
           justify-content: space-between;
           align-items: center;
           gap: 20px;
-          margin-bottom: 24px;
+          flex-wrap: wrap;
         }
         .search-input {
           padding: 12px 18px;
@@ -458,9 +559,11 @@ Diving Sanatan Wellness Team`);
           border-color: #7c3aed;
           box-shadow: 0 0 10px rgba(124, 58, 237, 0.08);
         }
+        .full-width { width: 100%; }
         .category-filters {
           display: flex;
           gap: 8px;
+          flex-wrap: wrap;
         }
         .filter-btn {
           background: transparent;
@@ -478,167 +581,338 @@ Diving Sanatan Wellness Team`);
           border-color: #7c3aed;
           background: rgba(168, 85, 247, 0.03);
         }
-        .loading-state, .empty-state {
+        .admin-loading {
           text-align: center;
           padding: 40px;
           color: hsl(var(--text-muted));
         }
-        .leads-list {
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
+        .table-wrapper {
+          width: 100%;
+          overflow-x: auto;
         }
-        .lead-card {
-          border-radius: 16px;
-          overflow: hidden;
-          transition: var(--transition-smooth);
+        .admin-table {
+          width: 100%;
+          border-collapse: collapse;
+          text-align: left;
+          font-size: 0.88rem;
         }
-        .lead-row {
-          padding: 20px 24px;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          cursor: pointer;
-          transition: var(--transition-fast);
-        }
-        .lead-row:hover {
-          background: rgba(168, 85, 247, 0.02);
-        }
-        .lead-meta {
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
-        }
-        .lead-date {
-          font-size: 0.75rem;
+        .admin-table th {
+          background: rgba(0,0,0,0.02);
+          border-bottom: 1px solid rgba(0,0,0,0.08);
+          padding: 14px 16px;
+          font-weight: 600;
+          text-transform: uppercase;
+          font-size: 0.72rem;
           color: hsl(var(--text-muted));
+          letter-spacing: 0.05em;
+          white-space: nowrap;
         }
-        .lead-name {
-          font-size: 1.15rem;
-          font-family: var(--font-sans);
-          font-weight: 700;
-          color: #1e1b4b;
+        .admin-table td {
+          border-bottom: 1px solid rgba(0,0,0,0.05);
+          padding: 14px 16px;
+          vertical-align: middle;
         }
-        .lead-email {
-          font-size: 0.85rem;
+        .date-cell {
+          font-size: 0.8rem;
           color: hsl(var(--text-muted));
-        }
-        .lead-stats {
-          display: flex;
-          align-items: center;
-          gap: 20px;
+          white-space: nowrap;
         }
         .category-badge {
           background: rgba(168, 85, 247, 0.08);
           border: 1px solid rgba(168, 85, 247, 0.2);
           color: #7c3aed;
-          font-size: 0.75rem;
+          font-size: 0.7rem;
+          font-weight: 700;
+          padding: 3px 8px;
+          border-radius: 6px;
+          text-transform: uppercase;
+          white-space: nowrap;
+        }
+        .answers-count {
+          font-weight: 700;
+          color: #059669;
+        }
+        .auth-badge {
+          font-size: 0.7rem;
           font-weight: 700;
           padding: 4px 10px;
           border-radius: 6px;
           text-transform: uppercase;
+          white-space: nowrap;
         }
-        .answers-count {
-          font-size: 0.85rem;
-          color: #059669;
+        .auth-badge.registered {
+          background: rgba(34, 197, 94, 0.08);
+          color: #15803d;
+          border: 1px solid rgba(34, 197, 94, 0.25);
+        }
+        .auth-badge.lead {
+          background: rgba(234, 179, 8, 0.08);
+          color: #b45309;
+          border: 1px solid rgba(234, 179, 8, 0.25);
+        }
+        .action-btns-group {
+          display: flex;
+          gap: 6px;
+        }
+        .tbl-btn {
+          border: none;
+          padding: 6px 12px;
+          border-radius: 6px;
+          cursor: pointer;
+          font-size: 0.75rem;
           font-weight: 600;
+          transition: var(--transition-fast);
+          white-space: nowrap;
         }
-        .expand-indicator {
+        .tbl-btn.view {
+          background: rgba(168, 85, 247, 0.08);
+          color: #6d28d9;
+          border: 1px solid rgba(168, 85, 247, 0.25);
+        }
+        .tbl-btn.view:hover { background: #7c3aed; color: #fff; }
+        .tbl-btn.danger {
+          background: rgba(239, 68, 68, 0.08);
+          color: #b91c1c;
+          border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+        .tbl-btn.danger:hover { background: #b91c1c; color: #fff; }
+        .empty-cell {
+          text-align: center;
+          padding: 32px;
+          color: hsl(var(--text-muted));
+        }
+        .pagination-bar {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 16px 20px;
+          border-top: 1px solid rgba(0,0,0,0.06);
+          flex-wrap: wrap;
+          gap: 12px;
+        }
+        .pagination-info {
+          font-size: 0.85rem;
+          color: hsl(var(--text-muted));
+        }
+        .pagination-controls {
+          display: flex;
+          gap: 4px;
+          flex-wrap: wrap;
+        }
+        .page-btn {
+          background: transparent;
+          border: 1px solid rgba(0,0,0,0.08);
+          padding: 6px 12px;
+          border-radius: 6px;
+          font-size: 0.8rem;
+          font-weight: 600;
+          color: hsl(var(--text-muted));
+          cursor: pointer;
+          transition: var(--transition-fast);
+          min-width: 36px;
+        }
+        .page-btn:hover:not(:disabled) {
+          border-color: #7c3aed;
+          color: #7c3aed;
+        }
+        .page-btn.active {
+          background: #7c3aed;
+          color: #fff;
+          border-color: #7c3aed;
+        }
+        .page-btn:disabled {
+          opacity: 0.4;
+          cursor: not-allowed;
+        }
+        .modal-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(0,0,0,0.45);
+          z-index: 1000;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 24px;
+        }
+        .modal-panel {
+          background: #FAF9F6;
+          border-radius: 16px;
+          width: 100%;
+          max-width: 720px;
+          max-height: 90vh;
+          overflow-y: auto;
+          box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+        }
+        .modal-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          padding: 24px 24px 0;
+          position: sticky;
+          top: 0;
+          background: #FAF9F6;
+          z-index: 1;
+        }
+        .modal-header h3 {
+          font-size: 1.3rem;
+          color: #4c1d95;
+          margin-bottom: 2px;
+        }
+        .modal-subtitle {
+          font-size: 0.85rem;
+          color: hsl(var(--text-muted));
+        }
+        .modal-close {
           background: transparent;
           border: none;
-          color: hsl(var(--text-muted));
-          font-size: 0.8rem;
+          font-size: 1.2rem;
           cursor: pointer;
+          color: hsl(var(--text-muted));
+          padding: 4px 8px;
         }
-        .lead-details {
-          border-top: 1.5px solid rgba(0,0,0,0.06);
-          padding: 24px;
-          background: rgba(0,0,0,0.01);
+        .modal-body {
+          padding: 20px 24px 24px;
         }
         .profile-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-          gap: 16px;
-          margin-bottom: 24px;
+          grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+          gap: 14px;
+          margin-bottom: 20px;
         }
         .profile-field {
           display: flex;
           flex-direction: column;
-          gap: 4px;
-          font-size: 0.9rem;
+          gap: 3px;
+          font-size: 0.88rem;
         }
         .profile-field strong {
-          color: #334155;
-          font-size: 0.8rem;
+          color: #64748b;
+          font-size: 0.72rem;
           text-transform: uppercase;
           letter-spacing: 0.05em;
         }
-        .profile-field span {
-          color: #1e293b;
-        }
-        .profile-field span.highlight {
-          color: #7c3aed;
-          font-weight: 700;
-        }
-        .answers-section {
-          background: #ffffff;
+        .profile-field .highlight { color: #7c3aed; font-weight: 700; }
+        .auth-yes { color: #15803d; font-weight: 600; }
+        .auth-no { color: #b45309; font-weight: 600; }
+        .answers-section, .report-section {
+          background: #fff;
           border: 1px solid rgba(0,0,0,0.06);
           border-radius: 12px;
-          padding: 20px;
-        }
-        .answers-title {
-          font-size: 1rem;
-          color: #4c1d95;
+          padding: 16px;
           margin-bottom: 16px;
+        }
+        .section-title {
+          font-size: 0.95rem;
+          color: #4c1d95;
+          margin-bottom: 12px;
           font-weight: 700;
         }
-        .answers-list {
+        .flex-between {
           display: flex;
-          flex-direction: column;
-          gap: 16px;
+          justify-content: space-between;
+          align-items: center;
         }
+        .answers-list { display: flex; flex-direction: column; gap: 12px; }
         .answer-item {
           border-bottom: 1px solid rgba(0,0,0,0.04);
-          padding-bottom: 12px;
+          padding-bottom: 10px;
         }
-        .answer-item:last-child {
-          border-bottom: none;
-          padding-bottom: 0;
+        .answer-item:last-child { border-bottom: none; padding-bottom: 0; }
+        .answer-q { font-weight: 600; color: #1e293b; margin-bottom: 4px; font-size: 0.9rem; }
+        .q-number { color: #7c3aed; }
+        .answer-a { font-size: 0.85rem; color: hsl(var(--text-muted)); }
+        .no-answers { color: hsl(var(--text-muted)); font-style: italic; font-size: 0.88rem; }
+        .report-badge {
+          font-size: 0.78rem;
+          padding: 3px 8px;
+          border-radius: 6px;
+          font-weight: 700;
         }
-        .answer-q {
-          font-size: 0.95rem;
+        .report-badge.sent { background: rgba(34,197,94,0.08); color: #15803d; }
+        .report-badge.pending { background: rgba(239,68,68,0.08); color: #b91c1c; }
+        .sent-preview {
+          background: rgba(168,85,247,0.03);
+          border: 1px solid rgba(168,85,247,0.15);
+          border-radius: 8px;
+          padding: 12px;
+          margin-bottom: 12px;
+          font-size: 0.85rem;
+        }
+        .sent-preview pre {
+          white-space: pre-wrap;
+          font-family: inherit;
+          margin: 6px 0 0;
+          color: #334155;
+        }
+        .chakra-sliders-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+          gap: 10px;
+          margin-bottom: 14px;
+        }
+        .chakra-field label {
+          font-size: 0.72rem;
+          text-transform: uppercase;
+          color: #64748b;
           font-weight: 600;
-          color: #1e293b;
-          margin-bottom: 6px;
         }
-        .q-number {
-          color: #7c3aed;
+        .chakra-range { accent-color: #7c3aed; width: 100%; }
+        .report-field {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          margin-bottom: 12px;
         }
-        .answer-a {
-          font-size: 0.9rem;
-          color: hsl(var(--text-muted));
+        .report-field label {
+          font-size: 0.72rem;
+          text-transform: uppercase;
+          color: #64748b;
+          font-weight: 600;
         }
-        .no-answers {
-          color: hsl(var(--text-muted));
-          font-size: 0.9rem;
-          font-style: italic;
+        .report-textarea {
+          width: 100%;
+          padding: 12px;
+          border: 1px solid rgba(0,0,0,0.1);
+          border-radius: 8px;
+          font-size: 0.88rem;
+          resize: vertical;
+          font-family: inherit;
         }
+        .status-msg {
+          padding: 10px 14px;
+          border-radius: 8px;
+          font-size: 0.85rem;
+          margin-bottom: 12px;
+        }
+        .status-msg.success {
+          background: rgba(34,197,94,0.08);
+          border: 1px solid rgba(34,197,94,0.2);
+          color: #15803d;
+        }
+        .status-msg.error {
+          background: rgba(239,68,68,0.08);
+          border: 1px solid rgba(239,68,68,0.2);
+          color: #b91c1c;
+        }
+        .send-report-btn {
+          background: linear-gradient(135deg, #7c3aed 0%, #4c1d95 100%);
+          color: #fff;
+          border: none;
+          padding: 12px 24px;
+          font-size: 0.88rem;
+          font-weight: 600;
+          border-radius: 8px;
+          cursor: pointer;
+          width: fit-content;
+          align-self: flex-end;
+          display: block;
+          margin-left: auto;
+        }
+        .send-report-btn:disabled { opacity: 0.6; cursor: not-allowed; }
         @media (max-width: 768px) {
-          .filters-row {
-            flex-direction: column;
-            align-items: stretch;
-          }
-          .search-input {
-            width: 100%;
-          }
-          .lead-row {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 16px;
-          }
-          .lead-stats {
-            align-self: flex-end;
-          }
+          .filters-row { flex-direction: column; align-items: stretch; }
+          .search-input { width: 100%; }
+          .dashboard-header-row { flex-direction: column; gap: 12px; align-items: flex-start; }
         }
       `}</style>
     </div>

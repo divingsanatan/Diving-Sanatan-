@@ -52,7 +52,7 @@ export default function AdminBookingsPage() {
       <div className="dashboard-header-row">
         <div>
           <h2>Bookings Scheduler</h2>
-          <p style={{ color: "hsl(var(--text-muted))", fontSize: "0.9rem", marginTop: "4px" }}>
+          <p className="admin-header-desc">
             Monitor and coordinate scheduled appointments, manage confirmation states, and track customer payments.
           </p>
         </div>
@@ -62,9 +62,9 @@ export default function AdminBookingsPage() {
       </div>
 
       {loading ? (
-        <p style={{ color: "hsl(var(--text-muted))", marginTop: "40px" }}>Loading bookings...</p>
+        <p className="admin-loading">Loading bookings...</p>
       ) : (
-        <Card variant="glass" style={{ padding: "0", overflow: "hidden" }}>
+        <Card variant="glass" className="admin-card-flush">
           <div className="table-wrapper">
             <table className="admin-table">
               <thead>
@@ -82,7 +82,7 @@ export default function AdminBookingsPage() {
               <tbody>
                 {bookings.length === 0 ? (
                   <tr>
-                    <td colSpan={8} style={{ textAlign: "center", padding: "32px" }}>No scheduled appointments.</td>
+                    <td colSpan={8} className="bookings-empty-cell">No scheduled appointments.</td>
                   </tr>
                 ) : (
                   bookings.map(b => (
@@ -94,7 +94,7 @@ export default function AdminBookingsPage() {
                       <td>{b.serviceName}</td>
                       <td>{b.practitionerName}</td>
                       <td>{b.date} ({b.timeSlot})</td>
-                      <td style={{ fontFamily: "var(--font-serif)", fontWeight: "600" }}>{formatCurrency(b.price)}</td>
+                      <td className="bookings-price-cell">{formatCurrency(b.price)}</td>
                       <td>
                         <span className={`status-badge ${b.status}`}>
                           {b.status}
@@ -241,6 +241,14 @@ export default function AdminBookingsPage() {
         .tbl-btn.pay:hover { background: #7c3aed; color: #fff; }
         .tbl-btn.pay-un { background: rgba(0,0,0,0.02); color: hsl(var(--text-muted)); border: 1px solid rgba(0,0,0,0.08); }
         .tbl-btn.pay-un:hover { border-color: #ef4444; color: #ef4444; }
+        .bookings-empty-cell {
+          text-align: center;
+          padding: 32px;
+        }
+        .bookings-price-cell {
+          font-family: var(--font-serif);
+          font-weight: 600;
+        }
       `}</style>
     </div>
   );

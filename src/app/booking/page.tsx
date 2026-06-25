@@ -1,23 +1,13 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect, Suspense, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { formatCurrency } from "@/utils/formatters";
-
-interface Service {
-  id: string;
-  name: string;
-  price: number;
-  duration: string;
-  rating: number;
-  practitioner: string;
-  category: string;
-  description: string;
-}
+import { Service } from "@/types/database";
 
 interface Practitioner {
   id: string;
@@ -57,6 +47,35 @@ function BookingContent() {
 
   // Validation states
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+
+  const getServiceImage = (imgName: string) => {
+    if (!imgName) return "/images/reiki_placeholder.jpg";
+    if (imgName.startsWith("http") || imgName.startsWith("/")) return imgName;
+    const mappings: Record<string, string> = {
+      aura_balancing: "/images/service_chakra.png",
+      crystal_healing: "/images/service_regression.png",
+      chakra_clearing: "/images/service_akashic.png",
+      mindfulness_meditation: "/images/service_chakra.png",
+      anxiety_release: "/images/service_regression.png",
+      spiritual_counseling: "/images/service_akashic.png",
+    };
+    return mappings[imgName] || "/images/reiki_placeholder.jpg";
+  };
+
+  const getEmbedUrl = (url: string) => {
+    if (!url) return null;
+    const isVideoFile = url.match(/\.(mp4|webm|ogg|mov|mkv)($|\?)/i) || url.includes("/storage/v1/object/public/");
+    if (isVideoFile) return null;
+    if (url.includes("youtube.com/shorts/")) {
+      const id = url.split("youtube.com/shorts/")[1]?.split(/[?&]/)[0];
+      if (id) return `https://www.youtube.com/embed/${id}`;
+    }
+    const ytRegExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#&?]*).*/;
+    const match = url.match(ytRegExp);
+    if (match && match[2].length === 11) return `https://www.youtube.com/embed/${match[2]}`;
+    if (url.includes("embed")) return url;
+    return null;
+  };
 
   // Prefill details from localStorage
   useEffect(() => {
@@ -220,8 +239,19 @@ function BookingContent() {
     }
   };
 
+  const heroImageRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (selectedService && heroImageRef.current) {
+      heroImageRef.current.style.setProperty(
+        "--bg-image",
+        `url(${getServiceImage(selectedService.image)})`
+      );
+    }
+  }, [selectedService]);
+
   return (
-    <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+    <div className="page-shell">
       <Header />
 
       <main className="booking-container">
@@ -229,18 +259,87 @@ function BookingContent() {
         {/* Page title */}
         <section className="booking-header">
           <h2 className="booking-header-title">Booking/Calendar Page</h2>
-          <p style={{ color: "hsl(var(--text-muted))", fontSize: "0.9rem" }}>
+          <p className="text-muted-sm">
             Align your schedule with our cosmic practitioners. Enter client telemetry to finalize appointments.
           </p>
         </section>
 
-        <form onSubmit={handleBookingSubmit} noValidate className="booking-grid">
+        <div className="booking-main-split">
+          {/* Left — Service showcase */}
+          <div className="booking-service-col">
+            {selectedService ? (
+              <Card variant="glass" className="service-showcase-card">
+                <div
+                  ref={heroImageRef}
+                  className="service-hero-image bg-var-image"
+                />
+                <div className="service-showcase-body">
+                  <div className="service-meta-row">
+                    <span className="service-category-pill">
+                      {selectedService.categories?.[0] || selectedService.category}
+                    </span>
+                    <span className="service-rating-pill">⭐ {selectedService.rating?.toFixed(1) || "5.0"}</span>
+                  </div>
+                  <h2 className="service-showcase-title">{selectedService.name}</h2>
+                  <p className="service-practitioner-line">
+                    Guided by <strong>{selectedService.practitioner}</strong> · {selectedService.duration}
+                  </p>
 
-          {/* Calendar, Services & Healer Columns */}
-          <div className="booking-controls-col">
+                  <div className="service-rich-description">
+                    {selectedService.description.split("\n").filter(Boolean).map((para, i) => (
+                      <p key={i}>{para}</p>
+                    ))}
+                    {selectedService.benefits && selectedService.benefits.length > 0 && (
+                      <ul className="service-benefits-list">
+                        {selectedService.benefits.map((b, i) => (
+                          <li key={i}>{b}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
 
-            {/* Service & Practitioner selections */}
-            <Card variant="glass" style={{ marginBottom: "24px", padding: "24px", display: "flex", flexDirection: "column", gap: "16px" }}>
+                  <div className="service-video-section">
+                    <span className="video-section-label">Session Preview</span>
+                    {selectedService.video_url ? (
+                      (() => {
+                        const embedUrl = getEmbedUrl(selectedService.video_url!);
+                        return embedUrl ? (
+                          <div className="video-embed-wrapper">
+                            <iframe
+                              src={embedUrl}
+                              title={`${selectedService.name} preview`}
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                              allowFullScreen
+                            />
+                          </div>
+                        ) : (
+                          <video
+                            src={selectedService.video_url}
+                            controls
+                            poster={getServiceImage(selectedService.image)}
+                            className="service-video-player"
+                          />
+                        );
+                      })()
+                    ) : (
+                      <div className="video-placeholder-box">
+                        <span className="video-placeholder-icon">▶</span>
+                        <p>Guided session video preview will appear here.</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </Card>
+            ) : (
+              <Card variant="glass" className="service-showcase-card card-pad-40-center">
+                <p className="text-muted-center">Select a healing session to view details.</p>
+              </Card>
+            )}
+          </div>
+
+          {/* Right — Calendar, booking form & summary */}
+          <form onSubmit={handleBookingSubmit} noValidate className="booking-controls-col">
+            <Card variant="glass" className="card-pad-24 card-mb-24 card-stack-16">
               <div className="selector-group">
                 <label>Select Healing Session</label>
                 <select
@@ -272,8 +371,7 @@ function BookingContent() {
               )}
             </Card>
 
-            {/* Interactive June 2026 Calendar */}
-            <Card variant="glass" className="calendar-card" style={{ padding: "24px" }}>
+            <Card variant="glass" className="calendar-card card-pad-24 card-mb-24">
               <div className="calendar-header-row">
                 <span className="month-year-label">June 2026</span>
                 <div className="calendar-tab-toggles">
@@ -282,20 +380,16 @@ function BookingContent() {
                 </div>
               </div>
 
-              {/* Day Titles */}
               <div className="calendar-days-titles">
                 {daysOfWeek.map(d => (
                   <span key={d} className="calendar-day-header">{d}</span>
                 ))}
               </div>
 
-              {/* Dates Grid */}
               <div className="calendar-dates-grid">
-                {/* Empty cells for Monday start offset */}
                 {Array.from({ length: startingDayIndex }).map((_, idx) => (
                   <span key={idx} className="calendar-date-cell empty" />
                 ))}
-
                 {daysInMonth.map(day => {
                   const isSelected = selectedDate === day;
                   return (
@@ -311,7 +405,6 @@ function BookingContent() {
                 })}
               </div>
 
-              {/* Time Slots */}
               <div className="time-slots-section">
                 <span className="slots-title">Select Time (EST)</span>
                 <div className="slots-grid">
@@ -331,14 +424,10 @@ function BookingContent() {
                 </div>
               </div>
             </Card>
-          </div>
 
-          {/* Form & Summary Column */}
-          <div className="booking-form-col">
-            <Card variant="glass" style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "20px" }}>
+            <Card variant="glass" className="card-pad-24 card-stack-20">
               <h3 className="form-column-title">Client Details & Booking Form</h3>
 
-              {/* Inputs */}
               <div className="form-group">
                 <label>Full Name</label>
                 <input
@@ -394,7 +483,6 @@ function BookingContent() {
                 />
               </div>
 
-              {/* Summary */}
               {selectedService && (
                 <div className="summary-block">
                   <h4 className="summary-title">Summary</h4>
@@ -421,17 +509,12 @@ function BookingContent() {
 
               {message && <p className="error-message">{message}</p>}
 
-              <Button
-                variant="gold"
-                type="submit"
-                disabled={submitting}
-              >
+              <Button variant="gold" type="submit" disabled={submitting}>
                 {submitting ? "Securing Session..." : "Confirm Booking"}
               </Button>
             </Card>
-          </div>
-
-        </form>
+          </form>
+        </div>
       </main>
 
       {/* Practitioner Bio hover modal/popup (From Slide 2) */}
@@ -481,15 +564,152 @@ function BookingContent() {
           color: #4c1d95;
           margin-bottom: 8px;
         }
-        .booking-grid {
+        .booking-main-split {
           display: grid;
-          grid-template-columns: 1.4fr 1fr;
+          grid-template-columns: 1.1fr 1fr;
           gap: 32px;
           width: 100%;
+          align-items: start;
+        }
+        .booking-service-col {
+          position: sticky;
+          top: 24px;
+        }
+        :global(.service-showcase-card) {
+          padding: 0 !important;
+          overflow: hidden;
+        }
+        .service-hero-image {
+          width: 100%;
+          height: 280px;
+          background-size: cover;
+          background-position: center;
+        }
+        .service-showcase-body {
+          padding: 28px;
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+        .service-meta-row {
+          display: flex;
+          gap: 10px;
+          align-items: center;
+        }
+        .service-category-pill {
+          background: rgba(16, 185, 129, 0.08);
+          border: 1px solid rgba(16, 185, 129, 0.2);
+          color: #065f46;
+          font-size: 0.7rem;
+          font-weight: 700;
+          padding: 4px 10px;
+          border-radius: 6px;
+          text-transform: uppercase;
+        }
+        .service-rating-pill {
+          font-size: 0.82rem;
+          font-weight: 700;
+          color: #b45309;
+        }
+        .service-showcase-title {
+          font-family: var(--font-serif);
+          font-size: 2rem;
+          color: #4c1d95;
+          line-height: 1.2;
+        }
+        .service-practitioner-line {
+          font-size: 0.9rem;
+          color: hsl(var(--text-muted));
+        }
+        .service-rich-description {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+        .service-rich-description p {
+          font-size: 0.95rem;
+          line-height: 1.75;
+          color: #334155;
+        }
+        .service-benefits-list {
+          margin: 4px 0 0 18px;
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+        .service-benefits-list li {
+          font-size: 0.88rem;
+          color: #475569;
+          line-height: 1.5;
+        }
+        .service-video-section {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          margin-top: 8px;
+        }
+        .video-section-label {
+          font-size: 0.75rem;
+          font-weight: 700;
+          color: hsl(var(--text-muted));
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+        }
+        .video-embed-wrapper {
+          position: relative;
+          width: 100%;
+          padding-bottom: 56.25%;
+          border-radius: 16px;
+          overflow: hidden;
+          background: #000;
+        }
+        .video-embed-wrapper iframe {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          border: none;
+        }
+        .service-video-player {
+          width: 100%;
+          border-radius: 16px;
+          aspect-ratio: 16/9;
+          object-fit: cover;
+          background: #000;
+        }
+        .video-placeholder-box {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          min-height: 200px;
+          background: rgba(0, 0, 0, 0.03);
+          border: 1.5px dashed rgba(124, 58, 237, 0.2);
+          border-radius: 16px;
+          color: hsl(var(--text-muted));
+          font-size: 0.88rem;
+        }
+        .video-placeholder-icon {
+          width: 48px;
+          height: 48px;
+          border-radius: 50%;
+          background: rgba(124, 58, 237, 0.1);
+          color: #7c3aed;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 1.1rem;
         }
         .booking-controls-col {
           display: flex;
           flex-direction: column;
+        }
+        .form-column-title {
+          font-family: var(--font-serif);
+          font-size: 1.15rem;
+          color: #4c1d95;
         }
         .selector-group {
           display: flex;
@@ -806,9 +1026,12 @@ function BookingContent() {
           from { transform: scale(0.95); opacity: 0; }
           to { transform: scale(1); opacity: 1; }
         }
-        @media (max-width: 768px) {
-          .booking-grid {
+        @media (max-width: 1024px) {
+          .booking-main-split {
             grid-template-columns: 1fr;
+          }
+          .booking-service-col {
+            position: static;
           }
         }
       `}</style>

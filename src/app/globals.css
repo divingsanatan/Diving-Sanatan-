@@ -320,6 +320,61 @@ p {
   padding-left: 4px;
 }
 
+/* Layout & utility classes */
+.page-col {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.text-center-pad {
+  text-align: center;
+  padding: 60px;
+  color: hsl(var(--text-muted));
+}
+
+.layout-loading {
+  text-align: center;
+  padding: 100px 0;
+}
+
+.card-empty-muted {
+  padding: 24px;
+  color: hsl(var(--text-muted));
+}
+
+.card-empty-muted-lg {
+  padding: 32px;
+  text-align: center;
+  color: hsl(var(--text-muted));
+}
+
+.services-cart-carousel-section.has-cart-pad {
+  padding-bottom: 24px;
+}
+
+.carousel-service-image-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+.skeleton-loader {
+  width: var(--skeleton-width, 100%);
+  height: var(--skeleton-height, 20px);
+  border-radius: var(--skeleton-radius, 8px);
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.04) 25%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0.04) 75%
+  );
+  background-size: 200% 100%;
+  animation: pulse-shimmer 1.8s infinite linear;
+}
+
 /* Global Shimmer Pulsing Keyframe Animation for Skeletons */
 @keyframes pulse-shimmer {
   0% {
@@ -373,4 +428,501 @@ p {
     transform: translate(-50%, -3px);
   }
 }
+
+/* ===== Page Layout Utilities ===== */
+.page-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.page-shell--cart-pad {
+  padding-bottom: 140px;
+}
+
+/* ===== Text Utilities ===== */
+.text-muted-sm {
+  color: hsl(var(--text-muted));
+  font-size: 0.9rem;
+}
+
+.text-muted-sm-mb {
+  color: hsl(var(--text-muted));
+  font-size: 0.9rem;
+  margin-bottom: 20px;
+}
+
+.text-muted-center {
+  text-align: center;
+  color: hsl(var(--text-muted));
+}
+
+.text-muted-center-padded {
+  text-align: center;
+  color: hsl(var(--text-muted));
+  padding: 80px 0;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-muted-xs {
+  font-size: 0.8rem;
+  color: hsl(var(--text-muted));
+}
+
+.text-muted-xs-mt {
+  font-size: 0.8rem;
+  color: hsl(var(--text-muted));
+  margin-top: 16px;
+}
+
+.text-muted-italic {
+  color: hsl(var(--text-muted));
+  font-style: italic;
+}
+
+.text-slate-italic-center {
+  text-align: center;
+  color: #64748b;
+  font-style: italic;
+  margin: 20px 0;
+}
+
+.link-violet-underline {
+  color: #7c3aed;
+  text-decoration: underline;
+}
+
+.about-section-desc {
+  text-align: center;
+  color: hsl(var(--text-muted));
+  margin-bottom: 40px;
+  font-size: 0.95rem;
+}
+
+/* ===== Dynamic CSS Variable Utilities ===== */
+.progress-var-fill {
+  width: var(--progress, 0%);
+}
+
+.steps-slider-offset {
+  transform: translateY(calc(-1 * var(--slider-offset, 0%)));
+}
+
+.bg-var-image {
+  background-image: var(--bg-image);
+  background-size: cover;
+  background-position: center;
+}
+
+/* ===== Card / Form Utilities ===== */
+.card-pad-20-center {
+  padding: 20px;
+  text-align: center;
+}
+
+.card-pad-20-center-muted {
+  padding: 20px;
+  text-align: center;
+  color: hsl(var(--text-muted));
+}
+
+.card-pad-24 {
+  padding: 24px;
+}
+
+.card-pad-32 {
+  padding: 32px;
+}
+
+.card-pad-40-center {
+  padding: 40px;
+  text-align: center;
+}
+
+.card-mb-24 {
+  margin-bottom: 24px;
+}
+
+.card-stack-16 {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.card-stack-20 {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-group-flex {
+  flex: 1;
+}
+
+.heading-mb-16 {
+  margin-bottom: 16px;
+}
+
+.heading-mb-20 {
+  margin-bottom: 20px;
+}
+
+.btn-full {
+  width: 100%;
+}
+
+.btn-full-mt-24 {
+  width: 100%;
+  margin-top: 24px;
+}
+
+.btn-fit-center {
+  width: fit-content;
+  margin: 0 auto;
+}
+
+.btn-full-pad-16 {
+  width: 100%;
+  padding: 16px;
+  font-size: 1rem;
+}
+
+.btn-mt-12-full {
+  margin-top: 12px;
+  width: 100%;
+}
+
+.btn-mt-16 {
+  margin-top: 16px;
+}
+
+.section-title-bordered {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding-bottom: 12px;
+}
+
+.summary-list-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.row-category-spaced {
+  margin-right: 6px;
+}
+
+.aura-stat-gold {
+  color: #d4af37;
+}
+
+.chakra-glow-blur {
+  filter: blur(6px);
+}
+
+.input-group-mt-16 {
+  margin-top: 16px;
+}
+
+.reports-tab-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.error-text-muted-mb {
+  margin: 16px 0;
+  color: hsl(var(--text-muted));
+}
+
+/* iframe / video embed */
+.embed-iframe {
+  border: none;
+  width: 100%;
+  height: 100%;
+}
+
+.embed-video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  outline: none;
+  background: black;
+}
+
+.embed-video-modal {
+  width: 100%;
+  max-height: 500px;
+  border-radius: 14px;
+  object-fit: contain;
+  outline: none;
+}
+
+/* Global loading skeleton layout */
+.loading-shell {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  padding: 16px;
+  gap: 24px;
+  min-height: 100vh;
+  background: hsl(var(--bg-base));
+}
+
+.loading-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  padding: 32px 24px;
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  background: var(--glass-bg);
+}
+
+.loading-nav-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1;
+  margin-top: 20px;
+}
+
+.loading-body {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  padding: 20px;
+}
+
+.loading-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.loading-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+.loading-glass-card {
+  border: 1px solid var(--glass-border);
+  padding: 24px;
+  border-radius: 16px;
+  background: var(--glass-bg);
+}
+
+.skeleton-mt-8 {
+  margin-top: 8px;
+}
+
+.skeleton-mt-16 {
+  margin-top: 16px;
+}
+
+.skeleton-mt-24 {
+  margin-top: 24px;
+}
+
+/* Error boundary page */
+.error-boundary-shell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: hsl(var(--bg-base));
+  padding: 32px;
+  color: white;
+  font-family: var(--font-family);
+}
+
+.error-boundary-panel {
+  max-width: 480px;
+  width: 100%;
+  padding: 40px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.error-boundary-icon {
+  font-size: 3.5rem;
+  animation: wiggle 1s infinite ease-in-out;
+}
+
+.error-boundary-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+.error-boundary-desc {
+  font-size: 0.9rem;
+  color: hsl(var(--text-secondary));
+  margin-top: 8px;
+}
+
+.error-boundary-code {
+  padding: 12px 16px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--glass-border);
+  font-size: 0.8rem;
+  color: hsl(var(--color-error));
+  text-align: left;
+  word-break: break-all;
+}
+
+.error-boundary-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0); }
+  25% { transform: rotate(-5deg); }
+  75% { transform: rotate(5deg); }
+}
+
+/* Admin shared utility classes */
+.admin-header-desc {
+  color: hsl(var(--text-muted));
+  font-size: 0.9rem;
+  margin-top: 4px;
+}
+.admin-loading {
+  color: hsl(var(--text-muted));
+  margin-top: 40px;
+}
+.text-right {
+  text-align: right;
+}
+.admin-empty-cell {
+  text-align: center;
+  color: hsl(var(--text-muted));
+  padding: 24px;
+}
+.form-group-flex {
+  flex: 1;
+}
+.form-group-flex-wide {
+  flex: 1.2;
+}
+.hidden-file-input {
+  display: none;
+}
+.visually-hidden-input {
+  opacity: 0;
+  height: 0;
+  position: absolute;
+  pointer-events: none;
+}
+.admin-card-flush {
+  padding: 0;
+  overflow: hidden;
+}
+.admin-padding-msg {
+  padding: 24px;
+  color: hsl(var(--text-muted));
+}
+.column-title-spaced {
+  margin-bottom: 20px;
+}
+.btn-full {
+  width: 100%;
+}
+.btn-full-spaced {
+  width: 100%;
+  margin-top: 8px;
+}
+.btn-full-mt {
+  width: 100%;
+  margin-top: 12px;
+  padding: 14px;
+}
+.admin-form-padding {
+  padding: 28px;
+}
+.muted-id {
+  font-size: 0.75rem;
+  color: hsl(var(--text-muted));
+}
+.muted-italic-sm {
+  color: hsl(var(--text-muted));
+  font-size: 0.8rem;
+  font-style: italic;
+}
+.flex-row-gap {
+  display: flex;
+  gap: 16px;
+  margin-top: 8px;
+}
+.radio-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.form-hint {
+  display: block;
+  color: hsl(var(--text-muted));
+  font-size: 0.75rem;
+  margin-top: 4px;
+}
+.admin-auth-checking {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: #ffffff;
+  color: #1e293b;
+}
+.btn-protected {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Chakra color dots & admin chips */
+.chakra-dot-root { background: #ef4444; }
+.chakra-dot-sacral { background: #f97316; }
+.chakra-dot-solar { background: #eab308; }
+.chakra-dot-heart { background: #22c55e; }
+.chakra-dot-throat { background: #06b6d4; }
+.chakra-dot-thirdeye { background: #6366f1; }
+.chakra-dot-crown { background: #a855f7; }
+
+.chakra-chip-badge[data-chakra="root"] { border-color: #ef4444; color: #ef4444; background: rgba(239, 68, 68, 0.03); }
+.chakra-chip-badge[data-chakra="sacral"] { border-color: #f97316; color: #f97316; background: rgba(249, 115, 22, 0.03); }
+.chakra-chip-badge[data-chakra="solar"] { border-color: #eab308; color: #eab308; background: rgba(234, 179, 8, 0.03); }
+.chakra-chip-badge[data-chakra="heart"] { border-color: #22c55e; color: #22c55e; background: rgba(34, 197, 94, 0.03); }
+.chakra-chip-badge[data-chakra="throat"] { border-color: #06b6d4; color: #06b6d4; background: rgba(6, 182, 212, 0.03); }
+.chakra-chip-badge[data-chakra="thirdeye"] { border-color: #6366f1; color: #6366f1; background: rgba(99, 102, 241, 0.03); }
+.chakra-chip-badge[data-chakra="crown"] { border-color: #a855f7; color: #a855f7; background: rgba(168, 85, 247, 0.03); }
+
+.chakra-preview-chip[data-chakra="root"] { background: #ef4444; }
+.chakra-preview-chip[data-chakra="sacral"] { background: #f97316; }
+.chakra-preview-chip[data-chakra="solar"] { background: #eab308; }
+.chakra-preview-chip[data-chakra="heart"] { background: #22c55e; }
+.chakra-preview-chip[data-chakra="throat"] { background: #06b6d4; }
+.chakra-preview-chip[data-chakra="thirdeye"] { background: #6366f1; }
+.chakra-preview-chip[data-chakra="crown"] { background: #a855f7; }
+
+.chakra-option-label[data-chakra="root"] { color: #ef4444; font-weight: 600; }
+.chakra-option-label[data-chakra="sacral"] { color: #f97316; font-weight: 600; }
+.chakra-option-label[data-chakra="solar"] { color: #eab308; font-weight: 600; }
+.chakra-option-label[data-chakra="heart"] { color: #22c55e; font-weight: 600; }
+.chakra-option-label[data-chakra="throat"] { color: #06b6d4; font-weight: 600; }
+.chakra-option-label[data-chakra="thirdeye"] { color: #6366f1; font-weight: 600; }
+.chakra-option-label[data-chakra="crown"] { color: #a855f7; font-weight: 600; }
 

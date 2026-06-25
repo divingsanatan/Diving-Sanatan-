@@ -206,7 +206,7 @@ export default function CheckoutPage() {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+    <div className="page-shell">
       <Header />
 
       <main className="checkout-container">
@@ -214,7 +214,7 @@ export default function CheckoutPage() {
         {/* Page Title */}
         <section className="checkout-header">
           <h2 className="checkout-header-title">Payment/Checkout Page</h2>
-          <p style={{ color: "hsl(var(--text-muted))", fontSize: "0.9rem" }}>
+          <p className="text-muted-sm">
             Complete your wellness transaction. Submitting authorizes instant booking dispatch.
           </p>
         </section>
@@ -236,18 +236,10 @@ export default function CheckoutPage() {
                 <h3 className="checkout-section-title">Payment Details</h3>
 
                 {totalCost === 0 ? (
-                  <div className="free-session-notice-box" style={{
-                    background: "rgba(168, 85, 247, 0.05)",
-                    border: "1px solid rgba(168, 85, 247, 0.2)",
-                    borderRadius: "12px",
-                    padding: "20px",
-                    marginBottom: "16px",
-                    color: "hsl(var(--text-cream))",
-                    textAlign: "center"
-                  }}>
-                    <span style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}>✨</span>
-                    <h4 style={{ color: "#a855f7", fontWeight: "700", marginBottom: "6px" }}>Complimentary Session</h4>
-                    <p style={{ fontSize: "0.88rem", color: "hsl(var(--text-muted))" }}>This session is completely free. No payment details or credit cards are required to secure your appointment.</p>
+                  <div className="free-session-notice-box">
+                    <span className="free-session-icon">✨</span>
+                    <h4 className="free-session-title">Complimentary Session</h4>
+                    <p className="free-session-desc">This session is completely free. No payment details or credit cards are required to secure your appointment.</p>
                   </div>
                 ) : (
                   <>
@@ -307,7 +299,7 @@ export default function CheckoutPage() {
                         </div>
 
                         <div className="form-row">
-                          <div className="form-group" style={{ flex: 1 }}>
+                          <div className="form-group form-group-flex">
                             <label>Expiry Date</label>
                             <input 
                               type="text" 
@@ -319,7 +311,7 @@ export default function CheckoutPage() {
                             />
                             {formErrors.expiry && <span className="inline-error-msg">{formErrors.expiry}</span>}
                           </div>
-                          <div className="form-group" style={{ flex: 1 }}>
+                          <div className="form-group form-group-flex">
                             <label>CVV</label>
                             <input 
                               type="password" 
@@ -360,7 +352,7 @@ export default function CheckoutPage() {
                   variant="gold" 
                   type="submit" 
                   disabled={processing || selections.length === 0}
-                  style={{ width: "100%", marginTop: "24px" }}
+                  className="btn-full-mt-24"
                 >
                   {processing ? "Securing Transaction..." : totalCost === 0 ? "Confirm Complimentary Booking" : `Complete Payment - ${formatCurrency(totalCost)}`}
                 </Button>
@@ -371,14 +363,14 @@ export default function CheckoutPage() {
             <div className="checkout-summary-col">
               
               {/* Order Summary */}
-              <Card variant="glass" style={{ padding: "24px", marginBottom: "24px" }}>
-                <h3 className="checkout-section-title" style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", paddingBottom: "12px" }}>
+              <Card variant="glass" className="card-pad-24 card-mb-24">
+                <h3 className="checkout-section-title section-title-bordered">
                   Order Summary
                 </h3>
                 {selections.length === 0 ? (
-                  <p style={{ fontSize: "0.9rem", color: "hsl(var(--text-muted))" }}>No active sessions in cart.</p>
+                  <p className="text-muted-sm">No active sessions in cart.</p>
                 ) : (
-                  <div className="checkout-summary-items-list" style={{ display: "flex", flexDirection: "column", gap: "16px", marginTop: "16px" }}>
+                  <div className="checkout-summary-items-list summary-list-stack">
                     {selections.map(s => (
                       <div key={s.id} className="summary-item-row">
                         <div className="item-label-group">
@@ -399,13 +391,13 @@ export default function CheckoutPage() {
 
               {/* Order History Sidebar (From Slide 2) */}
               <Card variant="glass" className="history-sidebar-card">
-                <h3 className="checkout-section-title" style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", paddingBottom: "12px" }}>
+                <h3 className="checkout-section-title section-title-bordered">
                   Order History
                 </h3>
                 
                 <div className="history-list-container">
                   {orderHistory.length === 0 ? (
-                    <p style={{ fontSize: "0.8rem", color: "hsl(var(--text-muted))", marginTop: "16px" }}>
+                    <p className="text-muted-xs-mt">
                       No past booking telemetry resolved.
                     </p>
                   ) : (
@@ -467,6 +459,29 @@ export default function CheckoutPage() {
         }
         .payment-card-panel {
           padding: 32px;
+        }
+        .free-session-notice-box {
+          background: rgba(168, 85, 247, 0.05);
+          border: 1px solid rgba(168, 85, 247, 0.2);
+          border-radius: 12px;
+          padding: 20px;
+          margin-bottom: 16px;
+          color: hsl(var(--text-cream));
+          text-align: center;
+        }
+        .free-session-icon {
+          font-size: 2rem;
+          display: block;
+          margin-bottom: 8px;
+        }
+        .free-session-title {
+          color: #a855f7;
+          font-weight: 700;
+          margin-bottom: 6px;
+        }
+        .free-session-desc {
+          font-size: 0.88rem;
+          color: hsl(var(--text-muted));
         }
         .checkout-section-title {
           font-family: var(--font-serif);

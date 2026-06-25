@@ -81,6 +81,14 @@ export const ImageCropperModal: React.FC<ImageCropperModalProps> = ({
     setIsDragging(false);
   };
 
+  useEffect(() => {
+    const img = imageRef.current;
+    if (!img) return;
+    img.style.setProperty("--crop-tx", `${offset.x}px`);
+    img.style.setProperty("--crop-ty", `${offset.y}px`);
+    img.style.setProperty("--crop-scale", String(zoom * baseScale));
+  }, [offset, zoom, baseScale]);
+
   const handleCrop = () => {
     if (!imageRef.current) return;
 
@@ -152,11 +160,6 @@ export const ImageCropperModal: React.FC<ImageCropperModalProps> = ({
             src={imageSrc}
             alt="Source to crop"
             onLoad={handleImageLoaded}
-            style={{
-              transform: `translate(-50%, -50%) translate(${offset.x}px, ${offset.y}px) scale(${
-                zoom * baseScale
-              })`,
-            }}
             className="crop-image"
           />
           {/* Circular mask overlay */}
@@ -260,6 +263,8 @@ export const ImageCropperModal: React.FC<ImageCropperModalProps> = ({
           max-height: none;
           pointer-events: none;
           transform-origin: center center;
+          transform: translate(-50%, -50%) translate(var(--crop-tx, 0px), var(--crop-ty, 0px))
+            scale(var(--crop-scale, 1));
         }
 
         .crop-mask-circle {

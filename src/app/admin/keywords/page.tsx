@@ -6,14 +6,26 @@ import { Button } from "@/components/ui/Button";
 import { Keyword, Category } from "@/types/database";
 
 const CHAKRAS_LIST = [
-  { name: "Crown", color: "#a855f7" },
-  { name: "Third Eye", color: "#6366f1" },
-  { name: "Throat", color: "#06b6d4" },
-  { name: "Heart", color: "#22c55e" },
-  { name: "Solar Plexus", color: "#eab308" },
-  { name: "Sacral", color: "#f97316" },
-  { name: "Root", color: "#ef4444" }
+  { name: "Crown", color: "#a855f7", key: "crown" },
+  { name: "Third Eye", color: "#6366f1", key: "thirdeye" },
+  { name: "Throat", color: "#06b6d4", key: "throat" },
+  { name: "Heart", color: "#22c55e", key: "heart" },
+  { name: "Solar Plexus", color: "#eab308", key: "solar" },
+  { name: "Sacral", color: "#f97316", key: "sacral" },
+  { name: "Root", color: "#ef4444", key: "root" }
 ];
+
+const chakraKey = (name: string): string => {
+  const n = name.toLowerCase();
+  if (n.includes("root")) return "root";
+  if (n.includes("sacral")) return "sacral";
+  if (n.includes("solar")) return "solar";
+  if (n.includes("heart")) return "heart";
+  if (n.includes("throat")) return "throat";
+  if (n.includes("third")) return "thirdeye";
+  if (n.includes("crown")) return "crown";
+  return "root";
+};
 
 export default function AdminKeywordsPage() {
   const [keywords, setKeywords] = useState<Keyword[]>([]);
@@ -172,16 +184,12 @@ export default function AdminKeywordsPage() {
     }
   };
 
-  const getChakraColor = (name: string) => {
-    return CHAKRAS_LIST.find(c => c.name.toLowerCase() === name.toLowerCase())?.color || "#6b7280";
-  };
-
   return (
     <div className="dashboard-content">
       <div className="dashboard-header-row">
         <div>
           <h2>Keywords Resonance Manager</h2>
-          <p style={{ color: "hsl(var(--text-muted))", fontSize: "0.9rem", marginTop: "4px" }}>
+          <p className="admin-header-desc">
             Create and align search words to specific healing categories and primary chakras.
           </p>
         </div>
@@ -196,7 +204,7 @@ export default function AdminKeywordsPage() {
       </div>
 
       {loading ? (
-        <p style={{ color: "hsl(var(--text-muted))", marginTop: "40px" }}>Loading keywords database...</p>
+        <p className="admin-loading">Loading keywords database...</p>
       ) : (
         <div className="admin-split-layout">
           <div className="split-list-col">
@@ -208,13 +216,13 @@ export default function AdminKeywordsPage() {
                     <th>Keyword</th>
                     <th>Linked Categories</th>
                     <th>Linked Chakras</th>
-                    <th style={{ textAlign: "right" }}>Actions</th>
+                    <th className="text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {keywords.length === 0 ? (
                     <tr>
-                      <td colSpan={4} style={{ textAlign: "center", color: "hsl(var(--text-muted))", padding: "24px" }}>
+                      <td colSpan={4} className="admin-empty-cell">
                         No keywords aligned yet.
                       </td>
                     </tr>
@@ -244,11 +252,7 @@ export default function AdminKeywordsPage() {
                                 <span 
                                   key={idx} 
                                   className="chakra-chip-badge"
-                                  style={{
-                                    borderColor: getChakraColor(chk),
-                                    color: getChakraColor(chk),
-                                    background: `${getChakraColor(chk)}08`
-                                  }}
+                                  data-chakra={chakraKey(chk)}
                                 >
                                   ● {chk}
                                 </span>
@@ -258,7 +262,7 @@ export default function AdminKeywordsPage() {
                             )}
                           </div>
                         </td>
-                        <td style={{ textAlign: "right" }}>
+                        <td className="text-right">
                           <div className="action-buttons-cell">
                             <button className="edit-row-btn" onClick={() => handleOpenEditModal(k)}>
                               ✎ Edit
@@ -286,7 +290,7 @@ export default function AdminKeywordsPage() {
               <button className="close-modal-btn" onClick={() => setIsModalOpen(false)}>
                 ✕
               </button>
-              <h3 className="column-title" style={{ marginBottom: "20px" }}>
+              <h3 className="column-title column-title-spaced">
                 {editMode ? "Edit Keyword Alignment" : "Add Aligned Keyword"}
               </h3>
               
@@ -370,8 +374,8 @@ export default function AdminKeywordsPage() {
                           selectedChakras.map(name => (
                             <span 
                               key={name} 
-                              className="selected-preview-chip"
-                              style={{ background: getChakraColor(name) }}
+                              className="selected-preview-chip chakra-preview-chip"
+                              data-chakra={chakraKey(name)}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 toggleChakraSelection(name);
@@ -396,7 +400,7 @@ export default function AdminKeywordsPage() {
                               onClick={() => toggleChakraSelection(chk.name)}
                             >
                               <span className="checkbox-indicator">{isSelected ? "✓" : ""}</span>
-                              <span className="option-label" style={{ color: chk.color, fontWeight: "600" }}>
+                              <span className="option-label chakra-option-label" data-chakra={chk.key}>
                                 ● {chk.name}
                               </span>
                             </div>
@@ -407,7 +411,7 @@ export default function AdminKeywordsPage() {
                   </div>
                 </div>
 
-                <Button variant="gold" type="submit" style={{ width: "100%", marginTop: "12px", padding: "14px" }}>
+                <Button variant="gold" type="submit" >
                   {editMode ? "Save Keyword" : "Create Keyword"}
                 </Button>
               </form>

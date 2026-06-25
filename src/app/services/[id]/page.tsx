@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
@@ -20,6 +20,38 @@ export default function ServiceDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState<"desc" | "benefits" | "process">("desc");
+  const heroImageRef = useRef<HTMLDivElement>(null);
+  const pracAvatarRef = useRef<HTMLDivElement>(null);
+
+  const getHeroImageUrl = (image: string) =>
+    image && !image.startsWith("aura_") && !image.startsWith("crystal_") && !image.startsWith("chakra_")
+      ? image
+      : "/images/reiki_placeholder.jpg";
+
+  const getPractitionerImageUrl = (image: string) =>
+    image && !image.startsWith("elara_") && !image.startsWith("master_") && !image.startsWith("celeste_")
+      ? image
+      : "/images/avatar_placeholder.jpg";
+
+  useEffect(() => {
+    if (!service) return;
+    if (heroImageRef.current) {
+      heroImageRef.current.style.setProperty(
+        "--bg-image",
+        `linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.4)), url(${getHeroImageUrl(service.image)})`
+      );
+    }
+  }, [service]);
+
+  useEffect(() => {
+    if (!practitioner) return;
+    if (pracAvatarRef.current) {
+      pracAvatarRef.current.style.setProperty(
+        "--bg-image",
+        `url(${getPractitionerImageUrl(practitioner.image)})`
+      );
+    }
+  }, [practitioner]);
 
   useEffect(() => {
     if (!serviceId) return;
@@ -78,7 +110,7 @@ export default function ServiceDetailPage() {
 
   if (loading) {
     return (
-      <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+      <div className="page-shell">
         <Header />
         <main className="loading-state-wrapper">
           <div className="spinner"></div>
@@ -115,12 +147,12 @@ export default function ServiceDetailPage() {
 
   if (error || !service) {
     return (
-      <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+      <div className="page-shell">
         <Header />
         <main className="error-state-wrapper">
           <h2>⚠️ Session Scan Terminated</h2>
           <p>{error || "The requested therapy was not found in the Sanctuary record."}</p>
-          <Button variant="gold" onClick={() => router.push("/search")} style={{ marginTop: "16px" }}>
+          <Button variant="gold" onClick={() => router.push("/search")} className="btn-mt-16">
             Return to Services List
           </Button>
         </main>
@@ -151,7 +183,7 @@ export default function ServiceDetailPage() {
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+    <div className="page-shell">
       <Header />
 
       <main className="service-details-container">
@@ -206,14 +238,8 @@ export default function ServiceDetailPage() {
                 </div>
               ) : (
                 <div 
-                  className="hero-image-placeholder-wrapper glass-panel"
-                  style={{
-                    backgroundImage: `linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.4)), url(${
-                      service.image && !service.image.startsWith("aura_") && !service.image.startsWith("crystal_") && !service.image.startsWith("chakra_")
-                        ? service.image 
-                        : "/images/reiki_placeholder.jpg"
-                    })`
-                  }}
+                  ref={heroImageRef}
+                  className="hero-image-placeholder-wrapper glass-panel bg-var-image"
                 >
                   <div className="image-tag-indicator">
                     ✨ High-Vibrational Energy Field
@@ -346,14 +372,8 @@ export default function ServiceDetailPage() {
                 <h4 className="section-minor-heading">Your Therapist</h4>
                 <div className="practitioner-flex-row">
                   <div 
-                    className="prac-avatar"
-                    style={{
-                      backgroundImage: `url(${
-                        practitioner.image && !practitioner.image.startsWith("elara_") && !practitioner.image.startsWith("master_") && !practitioner.image.startsWith("celeste_")
-                          ? practitioner.image 
-                          : "/images/avatar_placeholder.jpg"
-                      })`
-                    }}
+                    ref={pracAvatarRef}
+                    className="prac-avatar bg-var-image"
                   />
                   <div className="prac-text-bio">
                     <h5>{practitioner.name}</h5>
@@ -374,7 +394,7 @@ export default function ServiceDetailPage() {
               <h4 className="section-minor-heading">Client Testimonials ({reviews.length})</h4>
               <div className="reviews-vertical-stack">
                 {reviews.length === 0 ? (
-                  <Card variant="glass" style={{ padding: "20px", textAlign: "center", color: "hsl(var(--text-muted))" }}>
+                  <Card variant="glass" className="card-pad-20-center-muted">
                     No reviews recorded for this session yet. Be the first to schedule and leave feedback!
                   </Card>
                 ) : (
@@ -422,7 +442,7 @@ export default function ServiceDetailPage() {
               <Button 
                 variant="gold" 
                 size="lg" 
-                style={{ width: "100%", padding: "16px", fontSize: "1rem" }}
+                className="btn-full-pad-16"
                 onClick={() => router.push(`/booking?service=${service.id}`)}
               >
                 Book This Session

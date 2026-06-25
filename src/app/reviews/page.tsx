@@ -126,7 +126,7 @@ export default function ReviewsPage() {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+    <div className="page-shell">
       <Header />
 
       <main className="reviews-container">
@@ -195,8 +195,8 @@ export default function ReviewsPage() {
 
           {/* Form */}
           <div className="reviews-form-col">
-            <Card variant="glass" style={{ padding: "32px" }}>
-              <h3 className="column-title" style={{ marginBottom: "20px" }}>Share Your Experience</h3>
+            <Card variant="glass" className="card-pad-32">
+              <h3 className="column-title heading-mb-20">Share Your Experience</h3>
 
               <form onSubmit={handleSubmitReview} className="feedback-submission-form">
 

@@ -70,7 +70,7 @@ export default function ContactPage() {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+    <div className="page-shell">
       <Header />
 
       <main className="contact-container">
@@ -144,8 +144,8 @@ export default function ContactPage() {
 
           {/* Form */}
           <div className="form-col">
-            <Card variant="glass" style={{ padding: "32px" }}>
-              <h3 className="card-heading" style={{ marginBottom: "20px" }}>Send a Message</h3>
+            <Card variant="glass" className="card-pad-32">
+              <h3 className="card-heading heading-mb-20">Send a Message</h3>
 
               {submitted ? (
                 <div className="contact-success">
@@ -223,8 +223,8 @@ export default function ContactPage() {
 
         {/* Graphical Map Mockup */}
         <section className="map-mockup-section">
-          <Card variant="glass" className="map-card" style={{ padding: "20px", textAlign: "center" }}>
-            <h3 className="card-heading" style={{ marginBottom: "16px" }}>Our Location Coordinates</h3>
+          <Card variant="glass" className="map-card card-pad-20-center">
+            <h3 className="card-heading heading-mb-16">Our Location Coordinates</h3>
             <div className="mock-map-canvas">
               <div className="map-grid-overlay" />
               <div className="map-target-point">

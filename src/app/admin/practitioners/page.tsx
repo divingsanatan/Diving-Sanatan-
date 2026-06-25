@@ -301,7 +301,7 @@ export default function AdminPractitionersPage() {
       <div className="dashboard-header-row">
         <div>
           <h2>Practitioners Registry</h2>
-          <p style={{ color: "hsl(var(--text-muted))", fontSize: "0.9rem", marginTop: "4px" }}>
+          <p className="admin-header-desc">
             Maintain professional directories, register new healers, update credentials, upload certifications, and verify qualifications.
           </p>
         </div>
@@ -311,7 +311,7 @@ export default function AdminPractitionersPage() {
       </div>
 
       {loading ? (
-        <p style={{ color: "hsl(var(--text-muted))", marginTop: "40px" }}>Loading directory...</p>
+        <p className="admin-loading">Loading directory...</p>
       ) : (
         <div className="admin-split-layout">
           {/* List */}
@@ -319,7 +319,7 @@ export default function AdminPractitionersPage() {
             <h3 className="column-title">Certified Healers Registry ({practitioners.length})</h3>
             <div className="list-cards-vertical">
               {practitioners.length === 0 ? (
-                <p style={{ color: "hsl(var(--text-muted))", fontStyle: "italic" }}>No healers registered yet.</p>
+                <p className="empty-list-msg">No healers registered yet.</p>
               ) : (
                 practitioners.map(p => (
                   <Card key={p.id} variant="glass" className="admin-list-item-card">
@@ -338,7 +338,7 @@ export default function AdminPractitionersPage() {
                       <div className="item-card-details">
                         <h4>{p.name}</h4>
                         <span className="badge-span">{p.specialty}</span>
-                        <div className="rating-row" style={{ fontSize: "0.8rem", color: "#d4af37", marginTop: "4px" }}>
+                        <div className="rating-row">
                           ★ {p.rating.toFixed(1)} ({p.reviewsCount} Reviews)
                         </div>
 
@@ -351,7 +351,7 @@ export default function AdminPractitionersPage() {
                           </div>
                         )}
 
-                        <p className="item-desc" style={{ marginTop: "8px" }}>{p.bio}</p>
+                        <p className="item-desc item-desc-spaced">{p.bio}</p>
 
                         {/* Media markers */}
                         <div className="media-markers-row">
@@ -360,7 +360,7 @@ export default function AdminPractitionersPage() {
                             <span className="media-marker">📜 {p.certifications.length} Certifications</span>
                           )}
                           {p.social_links && Object.values(p.social_links).some(link => !!link) && (
-                            <span className="media-marker" style={{ color: "#7c3aed", background: "rgba(124, 58, 237, 0.05)", borderColor: "rgba(124, 58, 237, 0.15)" }}>
+                            <span className="media-marker media-marker-social">
                               🌐 Socials Linked
                             </span>
                           )}
@@ -449,7 +449,7 @@ export default function AdminPractitionersPage() {
                       <input
                         type="file"
                         accept="image/*"
-                        style={{ display: "none" }}
+                        className="hidden-file-input"
                         onChange={handlePhotoUpload}
                         disabled={uploadingPhoto}
                       />
@@ -479,7 +479,7 @@ export default function AdminPractitionersPage() {
                       <input
                         type="file"
                         accept="video/*"
-                        style={{ display: "none" }}
+                        className="hidden-file-input"
                         onChange={handleVideoUpload}
                         disabled={uploadingVideo}
                       />
@@ -500,7 +500,7 @@ export default function AdminPractitionersPage() {
                     <input
                       type="file"
                       accept="image/*,application/pdf"
-                      style={{ display: "none" }}
+                      className="hidden-file-input"
                       onChange={handleCertUpload}
                       disabled={uploadingCert}
                     />
@@ -520,49 +520,45 @@ export default function AdminPractitionersPage() {
                 {/* SOCIAL LINKS */}
                 <div className="form-group">
                   <label>Social Media Links</label>
-                  <div style={{ display: "flex", flexDirection: "column", gap: "8px", background: "rgba(0,0,0,0.02)", padding: "12px", borderRadius: "8px", border: "1px dashed rgba(0,0,0,0.08)" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                      <span style={{ fontSize: "0.8rem", width: "90px", color: "hsl(var(--text-muted))", fontWeight: 600 }}>Facebook</span>
+                  <div className="social-links-panel">
+                    <div className="social-link-row">
+                      <span className="social-link-label">Facebook</span>
                       <input 
                         type="text" 
-                        className="glass-input" 
+                        className="glass-input social-link-input" 
                         placeholder="https://facebook.com/username"
                         value={socialFacebook}
                         onChange={(e) => setSocialFacebook(e.target.value)}
-                        style={{ flexGrow: 1, padding: "8px 12px", fontSize: "0.85rem" }}
                       />
                     </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                      <span style={{ fontSize: "0.8rem", width: "90px", color: "hsl(var(--text-muted))", fontWeight: 600 }}>Instagram</span>
+                    <div className="social-link-row">
+                      <span className="social-link-label">Instagram</span>
                       <input 
                         type="text" 
-                        className="glass-input" 
+                        className="glass-input social-link-input" 
                         placeholder="https://instagram.com/username"
                         value={socialInstagram}
                         onChange={(e) => setSocialInstagram(e.target.value)}
-                        style={{ flexGrow: 1, padding: "8px 12px", fontSize: "0.85rem" }}
                       />
                     </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                      <span style={{ fontSize: "0.8rem", width: "90px", color: "hsl(var(--text-muted))", fontWeight: 600 }}>LinkedIn</span>
+                    <div className="social-link-row">
+                      <span className="social-link-label">LinkedIn</span>
                       <input 
                         type="text" 
-                        className="glass-input" 
+                        className="glass-input social-link-input" 
                         placeholder="https://linkedin.com/in/username"
                         value={socialLinkedin}
                         onChange={(e) => setSocialLinkedin(e.target.value)}
-                        style={{ flexGrow: 1, padding: "8px 12px", fontSize: "0.85rem" }}
                       />
                     </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                      <span style={{ fontSize: "0.8rem", width: "90px", color: "hsl(var(--text-muted))", fontWeight: 600 }}>YouTube</span>
+                    <div className="social-link-row">
+                      <span className="social-link-label">YouTube</span>
                       <input 
                         type="text" 
-                        className="glass-input" 
+                        className="glass-input social-link-input" 
                         placeholder="https://youtube.com/channel-or-user"
                         value={socialYoutube}
                         onChange={(e) => setSocialYoutube(e.target.value)}
-                        style={{ flexGrow: 1, padding: "8px 12px", fontSize: "0.85rem" }}
                       />
                     </div>
                   </div>
@@ -587,7 +583,7 @@ export default function AdminPractitionersPage() {
                   </div>
 
                   {/* Dynamic option insertion */}
-                  <div className="add-expertise-subform" style={{ marginTop: "12px" }}>
+                  <div className="add-expertise-subform add-expertise-subform-spaced">
                     <input
                       type="text"
                       className="glass-input small-input"
@@ -736,6 +732,50 @@ export default function AdminPractitionersPage() {
           font-size: 0.85rem;
           line-height: 1.5;
           color: #475569;
+        }
+        .item-desc-spaced {
+          margin-top: 8px;
+        }
+        .empty-list-msg {
+          color: hsl(var(--text-muted));
+          font-style: italic;
+        }
+        .rating-row {
+          font-size: 0.8rem;
+          color: #d4af37;
+          margin-top: 4px;
+        }
+        .media-marker.social,
+        .media-marker-social {
+          color: #7c3aed;
+          background: rgba(124, 58, 237, 0.05);
+          border-color: rgba(124, 58, 237, 0.15);
+        }
+        .social-links-panel {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          background: rgba(0,0,0,0.02);
+          padding: 12px;
+          border-radius: 8px;
+          border: 1px dashed rgba(0,0,0,0.08);
+        }
+        .social-link-row {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .social-link-label {
+          font-size: 0.8rem;
+          width: 90px;
+          color: hsl(var(--text-muted));
+          font-weight: 600;
+          flex-shrink: 0;
+        }
+        .social-link-input {
+          flex-grow: 1;
+          padding: 8px 12px;
+          font-size: 0.85rem;
         }
         .media-markers-row {
           display: flex;
@@ -973,6 +1013,9 @@ export default function AdminPractitionersPage() {
         .add-expertise-subform {
           display: flex;
           gap: 8px;
+        }
+        .add-expertise-subform-spaced {
+          margin-top: 12px;
         }
         .small-input {
           flex-grow: 1;

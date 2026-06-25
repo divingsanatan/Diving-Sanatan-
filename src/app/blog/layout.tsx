@@ -18,14 +18,18 @@ function BlogLayoutInner({ children }: { children: React.ReactNode }) {
     "/blog/glossary": { title: "Search Terms", placeholder: "Type a term..." },
     "/blog/quora-qa": { title: "Search Answers", placeholder: "Type your question..." },
     "/blog/case-studies": { title: "Search Case Studies", placeholder: "Type keywords..." },
-    "/blog/comparison": { title: "Search Comparisons", placeholder: "Type keywords..." },
+    "/blog/comparison": { title: "Search Comparisons", placeholder: "Search healing modalities... (e.g., anxiety, duration, tools)" },
     "/blog/video-transcripts": { title: "Search Transcripts", placeholder: "Type keywords..." },
   };
 
-  const config = searchConfig[pathname] ?? { title: "Search", placeholder: "Type keywords..." };
+  const comparisonSlugConfig = pathname.startsWith("/blog/comparison/") && pathname !== "/blog/comparison"
+    ? { title: "Search Comparisons", placeholder: "Search healing modalities... (e.g., anxiety, duration, tools)" }
+    : null;
+
+  const config = comparisonSlugConfig ?? searchConfig[pathname] ?? { title: "Search", placeholder: "Type keywords..." };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+    <div className="page-col">
       <Header />
 
       <div className="blog-layout-container">
@@ -203,7 +207,7 @@ export default function BlogLayout({
   children: React.ReactNode;
 }) {
   return (
-    <Suspense fallback={<div style={{ textAlign: "center", padding: "100px 0" }}>Loading layout...</div>}>
+    <Suspense fallback={<div className="layout-loading">Loading layout...</div>}>
       <BlogProvider>
         <BlogLayoutInner>{children}</BlogLayoutInner>
       </BlogProvider>

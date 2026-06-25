@@ -77,7 +77,7 @@ export default function AdminCategoriesPage() {
       <div className="dashboard-header-row">
         <div>
           <h2>Categories Manager</h2>
-          <p style={{ color: "hsl(var(--text-muted))", fontSize: "0.9rem", marginTop: "4px" }}>
+          <p className="admin-header-desc">
             Add, update, or remove healing disciplines. These categories are dynamically linked to services on storefront catalogs.
           </p>
         </div>
@@ -87,7 +87,7 @@ export default function AdminCategoriesPage() {
       </div>
 
       {loading ? (
-        <p style={{ color: "hsl(var(--text-muted))", marginTop: "40px" }}>Loading categories...</p>
+        <p className="admin-loading">Loading categories...</p>
       ) : (
         <div className="admin-split-layout">
           {/* List */}
@@ -99,16 +99,12 @@ export default function AdminCategoriesPage() {
                   <div className="item-card-row">
                     <div className="item-card-details">
                       <h4>{cat.name}</h4>
-                      <span style={{ fontSize: "0.75rem", color: "hsl(var(--text-muted))" }}>ID: {cat.id}</span>
+                      <span className="muted-id">ID: {cat.id}</span>
                     </div>
                     <button 
-                      className="delete-row-btn" 
+                      className={`delete-row-btn${["cat-1", "cat-2", "cat-3"].includes(cat.id) ? " btn-protected" : ""}`}
                       onClick={() => handleDeleteCategory(cat.id)}
                       disabled={["cat-1", "cat-2", "cat-3"].includes(cat.id)}
-                      style={{
-                        opacity: ["cat-1", "cat-2", "cat-3"].includes(cat.id) ? 0.4 : 1,
-                        cursor: ["cat-1", "cat-2", "cat-3"].includes(cat.id) ? "not-allowed" : "pointer"
-                      }}
                     >
                       ✕ Delete Category
                     </button>
@@ -120,8 +116,8 @@ export default function AdminCategoriesPage() {
 
           {/* Form */}
           <div className="split-form-col">
-            <Card variant="glass" style={{ padding: "28px" }}>
-              <h3 className="column-title" style={{ marginBottom: "20px" }}>Create Category</h3>
+            <Card variant="glass" className="admin-form-padding">
+              <h3 className="column-title column-title-spaced">Create Category</h3>
               <form onSubmit={handleAddCategory} className="admin-catalog-form">
                 
                 <div className="form-group">
@@ -136,7 +132,7 @@ export default function AdminCategoriesPage() {
                   />
                 </div>
 
-                <Button variant="gold" type="submit" style={{ width: "100%", marginTop: "8px" }}>
+                <Button variant="gold" type="submit" className="btn-full-spaced">
                   Create Category
                 </Button>
               </form>

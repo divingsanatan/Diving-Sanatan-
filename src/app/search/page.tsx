@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect, Suspense, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
@@ -166,9 +166,16 @@ function SearchPageContent() {
   };
 
   const totalSelectionsCost = selections.reduce((s, x) => s + x.price, 0);
+  const resonanceBarRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (auraReport && resonanceBarRef.current) {
+      resonanceBarRef.current.style.setProperty("--progress", `${auraReport.resonance}%`);
+    }
+  }, [auraReport]);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh", paddingBottom: selections.length > 0 ? "140px" : "0" }}>
+    <div className={`page-shell${selections.length > 0 ? " page-shell--cart-pad" : ""}`}>
       <Header />
 
       <main className="search-container">
@@ -176,7 +183,7 @@ function SearchPageContent() {
         {/* Search header filters */}
         <section className="search-controls-card glass-panel">
           <h2 className="search-header-title">Search Results Page</h2>
-          <p style={{ color: "hsl(var(--text-muted))", fontSize: "0.9rem", marginBottom: "20px" }}>
+          <p className="text-muted-sm-mb">
             Refining services and vibrational frequency outputs based on your search metrics.
           </p>
 
@@ -255,7 +262,7 @@ function SearchPageContent() {
                             <div className="category-badges">
                               {srv.categories && srv.categories.length > 0 ? (
                                 srv.categories.map(cat => (
-                                  <span key={cat} className="row-category" style={{ marginRight: '6px' }}>{cat}</span>
+                                  <span key={cat} className="row-category row-category-spaced">{cat}</span>
                                 ))
                               ) : (
                                 <span className="row-category">{srv.category}</span>
@@ -319,7 +326,7 @@ function SearchPageContent() {
                       return (
                         <g key={chk.key}>
                           {/* Radial Glow */}
-                          <circle cx="80" cy={yPos} r={glowRadius} fill={chk.color} opacity={opacity * 0.25} style={{ filter: "blur(6px)" }} />
+                          <circle cx="80" cy={yPos} r={glowRadius} fill={chk.color} opacity={opacity * 0.25} className="chakra-glow-blur" />
                           {/* Inner Core */}
                           <circle cx="80" cy={yPos} r="7" fill={chk.color} stroke="#fff" strokeWidth="1.5" className="chakra-node-pulse" />
                           {/* Label Text */}
@@ -335,10 +342,10 @@ function SearchPageContent() {
                 <div className="aura-stats">
                   <div className="aura-stat-row">
                     <span>Vibrational Resonance</span>
-                    <span className="aura-stat-val" style={{ color: "#d4af37" }}>{auraReport.resonance}%</span>
+                    <span className="aura-stat-val aura-stat-gold">{auraReport.resonance}%</span>
                   </div>
                   <div className="resonance-bar-bg">
-                    <div className="resonance-bar-fill" style={{ width: `${auraReport.resonance}%` }} />
+                    <div ref={resonanceBarRef} className="resonance-bar-fill progress-var-fill" />
                   </div>
                 </div>
 
@@ -606,6 +613,7 @@ function SearchPageContent() {
           height: 100%;
           background: linear-gradient(90deg, #059669, #7c3aed);
           border-radius: 99px;
+          width: var(--progress, 0%);
         }
         .aura-analysis-desc {
           font-size: 0.85rem;

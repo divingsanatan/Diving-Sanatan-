@@ -22,6 +22,7 @@ export default function AdminServicesPage() {
   const [servicePrice, setServicePrice] = useState("");
   const [serviceDuration, setServiceDuration] = useState("");
   const [servicePractitioner, setServicePractitioner] = useState("");
+  const [servicePractitionerId, setServicePractitionerId] = useState("");
   const [selectedServiceCategories, setSelectedServiceCategories] = useState<string[]>([]);
   const [serviceDesc, setServiceDesc] = useState("");
   const [serviceImage, setServiceImage] = useState("");
@@ -33,7 +34,22 @@ export default function AdminServicesPage() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [uploadingVideo, setUploadingVideo] = useState(false);
+  const [saving, setSaving] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const getServiceImagePreview = (imgName: string) => {
+    if (!imgName) return "";
+    if (imgName.startsWith("http") || imgName.startsWith("/")) return imgName;
+    const mappings: Record<string, string> = {
+      aura_balancing: "/images/service_chakra.png",
+      crystal_healing: "/images/service_regression.png",
+      chakra_clearing: "/images/service_akashic.png",
+      mindfulness_meditation: "/images/service_chakra.png",
+      anxiety_release: "/images/service_regression.png",
+      spiritual_counseling: "/images/service_akashic.png",
+    };
+    return mappings[imgName] || "";
+  };
 
   const loadData = async () => {
     try {
@@ -54,6 +70,7 @@ export default function AdminServicesPage() {
         setCategories(cJson.data);
         if (pJson.data.length > 0 && !servicePractitioner) {
           setServicePractitioner(pJson.data[0].name);
+          setServicePractitionerId(pJson.data[0].id);
         }
       }
     } catch (err) {
@@ -66,6 +83,12 @@ export default function AdminServicesPage() {
   useEffect(() => {
     loadData();
   }, []);
+
+  useEffect(() => {
+    if (!servicePractitioner || servicePractitionerId) return;
+    const match = practitioners.find((p) => p.name === servicePractitioner);
+    if (match) setServicePractitionerId(match.id);
+  }, [practitioners, servicePractitioner, servicePractitionerId]);
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -84,8 +107,10 @@ export default function AdminServicesPage() {
     setServiceDuration("");
     if (practitioners.length > 0) {
       setServicePractitioner(practitioners[0].name);
+      setServicePractitionerId(practitioners[0].id);
     } else {
       setServicePractitioner("");
+      setServicePractitionerId("");
     }
     setSelectedServiceCategories([]);
     setServiceDesc("");
@@ -108,8 +133,16 @@ export default function AdminServicesPage() {
     setServiceName(service.name);
     setServicePrice(service.price.toString());
     setServiceDuration(service.duration);
-    setServicePractitioner(service.practitioner);
-    setSelectedServiceCategories(service.categoryIds || []);
+    const matchedPractitioner = practitioners.find((p) => p.name === service.practitioner);
+    setServicePractitioner(matchedPractitioner?.name || service.practitioner);
+    setServicePractitionerId(matchedPractitioner?.id || "");
+    let categoryIds = service.categoryIds || [];
+    if (categoryIds.length === 0 && service.categories?.length) {
+      categoryIds = service.categories
+        .map(name => categories.find(c => c.name === name)?.id)
+        .filter((id): id is string => Boolean(id));
+    }
+    setSelectedServiceCategories(categoryIds);
     setServiceDesc(service.description);
     setServiceImage(service.image || "");
     setServiceVideoUrl(service.video_url || "");
@@ -159,6 +192,10 @@ export default function AdminServicesPage() {
       alert("Please select at least one category.");
       return;
     }
+    if (!servicePractitionerId || !servicePractitioner.trim()) {
+      alert("Please assign a practitioner.");
+      return;
+    }
 
     const payload = {
       name: serviceName,
@@ -174,6 +211,7 @@ export default function AdminServicesPage() {
     };
 
     try {
+      setSaving(true);
       let res;
       if (editMode && editServiceId) {
         res = await fetch("/api/services", {
@@ -196,11 +234,13 @@ export default function AdminServicesPage() {
         alert(editMode ? "Service details updated successfully!" : "Service successfully added to catalog!");
         loadData();
       } else {
-        alert("Operation failed: " + json.error);
+        alert(json.error || "Operation failed. Please try again.");
       }
     } catch (err) {
       console.error(err);
-      alert("An error occurred while saving the service.");
+      alert("Network error while saving. Please check your connection and try again.");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -258,7 +298,7 @@ export default function AdminServicesPage() {
       <div className="dashboard-header-row">
         <div>
           <h2>Services Catalog</h2>
-          <p style={{ color: "hsl(var(--text-muted))", fontSize: "0.9rem", marginTop: "4px" }}>
+          <p className="admin-header-desc">
             Add new treatments, edit specifications, classify under disciplines, and allocate certified healers.
           </p>
         </div>
@@ -273,7 +313,7 @@ export default function AdminServicesPage() {
       </div>
 
       {loading ? (
-        <p style={{ color: "hsl(var(--text-muted))", marginTop: "40px" }}>Loading catalog data...</p>
+        <p className="admin-loading">Loading catalog data...</p>
       ) : (
         <div className="admin-split-layout">
           <div className="split-list-col">
@@ -287,13 +327,13 @@ export default function AdminServicesPage() {
                     <th>Duration</th>
                     <th>Price</th>
                     <th>Practitioner</th>
-                    <th style={{ textAlign: "right" }}>Actions</th>
+                    <th className="text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {services.length === 0 ? (
                     <tr>
-                      <td colSpan={6} style={{ textAlign: "center", color: "hsl(var(--text-muted))", padding: "24px" }}>
+                      <td colSpan={6} className="admin-empty-cell">
                         No services in catalog.
                       </td>
                     </tr>
@@ -330,7 +370,7 @@ export default function AdminServicesPage() {
                         <td>
                           <span className="practitioner-text">{s.practitioner}</span>
                         </td>
-                        <td style={{ textAlign: "right" }}>
+                        <td className="text-right">
                           <div className="action-buttons-cell">
                             <button className="edit-row-btn" onClick={() => handleOpenEditModal(s)}>
                               ✎ Edit
@@ -358,11 +398,12 @@ export default function AdminServicesPage() {
               <button className="close-modal-btn" onClick={() => setIsModalOpen(false)}>
                 ✕
               </button>
-              <h3 className="column-title" style={{ marginBottom: "20px" }}>
+              <h3 className="column-title modal-title-bar">
                 {editMode ? "Edit Service details" : "Create Service"}
               </h3>
               
               <form onSubmit={handleSaveService} className="admin-catalog-form">
+                <div className="modal-form-scroll">
                 <div className="form-group">
                   <label>Service Name *</label>
                   <input
@@ -376,7 +417,7 @@ export default function AdminServicesPage() {
                 </div>
 
                 <div className="form-row">
-                  <div className="form-group" style={{ flex: 1 }}>
+                  <div className="form-group form-group-flex">
                     <label>Price ($) *</label>
                     <input
                       type="number"
@@ -387,7 +428,7 @@ export default function AdminServicesPage() {
                       onChange={(e) => setServicePrice(e.target.value)}
                     />
                   </div>
-                  <div className="form-group" style={{ flex: 1 }}>
+                  <div className="form-group form-group-flex">
                     <label>Duration *</label>
                     <input
                       type="text"
@@ -451,14 +492,20 @@ export default function AdminServicesPage() {
                 </div>
 
                 <div className="form-group">
-                  <label>Assign Practitioner</label>
+                    <label>Assign Practitioner *</label>
                   <select
                     className="glass-input"
-                    value={servicePractitioner}
-                    onChange={(e) => setServicePractitioner(e.target.value)}
+                      required
+                      value={servicePractitionerId}
+                      onChange={(e) => {
+                        const prac = practitioners.find((p) => p.id === e.target.value);
+                        setServicePractitionerId(e.target.value);
+                        setServicePractitioner(prac?.name || "");
+                      }}
                   >
+                      <option value="">Select practitioner...</option>
                     {practitioners.map(p => (
-                      <option key={p.id} value={p.name}>{p.name}</option>
+                      <option key={p.id} value={p.id}>{p.name}</option>
                     ))}
                   </select>
                 </div>
@@ -491,14 +538,14 @@ export default function AdminServicesPage() {
                         type="file" 
                         accept="image/*" 
                         onChange={(e) => handleFileUpload(e, "image")}
-                        style={{ display: "none" }}
+                        className="hidden-file-input"
                         disabled={uploadingImage}
                       />
                     </label>
                   </div>
-                  {serviceImage && (
+                    {serviceImage && getServiceImagePreview(serviceImage) && (
                     <div className="media-preview-container">
-                      <img src={serviceImage} alt="Service preview" className="media-preview-img" />
+                        <img src={getServiceImagePreview(serviceImage)} alt="Service preview" className="media-preview-img" />
                     </div>
                   )}
                 </div>
@@ -520,7 +567,7 @@ export default function AdminServicesPage() {
                         type="file" 
                         accept="video/*" 
                         onChange={(e) => handleFileUpload(e, "video")}
-                        style={{ display: "none" }}
+                        className="hidden-file-input"
                         disabled={uploadingVideo}
                       />
                     </label>
@@ -591,10 +638,23 @@ export default function AdminServicesPage() {
                     )}
                   </div>
                 </div>
+                </div>
 
-                <Button variant="gold" type="submit" style={{ width: "100%", marginTop: "12px", padding: "14px" }}>
-                  {editMode ? "Save changes" : "Create Service"}
-                </Button>
+                <div className="modal-form-footer">
+                  <button
+                    type="button"
+                    className="modal-cancel-btn"
+                    onClick={() => {
+                      setIsModalOpen(false);
+                      resetForm();
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <Button variant="gold" type="submit" disabled={saving} >
+                    {saving ? "Saving..." : editMode ? "Save Changes" : "Create Service"}
+                  </Button>
+                </div>
               </form>
             </Card>
           </div>
@@ -662,14 +722,61 @@ export default function AdminServicesPage() {
           width: 100%;
           max-width: 620px;
           max-height: 90vh;
-          overflow-y: auto;
           border-radius: 20px;
           box-shadow: 0 20px 50px rgba(0,0,0,0.15);
           animation: scaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          overflow: hidden;
         }
         :global(.modal-inner-card) {
-          padding: 32px !important;
+          padding: 0 !important;
           position: relative !important;
+          display: flex;
+          flex-direction: column;
+          max-height: 90vh;
+        }
+        .modal-title-bar {
+          padding: 32px 32px 0;
+          margin-bottom: 0 !important;
+        }
+        .admin-catalog-form {
+          display: flex;
+          flex-direction: column;
+          flex: 1;
+          min-height: 0;
+        }
+        .modal-form-scroll {
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+          overflow-y: auto;
+          padding: 20px 32px 24px;
+          flex: 1;
+        }
+        .modal-form-footer {
+          display: flex;
+          gap: 12px;
+          padding: 16px 32px 24px;
+          border-top: 1px solid rgba(0, 0, 0, 0.08);
+          background: rgba(255, 255, 255, 0.98);
+          position: sticky;
+          bottom: 0;
+          z-index: 5;
+        }
+        .modal-cancel-btn {
+          background: transparent;
+          border: 1px solid rgba(0, 0, 0, 0.12);
+          color: hsl(var(--text-muted));
+          padding: 14px 20px;
+          border-radius: 12px;
+          font-size: 0.85rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: var(--transition-fast);
+          white-space: nowrap;
+        }
+        .modal-cancel-btn:hover {
+          border-color: rgba(0, 0, 0, 0.2);
+          color: #1e293b;
         }
         .close-modal-btn {
           position: absolute;
@@ -825,11 +932,6 @@ export default function AdminServicesPage() {
         }
         .delete-row-btn:hover {
           background: rgba(239, 68, 68, 0.08);
-        }
-        .admin-catalog-form {
-          display: flex;
-          flex-direction: column;
-          gap: 20px;
         }
         .form-group {
           display: flex;

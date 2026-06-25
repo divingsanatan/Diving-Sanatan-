@@ -56,7 +56,7 @@ export default function AboutPage() {
   ];
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+    <div className="page-shell">
       <Header />
 
       <main className="about-container">
@@ -96,12 +96,12 @@ export default function AboutPage() {
         {/* Healers/Practitioners list */}
         <section className="practitioners-section">
           <h2 className="section-title">Certified Healers & Guides</h2>
-          <p style={{ textAlign: "center", color: "hsl(var(--text-muted))", marginBottom: "40px", fontSize: "0.95rem" }}>
+          <p className="about-section-desc">
             Meet the team of master physicians committed to your cosmic balance.
           </p>
 
           {loading ? (
-            <p style={{ textAlign: "center" }}>Aligning healing frequencies...</p>
+            <p className="text-center">Aligning healing frequencies...</p>
           ) : (
             <div className="practitioners-grid">
               {practitioners.map(prac => (

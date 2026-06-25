@@ -281,7 +281,9 @@ export default function UserProfilePage() {
         <div className="chakra-progress-bar-container">
           <div
             className={`chakra-progress-bar-fill ${colorClass}`}
-            style={{ width: `${score}%` }}
+            ref={(el) => {
+              if (el) el.style.setProperty("--progress", `${score}%`);
+            }}
           />
         </div>
         <p className="chakra-node-meaning">{meaning}</p>
@@ -602,7 +604,7 @@ export default function UserProfilePage() {
                       </div>
                     </div>
 
-                    <div className="input-group" style={{ marginTop: "16px" }}>
+                    <div className="input-group input-group-mt-16">
                       <label htmlFor="edit-password">Update Password (Optional)</label>
                       <input
                         id="edit-password"
@@ -621,7 +623,7 @@ export default function UserProfilePage() {
                 </Card>
               ) : (
                 /* Reports Tab */
-                <div className="reports-tab-content" style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+                <div className="reports-tab-content reports-tab-stack">
 
 
                 </div>
@@ -1035,6 +1037,7 @@ export default function UserProfilePage() {
         .chakra-progress-bar-fill {
           height: 100%;
           border-radius: 99px;
+          width: var(--progress, 0%);
           transition: width 1s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .chakra-node-meaning {

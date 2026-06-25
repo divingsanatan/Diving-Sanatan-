@@ -42,7 +42,7 @@ export default function AdminLayout({
 
   if (checking) {
     return (
-      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "100vh", background: "#ffffff", color: "#1e293b" }}>
+      <div className="admin-auth-checking">
         <p>Verifying credentials...</p>
       </div>
     );
@@ -72,6 +72,7 @@ export default function AdminLayout({
           <Link href="/admin/keywords" className={`sidebar-link ${pathname === "/admin/keywords" ? "active" : ""}`}>Keywords</Link>
           <Link href="/admin/quiz-questions" className={`sidebar-link ${pathname === "/admin/quiz-questions" ? "active" : ""}`}>Quiz Questions</Link>
           <Link href="/admin/blogs" className={`sidebar-link ${pathname === "/admin/blogs" ? "active" : ""}`}>Blogs</Link>
+          <Link href="/admin/comparisons" className={`sidebar-link ${pathname === "/admin/comparisons" ? "active" : ""}`}>Comparisons</Link>
           <Link href="/admin/leads" className={`sidebar-link ${pathname === "/admin/leads" ? "active" : ""}`}>Leads Profiles</Link>
           <Link href="/" className="sidebar-link">Public Site</Link>
         </nav>

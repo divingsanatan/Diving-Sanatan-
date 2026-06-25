@@ -57,7 +57,7 @@ export default function AdminDashboardPage() {
       <div className="dashboard-header-row">
         <div>
           <h2>Sanctuary Logistics Control</h2>
-          <p style={{ color: "hsl(var(--text-muted))", fontSize: "0.9rem", marginTop: "4px" }}>
+          <p className="admin-header-desc">
             Real-time analytics monitor and administrative overview of sanctuary systems.
           </p>
         </div>
@@ -67,7 +67,7 @@ export default function AdminDashboardPage() {
       </div>
 
       {loading ? (
-        <p style={{ color: "hsl(var(--text-muted))", marginTop: "40px" }}>Loading metrics...</p>
+        <p className="admin-loading">Loading metrics...</p>
       ) : (
         <>
           {/* Stats Widgets */}

@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/Card";
 
 export default function PrivacyPage() {
   return (
-    <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+    <div className="page-shell">
       <Header />
 
       <main className="privacy-container">
@@ -62,7 +62,7 @@ export default function PrivacyPage() {
             <div className="policy-section">
               <h2 className="policy-heading">5. Rights and Contact Details</h2>
               <p className="policy-text">
-                Should you wish to request total deletion of your scheduling history or update your email address in our newsletter system, please submit a message via our <a href="/contact" style={{ color: "#7c3aed", textDecoration: "underline" }}>Contact Page</a> or email support@divingsanatan.com.
+                Should you wish to request total deletion of your scheduling history or update your email address in our newsletter system, please submit a message via our <a href="/contact" className="link-violet-underline">Contact Page</a> or email support@divingsanatan.com.
               </p>
             </div>
 

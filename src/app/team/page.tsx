@@ -29,7 +29,7 @@ export default function TeamPage() {
   }, []);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+    <div className="page-shell">
       <Header />
 
       <main className="team-container">
@@ -55,8 +55,7 @@ export default function TeamPage() {
                 <Card 
                   key={prac.id} 
                   variant="glass" 
-                  className="team-card animate-slide-up"
-                  style={{ animationDelay: `${idx * 0.1}s` }}
+                  className={`team-card animate-slide-up team-card-delay-${idx % 12}`}
                 >
                   <div className="card-top-accent"></div>
                   
@@ -393,6 +392,19 @@ export default function TeamPage() {
         .animate-slide-up {
           animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
         }
+
+        :global(.team-card-delay-0) { animation-delay: 0s; }
+        :global(.team-card-delay-1) { animation-delay: 0.1s; }
+        :global(.team-card-delay-2) { animation-delay: 0.2s; }
+        :global(.team-card-delay-3) { animation-delay: 0.3s; }
+        :global(.team-card-delay-4) { animation-delay: 0.4s; }
+        :global(.team-card-delay-5) { animation-delay: 0.5s; }
+        :global(.team-card-delay-6) { animation-delay: 0.6s; }
+        :global(.team-card-delay-7) { animation-delay: 0.7s; }
+        :global(.team-card-delay-8) { animation-delay: 0.8s; }
+        :global(.team-card-delay-9) { animation-delay: 0.9s; }
+        :global(.team-card-delay-10) { animation-delay: 1s; }
+        :global(.team-card-delay-11) { animation-delay: 1.1s; }
 
         @keyframes fadeIn {
           from { opacity: 0; }

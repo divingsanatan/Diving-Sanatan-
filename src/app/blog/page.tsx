@@ -149,7 +149,7 @@ export default function BlogListingPage() {
       {/* Listings Grid */}
       <section className="blog-content-section">
         {loading ? (
-          <p style={{ textAlign: "center", color: "hsl(var(--text-muted))", padding: "80px 0" }}>Retrieving sacred scrolls...</p>
+          <p className="text-muted-center-padded">Retrieving sacred scrolls...</p>
         ) : isFilteringActive ? (
           // FILTERED LISTING VIEW (Flat Grid)
           <div className="filtered-results-wrapper">
@@ -164,7 +164,7 @@ export default function BlogListingPage() {
             </div>
 
             {filteredBlogs.length === 0 ? (
-              <div className="empty-state glass-card" style={{ padding: "40px", textAlign: "center" }}>
+              <div className="empty-state glass-card card-pad-40-center">
                 <p>No articles found matching your query metrics.</p>
               </div>
             ) : (
@@ -215,7 +215,7 @@ export default function BlogListingPage() {
             )}
 
             {blogs.length === 0 && (
-              <div className="empty-state glass-card" style={{ padding: "40px", textAlign: "center" }}>
+              <div className="empty-state glass-card card-pad-40-center">
                 <p>No articles currently published in the catalog.</p>
               </div>
             )}

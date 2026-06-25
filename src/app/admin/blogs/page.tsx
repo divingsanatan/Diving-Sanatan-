@@ -376,7 +376,7 @@ export default function AdminBlogsPage() {
       <div className="dashboard-header-row">
         <div>
           <h2>Publication & Blogs Control</h2>
-          <p style={{ color: "hsl(var(--text-muted))", fontSize: "0.9rem", marginTop: "4px" }}>
+          <p className="admin-header-desc">
             Create and edit dynamic articles, manage publications, classify guidance categories, and coordinate authors.
           </p>
         </div>
@@ -401,7 +401,7 @@ export default function AdminBlogsPage() {
       </div>
 
       {loading ? (
-        <p style={{ color: "hsl(var(--text-muted))", marginTop: "40px" }}>Loading publication catalog...</p>
+        <p className="admin-loading">Loading publication catalog...</p>
       ) : (
         <div className="admin-split-layout">
           <div className="split-list-col">
@@ -416,13 +416,13 @@ export default function AdminBlogsPage() {
                     <th>Author</th>
                     <th>Read Estimate</th>
                     <th>Date</th>
-                    <th style={{ textAlign: "right" }}>Actions</th>
+                    <th className="text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredBlogs.length === 0 ? (
                     <tr>
-                      <td colSpan={6} style={{ textAlign: "center", color: "hsl(var(--text-muted))", padding: "24px" }}>
+                      <td colSpan={6} className="admin-empty-cell">
                         No matching articles found in catalog.
                       </td>
                     </tr>
@@ -444,7 +444,7 @@ export default function AdminBlogsPage() {
                           {b.section ? (
                             <span className="section-badge">{b.section}</span>
                           ) : (
-                            <span style={{ color: "hsl(var(--text-muted))", fontSize: "0.8rem", fontStyle: "italic" }}>Regular Feed</span>
+                            <span className="muted-italic-sm">Regular Feed</span>
                           )}
                         </td>
                         <td>
@@ -456,7 +456,7 @@ export default function AdminBlogsPage() {
                         <td>
                           <span className="date-text">{b.date}</span>
                         </td>
-                        <td style={{ textAlign: "right" }}>
+                        <td className="text-right">
                           <div className="action-buttons-cell">
                             <button className="edit-row-btn" onClick={() => handleOpenEditModal(b)}>
                               ✎ Edit
@@ -484,7 +484,7 @@ export default function AdminBlogsPage() {
               <button className="close-modal-btn" onClick={() => setIsModalOpen(false)}>
                 ✕
               </button>
-              <h3 className="column-title" style={{ marginBottom: "20px" }}>
+              <h3 className="column-title column-title-spaced">
                 {editMode ? "Edit Publication Details" : "Publish New Article"}
               </h3>
               
@@ -502,7 +502,7 @@ export default function AdminBlogsPage() {
                 </div>
 
                 <div className="form-row">
-                  <div className="form-group" style={{ flex: 1 }}>
+                  <div className="form-group form-group-flex">
                     <label>Category *</label>
                     <select
                       className="glass-input"
@@ -515,7 +515,7 @@ export default function AdminBlogsPage() {
                     </select>
                   </div>
                   {showCustomCategory && (
-                    <div className="form-group" style={{ flex: 1 }}>
+                    <div className="form-group form-group-flex">
                       <label>Custom Category Name *</label>
                       <input
                         type="text"
@@ -530,10 +530,10 @@ export default function AdminBlogsPage() {
                 </div>
 
                 <div className="form-row">
-                  <div className="form-group" style={{ flex: 1 }}>
+                  <div className="form-group form-group-flex">
                     <label>Author Source *</label>
-                    <div style={{ display: "flex", gap: "16px", marginTop: "8px" }}>
-                      <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.85rem", cursor: "pointer" }}>
+                    <div className="flex-row-gap">
+                      <label className="radio-label">
                         <input
                           type="radio"
                           name="authorType"
@@ -542,7 +542,7 @@ export default function AdminBlogsPage() {
                         />
                         Practitioner
                       </label>
-                      <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.85rem", cursor: "pointer" }}>
+                      <label className="radio-label">
                         <input
                           type="radio"
                           name="authorType"
@@ -554,7 +554,7 @@ export default function AdminBlogsPage() {
                     </div>
                   </div>
 
-                  <div className="form-group" style={{ flex: 1.2 }}>
+                  <div className="form-group form-group-flex-wide">
                     {authorType === "practitioner" ? (
                       <>
                         <label>Select Author Practitioner *</label>
@@ -594,7 +594,7 @@ export default function AdminBlogsPage() {
                 </div>
 
                 <div className="form-row">
-                  <div className="form-group" style={{ flex: 1 }}>
+                  <div className="form-group form-group-flex">
                     <label>Release Date *</label>
                     <input
                       type="date"
@@ -604,7 +604,7 @@ export default function AdminBlogsPage() {
                       onChange={(e) => setDate(e.target.value)}
                     />
                   </div>
-                  <div className="form-group" style={{ flex: 1 }}>
+                  <div className="form-group form-group-flex">
                     <label>Read Time Estimate *</label>
                     <input
                       type="text"
@@ -648,7 +648,7 @@ export default function AdminBlogsPage() {
                         type="file" 
                         accept="image/*" 
                         onChange={handleFileUpload}
-                        style={{ display: "none" }}
+                        className="hidden-file-input"
                         disabled={uploadingImage}
                       />
                     </label>
@@ -662,7 +662,7 @@ export default function AdminBlogsPage() {
 
                 {/* Multiple Gallery Images */}
                 <div className="form-group">
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div className="flex-between">
                     <label>Gallery Images (Additional Photos Showcase)</label>
                     <button type="button" className="add-list-item-btn" onClick={handleAddGalleryImage}>
                       ＋ Add Photo
@@ -685,7 +685,7 @@ export default function AdminBlogsPage() {
                               type="file" 
                               accept="image/*" 
                               onChange={(e) => handleGalleryUpload(e, idx)}
-                              style={{ display: "none" }}
+                              className="hidden-file-input"
                               disabled={uploadingGalleryIdx !== null}
                             />
                           </label>
@@ -708,7 +708,7 @@ export default function AdminBlogsPage() {
 
                 {/* Multiple Blog Videos */}
                 <div className="form-group">
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div className="flex-between">
                     <label>Blog Videos (Additional Video Playbacks)</label>
                     <button type="button" className="add-list-item-btn" onClick={handleAddBlogVideo}>
                       ＋ Add Video
@@ -731,7 +731,7 @@ export default function AdminBlogsPage() {
                               type="file" 
                               accept="video/*" 
                               onChange={(e) => handleVideoUpload(e, idx)}
-                              style={{ display: "none" }}
+                              className="hidden-file-input"
                               disabled={uploadingVideoIdx !== null}
                             />
                           </label>
@@ -805,16 +805,16 @@ export default function AdminBlogsPage() {
                       value={content}
                       onChange={() => {}}
                       tabIndex={-1}
-                      style={{ opacity: 0, height: 0, position: "absolute", pointerEvents: "none" }}
+                      className="visually-hidden-input"
                     />
                   </div>
 
-                  <small style={{ display: "block", color: "hsl(var(--text-muted))", fontSize: "0.75rem", marginTop: "4px" }}>
+                  <small className="form-hint">
                     Word Count: {content.replace(/<[^>]*>/g, " ").trim().split(/\s+/).filter(Boolean).length} words
                   </small>
                 </div>
 
-                <Button variant="gold" type="submit" style={{ width: "100%", marginTop: "12px", padding: "14px" }}>
+                <Button variant="gold" type="submit" className="btn-full-mt">
                   {editMode ? "Save Changes" : "Publish Article"}
                 </Button>
               </form>

@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Card } from "@/components/ui/Card";
-import { formatCurrency } from "@/utils/formatters";
+import { ServicesCartCarousel } from "@/components/services/ServicesCartCarousel";
 
 interface Practitioner {
   id: string;
@@ -99,42 +99,9 @@ export default function HealerDetailPage() {
   };
 
 
-  // Services scroll ref
-  const servicesScrollRef = useRef<HTMLDivElement>(null);
-
   // Certifications Modal Lightbox State
   const [activeCertUrl, setActiveCertUrl] = useState<string | null>(null);
-
-  // Helper to generate dynamic title & description for certifications
-  const getCertInfo = (url: string, index: number) => {
-    if (url.includes("cert_1")) {
-      return {
-        title: "Certified Usui Reiki Master",
-        description: "Accredited Reiki master certification in energetic realignment and chakra healing resonance."
-      };
-    }
-    if (url.includes("cert_2")) {
-      return {
-        title: "Advanced Chakra Therapist",
-        description: "Professional qualification in chakra energy balancing, aura diagnostics, and sound therapy."
-      };
-    }
-    const fallbacks = [
-      {
-        title: "Certified Usui Reiki Master",
-        description: "Accredited Reiki master certification in energetic realignment and chakra healing resonance."
-      },
-      {
-        title: "Advanced Chakra Therapist",
-        description: "Professional qualification in chakra energy balancing, aura diagnostics, and sound therapy."
-      },
-      {
-        title: "Cosmic Consciousness Guide",
-        description: "Specialized certification in past life regression, akashic records, and spiritual counseling."
-      }
-    ];
-    return fallbacks[index % fallbacks.length];
-  };
+  const [certActiveIndex, setCertActiveIndex] = useState(0);
 
   useEffect(() => {
     if (!healerId) return;
@@ -190,17 +157,6 @@ export default function HealerDetailPage() {
 
     loadHealerDetails();
   }, [healerId]);
-
-  // Services scroll handler
-  const scrollServices = (direction: "left" | "right") => {
-    if (servicesScrollRef.current) {
-      const scrollAmount = 340;
-      servicesScrollRef.current.scrollBy({
-        left: direction === "left" ? -scrollAmount : scrollAmount,
-        behavior: "smooth",
-      });
-    }
-  };
 
   const selectSuggestion = (val: string) => {
     window.location.href = `/?search=${encodeURIComponent(val)}`;
@@ -265,19 +221,6 @@ export default function HealerDetailPage() {
     });
   };
 
-  // Resolve service image mapping
-  const getServiceImage = (imgName: string) => {
-    const mappings: Record<string, string> = {
-      "aura_balancing": "/images/service_chakra.png",
-      "crystal_healing": "/images/service_regression.png",
-      "chakra_clearing": "/images/service_akashic.png",
-      "mindfulness_meditation": "/images/service_chakra.png",
-      "anxiety_release": "/images/service_regression.png",
-      "spiritual_counseling": "/images/service_akashic.png",
-    };
-    return mappings[imgName] || "/images/service_chakra.png";
-  };
-
   const getPractitionerImage = (img: string) => {
     if (!img) return "/images/anara.png";
     if (img.startsWith("http") || img.startsWith("/")) return img;
@@ -291,7 +234,7 @@ export default function HealerDetailPage() {
 
   if (loading) {
     return (
-      <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+      <div className="page-shell">
         <Header />
         <main className="loading-state-wrapper">
           <div className="spinner"></div>
@@ -328,24 +271,14 @@ export default function HealerDetailPage() {
 
   if (error || !healer) {
     return (
-      <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+      <div className="page-shell">
         <Header />
         <main className="error-state-wrapper">
           <h2>⚠️ Registry Search Terminated</h2>
           <p>{error || "The requested practitioner profile was not found."}</p>
           <button
             onClick={() => router.push("/team")}
-            style={{
-              marginTop: "20px",
-              backgroundColor: "#4c1d95",
-              color: "white",
-              padding: "12px 24px",
-              borderRadius: "12px",
-              fontWeight: 700,
-              border: "none",
-              cursor: "pointer",
-              boxShadow: "0 4px 10px rgba(76,29,149,0.15)"
-            }}
+            className="error-return-btn"
           >
             Return to Team List
           </button>
@@ -452,60 +385,18 @@ export default function HealerDetailPage() {
                 <Link
                   href={`/booking?practitioner=${healer.id}`}
                   className="btn-book"
-                  style={{
-                    display: "block",
-                    width: "100%",
-                    textAlign: "center",
-                    backgroundColor: "#4c1d95",
-                    color: "white",
-                    padding: "12px",
-                    borderRadius: "12px",
-                    fontWeight: 700,
-                    fontSize: "0.85rem",
-                    letterSpacing: "0.08em",
-                    boxShadow: "0 4px 12px rgba(76, 29, 149, 0.15)",
-                    textDecoration: "none",
-                    cursor: "pointer",
-                    transition: "all 0.2s ease"
-                  }}
                 >
                   BOOK A SESSION
                 </Link>
                 <Link
                   href="/?search=resonance"
                   className="btn-quiz"
-                  style={{
-                    display: "block",
-                    width: "100%",
-                    textAlign: "center",
-                    backgroundColor: "white",
-                    color: "#4c1d95",
-                    padding: "11px",
-                    borderRadius: "12px",
-                    fontWeight: 700,
-                    fontSize: "0.85rem",
-                    letterSpacing: "0.08em",
-                    border: "1.5px solid #4c1d95",
-                    textDecoration: "none",
-                    cursor: "pointer",
-                    transition: "all 0.2s ease"
-                  }}
                 >
                   TAKE SOUL QUIZ
                 </Link>
                 <Link
                   href="/team"
-                  style={{
-                    display: "block",
-                    width: "100%",
-                    textAlign: "center",
-                    color: "#7c3aed",
-                    fontSize: "0.82rem",
-                    fontWeight: 600,
-                    marginTop: "8px",
-                    textDecoration: "underline",
-                    cursor: "pointer"
-                  }}
+                  className="btn-back-list"
                 >
                   Back to healer list
                 </Link>
@@ -547,7 +438,7 @@ export default function HealerDetailPage() {
             {healer.video_url && (() => {
               const embedUrl = getEmbedUrl(healer.video_url);
               return (
-                <div className="video-slot glass-panel" style={{ cursor: "default", marginTop: "auto" }}>
+                <div className="video-slot glass-panel video-slot-embedded">
                   {embedUrl ? (
                     <iframe
                       width="100%"
@@ -557,13 +448,13 @@ export default function HealerDetailPage() {
                       frameBorder="0"
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                       allowFullScreen
-                      style={{ border: "none", width: "100%", height: "100%" }}
+                      className="embed-iframe"
                     ></iframe>
                   ) : (
                     <video
                       src={healer.video_url}
                       controls
-                      style={{ width: "100%", height: "100%", objectFit: "contain", outline: "none", background: "black" }}
+                      className="embed-video"
                     />
                   )}
                 </div>
@@ -581,35 +472,22 @@ export default function HealerDetailPage() {
               <div className="insights-list">
                 {reviews.length > 0 ? (
                   reviews.slice(0, 4).map((rev) => (
-                    <div key={rev.id} className="insight-card" style={{ flexDirection: "column", alignItems: "flex-start", gap: "6px" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", width: "100%", alignItems: "center" }}>
-                        <span style={{ fontWeight: 700, color: "#4c1d95", fontSize: "0.92rem" }}>{rev.clientName}</span>
-                        <span style={{ color: "#d4af37", fontSize: "0.75rem" }}>{"★".repeat(rev.rating)}</span>
+                    <div key={rev.id} className="insight-card testimonial-card">
+                      <div className="testimonial-header">
+                        <span className="testimonial-name">{rev.clientName}</span>
+                        <span className="testimonial-stars">{"★".repeat(rev.rating)}</span>
                       </div>
                       {rev.serviceName && (
-                        <span style={{
-                          fontSize: "0.72rem",
-                          background: "rgba(13, 148, 136, 0.08)",
-                          color: "#0d9488",
-                          padding: "2px 6px",
-                          borderRadius: "4px",
-                          fontWeight: 500
-                        }}>{rev.serviceName}</span>
+                        <span className="testimonial-service-tag">{rev.serviceName}</span>
                       )}
-                      <p style={{
-                        fontSize: "0.82rem",
-                        color: "hsl(var(--text-cream))",
-                        lineHeight: 1.5,
-                        fontStyle: "italic",
-                        margin: "4px 0"
-                      }}>"{rev.comment}"</p>
-                      <span style={{ fontSize: "0.7rem", color: "hsl(var(--text-muted))" }}>
+                      <p className="testimonial-comment">"{rev.comment}"</p>
+                      <span className="testimonial-date">
                         {new Date(rev.date).toLocaleDateString()}
                       </span>
                     </div>
                   ))
                 ) : (
-                  <p style={{ color: "hsl(var(--text-muted))", fontStyle: "italic" }}>No client testimonials recorded for {healer.name} yet.</p>
+                  <p className="text-muted-italic">No client testimonials recorded for {healer.name} yet.</p>
                 )}
               </div>
             </div>
@@ -627,94 +505,86 @@ export default function HealerDetailPage() {
               </div>
             </div>
 
-            {/* Certification Showcase */}
-            <div className="sidebar-section glass-panel" style={{ marginTop: "auto" }}>
+            {/* Certification Showcase — image carousel only */}
+            <div className="sidebar-section glass-panel sidebar-section-bottom">
               <h2 className="sidebar-heading">CREDENTIALS SHOWCASE</h2>
 
-              <div className="insights-list">
-                {certificationsList.map((certUrl, idx) => {
-                  const certInfo = getCertInfo(certUrl, idx);
-                  return (
-                    <div
-                      key={idx}
-                      className="insight-card"
-                      style={{ cursor: "pointer" }}
-                      onClick={() => setActiveCertUrl(certUrl)}
-                    >
-                      <div className="insight-img-wrapper" style={{ border: "1px solid rgba(168, 85, 247, 0.1)" }}>
-                        <img src={certUrl} alt={certInfo.title} />
-                      </div>
-                      <div className="insight-content">
-                        <h4 style={{
-                          fontFamily: "var(--font-sans)",
-                          fontSize: "0.95rem",
-                          color: "#4c1d95",
-                          fontWeight: 700,
-                          lineHeight: 1.35
-                        }}>{certInfo.title}</h4>
-                        <p style={{
-                          fontSize: "0.8rem",
-                          color: "hsl(var(--text-muted))",
-                          lineHeight: 1.4,
-                          margin: "2px 0 0 0"
-                        }}>{certInfo.description}</p>
-                        <span className="insight-read-link" style={{ fontSize: "0.8rem", color: "#7c3aed", fontWeight: 600, marginTop: "4px" }}>
-                          View Certificate →
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
+              <div className="cert-slider">
+                {certificationsList.length > 1 && (
+                  <button
+                    type="button"
+                    className="cert-nav-btn"
+                    onClick={() =>
+                      setCertActiveIndex((i) =>
+                        i === 0 ? certificationsList.length - 1 : i - 1
+                      )
+                    }
+                    aria-label="Previous certificate"
+                  >
+                    ‹
+                  </button>
+                )}
+
+                <div
+                  className="cert-frame cert-frame-clickable"
+                  onClick={() => setActiveCertUrl(certificationsList[certActiveIndex])}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      setActiveCertUrl(certificationsList[certActiveIndex]);
+                    }
+                  }}
+                  aria-label={`View certificate ${certActiveIndex + 1} of ${certificationsList.length}`}
+                >
+                  <img
+                    src={certificationsList[certActiveIndex]}
+                    alt={`Certificate ${certActiveIndex + 1}`}
+                    className="cert-img"
+                  />
+                </div>
+
+                {certificationsList.length > 1 && (
+                  <button
+                    type="button"
+                    className="cert-nav-btn"
+                    onClick={() =>
+                      setCertActiveIndex((i) =>
+                        i === certificationsList.length - 1 ? 0 : i + 1
+                      )
+                    }
+                    aria-label="Next certificate"
+                  >
+                    ›
+                  </button>
+                )}
               </div>
-            </div>
 
-          </div>
-
-        </div>
-
-        {/* Curated Services Carousel — Full Width below the grid */}
-        <div className="curated-services-section">
-          <div className="section-header-row">
-            <h2 className="section-heading">Therapies Guided</h2>
-            <div className="carousel-nav-arrows">
-              <button className="nav-arrow-btn" onClick={() => scrollServices("left")}>
-                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="20" height="20">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
-              <button className="nav-arrow-btn" onClick={() => scrollServices("right")}>
-                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="20" height="20">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          <div className="services-carousel-wrapper" ref={servicesScrollRef}>
-            <div className="services-carousel-track">
-              {services.length > 0 ? (
-                services.map((srv) => (
-                  <div key={srv.id} className="service-slide-card glass-card">
-                    <div className="service-image-box">
-                      <img src={getServiceImage(srv.image)} alt={srv.name} />
-                    </div>
-                    <div className="service-card-body">
-                      <h3>{srv.name}</h3>
-                      <p>{srv.description.length > 110 ? `${srv.description.substring(0, 110)}...` : srv.description}</p>
-                      <Link href={`/booking?service=${srv.id}`} className="service-link">
-                        Book Session ({formatCurrency(srv.price)}) →
-                      </Link>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <Card variant="glass" style={{ padding: "20px", width: "300px", color: "hsl(var(--text-muted))" }}>
-                  No active therapies listed under {healer.name}'s guidance.
-                </Card>
+              {certificationsList.length > 1 && (
+                <div className="cert-dots">
+                  {certificationsList.map((_, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      className={`cert-dot ${certActiveIndex === idx ? "active" : ""}`}
+                      onClick={() => setCertActiveIndex(idx)}
+                      aria-label={`Go to certificate ${idx + 1}`}
+                    />
+                  ))}
+                </div>
               )}
             </div>
+
           </div>
+
         </div>
+
+        <ServicesCartCarousel
+          services={services}
+          title="Add More Therapies to Cart"
+          emptyMessage={healer ? `No active therapies listed under ${healer.name}'s guidance.` : "No therapies available."}
+          className="curated-services-section"
+        />
 
         {/* Google Ad Banner Space — Full Width */}
         <div className="google-ad-horizontal-wrapper">
@@ -737,7 +607,7 @@ export default function HealerDetailPage() {
           <div className="video-modal-overlay" onClick={() => setIsVideoOpen(false)}>
             <div className="video-modal-content glass-panel" onClick={(e) => e.stopPropagation()}>
               <button className="close-modal-btn" onClick={() => setIsVideoOpen(false)}>×</button>
-              <div className="iframe-wrapper" style={{ display: "flex", justifyContent: "center", alignItems: "center", width: "100%", height: "100%", minHeight: "350px", background: "black" }}>
+              <div className="iframe-wrapper iframe-wrapper-modal">
                 {embedUrl ? (
                   <iframe
                     width="100%"
@@ -747,14 +617,14 @@ export default function HealerDetailPage() {
                     frameBorder="0"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
-                    style={{ border: "none" }}
+                    className="embed-iframe"
                   ></iframe>
                 ) : (
                   <video
                     src={healer.video_url}
                     controls
                     autoPlay
-                    style={{ width: "100%", maxHeight: "500px", borderRadius: "14px", objectFit: "contain", outline: "none" }}
+                    className="embed-video-modal"
                   />
                 )}
               </div>
@@ -766,10 +636,10 @@ export default function HealerDetailPage() {
       {/* Certification Image Modal Overlay */}
       {activeCertUrl && (
         <div className="video-modal-overlay" onClick={() => setActiveCertUrl(null)}>
-          <div className="video-modal-content glass-panel" style={{ maxWidth: "600px" }} onClick={(e) => e.stopPropagation()}>
+          <div className="video-modal-content glass-panel cert-modal-content" onClick={(e) => e.stopPropagation()}>
             <button className="close-modal-btn" onClick={() => setActiveCertUrl(null)}>×</button>
-            <div style={{ width: "100%", borderRadius: "14px", overflow: "hidden", background: "white", padding: "10px", boxShadow: "inset 0 0 10px rgba(0,0,0,0.05)" }}>
-              <img src={activeCertUrl} alt="Certification Certificate" style={{ width: "100%", height: "auto", display: "block", borderRadius: "8px" }} />
+            <div className="cert-modal-frame">
+              <img src={activeCertUrl} alt="Certification Certificate" className="cert-modal-image" />
             </div>
           </div>
         </div>
@@ -848,14 +718,14 @@ export default function HealerDetailPage() {
         .profile-top-grid {
           display: grid;
           grid-template-columns: 1fr 1.25fr 1fr;
-          gap: 32px;
+          gap: 24px;
           align-items: stretch;
         }
 
         .profile-sidebar-column {
           display: flex;
           flex-direction: column;
-          gap: 32px;
+          gap: 20px;
           min-width: 0;
           height: 100%;
         }
@@ -866,11 +736,12 @@ export default function HealerDetailPage() {
 
         /* Healer Profile Card */
         .anara-card {
-          padding: 24px;
+          padding: 16px;
           display: flex;
           flex-direction: column;
-          gap: 20px;
-          border-radius: 24px;
+          gap: 14px;
+          height: 100%;
+          border-radius: 20px;
           overflow: hidden;
           background: rgba(255, 255, 255, 0.8);
           border: 1px solid var(--gold-border);
@@ -879,10 +750,10 @@ export default function HealerDetailPage() {
 
         .anara-photo-wrapper {
           width: 100%;
-          border-radius: 18px;
+          border-radius: 14px;
           overflow: hidden;
-          aspect-ratio: 1 / 1.1;
-          min-height: 250px;
+          aspect-ratio: 1 / 1;
+          flex-shrink: 0;
           box-shadow: 0 4px 20px rgba(0,0,0,0.03);
           border: 1px solid rgba(168, 85, 247, 0.1);
           background: rgba(168, 85, 247, 0.03);
@@ -902,12 +773,14 @@ export default function HealerDetailPage() {
         .anara-info {
           display: flex;
           flex-direction: column;
-          gap: 12px;
+          gap: 8px;
+          flex: 1;
+          min-height: 0;
         }
 
         .anara-name {
           font-family: var(--font-serif);
-          font-size: 1.6rem;
+          font-size: 1.35rem;
           color: #4c1d95;
           line-height: 1.2;
           font-weight: 700;
@@ -949,21 +822,225 @@ export default function HealerDetailPage() {
         .anara-actions {
           display: flex;
           flex-direction: column;
-          gap: 10px;
-          margin-top: 14px;
+          gap: 8px;
+          margin-top: auto;
+          padding-top: 10px;
+        }
+
+        .anara-actions :global(a.btn-book) {
+          display: block;
+          width: 100%;
+          text-align: center;
+          background-color: #4c1d95;
+          color: #ffffff !important;
+          padding: 12px 16px;
+          border-radius: 12px;
+          font-weight: 700;
+          font-size: 0.82rem;
+          letter-spacing: 0.08em;
+          box-shadow: 0 4px 14px rgba(76, 29, 149, 0.2);
+          text-decoration: none !important;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          border: none;
+        }
+
+        .anara-actions :global(a.btn-book:hover) {
+          background-color: #5b21b6;
+          transform: translateY(-1px);
+          box-shadow: 0 6px 18px rgba(76, 29, 149, 0.28);
+        }
+
+        .anara-actions :global(a.btn-quiz) {
+          display: block;
+          width: 100%;
+          text-align: center;
+          background-color: #ffffff;
+          color: #4c1d95 !important;
+          padding: 11px 16px;
+          border-radius: 12px;
+          font-weight: 700;
+          font-size: 0.82rem;
+          letter-spacing: 0.08em;
+          border: 1.5px solid #4c1d95;
+          text-decoration: none !important;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .anara-actions :global(a.btn-quiz:hover) {
+          background-color: rgba(76, 29, 149, 0.06);
+          border-color: #5b21b6;
+          transform: translateY(-1px);
+        }
+
+        .anara-actions :global(a.btn-back-list) {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 6px;
+          width: 100%;
+          color: #7c3aed !important;
+          font-size: 0.8rem;
+          font-weight: 600;
+          margin-top: 4px;
+          padding: 8px 0;
+          text-decoration: none !important;
+          cursor: pointer;
+          transition: color 0.2s ease;
+          opacity: 0.85;
+        }
+
+        .anara-actions :global(a.btn-back-list:hover) {
+          color: #4c1d95 !important;
+          opacity: 1;
+        }
+
+        .anara-actions :global(a.btn-back-list)::before {
+          content: "←";
+          font-size: 0.9rem;
+        }
+
+        .error-return-btn {
+          margin-top: 20px;
+          background-color: #4c1d95;
+          color: white;
+          padding: 12px 24px;
+          border-radius: 12px;
+          font-weight: 700;
+          border: none;
+          cursor: pointer;
+          box-shadow: 0 4px 10px rgba(76, 29, 149, 0.15);
+        }
+
+        .video-slot-embedded {
+          cursor: default;
+          max-height: 220px;
+          margin-top: auto;
+        }
+
+        .testimonial-card {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 6px;
+        }
+
+        .testimonial-header {
+          display: flex;
+          justify-content: space-between;
+          width: 100%;
+          align-items: center;
+        }
+
+        .testimonial-name {
+          font-weight: 700;
+          color: #4c1d95;
+          font-size: 0.92rem;
+        }
+
+        .testimonial-stars {
+          color: #d4af37;
+          font-size: 0.75rem;
+        }
+
+        .testimonial-service-tag {
+          font-size: 0.72rem;
+          background: rgba(13, 148, 136, 0.08);
+          color: #0d9488;
+          padding: 2px 6px;
+          border-radius: 4px;
+          font-weight: 500;
+        }
+
+        .testimonial-comment {
+          font-size: 0.82rem;
+          color: hsl(var(--text-cream));
+          line-height: 1.5;
+          font-style: italic;
+          margin: 4px 0;
+        }
+
+        .testimonial-date {
+          font-size: 0.7rem;
+          color: hsl(var(--text-muted));
+        }
+
+        .sidebar-section-bottom {
+          margin-top: auto;
+        }
+
+        .insight-card-clickable {
+          cursor: pointer;
+        }
+
+        .insight-img-bordered {
+          border: 1px solid rgba(168, 85, 247, 0.1);
+        }
+
+        .insight-cert-title {
+          font-family: var(--font-sans);
+          font-size: 0.95rem;
+          color: #4c1d95;
+          font-weight: 700;
+          line-height: 1.35;
+        }
+
+        .insight-cert-desc {
+          font-size: 0.8rem;
+          color: hsl(var(--text-muted));
+          line-height: 1.4;
+          margin: 2px 0 0 0;
+        }
+
+        .insight-read-link-styled {
+          font-size: 0.8rem;
+          color: #7c3aed;
+          font-weight: 600;
+          margin-top: 4px;
+        }
+
+        .iframe-wrapper-modal {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          width: 100%;
+          height: 100%;
+          min-height: 350px;
+          background: black;
+        }
+
+        .cert-modal-content {
+          max-width: 600px;
+        }
+
+        .cert-modal-frame {
+          width: 100%;
+          border-radius: 14px;
+          overflow: hidden;
+          background: white;
+          padding: 10px;
+          box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .cert-modal-image {
+          width: 100%;
+          height: auto;
+          display: block;
+          border-radius: 8px;
         }
 
         /* Bio and Video block */
         .bio-video-section {
           display: flex;
           flex-direction: column;
-          gap: 12px;
+          gap: 10px;
           height: 100%;
+          min-height: 0;
         }
 
         .main-title {
           font-family: var(--font-serif);
-          font-size: 2.6rem;
+          font-size: 2.1rem;
           color: #4c1d95;
           line-height: 1.15;
           margin-bottom: 4px;
@@ -972,12 +1049,12 @@ export default function HealerDetailPage() {
         .bio-paragraphs {
           display: flex;
           flex-direction: column;
-          gap: 16px;
+          gap: 12px;
         }
 
         .bio-paragraphs p {
-          font-size: 1.05rem;
-          line-height: 1.75;
+          font-size: 0.95rem;
+          line-height: 1.65;
           color: hsl(var(--text-cream));
         }
 
@@ -1112,143 +1189,9 @@ export default function HealerDetailPage() {
           box-shadow: 0 0 15px rgba(219,39,119,0.3);
         }
 
-        /* Therapies Guided Carousel */
-        .curated-services-section {
-          display: flex;
-          flex-direction: column;
-          gap: 24px;
+        /* Therapies carousel section */
+        :global(.curated-services-section) {
           margin-top: 60px;
-        }
-
-        .section-header-row {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          border-bottom: 1.5px solid rgba(168, 85, 247, 0.1);
-          padding-bottom: 12px;
-        }
-
-        .section-heading {
-          font-family: var(--font-serif);
-          font-size: 2rem;
-          color: #4c1d95;
-        }
-
-        .carousel-nav-arrows {
-          display: flex;
-          gap: 12px;
-        }
-
-        .nav-arrow-btn {
-          width: 36px;
-          height: 36px;
-          border-radius: 50%;
-          border: 1px solid rgba(168, 85, 247, 0.2);
-          background: white;
-          color: #4c1d95;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-          transition: var(--transition-fast);
-          box-shadow: 0 2px 8px rgba(0,0,0,0.02);
-        }
-
-        .nav-arrow-btn:hover {
-          background: #4c1d95;
-          color: white;
-          border-color: #4c1d95;
-          transform: scale(1.05);
-        }
-
-        .services-carousel-wrapper {
-          overflow-x: auto;
-          scroll-behavior: smooth;
-          padding: 8px 4px 20px;
-          scrollbar-width: none;
-        }
-
-        .services-carousel-wrapper::-webkit-scrollbar {
-          display: none;
-        }
-
-        .services-carousel-track {
-          display: flex;
-          gap: 24px;
-          width: max-content;
-        }
-
-        .service-slide-card {
-          width: 300px;
-          flex-shrink: 0;
-          display: flex;
-          flex-direction: column;
-          border-radius: 20px;
-          overflow: hidden;
-          background: rgba(255,255,255,0.85);
-          box-shadow: 0 8px 24px rgba(0,0,0,0.015);
-          border: 1px solid var(--border-glass);
-          transition: var(--transition-smooth);
-        }
-
-        .service-slide-card:hover {
-          transform: translateY(-4px);
-          border-color: var(--gold-border);
-          box-shadow: 0 12px 30px rgba(168,85,247,0.04), 0 0 20px rgba(168,85,247,0.05);
-        }
-
-        .service-image-box {
-          width: 100%;
-          height: 180px;
-          overflow: hidden;
-          position: relative;
-        }
-
-        .service-image-box img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-          transition: var(--transition-smooth);
-        }
-
-        .service-slide-card:hover .service-image-box img {
-          transform: scale(1.05);
-        }
-
-        .service-card-body {
-          padding: 20px;
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-          flex-grow: 1;
-        }
-
-        .service-card-body h3 {
-          font-family: var(--font-serif);
-          font-size: 1.3rem;
-          color: #4c1d95;
-        }
-
-        .service-card-body p {
-          font-size: 0.88rem;
-          line-height: 1.6;
-          color: hsl(var(--text-muted));
-          flex-grow: 1;
-        }
-
-        .service-link {
-          font-family: var(--font-serif);
-          font-size: 0.9rem;
-          font-weight: 700;
-          color: #7c3aed;
-          text-decoration: none;
-          display: inline-block;
-          margin-top: 6px;
-          transition: color 0.2s;
-        }
-
-        .service-link:hover {
-          color: #d4af37;
         }
 
         /* Google Ad Banner */
@@ -1331,21 +1274,21 @@ export default function HealerDetailPage() {
 
         /* ==================== RIGHT COLUMN (SIDEBAR) ==================== */
         .sidebar-section {
-          padding: 24px;
+          padding: 16px;
           background: rgba(255, 255, 255, 0.7);
           border: 1px solid var(--gold-border);
-          border-radius: 24px;
+          border-radius: 18px;
           box-shadow: 0 8px 30px rgba(0,0,0,0.015);
         }
 
         .sidebar-heading {
           font-family: var(--font-serif);
-          font-size: 1.35rem;
+          font-size: 1.1rem;
           letter-spacing: 0.05em;
           color: #4c1d95;
           border-bottom: 1.5px solid rgba(168, 85, 247, 0.1);
-          padding-bottom: 10px;
-          margin-bottom: 20px;
+          padding-bottom: 8px;
+          margin-bottom: 14px;
           font-weight: 700;
         }
 
@@ -1394,8 +1337,8 @@ export default function HealerDetailPage() {
         .google-ad-box {
           background: rgba(240, 240, 240, 0.45);
           border: 1px dashed rgba(0, 0, 0, 0.12);
-          border-radius: 20px;
-          padding: 28px 24px;
+          border-radius: 16px;
+          padding: 16px 14px;
           text-align: center;
         }
 
@@ -1458,32 +1401,31 @@ export default function HealerDetailPage() {
 
         .cert-frame {
           flex-grow: 1;
-          border-radius: 16px;
+          border-radius: 12px;
           overflow: hidden;
           position: relative;
-          aspect-ratio: 1.4 / 1;
+          aspect-ratio: 1.5 / 1;
+          max-height: 130px;
           box-shadow: 0 4px 15px rgba(0,0,0,0.03);
           border: 1px solid rgba(168, 85, 247, 0.1);
+          background: rgba(168, 85, 247, 0.03);
+        }
+
+        .cert-frame-clickable {
+          cursor: pointer;
+          transition: var(--transition-fast);
+        }
+
+        .cert-frame-clickable:hover {
+          border-color: rgba(168, 85, 247, 0.35);
+          box-shadow: 0 6px 20px rgba(124, 58, 237, 0.1);
         }
 
         .cert-img {
           width: 100%;
           height: 100%;
-          object-fit: cover;
-        }
-
-        .cert-title-overlay {
-          position: absolute;
-          bottom: 0;
-          left: 0;
-          right: 0;
-          background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%);
-          padding: 12px 16px;
-          color: white;
-          font-size: 0.8rem;
-          font-weight: 600;
-          letter-spacing: 0.01em;
-          text-align: center;
+          object-fit: contain;
+          display: block;
         }
 
         .cert-nav-btn {
@@ -1522,6 +1464,8 @@ export default function HealerDetailPage() {
           background: rgba(168, 85, 247, 0.2);
           cursor: pointer;
           transition: var(--transition-fast);
+          border: none;
+          padding: 0;
         }
 
         .cert-dot.active {

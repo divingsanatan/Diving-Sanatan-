@@ -11,8 +11,9 @@ export const Carousel: React.FC<CarouselProps> = ({ children, title }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [visibleCount, setVisibleCount] = useState(3);
   const containerRef = useRef<HTMLDivElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const slideRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-  // Handle responsive visible counts
   useEffect(() => {
     const handleResize = () => {
       if (!window) return;
@@ -34,12 +35,26 @@ export const Carousel: React.FC<CarouselProps> = ({ children, title }) => {
   const totalItems = children.length;
   const maxIndex = Math.max(0, totalItems - visibleCount);
 
-  // Reset index if visibleCount changes and exceeds maxIndex
   useEffect(() => {
     if (currentIndex > maxIndex) {
       setCurrentIndex(maxIndex);
     }
   }, [visibleCount, maxIndex, currentIndex]);
+
+  useEffect(() => {
+    const slideBasis = `${100 / visibleCount}%`;
+    const translate = `-${currentIndex * (100 / visibleCount)}%`;
+
+    if (trackRef.current) {
+      trackRef.current.style.setProperty("--carousel-translate", translate);
+    }
+
+    slideRefs.current.forEach((slide) => {
+      if (slide) {
+        slide.style.setProperty("--slide-flex-basis", slideBasis);
+      }
+    });
+  }, [currentIndex, visibleCount, children.length]);
 
   const handlePrev = () => {
     setCurrentIndex((prev) => Math.max(0, prev - 1));
@@ -82,20 +97,14 @@ export const Carousel: React.FC<CarouselProps> = ({ children, title }) => {
       </div>
 
       <div className="carousel-viewport" ref={containerRef}>
-        <div
-          className="carousel-track"
-          style={{
-            transform: `translateX(-${currentIndex * (100 / visibleCount)}%)`,
-            transition: "transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)",
-          }}
-        >
+        <div className="carousel-track" ref={trackRef}>
           {children.map((child, index) => (
             <div
               key={index}
-              className="carousel-slide"
-              style={{
-                flex: `0 0 ${100 / visibleCount}%`,
+              ref={(el) => {
+                slideRefs.current[index] = el;
               }}
+              className="carousel-slide"
             >
               <div className="slide-content-pad">{child}</div>
             </div>
@@ -164,10 +173,13 @@ export const Carousel: React.FC<CarouselProps> = ({ children, title }) => {
         .carousel-track {
           display: flex;
           width: 100%;
+          transform: translateX(var(--carousel-translate, 0%));
+          transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .carousel-slide {
           box-sizing: border-box;
           transition: opacity 0.3s ease;
+          flex: 0 0 var(--slide-flex-basis, 33.333%);
         }
         .slide-content-pad {
           padding: 0 10px;

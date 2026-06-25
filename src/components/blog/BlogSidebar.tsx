@@ -101,6 +101,9 @@ export const BlogSidebar: React.FC = () => {
       // Exactly matches /blog or matches detailed post URL (except other sections)
       return pathname === "/blog" || (pathname.startsWith("/blog/") && !items.some(i => i.path !== "/blog" && pathname.startsWith(i.path)));
     }
+    if (itemPath === "/blog/comparison") {
+      return pathname === "/blog/comparison" || pathname.startsWith("/blog/comparison/");
+    }
     return pathname.startsWith(itemPath);
   };
 

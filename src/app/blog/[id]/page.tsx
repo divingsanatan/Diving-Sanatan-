@@ -31,6 +31,54 @@ const getBlogImage = (img: string) => {
   return mappings[img] || "/images/insight_blog.png";
 };
 
+const IconHeart = ({ filled = false }: { filled?: boolean }) => (
+  <svg className="action-icon" width="18" height="18" viewBox="0 0 24 24" fill={filled ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+  </svg>
+);
+
+const IconComment = () => (
+  <svg className="action-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+  </svg>
+);
+
+const IconShare = () => (
+  <svg className="action-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <circle cx="18" cy="5" r="3" />
+    <circle cx="6" cy="12" r="3" />
+    <circle cx="18" cy="19" r="3" />
+    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+  </svg>
+);
+
+const IconCopy = () => (
+  <svg className="action-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+  </svg>
+);
+
+const isHtmlContent = (c: string) => /^\s*<[a-z]/.test(c);
+
+const getContentParagraphs = (content: string): string[] =>
+  content.split(/\r?\n\r?\n/).filter((p) => p.trim().length > 0).map((p) => p.trim());
+
+const extractHtmlIntro = (html: string): string => {
+  const match = html.match(/<p[^>]*>([\s\S]*?)<\/p>/i);
+  if (match) return match[1].replace(/<[^>]+>/g, "").trim();
+  return "";
+};
+
+const stripFirstHtmlParagraph = (html: string): string =>
+  html.replace(/<p[^>]*>[\s\S]*?<\/p>/i, "").trim();
+
+const FALLBACK_QUOTE =
+  "Energy flow balances are the foundational blueprint of physical comfort. Maintain your aura, and your mind will follow.";
+
+const FALLBACK_BODY =
+  "Somatic therapies remind us that blockades within our chakras aren't just mystical constructs. They represent tension held in our nervous pathways. By introducing sound bowls at specific frequencies, we assist the body in aligning these rhythms, which stabilizes cortisol flow and reduces tension.";
 export default function BlogDetailsPage() {
   const router = useRouter();
   const params = useParams();
@@ -58,6 +106,7 @@ export default function BlogDetailsPage() {
   // Share states
   const [showSharePopup, setShowSharePopup] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [showCommentsPanel, setShowCommentsPanel] = useState(false);
 
   // Auth modal states
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -73,15 +122,17 @@ export default function BlogDetailsPage() {
   const [modalSubmitting, setModalSubmitting] = useState(false);
   const [pendingActionAfterAuth, setPendingActionAfterAuth] = useState<"like" | "comment" | null>(null);
 
-  // Build combined media array: images first, then videos
   const getMediaItems = (b: Blog) => {
-    const imgs = (b.images || []).map((src) => ({ type: "image" as const, src }));
-    const vids = (b.videos || []).map((src) => ({ type: "video" as const, src }));
+    const imgs = (b.images || []).map((src) => ({
+      type: "image" as const,
+      src: getBlogImage(src),
+    }));
+    const vids = (b.videos || []).map((src) => ({
+      type: "video" as const,
+      src,
+    }));
     return [...imgs, ...vids];
   };
-
-  const isVideoUrl = (url: string) =>
-    /\.(mp4|webm|ogg|mov)$/i.test(url) || url.includes("video");
 
   const nextMedia = (total: number) => {
     setActiveMediaIndex((prev) => (prev + 1) % total);
@@ -114,6 +165,7 @@ export default function BlogDetailsPage() {
         const json = await res.json();
         if (json.success) {
           setBlog(json.data);
+          setActiveMediaIndex(0);
         } else {
           setError(json.error || "Article not found");
         }
@@ -281,6 +333,9 @@ export default function BlogDetailsPage() {
         if (pendingActionAfterAuth === "like") {
           toggleLikeForUser(json.data.id);
         }
+        if (pendingActionAfterAuth === "comment") {
+          setShowCommentsPanel(true);
+        }
         setPendingActionAfterAuth(null);
         setModalEmail("");
         setModalPassword("");
@@ -328,10 +383,13 @@ export default function BlogDetailsPage() {
 
         setTimeout(() => {
           setShowAuthModal(false);
-          if (pendingActionAfterAuth === "like") {
-            toggleLikeForUser(json.data.id);
-          }
-          setPendingActionAfterAuth(null);
+        if (pendingActionAfterAuth === "like") {
+          toggleLikeForUser(json.data.id);
+        }
+        if (pendingActionAfterAuth === "comment") {
+          setShowCommentsPanel(true);
+        }
+        setPendingActionAfterAuth(null);
           setModalName("");
           setModalEmail("");
           setModalPhone("");
@@ -370,257 +428,311 @@ export default function BlogDetailsPage() {
     }
   };
 
-  const isHtmlContent = (c: string) => /^\s*<[a-z]/.test(c);
+  const getArticleSections = (b: Blog) => {
+    const coverImage = getBlogImage(b.image);
+    const htmlMode = isHtmlContent(b.content);
+
+    if (htmlMode) {
+      const intro =
+        extractHtmlIntro(b.content) ||
+        `In this guide, ${b.author} explores ${b.title.toLowerCase()} — a foundational topic in ${b.category.toLowerCase()}.`;
+      return {
+        htmlMode: true,
+        intro,
+        bodyParagraphs: [] as string[],
+        coverImage,
+      };
+    }
+
+    const paras = getContentParagraphs(b.content);
+    const intro =
+      paras[0] ||
+      `Welcome to this exploration of ${b.title}. Our practitioners share insights to help you on your healing journey.`;
+
+    return {
+      htmlMode: false,
+      intro,
+      bodyParagraphs: paras.slice(1),
+      coverImage,
+    };
+  };
 
   return (
     <div className="blog-detail-page">
       {loading ? (
-        <p style={{ textAlign: "center", padding: "80px 0", color: "hsl(var(--text-muted))" }}>Unrolling manuscript...</p>
+        <p className="text-muted-center-padded">Unrolling manuscript...</p>
       ) : error || !blog ? (
-        <div className="error-card glass-panel" style={{ padding: "40px", textAlign: "center" }}>
+        <div className="error-card glass-panel card-pad-40-center">
           <h3>Error Resolving Article</h3>
-          <p style={{ margin: "16px 0", color: "hsl(var(--text-muted))" }}>{error}</p>
+          <p className="error-text-muted-mb">{error}</p>
           <Button variant="gold" onClick={() => router.push("/blog")}>Back to Blog</Button>
         </div>
       ) : (
         <article className="blog-article-content">
+          {(() => {
+            const sections = getArticleSections(blog);
+            const { intro, bodyParagraphs, coverImage, htmlMode } = sections;
 
-          {/* Header info */}
-          <div className="article-header">
-            <span className="article-category">{blog.category}</span>
-            <h1 className="article-title">{blog.title}</h1>
-            <div className="article-meta">
-              <span>Written by: <strong>{blog.author}</strong></span>
-              <span>•</span>
-              <span>Released: <strong>{blog.date}</strong></span>
-              <span>•</span>
-              <span>Reading estimate: <strong>{blog.readTime}</strong></span>
-            </div>
-          </div>
+            return (
+              <>
+                <nav className="article-breadcrumb" aria-label="Breadcrumb">
+                  <button type="button" className="breadcrumb-link" onClick={() => router.push("/blog")}>
+                    ← Back to Blog
+                  </button>
+                  <span className="breadcrumb-sep">/</span>
+                  <span className="breadcrumb-current">{blog.category}</span>
+                </nav>
 
-          {/* Cover image banner */}
-          <div className="article-cover-wrapper">
-            <img
-              src={getBlogImage(blog.image)}
-              alt={blog.title}
-              className="article-cover-img"
-            />
-          </div>
+                <Card variant="glass" className="article-unified-card">
+                  <div className="article-header">
+                    <span className="article-category">{blog.category}</span>
+                    <h1 className="article-title">{blog.title}</h1>
+                    <div className="article-meta">
+                      <span>Written by: <strong>{blog.author}</strong></span>
+                      <span>•</span>
+                      <span>Released: <strong>{blog.date}</strong></span>
+                      <span>•</span>
+                      <span>Reading estimate: <strong>{blog.readTime}</strong></span>
+                    </div>
+                  </div>
 
-          {/* Content panel */}
-          <Card variant="glass" className="article-body-card">
-            <div className="article-paragraph-wrapper">
+                  <div className="article-lead">
+                    <p className="first-paragraph-dropcap">{intro}</p>
+                  </div>
 
-              {blog && isHtmlContent(blog.content) ? (
-                /* Rich HTML content from RTE */
-                <div
-                  className="article-rich-content"
-                  dangerouslySetInnerHTML={{ __html: blog.content }}
-                />
-              ) : (
-                /* Legacy plain-text paragraph rendering */
-                <>
-                  {blog?.content.split(/\r?\n\r?\n/).filter(p => p.trim().length > 0).map((para, index) => (
-                    <p key={index} className={index === 0 ? "first-paragraph-dropcap" : ""}>
-                      {para.trim()}
-                    </p>
-                  ))}
-
-                  {(blog?.content.split(/\r?\n\r?\n/).filter(p => p.trim().length > 0).length ?? 0) <= 1 && (
-                    <>
-                      {/* Visual quote spacer */}
-                      <div className="article-blockquote">
-                        <span className="quote-mark">“</span>
-                        <p>Energy flow balances are the foundational blueprint of physical comfort. Maintain your aura, and your mind will follow.</p>
-                      </div>
-
-                      <p>
-                        Somatic therapies remind us that blockades within our chakras aren’t just mystical constructs. They represent chemical blockades in our nervous pathways. By introducing sound bowls vibrating at specific frequencies (e.g. 528Hz for DNA repair or 432Hz for deep meditation), we assist our bodies in aligning these frequencies, which stabilizes cortisol flow and reduces tension. Ensure you discuss layout sessions with a certified practitioner to customize crystals based on your current physical conditions.
-                      </p>
-                    </>
-                  )}
-                </>
-              )}
-            </div>
-
-            {/* Unified Media Carousel — images + videos combined */}
-            {(() => {
-              const mediaItems = getMediaItems(blog);
-              if (mediaItems.length === 0) return null;
-              const currentItem = mediaItems[activeMediaIndex];
-              return (
-                <div className="article-carousel-showcase">
-                  <h4 className="media-section-title">✨ Sacred Gallery</h4>
-
-                  <div className="carousel-container glass-panel">
-                    {/* Viewport */}
-                    <div className="carousel-viewport">
-                      {currentItem.type === "video" ? (
-                        <video
-                          key={currentItem.src}
-                          controls
-                          className="carousel-active-slide-video"
-                        >
-                          <source src={currentItem.src} type="video/mp4" />
-                          Your browser does not support the video tag.
-                        </video>
-                      ) : (
-                        <img
-                          src={getBlogImage(currentItem.src)}
-                          alt={`${blog.title} slide ${activeMediaIndex + 1}`}
-                          className="carousel-active-slide-img"
-                          onClick={() => window.open(getBlogImage(currentItem.src), "_blank")}
+                  <div className="article-split-row hero-split">
+                    <div className="split-text-col">
+                      {htmlMode ? (
+                        <div
+                          className="article-rich-content split-preview"
+                          dangerouslySetInnerHTML={{
+                            __html: stripFirstHtmlParagraph(blog.content) || blog.content,
+                          }}
                         />
+                      ) : bodyParagraphs.length > 0 ? (
+                        <p className="split-body-text">{bodyParagraphs[0]}</p>
+                      ) : (
+                        <>
+                          <div className="article-blockquote compact">
+                            <span className="quote-mark">"</span>
+                            <p>{FALLBACK_QUOTE}</p>
+                          </div>
+                          <p className="split-body-text">{FALLBACK_BODY}</p>
+                        </>
                       )}
-
-                      {/* Media type badge */}
-                      {currentItem.type === "video" && (
-                        <div className="carousel-media-badge">🎥 Video</div>
-                      )}
                     </div>
-
-                    {/* Navigation controls */}
-                    {mediaItems.length > 1 && (
-                      <>
-                        <button type="button" className="carousel-control-btn prev" onClick={() => prevMedia(mediaItems.length)}>
-                          ‹
-                        </button>
-                        <button type="button" className="carousel-control-btn next" onClick={() => nextMedia(mediaItems.length)}>
-                          ›
-                        </button>
-
-                        {/* Dot Indicators */}
-                        <div className="carousel-dots-indicator">
-                          {mediaItems.map((item, idx) => (
-                            <button
-                              key={idx}
-                              type="button"
-                              className={`carousel-dot-btn ${item.type === "video" ? "video-dot" : ""} ${activeMediaIndex === idx ? "active" : ""}`}
-                              onClick={() => setActiveMediaIndex(idx)}
-                              aria-label={`Jump to ${item.type} slide ${idx + 1}`}
-                              title={item.type === "video" ? "Video" : "Image"}
-                            />
-                          ))}
-                        </div>
-                      </>
-                    )}
-
-                    {/* Slide counter */}
-                    <div className="carousel-counter">
-                      {activeMediaIndex + 1} / {mediaItems.length}
-                    </div>
-                  </div>
-                </div>
-              );
-            })()}
-
-            {/* Interactive Likes, Share and Comments Sections */}
-            <div className="article-interactions-section">
-              <div className="interactions-bar glass-panel">
-                <div className="likes-interactive-trigger">
-                  <button
-                    type="button"
-                    className={`like-action-btn ${isLiked ? "liked" : ""}`}
-                    onClick={handleLikeToggle}
-                    disabled={loadingLikes}
-                  >
-                    <span className="heart-icon">{isLiked ? "❤️" : "🤍"}</span>
-                    <span className="likes-count-text">
-                      {loadingLikes ? "..." : `${likesCount} Likes`}
-                    </span>
-                  </button>
-                </div>
-
-                <div className="share-interactive-trigger">
-                  <button
-                    type="button"
-                    className="share-action-btn"
-                    onClick={() => setShowSharePopup(!showSharePopup)}
-                  >
-                    <span className="share-icon">🔗</span> Share Article
-                  </button>
-                  {showSharePopup && (
-                    <div className="share-glass-popup glass-panel">
-                      <button type="button" className="share-popup-item" onClick={copyPageLink}>
-                        <span className="popup-icon">📋</span> {copiedLink ? "Link Copied!" : "Copy Link"}
-                      </button>
-                      <a href={`https://api.whatsapp.com/send?text=${encodeURIComponent("Read this beautiful wellness article on Diving Sanatan: " + window.location.href)}`} target="_blank" rel="noopener noreferrer" className="share-popup-item">
-                        <span className="popup-icon">💬</span> WhatsApp
-                      </a>
-                      <a href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(blog.title)}`} target="_blank" rel="noopener noreferrer" className="share-popup-item">
-                        <span className="popup-icon">🐦</span> X / Twitter
-                      </a>
-                      <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`} target="_blank" rel="noopener noreferrer" className="share-popup-item">
-                        <span className="popup-icon">👥</span> Facebook
-                      </a>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Comments Subsection */}
-              <div className="comments-interactive-section">
-                <h4 className="media-section-title">💬 Reflections & Conversation ({comments.length})</h4>
-
-                {/* Comment Posting box */}
-                <div className="comment-post-box glass-panel">
-                  {user ? (
-                    <form onSubmit={handleCommentSubmit} className="comment-form">
-                      <textarea
-                        rows={3}
-                        placeholder="Share your somatic insights or thoughts on this article..."
-                        value={commentText}
-                        onChange={(e) => setCommentText(e.target.value)}
-                        className="comment-textarea"
-                        required
+                    <figure className="split-media-col">
+                      <img
+                        src={coverImage}
+                        alt={blog.title}
+                        className="split-featured-img"
                       />
-                      <Button variant="gold" type="submit" disabled={postingComment}>
-                        {postingComment ? "Posting reflection..." : "Publish Reflection"}
-                      </Button>
-                    </form>
-                  ) : (
-                    <div className="comment-login-promo">
-                      <p>Somatic reflections are shared within our directory. Log in or sign up to leave a comment.</p>
-                      <Button variant="gold-outline" onClick={() => setShowAuthModal(true)} style={{ width: "fit-content", margin: "0 auto" }}>
-                        Log In / Sign Up to Comment
-                      </Button>
+                    </figure>
+                  </div>
+
+                  {bodyParagraphs.slice(1).length > 0 && (
+                    <div className="article-paragraph-wrapper">
+                      {bodyParagraphs.slice(1).map((para, index) => (
+                        <p key={index}>{para}</p>
+                      ))}
                     </div>
                   )}
-                </div>
 
-                {/* Comments List */}
-                {loadingComments ? (
-                  <p style={{ textAlign: "center", color: "#64748b", fontStyle: "italic", margin: "20px 0" }}>Unrolling reflections...</p>
-                ) : comments.length > 0 ? (
-                  <div className="comments-list-container">
-                    {comments.map((comm) => (
-                      <div key={comm.id} className="single-comment-card glass-panel">
-                        <div className="comment-card-meta">
-                          <strong className="comment-author-name">{comm.userName}</strong>
-                          <span className="comment-timestamp">{formatCommentDate(comm.createdAt)}</span>
+                  {(() => {
+                    const mediaItems = getMediaItems(blog);
+                    if (mediaItems.length === 0) return null;
+                    const currentItem = mediaItems[activeMediaIndex];
+                    return (
+                      <div className="article-carousel-showcase">
+                        <h4 className="media-section-title gallery-heading">Gallery &amp; Media</h4>
+                        <div className="carousel-container">
+                          <div className="carousel-viewport">
+                            {currentItem.type === "video" ? (
+                              <video
+                                key={currentItem.src}
+                                controls
+                                className="carousel-active-slide-video"
+                              >
+                                <source src={currentItem.src} type="video/mp4" />
+                                Your browser does not support the video tag.
+                              </video>
+                            ) : (
+                              <img
+                                src={currentItem.src}
+                                alt={`${blog.title} gallery ${activeMediaIndex + 1}`}
+                                className="carousel-active-slide-img"
+                                onClick={() => window.open(currentItem.src, "_blank")}
+                              />
+                            )}
+                            {currentItem.type === "video" && (
+                              <div className="carousel-media-badge">Video</div>
+                            )}
+                          </div>
+
+                          {mediaItems.length > 1 && (
+                            <>
+                              <button
+                                type="button"
+                                className="carousel-control-btn prev"
+                                onClick={() => prevMedia(mediaItems.length)}
+                                aria-label="Previous slide"
+                              >
+                                ‹
+                              </button>
+                              <button
+                                type="button"
+                                className="carousel-control-btn next"
+                                onClick={() => nextMedia(mediaItems.length)}
+                                aria-label="Next slide"
+                              >
+                                ›
+                              </button>
+                              <div className="carousel-dots-indicator">
+                                {mediaItems.map((item, idx) => (
+                                  <button
+                                    key={idx}
+                                    type="button"
+                                    className={`carousel-dot-btn ${item.type === "video" ? "video-dot" : ""} ${activeMediaIndex === idx ? "active" : ""}`}
+                                    onClick={() => setActiveMediaIndex(idx)}
+                                    aria-label={`Go to ${item.type} ${idx + 1}`}
+                                  />
+                                ))}
+                              </div>
+                            </>
+                          )}
+
+                          <div className="carousel-counter">
+                            {activeMediaIndex + 1} / {mediaItems.length}
+                          </div>
                         </div>
-                        <p className="comment-text-content">{comm.commentText}</p>
                       </div>
-                    ))}
+                    );
+                  })()}
+
+                  <div className="article-interactions-section">
+                    <div className="interactions-bar">
+                      <div className="interactions-left">
+                        <button
+                          type="button"
+                          className={`like-action-btn ${isLiked ? "liked" : ""}`}
+                          onClick={handleLikeToggle}
+                          disabled={loadingLikes}
+                          aria-label={isLiked ? "Unlike article" : "Like article"}
+                        >
+                          <IconHeart filled={isLiked} />
+                          <span className="likes-count-text">
+                            {loadingLikes ? "..." : likesCount}
+                          </span>
+                        </button>
+
+                        <button
+                          type="button"
+                          className={`comment-count-btn ${showCommentsPanel ? "active" : ""}`}
+                          onClick={() => setShowCommentsPanel((prev) => !prev)}
+                          aria-expanded={showCommentsPanel}
+                          aria-label="Toggle comments"
+                        >
+                          <IconComment />
+                          <span>{comments.length}</span>
+                        </button>
+                      </div>
+
+                      <div className="share-interactive-trigger">
+                        <button
+                          type="button"
+                          className="share-action-btn"
+                          onClick={() => setShowSharePopup(!showSharePopup)}
+                          aria-label="Share article"
+                        >
+                          <IconShare />
+                          <span>Share</span>
+                        </button>
+                        {showSharePopup && (
+                          <div className="share-glass-popup glass-panel">
+                            <button type="button" className="share-popup-item" onClick={copyPageLink}>
+                              <IconCopy /> {copiedLink ? "Link Copied!" : "Copy Link"}
+                            </button>
+                            <a href={`https://api.whatsapp.com/send?text=${encodeURIComponent("Read this beautiful wellness article on Diving Sanatan: " + window.location.href)}`} target="_blank" rel="noopener noreferrer" className="share-popup-item">
+                              <IconComment /> WhatsApp
+                            </a>
+                            <a href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(blog.title)}`} target="_blank" rel="noopener noreferrer" className="share-popup-item">
+                              <svg className="action-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
+                              X / Twitter
+                            </a>
+                            <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`} target="_blank" rel="noopener noreferrer" className="share-popup-item">
+                              <svg className="action-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" /></svg>
+                              Facebook
+                            </a>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {showCommentsPanel && (
+                      <div id="comments-section" className="comments-interactive-section">
+                        <h4 className="media-section-title comments-heading">
+                          <IconComment />
+                          Reflections &amp; Conversation ({comments.length})
+                        </h4>
+
+                        <div className="comment-post-box">
+                          {user ? (
+                            <form onSubmit={handleCommentSubmit} className="comment-form">
+                              <textarea
+                                rows={3}
+                                placeholder="Share your somatic insights or thoughts on this article..."
+                                value={commentText}
+                                onChange={(e) => setCommentText(e.target.value)}
+                                className="comment-textarea"
+                                required
+                              />
+                              <Button variant="gold" type="submit" disabled={postingComment}>
+                                {postingComment ? "Posting reflection..." : "Publish Reflection"}
+                              </Button>
+                            </form>
+                          ) : (
+                            <div className="comment-login-promo">
+                              <p>Somatic reflections are shared within our directory. Log in or sign up to leave a comment.</p>
+                              <Button variant="gold-outline" onClick={() => setShowAuthModal(true)} className="btn-fit-center">
+                                Log In / Sign Up to Comment
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+
+                        {loadingComments ? (
+                          <p className="text-slate-italic-center">Unrolling reflections...</p>
+                        ) : comments.length > 0 ? (
+                          <div className="comments-list-container">
+                            {comments.map((comm) => (
+                              <div key={comm.id} className="single-comment-card">
+                                <div className="comment-card-meta">
+                                  <strong className="comment-author-name">{comm.userName}</strong>
+                                  <span className="comment-timestamp">{formatCommentDate(comm.createdAt)}</span>
+                                </div>
+                                <p className="comment-text-content">{comm.commentText}</p>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="no-comments-fallback">No reflections yet. Be the first to share your thoughts!</p>
+                        )}
+                      </div>
+                    )}
                   </div>
-                ) : (
-                  <p className="no-comments-fallback">No reflections left yet. Be the first to share your thoughts!</p>
-                )}
-              </div>
-            </div>
 
-            {/* Actions footer */}
-            <div className="article-footer-actions">
-              <Button variant="gold-outline" onClick={() => router.push("/blog")}>
-                ← Back to Listings
-              </Button>
-
-              <Button variant="gold" onClick={() => router.push(`/search?query=${encodeURIComponent(blog.category)}`)}>
-                Book Related Sessions
-              </Button>
-            </div>
-          </Card>
-
+                  <div className="article-footer-actions">
+                    <Button variant="gold-outline" onClick={() => router.push("/blog")}>
+                      ← Back to Listings
+                    </Button>
+                    <Button variant="gold" onClick={() => router.push(`/search?query=${encodeURIComponent(blog.category)}`)}>
+                      Book Related Sessions
+                    </Button>
+                  </div>
+                </Card>
+              </>
+            );
+          })()}
         </article>
       )}
 
@@ -744,7 +856,7 @@ export default function BlogDetailsPage() {
                     required
                   />
                 </div>
-                <Button variant="gold" type="submit" disabled={modalSubmitting} style={{ marginTop: "12px", width: "100%" }}>
+                <Button variant="gold" type="submit" disabled={modalSubmitting} className="btn-mt-12-full">
                   {modalSubmitting ? "Creating & Syncing..." : "Sign Up & Sync Profile"}
                 </Button>
               </form>
@@ -756,16 +868,44 @@ export default function BlogDetailsPage() {
       <style jsx>{`
         .blog-detail-page {
           width: 100%;
-          max-width: 800px;
+          max-width: 920px;
           margin: 0 auto;
+        }
+        .article-breadcrumb {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 20px;
+          font-size: 0.85rem;
+        }
+        .breadcrumb-link {
+          background: none;
+          border: none;
+          color: #7c3aed;
+          font-weight: 600;
+          cursor: pointer;
+          padding: 0;
+          font-size: 0.85rem;
+        }
+        .breadcrumb-link:hover { text-decoration: underline; }
+        .breadcrumb-sep { color: hsl(var(--text-muted)); }
+        .breadcrumb-current {
+          color: hsl(var(--text-muted));
+          text-transform: capitalize;
+        }
+        .article-unified-card {
+          padding: 36px 40px !important;
+          border-radius: 24px !important;
         }
         .article-header {
           text-align: center;
-          margin-bottom: 32px;
+          margin-bottom: 24px;
           display: flex;
           flex-direction: column;
           align-items: center;
           gap: 12px;
+          padding-bottom: 24px;
+          border-bottom: 1px solid rgba(0, 0, 0, 0.06);
         }
         .article-category {
           background: rgba(16, 185, 129, 0.08);
@@ -789,32 +929,73 @@ export default function BlogDetailsPage() {
           font-size: 0.85rem;
           color: hsl(var(--text-muted));
           margin-top: 4px;
+          flex-wrap: wrap;
+          justify-content: center;
         }
-        .article-cover-wrapper {
-          width: 100%;
-          height: 380px;
-          border-radius: 24px;
-          overflow: hidden;
-          margin-bottom: 40px;
-          border: 1px solid var(--gold-border);
-          box-shadow: 0 16px 40px rgba(0, 0, 0, 0.04);
+        .article-lead {
+          padding: 0 0 24px;
+          margin-bottom: 24px;
+          border-bottom: 1px solid rgba(0, 0, 0, 0.05);
         }
-        .article-cover-img {
+        .article-lead p {
+          font-size: 1.18rem;
+          line-height: 1.9;
+          color: #334155;
+          margin: 0;
+        }
+        .article-split-row {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 36px;
+          align-items: center;
+          margin-bottom: 36px;
+        }
+        .article-split-row.reversed .split-text-col { order: 2; }
+        .article-split-row.reversed .split-media-col { order: 1; }
+        .split-text-col {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+        .split-body-text {
+          font-size: 1.05rem;
+          line-height: 1.85;
+          color: hsl(var(--text-cream));
+          margin: 0;
+        }
+        .split-media-col {
+          margin: 0;
+        }
+        .split-featured-img {
           width: 100%;
-          height: 100%;
+          height: 300px;
           object-fit: cover;
-          transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+          border-radius: 20px;
+          border: 1px solid var(--gold-border);
+          box-shadow: 0 12px 36px rgba(0, 0, 0, 0.07);
         }
-        .article-cover-wrapper:hover .article-cover-img {
-          transform: scale(1.03);
+        .hero-split {
+          margin-bottom: 28px;
+          padding-bottom: 28px;
+          border-bottom: 1px solid rgba(0, 0, 0, 0.05);
         }
-        .article-body-card {
-          padding: 40px !important;
+        .article-blockquote.compact {
+          margin: 0 0 16px;
+          padding: 16px 20px;
+        }
+        .split-preview :global(p) {
+          margin: 0 0 12px;
+        }
+        .split-preview :global(p:last-child) {
+          margin-bottom: 0;
         }
         .article-paragraph-wrapper {
           display: flex;
           flex-direction: column;
-          gap: 24px;
+          gap: 20px;
+          margin-bottom: 28px;
+          padding-bottom: 28px;
+          border-bottom: 1px solid rgba(0, 0, 0, 0.05);
         }
         /* Rich HTML content (from RTE) */
         .article-rich-content {
@@ -920,54 +1101,66 @@ export default function BlogDetailsPage() {
         
         /* Interactive Actions Bar Styles */
         .article-interactions-section {
-          margin-top: 48px;
-          border-top: 1.5px solid rgba(0, 0, 0, 0.05);
-          padding-top: 36px;
+          margin-top: 8px;
+          padding-top: 28px;
+          border-top: 1px solid rgba(0, 0, 0, 0.06);
         }
         .interactions-bar {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          padding: 12px 24px !important;
-          border-radius: 16px !important;
-          background: rgba(255, 255, 255, 0.5) !important;
-          border: 1px solid rgba(168, 85, 247, 0.1) !important;
-          margin-bottom: 32px;
+          padding: 4px 0;
+          margin-bottom: 0;
+        }
+        .interactions-left {
+          display: flex;
+          align-items: center;
+          gap: 4px;
         }
         .likes-interactive-trigger, .share-interactive-trigger {
           position: relative;
         }
-        .like-action-btn, .share-action-btn {
+        .like-action-btn, .comment-count-btn, .share-action-btn {
           background: transparent;
           border: none;
           cursor: pointer;
-          font-size: 0.95rem;
+          font-size: 0.88rem;
           font-weight: 600;
-          color: #475569;
+          color: #64748b;
           display: flex;
           align-items: center;
-          gap: 8px;
-          padding: 8px 16px;
-          border-radius: 10px;
+          gap: 6px;
+          padding: 8px 14px;
+          border-radius: 999px;
           transition: all 0.2s ease;
         }
+        .action-icon {
+          flex-shrink: 0;
+          display: block;
+        }
         .like-action-btn:hover {
-          background: rgba(239, 68, 68, 0.05);
+          background: rgba(239, 68, 68, 0.08);
           color: #dc2626;
         }
         .like-action-btn.liked {
           color: #dc2626;
+          background: rgba(239, 68, 68, 0.06);
         }
-        .like-action-btn.liked .heart-icon {
+        .like-action-btn.liked .action-icon {
           animation: beat 0.3s ease-in-out;
+        }
+        .comment-count-btn:hover,
+        .comment-count-btn.active {
+          background: rgba(124, 58, 237, 0.08);
+          color: #7c3aed;
         }
         @keyframes beat {
           0% { transform: scale(1); }
-          50% { transform: scale(1.3); }
+          50% { transform: scale(1.2); }
           100% { transform: scale(1); }
         }
         .share-action-btn:hover {
-          background: rgba(124, 58, 237, 0.05);
+          background: rgba(124, 58, 237, 0.08);
           color: #7c3aed;
         }
         .share-glass-popup {
@@ -1004,15 +1197,28 @@ export default function BlogDetailsPage() {
           background: rgba(168, 85, 247, 0.06);
           color: #7c3aed;
         }
-        .popup-icon {
-          font-size: 0.95rem;
-        }
 
         /* Comments Subsection styles */
         .comments-interactive-section {
           display: flex;
           flex-direction: column;
           gap: 20px;
+          margin-top: 20px;
+          padding-top: 20px;
+          border-top: 1px solid rgba(0, 0, 0, 0.06);
+          animation: commentsSlideIn 0.25s ease-out;
+        }
+        @keyframes commentsSlideIn {
+          from { opacity: 0; transform: translateY(-8px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .comments-heading {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .comments-heading .action-icon {
+          color: #7c3aed;
         }
         .comment-post-box {
           padding: 20px !important;
@@ -1229,6 +1435,22 @@ export default function BlogDetailsPage() {
           padding-top: 32px;
           margin-top: 40px;
         }
+        @media (max-width: 768px) {
+          .article-split-row {
+            grid-template-columns: 1fr;
+            gap: 20px;
+          }
+          .article-split-row.reversed .split-text-col,
+          .article-split-row.reversed .split-media-col {
+            order: unset;
+          }
+          .split-featured-img {
+            height: 220px;
+          }
+          .article-lead {
+            padding: 20px;
+          }
+        }
         @media (max-width: 640px) {
           .article-title {
             font-size: 1.8rem;
@@ -1241,10 +1463,8 @@ export default function BlogDetailsPage() {
           .article-meta span:nth-child(even) {
             display: none;
           }
-          .article-cover-wrapper {
-            height: 220px;
-            margin-bottom: 24px;
-            border-radius: 16px;
+          .article-unified-card {
+            padding: 20px !important;
           }
           .article-body-card {
             padding: 20px !important;
@@ -1273,7 +1493,12 @@ export default function BlogDetailsPage() {
           letter-spacing: 0.02em;
         }
         .article-carousel-showcase {
-          margin: 36px 0 24px;
+          margin: 8px 0 28px;
+          padding-bottom: 28px;
+          border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        .gallery-heading {
+          margin-top: 0;
         }
         .carousel-container {
           position: relative;

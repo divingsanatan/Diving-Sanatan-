@@ -125,6 +125,18 @@ export default function Home() {
   }, []);
 
   const sliderRef = useRef<HTMLDivElement>(null);
+  const progressBarRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    sliderRef.current?.style.setProperty("--slider-offset", `${(activeStep - 1) * 25}%`);
+  }, [activeStep]);
+
+  useEffect(() => {
+    if (currentQuestions.length > 0) {
+      const pct = ((currentQuestionIndex + 1) / currentQuestions.length) * 100;
+      progressBarRef.current?.style.setProperty("--progress", `${pct}%`);
+    }
+  }, [currentQuestionIndex, currentQuestions.length]);
 
   // Fetch services and categories from API
   useEffect(() => {
@@ -347,11 +359,13 @@ export default function Home() {
 
       if (json.success) {
         setSubmittedProfileId(json.data.id);
-        // Save profile data to localStorage
         window.localStorage.setItem("divingsanatan_user_profile", JSON.stringify(profileForm));
         setHasSavedProfile(true);
         setChakraScores(generateChakraScores(selectedCategory));
         triggerStepTransition(4);
+        if (json.updated) {
+          console.info("Existing profile updated for this email — no duplicate created.");
+        }
       } else {
         alert("Submission failed: " + json.error);
       }
@@ -461,8 +475,7 @@ export default function Home() {
       <div className="slider-container">
         <div
           ref={sliderRef}
-          className="steps-slider"
-          style={{ transform: `translateY(-${(activeStep - 1) * 25}%)` }}
+          className="steps-slider steps-slider-offset"
         >
 
           {/* 1. Landing Viewport (Redesigned Dark Theme Layout) */}
@@ -625,8 +638,8 @@ export default function Home() {
 
                   <div className="progress-bar-container">
                     <div
-                      className="progress-bar-fill"
-                      style={{ width: `${((currentQuestionIndex + 1) / currentQuestions.length) * 100}%` }}
+                      ref={progressBarRef}
+                      className="progress-bar-fill progress-var-fill"
                     />
                   </div>
 
@@ -637,9 +650,8 @@ export default function Home() {
                       {getOptionsArray(currentQuestion).map((option: string, idx: number) => (
                         <button
                           key={idx}
-                          className="quiz-option-btn"
+                          className={`quiz-option-btn quiz-option-delay-${idx % 12}`}
                           onClick={() => handleAnswerSelect(option)}
-                          style={{ animationDelay: `${idx * 0.08}s` }}
                         >
                           {option}
                         </button>
@@ -809,62 +821,62 @@ export default function Home() {
                   <div className="report-columns-grid">
 
                     {/* Left Column: Visual Chakras (Scanner) */}
-                    <div className="report-left-column glass-panel" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
-                      <h3 className="visualizer-heading" style={{ marginBottom: "20px", color: "hsl(var(--text-cream))", fontFamily: "var(--font-serif)" }}>Somatic Scanner</h3>
-                      <div className="chakra-interactive-visualizer" style={{ position: "relative", width: "100%", display: "flex", justifyContent: "center" }}>
+                    <div className="report-left-column glass-panel">
+                      <h3 className="visualizer-heading">Somatic Scanner</h3>
+                      <div className="chakra-interactive-visualizer">
 
                         {/* SVG spinal channel with glowing nodes */}
-                        <div className="spinal-svg-wrapper" style={{ position: "relative", height: "460px" }}>
-                          <svg className="spinal-channel" width="80" height="460" viewBox="0 0 80 460" style={{ overflow: "visible" }}>
+                        <div className="spinal-svg-wrapper spinal-svg-tall">
+                          <svg className="spinal-channel spinal-channel-visible" width="80" height="460" viewBox="0 0 80 460">
                             <line x1="40" y1="20" x2="40" y2="440" stroke="rgba(168, 85, 247, 0.15)" strokeWidth="6" strokeDasharray="8 6" />
 
-                            <circle cx="40" cy="40" r="18" className="chakra-crown" style={{ fill: "rgba(168, 85, 247, 0.2)", stroke: "#a855f7", strokeWidth: "2" }} />
-                            <circle cx="40" cy="100" r="18" className="chakra-thirdeye" style={{ fill: "rgba(99, 102, 241, 0.2)", stroke: "#6366f1", strokeWidth: "2" }} />
-                            <circle cx="40" cy="160" r="18" className="chakra-throat" style={{ fill: "rgba(56, 189, 248, 0.2)", stroke: "#38bdf8", strokeWidth: "2" }} />
-                            <circle cx="40" cy="220" r="18" className="chakra-heart" style={{ fill: "rgba(34, 197, 94, 0.2)", stroke: "#22c55e", strokeWidth: "2" }} />
-                            <circle cx="40" cy="280" r="18" className="chakra-solar" style={{ fill: "rgba(234, 179, 8, 0.2)", stroke: "#eab308", strokeWidth: "2" }} />
-                            <circle cx="40" cy="340" r="18" className="chakra-sacral" style={{ fill: "rgba(249, 115, 22, 0.2)", stroke: "#f97316", strokeWidth: "2" }} />
-                            <circle cx="40" cy="400" r="18" className="chakra-root" style={{ fill: "rgba(239, 68, 68, 0.2)", stroke: "#ef4444", strokeWidth: "2" }} />
+                            <circle cx="40" cy="40" r="18" className="scanner-chakra scanner-chakra-crown" />
+                            <circle cx="40" cy="100" r="18" className="scanner-chakra scanner-chakra-thirdeye" />
+                            <circle cx="40" cy="160" r="18" className="scanner-chakra scanner-chakra-throat" />
+                            <circle cx="40" cy="220" r="18" className="scanner-chakra scanner-chakra-heart" />
+                            <circle cx="40" cy="280" r="18" className="scanner-chakra scanner-chakra-solar" />
+                            <circle cx="40" cy="340" r="18" className="scanner-chakra scanner-chakra-sacral" />
+                            <circle cx="40" cy="400" r="18" className="scanner-chakra scanner-chakra-root" />
 
                             {/* Scanner Line */}
-                            <line x1="5" y1="20" x2="75" y2="20" stroke="#db2777" strokeWidth="3" className="scanner-line" style={{ filter: "drop-shadow(0 0 8px #db2777)" }} />
+                            <line x1="5" y1="20" x2="75" y2="20" stroke="#db2777" strokeWidth="3" className="scanner-line scanner-line-glow" />
                           </svg>
                         </div>
                       </div>
 
-                      <div className="scanner-status" style={{ marginTop: "24px", color: "hsl(var(--text-muted))", fontSize: "0.85rem", letterSpacing: "0.05em", textTransform: "uppercase", display: "flex", gap: "8px", alignItems: "center" }}>
-                        <span className="scanning-dot" style={{ display: "inline-block", width: "8px", height: "8px", borderRadius: "50%", background: "#a855f7" }}></span>
+                      <div className="scanner-status">
+                        <span className="scanning-dot"></span>
                         Analyzing Somatic Resonances...
                       </div>
                     </div>
 
                     {/* Right Column: In Progress Details */}
-                    <div className="report-right-column glass-panel" style={{ display: "flex", flexDirection: "column", gap: "20px", padding: "32px" }}>
-                      <div className="report-header" style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", paddingBottom: "16px" }}>
-                        <span className="report-status-badge" style={{ background: "rgba(219, 39, 119, 0.1)", border: "1px solid rgba(219, 39, 119, 0.2)", color: "#db2777", fontSize: "0.75rem", fontWeight: "700", padding: "4px 10px", borderRadius: "6px", textTransform: "uppercase" }}>Preparation in Progress</span>
-                        <h2 className="report-title gold-text-gradient" style={{ fontSize: "2rem", margin: "12px 0 6px", fontFamily: "var(--font-serif)" }}>Your Custom Soul Report</h2>
-                        <p className="report-owner" style={{ fontSize: "0.9rem", color: "hsl(var(--text-muted))" }}>Prepared for <strong>{profileForm.name}</strong> • Focus Category: <strong>{selectedCategory}</strong></p>
+                    <div className="report-right-column glass-panel">
+                      <div className="report-header">
+                        <span className="report-status-badge report-status-in-progress">Preparation in Progress</span>
+                        <h2 className="report-title gold-text-gradient">Your Custom Soul Report</h2>
+                        <p className="report-owner">Prepared for <strong>{profileForm.name}</strong> • Focus Category: <strong>{selectedCategory}</strong></p>
                       </div>
 
-                      <div className="soul-report-summary" style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                        <p style={{ lineHeight: "1.6", color: "hsl(var(--text-cream))", fontSize: "0.95rem" }}>
+                      <div className="soul-report-summary">
+                        <p className="report-paragraph">
                           Thank you for completing your Somatic Alignment check. Your responses have been submitted to our wellness practitioners.
                         </p>
-                        <p style={{ lineHeight: "1.6", color: "hsl(var(--text-cream))", fontSize: "0.95rem" }}>
+                        <p className="report-paragraph">
                           Instead of generating a generic, automated template, our certified energy healers are manually analyzing your specific answers, mapping your chakra flow, and constructing a customized spiritual alignment plan.
                         </p>
-                        <p style={{ lineHeight: "1.6", color: "hsl(var(--text-cream))", fontSize: "0.95rem" }}>
+                        <p className="report-paragraph">
                           Your completed report will be sent to your email (<strong>{profileForm.email}</strong>) within 24 hours.
                         </p>
                       </div>
 
-                      <div style={{ marginTop: "12px", background: "linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(219, 39, 119, 0.1) 100%)", border: "1px solid rgba(168, 85, 247, 0.2)", borderRadius: "16px", padding: "24px", display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" }}>
-                        <h4 style={{ color: "#a855f7", fontWeight: "700", margin: 0, textTransform: "uppercase", fontSize: "0.8rem", letterSpacing: "0.05em" }}>Next Alignment Step</h4>
-                        <h3 style={{ color: "hsl(var(--text-cream))", fontSize: "1.2rem", textAlign: "center", margin: 0, fontFamily: "var(--font-serif)" }}>Book a Free 15-Minute Diagnostic Session</h3>
-                        <p style={{ color: "hsl(var(--text-muted))", fontSize: "0.85rem", textAlign: "center", margin: "0 0 10px", lineHeight: "1.4" }}>
+                      <div className="alignment-step-card">
+                        <h4 className="alignment-step-label">Next Alignment Step</h4>
+                        <h3 className="alignment-step-title">Book a Free 15-Minute Diagnostic Session</h3>
+                        <p className="alignment-step-desc">
                           Schedule a live video call with Dr. Elara Vance to scan your auric fields and map blockages.
                         </p>
-                        <Button variant="gold" onClick={() => router.push("/booking?service=srv-free")} style={{ width: "100%", padding: "14px 28px", fontSize: "0.95rem", fontWeight: "600", letterSpacing: "0.02em" }}>
+                        <Button variant="gold" onClick={() => router.push("/booking?service=srv-free")} className="book-free-session-btn">
                           🔮 Book Free Energy Session
                         </Button>
                       </div>
@@ -878,9 +890,9 @@ export default function Home() {
                       <p className="bottom-section-subtitle">Below are the recommended paid sessions to target somatic blocks in your {selectedCategory} category.</p>
                     </div>
 
-                    <div className="booking-options-grid" style={{ display: "block" }}>
-                      <div className="therapies-recommendation-card" style={{ width: "100%" }}>
-                        <div className="recommended-services-grid-layout" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "20px" }}>
+                    <div className="booking-options-grid booking-options-stacked">
+                      <div className="therapies-recommendation-card therapies-card-full">
+                        <div className="recommended-services-grid-layout recommended-grid-auto">
                           {getRecommendedServices().map((srv) => (
                             <Card key={srv.id} className="recommend-service-card" variant="glowing">
                               <div className="card-top-row">
@@ -892,7 +904,7 @@ export default function Home() {
                               <Button
                                 variant="gold-outline"
                                 onClick={() => router.push(`/booking?service=${srv.id}`)}
-                                style={{ width: "100%", marginTop: "12px" }}
+
                               >
                                 Book This Session
                               </Button>
@@ -1189,6 +1201,124 @@ export default function Home() {
         }
         .scanning-dot {
           animation: pulse-dot 1.5s ease-in-out infinite;
+          display: inline-block;
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background: #a855f7;
+        }
+
+        .scanner-status {
+          margin-top: 24px;
+          color: hsl(var(--text-muted));
+          font-size: 0.85rem;
+          letter-spacing: 0.05em;
+          text-transform: uppercase;
+          display: flex;
+          gap: 8px;
+          align-items: center;
+        }
+
+        .spinal-svg-tall {
+          position: relative;
+          height: 460px;
+        }
+
+        .spinal-channel-visible {
+          overflow: visible;
+        }
+
+        .scanner-chakra {
+          stroke-width: 2;
+        }
+
+        .scanner-chakra-crown { fill: rgba(168, 85, 247, 0.2); stroke: #a855f7; }
+        .scanner-chakra-thirdeye { fill: rgba(99, 102, 241, 0.2); stroke: #6366f1; }
+        .scanner-chakra-throat { fill: rgba(56, 189, 248, 0.2); stroke: #38bdf8; }
+        .scanner-chakra-heart { fill: rgba(34, 197, 94, 0.2); stroke: #22c55e; }
+        .scanner-chakra-solar { fill: rgba(234, 179, 8, 0.2); stroke: #eab308; }
+        .scanner-chakra-sacral { fill: rgba(249, 115, 22, 0.2); stroke: #f97316; }
+        .scanner-chakra-root { fill: rgba(239, 68, 68, 0.2); stroke: #ef4444; }
+
+        .scanner-line-glow {
+          filter: drop-shadow(0 0 8px #db2777);
+        }
+
+        .report-status-in-progress {
+          background: rgba(219, 39, 119, 0.1);
+          border: 1px solid rgba(219, 39, 119, 0.2);
+          color: #db2777;
+        }
+
+        .soul-report-summary {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+
+        .report-paragraph {
+          line-height: 1.6;
+          color: hsl(var(--text-cream));
+          font-size: 0.95rem;
+        }
+
+        .alignment-step-card {
+          margin-top: 12px;
+          background: linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(219, 39, 119, 0.1) 100%);
+          border: 1px solid rgba(168, 85, 247, 0.2);
+          border-radius: 16px;
+          padding: 24px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 12px;
+        }
+
+        .alignment-step-label {
+          color: #a855f7;
+          font-weight: 700;
+          margin: 0;
+          text-transform: uppercase;
+          font-size: 0.8rem;
+          letter-spacing: 0.05em;
+        }
+
+        .alignment-step-title {
+          color: hsl(var(--text-cream));
+          font-size: 1.2rem;
+          text-align: center;
+          margin: 0;
+          font-family: var(--font-serif);
+        }
+
+        .alignment-step-desc {
+          color: hsl(var(--text-muted));
+          font-size: 0.85rem;
+          text-align: center;
+          margin: 0 0 10px;
+          line-height: 1.4;
+        }
+
+        .book-free-session-btn {
+          width: 100%;
+          padding: 14px 28px;
+          font-size: 0.95rem;
+          font-weight: 600;
+          letter-spacing: 0.02em;
+        }
+
+        .booking-options-stacked {
+          display: block;
+        }
+
+        .therapies-card-full {
+          width: 100%;
+        }
+
+        .recommended-grid-auto {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+          gap: 20px;
         }
 
         /* 4. Restructured Report View Layout */
@@ -1633,6 +1763,7 @@ export default function Home() {
           flex-direction: column;
           will-change: transform;
           transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+          transform: translateY(calc(-1 * var(--slider-offset, 0%)));
         }
         .viewport-section {
           width: 100%;
@@ -2117,6 +2248,7 @@ export default function Home() {
           height: 100%;
           background: linear-gradient(90deg, #db2777 0%, #7c3aed 100%);
           border-radius: 99px;
+          width: var(--progress, 0%);
           transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .quiz-question-text {
@@ -2155,6 +2287,19 @@ export default function Home() {
           box-shadow: 0 4px 15px rgba(168, 85, 247, 0.08);
           color: #7c3aed;
         }
+
+        .quiz-option-delay-0 { animation-delay: 0s; }
+        .quiz-option-delay-1 { animation-delay: 0.08s; }
+        .quiz-option-delay-2 { animation-delay: 0.16s; }
+        .quiz-option-delay-3 { animation-delay: 0.24s; }
+        .quiz-option-delay-4 { animation-delay: 0.32s; }
+        .quiz-option-delay-5 { animation-delay: 0.4s; }
+        .quiz-option-delay-6 { animation-delay: 0.48s; }
+        .quiz-option-delay-7 { animation-delay: 0.56s; }
+        .quiz-option-delay-8 { animation-delay: 0.64s; }
+        .quiz-option-delay-9 { animation-delay: 0.72s; }
+        .quiz-option-delay-10 { animation-delay: 0.8s; }
+        .quiz-option-delay-11 { animation-delay: 0.88s; }
         
         .quiz-text-input-container {
           display: flex;
