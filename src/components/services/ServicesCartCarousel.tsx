@@ -189,8 +189,11 @@ export const ServicesCartCarousel: React.FC<ServicesCartCarouselProps> = ({
           outline: 2px solid rgba(124, 58, 237, 0.35);
         }
         .carousel-service-image {
-          height: 140px;
+          width: 100%;
+          aspect-ratio: 4 / 3;
+          min-height: 200px;
           overflow: hidden;
+          flex-shrink: 0;
         }
         .carousel-service-body {
           padding: 16px;

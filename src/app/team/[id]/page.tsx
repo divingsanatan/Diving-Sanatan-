@@ -7,6 +7,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Card } from "@/components/ui/Card";
 import { ServicesCartCarousel } from "@/components/services/ServicesCartCarousel";
+import { Service } from "@/types/database";
 
 interface Practitioner {
   id: string;
@@ -25,16 +26,6 @@ interface Practitioner {
     linkedin?: string;
     youtube?: string;
   };
-}
-
-interface Service {
-  id: string;
-  name: string;
-  description: string;
-  image: string;
-  duration: string;
-  price: number;
-  practitioner: string;
 }
 
 interface Review {
@@ -323,7 +314,7 @@ export default function HealerDetailPage() {
         <div className="profile-top-grid">
 
           {/* Featured Healer Card */}
-          <div className="anara-card glass-panel">
+          <div className="anara-card glass-panel profile-grid-col">
             <div className="anara-photo-wrapper">
               <img
                 src={getPractitionerImage(healer.image)}
@@ -380,35 +371,36 @@ export default function HealerDetailPage() {
                   </>
                 )}
               </div>
+            </div>
 
-              <div className="anara-actions">
-                <Link
-                  href={`/booking?practitioner=${healer.id}`}
-                  className="btn-book"
-                >
-                  BOOK A SESSION
-                </Link>
-                <Link
-                  href="/?search=resonance"
-                  className="btn-quiz"
-                >
-                  TAKE SOUL QUIZ
-                </Link>
-                <Link
-                  href="/team"
-                  className="btn-back-list"
-                >
-                  Back to healer list
-                </Link>
-              </div>
+            <div className="anara-actions column-bottom-block">
+              <Link
+                href={`/booking?practitioner=${healer.id}`}
+                className="btn-book"
+              >
+                BOOK A SESSION
+              </Link>
+              <Link
+                href="/?search=resonance"
+                className="btn-quiz"
+              >
+                TAKE SOUL QUIZ
+              </Link>
+              <Link
+                href="/team"
+                className="btn-back-list"
+              >
+                Back to healer list
+              </Link>
             </div>
           </div>
 
           {/* Bio & Video Section */}
-          <div className="bio-video-section">
-            <h1 className="main-title gold-text-gradient">A Journey into Wholeness</h1>
+          <div className="bio-video-section profile-grid-col">
+            <div className="bio-content-top">
+              <h1 className="main-title gold-text-gradient">A Journey into Wholeness</h1>
 
-            <div className="bio-paragraphs">
+              <div className="bio-paragraphs">
               {(() => {
                 const { text: truncatedBioText, isLong: isBioLong } = getTruncatedBio(healer.bio);
                 const bioToRender = (!isBioExpanded && isBioLong) ? truncatedBioText : healer.bio;
@@ -433,12 +425,13 @@ export default function HealerDetailPage() {
                 });
               })()}
             </div>
+            </div>
 
             {/* Video Playback Slot */}
             {healer.video_url && (() => {
               const embedUrl = getEmbedUrl(healer.video_url);
               return (
-                <div className="video-slot glass-panel video-slot-embedded">
+                <div className="video-slot glass-panel video-slot-embedded video-slot-fill">
                   {embedUrl ? (
                     <iframe
                       width="100%"
@@ -463,8 +456,8 @@ export default function HealerDetailPage() {
           </div>
 
           {/* ==================== RIGHT COLUMN (SIDEBAR) ==================== */}
-          <div className="profile-sidebar-column">
-
+          <div className="profile-sidebar-column profile-grid-col">
+            <div className="sidebar-top-content">
             {/* Insights & Guidance Section: Testimonials */}
             <div className="sidebar-section glass-panel">
               <h2 className="sidebar-heading">CLIENT TESTIMONIALS</h2>
@@ -504,9 +497,10 @@ export default function HealerDetailPage() {
                 </div>
               </div>
             </div>
+            </div>
 
             {/* Certification Showcase — image carousel only */}
-            <div className="sidebar-section glass-panel sidebar-section-bottom">
+            <div className="sidebar-section glass-panel sidebar-section-bottom column-bottom-block">
               <h2 className="sidebar-heading">CREDENTIALS SHOWCASE</h2>
 
               <div className="cert-slider">
@@ -717,9 +711,21 @@ export default function HealerDetailPage() {
 
         .profile-top-grid {
           display: grid;
-          grid-template-columns: 1fr 1.25fr 1fr;
+          grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.65fr) minmax(0, 0.9fr);
           gap: 24px;
           align-items: stretch;
+        }
+
+        .profile-grid-col {
+          display: flex;
+          flex-direction: column;
+          height: 100%;
+          min-height: 0;
+        }
+
+        .column-bottom-block {
+          margin-top: auto;
+          flex-shrink: 0;
         }
 
         .profile-sidebar-column {
@@ -727,7 +733,13 @@ export default function HealerDetailPage() {
           flex-direction: column;
           gap: 20px;
           min-width: 0;
-          height: 100%;
+        }
+
+        .sidebar-top-content {
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+          flex-shrink: 0;
         }
 
         .intro-grid > div {
@@ -774,8 +786,7 @@ export default function HealerDetailPage() {
           display: flex;
           flex-direction: column;
           gap: 8px;
-          flex: 1;
-          min-height: 0;
+          flex-shrink: 0;
         }
 
         .anara-name {
@@ -823,7 +834,6 @@ export default function HealerDetailPage() {
           display: flex;
           flex-direction: column;
           gap: 8px;
-          margin-top: auto;
           padding-top: 10px;
         }
 
@@ -915,8 +925,26 @@ export default function HealerDetailPage() {
 
         .video-slot-embedded {
           cursor: default;
-          max-height: 220px;
-          margin-top: auto;
+          flex: 1;
+          min-height: 200px;
+          aspect-ratio: unset;
+          margin-top: 0;
+          display: flex;
+          flex-direction: column;
+        }
+
+        .video-slot-embedded:hover {
+          transform: none;
+        }
+
+        .video-slot-fill :global(.embed-iframe),
+        .video-slot-fill :global(.embed-video) {
+          flex: 1;
+          width: 100%;
+          height: 100%;
+          min-height: 200px;
+          border: none;
+          display: block;
         }
 
         .testimonial-card {
@@ -966,7 +994,7 @@ export default function HealerDetailPage() {
         }
 
         .sidebar-section-bottom {
-          margin-top: auto;
+          margin-top: 0;
         }
 
         .insight-card-clickable {
@@ -1033,9 +1061,16 @@ export default function HealerDetailPage() {
         .bio-video-section {
           display: flex;
           flex-direction: column;
-          gap: 10px;
-          height: 100%;
+          gap: 12px;
           min-height: 0;
+          flex: 1;
+        }
+
+        .bio-content-top {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          flex-shrink: 0;
         }
 
         .main-title {
