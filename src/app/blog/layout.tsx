@@ -73,10 +73,13 @@ function BlogLayoutInner({ children }: { children: React.ReactNode }) {
       <Footer />
 
       <style jsx global>{`
+        .blog-layout-container + .footer-container {
+          margin-top: 24px;
+        }
         .blog-layout-container {
           max-width: 1200px;
           margin: 0 auto;
-          padding: 40px 24px 80px;
+          padding: 40px 24px 24px;
           display: flex;
           gap: 40px;
           width: 100%;
@@ -185,7 +188,7 @@ function BlogLayoutInner({ children }: { children: React.ReactNode }) {
         @media (max-width: 968px) {
           .blog-layout-container {
             flex-direction: column;
-            padding: 30px 20px 60px;
+            padding: 30px 20px 24px;
           }
           .blog-sidebar-container {
             width: 100%;

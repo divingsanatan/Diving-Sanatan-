@@ -106,6 +106,18 @@ export interface Blog {
   createdAt?: string;
 }
 
+export type GlossaryIllustration = "aura-chart" | "chakra-system" | null;
+
+export interface GlossaryTerm {
+  id: string;
+  word: string;
+  phonetic: string;
+  category: string;
+  definition: string;
+  illustration?: GlossaryIllustration;
+  createdAt?: string;
+}
+
 export interface ComparisonRowItem {
   label: string;
   valueA: string;

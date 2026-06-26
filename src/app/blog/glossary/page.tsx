@@ -1,82 +1,40 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
 import { useBlog } from "../BlogContext";
+import { GlossaryTerm } from "@/types/database";
+import { GlossaryTermIllustration } from "@/components/blog/GlossaryTermIllustration";
 
-interface GlossaryTerm {
-  word: string;
-  phonetic: string;
-  category: string;
-  definition: string;
-  illustration?: "aura-chart" | "chakra-system";
-}
-
-const GLOSSARY_TERMS: GlossaryTerm[] = [
-  {
-    word: "Aura",
-    phonetic: "/ˈɔːrə/",
-    category: "Bio-Energy",
-    definition: "The subtle electromagnetic field surrounding a living being. Composed of multiple layers corresponding to mental, emotional, and spiritual states, the aura reflects the vitality and balance of the body's major energy nodes.",
-    illustration: "aura-chart",
-  },
-  {
-    word: "Chakra",
-    phonetic: "/ˈtʃʌkrə/",
-    category: "Energy Center",
-    definition: "Sanskrit for 'wheel' or 'disk'. Represents the seven focal nodes in the subtle body, aligned along the spine, through which life force energy (prana) flows. Balancing these centers prevents somatic blockages.",
-    illustration: "chakra-system",
-  },
-  {
-    word: "Cleansing",
-    phonetic: "/ˈklɛnzɪŋ/",
-    category: "Ritual Practice",
-    definition: "The process of removing accumulated negative or heavy frequencies from crystals, healing tools, or personal fields. Typically performed using running water, moonlight, sage, or sound bowl frequencies.",
-  },
-  {
-    word: "Energy Node",
-    phonetic: "/ˈɛnərdʒi noʊd/",
-    category: "Metaphysics",
-    definition: "A crossing point of meridians or nadis in the subtle body. High-density intersections create chakras, while minor nodes direct subtle energy flows through limbs and organs.",
-  },
-  {
-    word: "Kundalini",
-    phonetic: "/ˌkʊndəˈliːni/",
-    category: "Spirituality",
-    definition: "A latent spiritual energy coiled at the base of the spine, represented as a sleeping serpent. When awakened through meditation or yoga, it ascends through the chakras to trigger spiritual enlightenment.",
-  },
-  {
-    word: "Mantra",
-    phonetic: "/ˈmæntrə/",
-    category: "Meditation",
-    definition: "A sacred sound, syllable, word, or phrase repeated in meditation. The vibrational frequency of a mantra (like 'Om') helps align brainwaves and soothe the nervous system.",
-  },
-  {
-    word: "Prana",
-    phonetic: "/ˈprɑːnə/",
-    category: "Vital force",
-    definition: "The Sanskrit term for vital life force or breath. Equivalent to 'Chi' in Chinese philosophy, prana flows through nadis and sustains all living cells.",
-  },
-  {
-    word: "Reiki",
-    phonetic: "/ˈreɪki/",
-    category: "Healing",
-    definition: "A Japanese technique for stress reduction and relaxation that also promotes healing. Administered by 'laying on hands', it is based on the flow of universal life energy.",
-  },
-];
+const PUBLIC_PAGE_SIZE = 5; // Display 5 cards per page on the public page for clean spacing
 
 export default function GlossaryPage() {
-  const { searchQuery } = useBlog(); // ← sidebar search drives this page
+  const { searchQuery } = useBlog();
   const [activeLetter, setActiveLetter] = useState("all");
+  const [terms, setTerms] = useState<GlossaryTerm[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
+  useEffect(() => {
+    async function loadTerms() {
+      try {
+        const res = await fetch("/api/glossary");
+        const json = await res.json();
+        if (json.success) setTerms(json.data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadTerms();
+  }, []);
+
   const speakTerm = (term: GlossaryTerm) => {
     if (typeof window !== "undefined" && window.speechSynthesis) {
-      // Cancel any ongoing speech
       window.speechSynthesis.cancel();
-      
       const utterance = new SpeechSynthesisUtterance(`${term.word}. ${term.definition}`);
       utterance.rate = 0.95;
       utterance.pitch = 1.0;
@@ -86,16 +44,28 @@ export default function GlossaryPage() {
     }
   };
 
-  const filteredTerms = GLOSSARY_TERMS.filter((t) => {
-    const matchesLetter = activeLetter === "all" || t.word.toLowerCase().startsWith(activeLetter.toLowerCase());
-    const matchesSearch = t.word.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          t.definition.toLowerCase().includes(searchQuery.toLowerCase());
+  const filteredTerms = terms.filter((t) => {
+    const matchesLetter =
+      activeLetter === "all" || t.word.toLowerCase().startsWith(activeLetter.toLowerCase());
+    const matchesSearch =
+      t.word.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      t.definition.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (t.category && t.category.toLowerCase().includes(searchQuery.toLowerCase()));
     return matchesLetter && matchesSearch;
   });
 
+  // Whenever filters change, go back to page 1
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeLetter, searchQuery]);
+
+  // Pagination bounds
+  const totalPages = Math.ceil(filteredTerms.length / PUBLIC_PAGE_SIZE) || 1;
+  const safePage = Math.min(currentPage, totalPages);
+  const paginatedTerms = filteredTerms.slice((safePage - 1) * PUBLIC_PAGE_SIZE, safePage * PUBLIC_PAGE_SIZE);
+
   return (
     <div className="glossary-page">
-      {/* Header */}
       <div className="glossary-header">
         <h1 className="glossary-title">Metaphysical Glossary</h1>
         <p className="glossary-subtitle">
@@ -103,7 +73,6 @@ export default function GlossaryPage() {
         </p>
       </div>
 
-      {/* Control panel (Alphabet + active search badge — search is via sidebar) */}
       <section className="glossary-controls-section glass-panel">
         {searchQuery && (
           <div className="glossary-active-search-badge">
@@ -117,16 +86,18 @@ export default function GlossaryPage() {
 
         <div className="alphabet-bar">
           <button
+            type="button"
             className={`letter-btn ${activeLetter === "all" ? "active" : ""}`}
             onClick={() => setActiveLetter("all")}
           >
             All
           </button>
           {letters.map((letter) => {
-            const hasTerms = GLOSSARY_TERMS.some((t) => t.word.toUpperCase().startsWith(letter));
+            const hasTerms = terms.some((t) => t.word.toUpperCase().startsWith(letter));
             return (
               <button
                 key={letter}
+                type="button"
                 className={`letter-btn ${activeLetter === letter ? "active" : ""} ${!hasTerms ? "disabled" : ""}`}
                 onClick={() => hasTerms && setActiveLetter(letter)}
                 disabled={!hasTerms && activeLetter !== letter}
@@ -139,91 +110,84 @@ export default function GlossaryPage() {
       </section>
 
       <div className="terms-container">
-        {filteredTerms.length === 0 ? (
+        {loading ? (
+          <div className="terms-empty glass-card">
+            <p>Loading glossary terms...</p>
+          </div>
+        ) : filteredTerms.length === 0 ? (
           <div className="terms-empty glass-card">
             <p>No glossary definitions match your search terms.</p>
           </div>
         ) : (
-          filteredTerms.map((term) => (
-            <Card key={term.word} variant="glass" className="term-card">
-              <div className="term-card-content">
-                <div className="term-main-info">
-                  <div className="term-title-row">
-                    <div className="title-left">
-                      <h3 className="term-word">{term.word}</h3>
-                      <span className="term-phonetic">{term.phonetic}</span>
+          <>
+            {paginatedTerms.map((term) => (
+              <Card key={term.id} variant="glass" className="term-card">
+                <div className="term-card-content">
+                  <div className="term-main-info">
+                    <div className="term-title-row">
+                      <div className="title-left">
+                        <h3 className="term-word">{term.word}</h3>
+                        {term.phonetic && <span className="term-phonetic">{term.phonetic}</span>}
+                      </div>
+
+                      <button
+                        type="button"
+                        className="speak-btn"
+                        onClick={() => speakTerm(term)}
+                        title="Listen to pronunciation"
+                      >
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                          <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />
+                        </svg>
+                      </button>
                     </div>
 
-                    <button className="speak-btn" onClick={() => speakTerm(term)} title="Listen to pronunciation">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-                        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />
-                      </svg>
-                    </button>
+                    {term.category && <span className="term-category-badge">{term.category}</span>}
+                    <p className="term-definition-text">{term.definition}</p>
                   </div>
 
-                  <span className="term-category-badge">{term.category}</span>
-                  <p className="term-definition-text">{term.definition}</p>
+                  <GlossaryTermIllustration illustration={term.illustration} />
                 </div>
+              </Card>
+            ))}
 
-                {term.illustration === "aura-chart" && (
-                  <div className="term-graphic-container">
-                    <span className="graphic-label">Aura Layer Mapping</span>
-                    <div className="aura-chart-svg-wrapper">
-                      <svg width="100%" height="150" viewBox="0 0 200 150">
-                        {/* Aura Outer Glowing Rings */}
-                        <circle cx="100" cy="75" r="50" stroke="rgba(192, 132, 252, 0.4)" strokeWidth="8" fill="none" />
-                        <circle cx="100" cy="75" r="42" stroke="rgba(129, 140, 248, 0.3)" strokeWidth="6" fill="none" />
-                        <circle cx="100" cy="75" r="35" stroke="rgba(34, 211, 238, 0.3)" strokeWidth="4" fill="none" />
-                        <circle cx="100" cy="75" r="28" stroke="rgba(74, 222, 128, 0.2)" strokeWidth="4" fill="none" />
-                        
-                        {/* Meditating Human Silhouette Outline */}
-                        <path d="M100 35 C105 35, 107 40, 105 45 C107 50, 103 55, 100 55 C97 55, 93 50, 95 45 C93 40, 95 35, 100 35 Z" fill="rgba(109, 40, 217, 0.08)" stroke="#6d28d9" strokeWidth="1.5" />
-                        <path d="M100 55 C90 60, 80 65, 75 75 C70 85, 60 95, 60 105 C60 115, 80 115, 100 115 C120 115, 140 115, 140 105 C140 95, 130 85, 125 75 C120 65, 110 60, 100 55 Z" fill="rgba(109, 40, 217, 0.08)" stroke="#6d28d9" strokeWidth="1.5" />
-                        
-                        {/* Chakra nodes mapped inside silhouette */}
-                        <circle cx="100" cy="40" r="3.5" fill="#c084fc" className="glow-node" /> {/* Crown */}
-                        <circle cx="100" cy="48" r="3.5" fill="#818cf8" className="glow-node" /> {/* Third Eye */}
-                        <circle cx="100" cy="57" r="3.5" fill="#22d3ee" className="glow-node" /> {/* Throat */}
-                        <circle cx="100" cy="69" r="3.5" fill="#4ade80" className="glow-node" /> {/* Heart */}
-                        <circle cx="100" cy="82" r="3.5" fill="#facc15" className="glow-node" /> {/* Solar Plexus */}
-                        <circle cx="100" cy="95" r="3.5" fill="#fb923c" className="glow-node" /> {/* Sacral */}
-                        <circle cx="100" cy="108" r="3.5" fill="#f87171" className="glow-node" /> {/* Root */}
-                      </svg>
-                    </div>
-                  </div>
-                )}
-
-                {term.illustration === "chakra-system" && (
-                  <div className="term-graphic-container">
-                    <span className="graphic-label">Energy Center Alignment</span>
-                    <div className="aura-chart-svg-wrapper">
-                      <svg width="100%" height="150" viewBox="0 0 200 150">
-                        {/* Spine Line */}
-                        <line x1="100" y1="20" x2="100" y2="130" stroke="rgba(168, 85, 247, 0.15)" strokeWidth="3" strokeDasharray="3 3" />
-                        
-                        {/* Major Chakra Centers on Spine */}
-                        <circle cx="100" cy="22" r="6" fill="#c084fc" />
-                        <circle cx="100" cy="40" r="6" fill="#818cf8" />
-                        <circle cx="100" cy="58" r="6" fill="#22d3ee" />
-                        <circle cx="100" cy="76" r="6" fill="#4ade80" />
-                        <circle cx="100" cy="94" r="6" fill="#facc15" />
-                        <circle cx="100" cy="112" r="6" fill="#fb923c" />
-                        <circle cx="100" cy="130" r="6" fill="#f87171" />
-                        
-                        {/* Horizontal Energy Loops */}
-                        <path d="M70 76 Q100 56 130 76" fill="none" stroke="rgba(74, 222, 128, 0.4)" strokeWidth="1.5" />
-                        <path d="M70 76 Q100 96 130 76" fill="none" stroke="rgba(74, 222, 128, 0.4)" strokeWidth="1.5" />
-                        
-                        <path d="M80 40 Q100 30 120 40" fill="none" stroke="rgba(129, 140, 248, 0.4)" strokeWidth="1.5" />
-                        <path d="M80 40 Q100 50 120 40" fill="none" stroke="rgba(129, 140, 248, 0.4)" strokeWidth="1.5" />
-                      </svg>
-                    </div>
-                  </div>
-                )}
+            {filteredTerms.length > PUBLIC_PAGE_SIZE && (
+              <div className="public-pagination-bar">
+                <span className="pagination-info">
+                  Showing {(safePage - 1) * PUBLIC_PAGE_SIZE + 1}–{Math.min(safePage * PUBLIC_PAGE_SIZE, filteredTerms.length)} of {filteredTerms.length}
+                </span>
+                <div className="pagination-controls">
+                  <button
+                    type="button"
+                    className="page-btn"
+                    disabled={safePage <= 1}
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  >
+                    ← Prev
+                  </button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <button
+                      key={page}
+                      type="button"
+                      className={`page-btn ${page === safePage ? "active" : ""}`}
+                      onClick={() => setCurrentPage(page)}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    className="page-btn"
+                    disabled={safePage >= totalPages}
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  >
+                    Next →
+                  </button>
+                </div>
               </div>
-            </Card>
-          ))
+            )}
+          </>
         )}
       </div>
 
@@ -342,6 +306,7 @@ export default function GlossaryPage() {
           display: flex;
           align-items: baseline;
           gap: 12px;
+          flex-wrap: wrap;
         }
         .term-word {
           font-size: 1.8rem;
@@ -366,6 +331,7 @@ export default function GlossaryPage() {
           display: flex;
           align-items: center;
           justify-content: center;
+          flex-shrink: 0;
         }
         .speak-btn:hover {
           background: #7c3aed;
@@ -390,59 +356,62 @@ export default function GlossaryPage() {
           line-height: 1.7;
           color: hsl(var(--text-cream));
         }
-        .term-graphic-container {
-          width: 180px;
-          flex-shrink: 0;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 8px;
-          border-left: 1px solid rgba(0, 0, 0, 0.05);
-          padding-left: 24px;
-        }
-        .graphic-label {
-          font-size: 0.7rem;
-          font-weight: 600;
-          color: hsl(var(--text-muted));
-          text-transform: uppercase;
-          letter-spacing: 0.04em;
-        }
-        .aura-chart-svg-wrapper {
-          width: 100%;
-          background: rgba(255, 255, 255, 0.5);
-          border-radius: 12px;
-          border: 1px solid rgba(0, 0, 0, 0.03);
-          padding: 6px;
-        }
         .terms-empty {
           text-align: center;
           padding: 40px !important;
           color: hsl(var(--text-muted));
         }
-        
-        @keyframes subtleGlow {
-          0%, 100% { opacity: 0.6; transform: scale(1); }
-          50% { opacity: 1; transform: scale(1.2); }
+        .public-pagination-bar {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 20px 24px;
+          border-top: 1px solid rgba(168, 85, 247, 0.08);
+          background: rgba(255, 255, 255, 0.15);
+          border-radius: 12px;
+          flex-wrap: wrap;
+          gap: 12px;
+          margin-top: 12px;
         }
-        .glow-node {
-          animation: subtleGlow 3s infinite ease-in-out;
+        .pagination-info {
+          font-size: 0.85rem;
+          color: hsl(var(--text-muted));
         }
-        .glow-node:nth-child(even) {
-          animation-delay: 1.5s;
+        .pagination-controls {
+          display: flex;
+          gap: 4px;
+          flex-wrap: wrap;
         }
-
+        .page-btn {
+          background: transparent;
+          border: 1px solid rgba(0, 0, 0, 0.08);
+          padding: 6px 12px;
+          border-radius: 6px;
+          font-size: 0.8rem;
+          font-weight: 600;
+          color: hsl(var(--text-muted));
+          cursor: pointer;
+          transition: var(--transition-fast);
+          min-width: 32px;
+        }
+        .page-btn:hover:not(:disabled) {
+          border-color: #7c3aed;
+          color: #7c3aed;
+        }
+        .page-btn.active {
+          background: #7c3aed;
+          color: #fff;
+          border-color: #7c3aed;
+        }
+        .page-btn:disabled {
+          opacity: 0.4;
+          cursor: not-allowed;
+        }
         @media (max-width: 680px) {
           .term-card-content {
             flex-direction: column;
             align-items: stretch;
             gap: 20px;
-          }
-          .term-graphic-container {
-            width: 100%;
-            border-left: none;
-            border-top: 1px solid rgba(0, 0, 0, 0.05);
-            padding-left: 0;
-            padding-top: 20px;
           }
         }
       `}</style>

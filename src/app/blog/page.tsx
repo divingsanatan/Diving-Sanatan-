@@ -2,10 +2,11 @@
 
 import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
 import Link from "next/link";
 import { useBlog } from "./BlogContext";
 import { Carousel } from "@/components/ui/Carousel";
+import { ServicesCartCarousel } from "@/components/services/ServicesCartCarousel";
+import { Service } from "@/types/database";
 
 interface Blog {
   id: string;
@@ -37,18 +38,26 @@ export const getBlogImage = (img: string) => {
 export default function BlogListingPage() {
   const [blogs, setBlogs] = useState<Blog[]>([]);
   const [filteredBlogs, setFilteredBlogs] = useState<Blog[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
   const { searchQuery, activeCategory, setActiveCategory } = useBlog();
   const [loading, setLoading] = useState(true);
 
-  // Load blogs
+  // Load blogs and services
   useEffect(() => {
     async function loadBlogs() {
       try {
-        const res = await fetch("/api/blogs");
-        const json = await res.json();
+        const [blogsRes, servicesRes] = await Promise.all([
+          fetch("/api/blogs"),
+          fetch("/api/services"),
+        ]);
+        const json = await blogsRes.json();
+        const servicesJson = await servicesRes.json();
         if (json.success) {
           setBlogs(json.data);
           setFilteredBlogs(json.data);
+        }
+        if (servicesJson.success) {
+          setServices(servicesJson.data);
         }
       } catch (err) {
         console.error(err);
@@ -86,40 +95,34 @@ export default function BlogListingPage() {
   );
 
   const renderBlogCard = (post: Blog) => (
-    <Card key={post.id} className="blog-card" variant="glass">
-      <div className="blog-card-image-container">
-        <img
-          src={getBlogImage(post.image)}
-          alt={post.title}
-          className="blog-card-img"
-        />
-        <span className="blog-card-badge">{post.category}</span>
-      </div>
-
-      <div className="blog-card-content">
-        <div className="blog-card-header-info">
-          <span className="blog-card-time">⏱️ {post.readTime}</span>
+    <Link key={post.id} href={`/blog/${post.id}`} className="blog-card-link">
+      <Card className="blog-card" variant="glass">
+        <div className="blog-card-image-container">
+          <img
+            src={getBlogImage(post.image)}
+            alt={post.title}
+            className="blog-card-img"
+          />
+          <span className="blog-card-badge">{post.category}</span>
         </div>
 
-        <h3 className="blog-card-title">{post.title}</h3>
-        <p className="blog-card-excerpt">
-          {post.content.substring(0, 120)}...
-        </p>
+        <div className="blog-card-content">
+          <div className="blog-card-header-info">
+            <span className="blog-card-time">⏱️ {post.readTime}</span>
+          </div>
 
-        <div className="blog-card-footer">
-          <span className="blog-card-author">By <strong>{post.author}</strong></span>
-          <span className="blog-card-date">{post.date}</span>
-        </div>
+          <h3 className="blog-card-title">{post.title}</h3>
+          <p className="blog-card-excerpt">
+            {post.content.substring(0, 120)}...
+          </p>
 
-        <div className="blog-card-action">
-          <Link href={`/blog/${post.id}`}>
-            <Button variant="gold-outline" size="sm">
-              Read Article
-            </Button>
-          </Link>
+          <div className="blog-card-footer">
+            <span className="blog-card-author">By <strong>{post.author}</strong></span>
+            <span className="blog-card-date">{post.date}</span>
+          </div>
         </div>
-      </div>
-    </Card>
+      </Card>
+    </Link>
   );
 
   const isFilteringActive = activeCategory !== "all" || searchQuery !== "";
@@ -223,6 +226,13 @@ export default function BlogListingPage() {
         )}
       </section>
 
+      <ServicesCartCarousel
+        services={services}
+        title="Explore All Therapies"
+        emptyMessage="No therapies available at the moment."
+        className="blog-services-carousel"
+      />
+
       <style jsx>{`
         .blog-posts-page {
           display: flex;
@@ -304,10 +314,32 @@ export default function BlogListingPage() {
         .blog-showcase-section:last-child {
           margin-bottom: 0;
         }
+        :global(.blog-services-carousel) {
+          margin-top: 16px;
+          padding-top: 24px;
+          padding-bottom: 0;
+          margin-bottom: 0;
+          border-top: 1px solid rgba(168, 85, 247, 0.1);
+        }
         .blog-cards-grid {
           display: grid;
           grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
           gap: 24px;
+        }
+        :global(.blog-card-link) {
+          display: block;
+          text-decoration: none;
+          color: inherit;
+          height: 100%;
+          border-radius: 16px;
+          transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+        :global(.blog-card-link:hover) {
+          transform: translateY(-3px);
+        }
+        :global(.blog-card-link:hover .blog-card) {
+          border-color: rgba(168, 85, 247, 0.35);
+          box-shadow: 0 10px 28px rgba(124, 58, 237, 0.1);
         }
         :global(.blog-card) {
           display: flex;
@@ -395,13 +427,10 @@ export default function BlogListingPage() {
           color: hsl(var(--text-muted));
           border-top: 1px solid rgba(0, 0, 0, 0.05);
           padding-top: 8px;
-          margin-bottom: 12px;
+          margin-top: auto;
         }
         :global(.blog-card-author) {
           font-weight: 500;
-        }
-        :global(.blog-card-action) {
-          width: 100%;
         }
         @media (max-width: 968px) {
           .blog-controls-section {
