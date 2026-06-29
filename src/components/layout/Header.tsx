@@ -2,9 +2,11 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Logo } from "./Logo";
 
 export const Header: React.FC = () => {
+  const pathname = usePathname();
   const [cartCount, setCartCount] = useState(0);
   const [isAdmin, setIsAdmin] = useState(false);
   const [user, setUser] = useState<any>(null);
@@ -61,20 +63,22 @@ export const Header: React.FC = () => {
 
           {/* Nav Links */}
           <nav className="nav-menu">
-            <Link href="/" className="nav-item-link">Home</Link>
-            <Link href="/search" className="nav-item-link">Services</Link>
-            <Link href="/about" className="nav-item-link">About</Link>
-            <Link href="/blog" className="nav-item-link">Blog</Link>
+            <Link href="/" className={`nav-item-link ${pathname === "/" ? "active" : ""}`}>Home</Link>
+            <Link href="/services" className={`nav-item-link ${pathname === "/services" || pathname.startsWith("/services/") ? "active" : ""}`}>Services</Link>
+            <Link href="/about" className={`nav-item-link ${pathname === "/about" ? "active" : ""}`}>About</Link>
+            <Link href="/blog" className={`nav-item-link ${pathname === "/blog" ? "active" : ""}`}>Blog</Link>
           </nav>
 
           {/* CTA Buttons */}
           <div className="nav-actions">
-            {cartCount > 0 && (
-              <Link href="/search" className="cart-badge-container">
-                <span className="cart-pulse"></span>
-                <span className="cart-text">Cart ({cartCount})</span>
-              </Link>
-            )}
+            <Link href="/search" className="cart-badge-container">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="cart-icon">
+                <circle cx="9" cy="21" r="1"/>
+                <circle cx="20" cy="21" r="1"/>
+                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+              </svg>
+              <span className="cart-text">Cart ({cartCount})</span>
+            </Link>
             {isAdmin && (
               <Link href="/admin" className="admin-cta-btn">
                 Admin Panel
@@ -115,7 +119,7 @@ export const Header: React.FC = () => {
           flex-shrink: 0;
         }
         .nav-container {
-          max-width: 1200px;
+          max-width: 1050px;
           margin: 0 auto;
           padding: 0 24px;
           display: flex;
@@ -130,44 +134,37 @@ export const Header: React.FC = () => {
         }
         .brand-text {
           font-family: var(--font-serif);
-          color: var(--header-brand-color);
+          color: #7c3aed; /* Purple brand text matching mockup */
           font-size: 1.15rem;
           font-weight: 700;
           letter-spacing: 0.12em;
-          text-shadow: 0 0 10px var(--header-brand-shadow);
+          text-shadow: 0 0 10px rgba(124, 58, 237, 0.05);
           text-decoration: none !important;
         }
         .nav-menu {
           display: flex;
-          gap: 28px;
+          align-items: center;
+          gap: 16px;
         }
         .nav-item-link {
-          font-size: 0.85rem;
-          font-weight: 600;
+          font-family: var(--font-serif);
+          font-size: 1.15rem;
+          font-weight: 700;
           color: var(--header-link-color);
           text-decoration: none !important;
-          letter-spacing: 0.08em;
+          letter-spacing: 0.02em;
           transition: var(--transition-fast);
-          text-transform: uppercase;
-          position: relative;
-          padding: 4px 0;
+          text-transform: none;
+          padding: 6px 16px;
+          border-radius: 99px;
         }
-        .nav-item-link::after {
-          content: '';
-          position: absolute;
-          bottom: 0;
-          left: 0;
-          width: 0;
-          height: 1.5px;
-          background: var(--header-link-hover-color);
-          transition: var(--transition-fast);
-          box-shadow: 0 0 8px var(--header-link-hover-shadow);
+        .nav-item-link.active {
+          background: #eedffd;
+          color: #4c1d95;
         }
-        .nav-item-link:hover {
+        .nav-item-link:hover:not(.active) {
           color: var(--header-link-hover-color);
-        }
-        .nav-item-link:hover::after {
-          width: 100%;
+          background: rgba(168, 85, 247, 0.04);
         }
         .nav-actions {
           display: flex;
@@ -178,22 +175,21 @@ export const Header: React.FC = () => {
           display: flex;
           align-items: center;
           gap: 8px;
-          background: var(--cart-badge-bg);
-          border: 1px solid var(--cart-badge-border);
+          background: transparent;
+          border: none;
           padding: 6px 12px;
-          border-radius: 99px;
-          color: var(--cart-badge-text);
+          color: #475569;
           text-decoration: none !important;
-          font-size: 0.8rem;
-          font-weight: 600;
-          position: relative;
+          font-family: var(--font-serif);
+          font-size: 1.1rem;
+          font-weight: 700;
+          transition: var(--transition-fast);
         }
-        .cart-pulse {
-          width: 8px;
-          height: 8px;
-          background-color: var(--cart-pulse-color);
-          border-radius: 50%;
-          animation: badgeGlow 1.5s infinite ease-in-out;
+        .cart-badge-container:hover {
+          color: var(--header-link-hover-color);
+        }
+        .cart-icon {
+          color: #7c3aed;
         }
         .admin-cta-btn {
           font-family: var(--font-serif);
@@ -217,34 +213,36 @@ export const Header: React.FC = () => {
           transform: translateY(-1px);
         }
         .user-profile-btn {
-          font-family: var(--font-sans);
-          font-size: 0.8rem;
-          font-weight: 600;
-          color: #6d28d9;
-          background: rgba(168, 85, 247, 0.06);
-          border: 1.5px solid rgba(168, 85, 247, 0.25);
-          padding: 8px 16px;
-          border-radius: 10px;
+          font-family: var(--font-serif);
+          font-size: 1.05rem;
+          font-weight: 700;
+          color: #7c3aed;
+          background: #ffffff;
+          border: 1.5px solid rgba(124, 58, 237, 0.4);
+          padding: 8px 20px;
+          border-radius: 99px;
           text-decoration: none !important;
           display: flex;
           align-items: center;
           gap: 6px;
           transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          box-shadow: 0 2px 6px rgba(124, 58, 237, 0.05);
         }
         .user-profile-btn:hover {
-          background: rgba(168, 85, 247, 0.12);
-          border-color: rgba(168, 85, 247, 0.5);
+          background: rgba(124, 58, 237, 0.04);
+          border-color: #7c3aed;
+          box-shadow: 0 4px 12px rgba(124, 58, 237, 0.1);
           transform: translateY(-1px);
         }
         .user-profile-btn.login {
-          color: #475569;
-          background: rgba(0, 0, 0, 0.03);
-          border-color: rgba(0, 0, 0, 0.08);
+          color: #7c3aed;
+          background: #ffffff;
+          border-color: rgba(124, 58, 237, 0.4);
         }
         .user-profile-btn.login:hover {
-          background: rgba(0, 0, 0, 0.06);
-          border-color: rgba(0, 0, 0, 0.15);
-          color: #1e293b;
+          background: rgba(124, 58, 237, 0.04);
+          border-color: #7c3aed;
+          color: #6d28d9;
         }
         .user-avatar-icon {
           font-size: 0.95rem;

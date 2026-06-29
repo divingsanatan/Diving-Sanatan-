@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { formatCurrency } from "@/utils/formatters";
 import { useRouter } from "next/navigation";
+import { Brain, Heart, DollarSign, Compass, Users, User, Sparkles, Grid, Search, ArrowRight, Shield, Flower } from "lucide-react";
 
 import { Service, Category } from "@/types/database";
 
@@ -28,12 +29,19 @@ export default function Home() {
   const getDbCategory = (cat: string): string => {
     const mapping: Record<string, string> = {
       "Anxiety & overthinking": "Anxiety",
+      "Anxiety & Overthinking": "Anxiety",
       "Relationship pain": "Loss",
+      "Relationship Pain": "Loss",
       "Financial stress": "Stress",
+      "Financial Stress": "Stress",
       "No life direction": "Loss",
+      "Life Direction": "Loss",
       "Life partner": "Loss",
       "Family conflict": "Stress",
+      "Family Conflict": "Stress",
       "Spiritual crisis": "Anxiety",
+      "Spiritual Crisis": "Anxiety",
+      "Self Love & Confidence": "Anxiety",
       "Career & business": "Stress",
       "Anxious and Lost": "Anxiety",
       "Stressed and Fatigued": "Stress",
@@ -436,39 +444,41 @@ export default function Home() {
       )}
 
       {/* Floating Vertical Stepper Progress Indicator */}
-      <div className="floating-vertical-stepper">
-        <button
-          className={`stepper-node ${activeStep === 1 ? 'active' : ''} ${activeStep > 1 ? 'completed' : ''}`}
-          onClick={() => triggerStepTransition(1)}
-        >
-          <span className="node-dot"></span>
-          <span className="node-label">1. Seek Guidance</span>
-        </button>
-        <button
-          className={`stepper-node ${activeStep === 2 ? 'active' : ''} ${activeStep > 2 ? 'completed' : ''}`}
-          onClick={() => activeStep >= 2 && triggerStepTransition(2)}
-          disabled={activeStep < 2}
-        >
-          <span className="node-dot"></span>
-          <span className="node-label">2. Somatic Quiz</span>
-        </button>
-        <button
-          className={`stepper-node ${activeStep === 3 ? 'active' : ''} ${activeStep > 3 ? 'completed' : ''}`}
-          onClick={() => activeStep >= 3 && triggerStepTransition(3)}
-          disabled={activeStep < 3}
-        >
-          <span className="node-dot"></span>
-          <span className="node-label">3. Energy Mapping</span>
-        </button>
-        <button
-          className={`stepper-node ${activeStep === 4 ? 'active' : ''} ${activeStep > 4 ? 'completed' : ''}`}
-          onClick={() => activeStep >= 4 && triggerStepTransition(4)}
-          disabled={activeStep < 4}
-        >
-          <span className="node-dot"></span>
-          <span className="node-label">4. Report & Consult</span>
-        </button>
-      </div>
+      {activeStep > 1 && (
+        <div className="floating-vertical-stepper">
+          <button
+            className={`stepper-node ${activeStep === 1 ? 'active' : ''} ${activeStep > 1 ? 'completed' : ''}`}
+            onClick={() => triggerStepTransition(1)}
+          >
+            <span className="node-dot"></span>
+            <span className="node-label">1. Seek Guidance</span>
+          </button>
+          <button
+            className={`stepper-node ${activeStep === 2 ? 'active' : ''} ${activeStep > 2 ? 'completed' : ''}`}
+            onClick={() => activeStep >= 2 && triggerStepTransition(2)}
+            disabled={activeStep < 2}
+          >
+            <span className="node-dot"></span>
+            <span className="node-label">2. Somatic Quiz</span>
+          </button>
+          <button
+            className={`stepper-node ${activeStep === 3 ? 'active' : ''} ${activeStep > 3 ? 'completed' : ''}`}
+            onClick={() => activeStep >= 3 && triggerStepTransition(3)}
+            disabled={activeStep < 3}
+          >
+            <span className="node-dot"></span>
+            <span className="node-label">3. Energy Mapping</span>
+          </button>
+          <button
+            className={`stepper-node ${activeStep === 4 ? 'active' : ''} ${activeStep > 4 ? 'completed' : ''}`}
+            onClick={() => activeStep >= 4 && triggerStepTransition(4)}
+            disabled={activeStep < 4}
+          >
+            <span className="node-dot"></span>
+            <span className="node-label">4. Report & Consult</span>
+          </button>
+        </div>
+      )}
 
 
 
@@ -478,146 +488,150 @@ export default function Home() {
           className="steps-slider steps-slider-offset"
         >
 
-          {/* 1. Landing Viewport (Redesigned Dark Theme Layout) */}
+          {/* 1. Landing Viewport (Redesigned Light Wellness Layout) */}
           <section id="section-landing" className="viewport-section landing-view">
             <div className="hero-banner">
               <div className="hero-content">
-                <h1 className="hero-title">What is stealing your peace right now?</h1>
-                <p className="hero-subtitle">Choose what you're experiencing and we'll show you what your energy is saying</p>
+                <h1 className="hero-title">
+                  <span className="hero-title-sub">You don't have to carry it all alone.</span>
+                  <span className="hero-title-main">
+                    There is <span className="accent-text">light</span>, even in the <span className="accent-text">dark</span>.
+                  </span>
+                </h1>
 
-                {/* Grid of 8 options */}
-                <div className="landing-grid">
-                  <button type="button" className="grid-item-card" onClick={() => startQuiz("Anxiety & overthinking")}>
-                    <div className="grid-item-icon">
-                      {/* Brain Icon */}
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10Z" opacity="0.1" fill="currentColor"/>
-                        <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.44 2.5 2.5 0 0 1 0-3.12 3 3 0 0 1 0-3.88 2.5 2.5 0 0 1 0-3.12A2.5 2.5 0 0 1 9.5 2Z" />
-                        <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.44 2.5 2.5 0 0 0 0-3.12 3 3 0 0 0 0-3.88 2.5 2.5 0 0 0 0-3.12A2.5 2.5 0 0 0 14.5 2Z" />
-                      </svg>
-                    </div>
-                    <span className="grid-item-text">Anxiety & overthinking</span>
-                  </button>
-
-                  <button type="button" className="grid-item-card" onClick={() => startQuiz("Relationship pain")}>
-                    <div className="grid-item-icon">
-                      {/* Broken Heart Icon */}
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" opacity="0.1" fill="currentColor"/>
-                        <path d="M12 5c-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
-                        <path d="M12 5c1.5-1.5 3-2 4.5-2A5.5 5.5 0 0 1 22 8.5c0 2.3-1.5 4.05-3 5.5l-7 7" />
-                        <path d="M12 5v4l-2.5 2 3.5 2-2 3.5 1 4" />
-                      </svg>
-                    </div>
-                    <span className="grid-item-text">Relationship pain</span>
-                  </button>
-
-                  <button type="button" className="grid-item-card" onClick={() => startQuiz("Financial stress")}>
-                    <div className="grid-item-icon">
-                      {/* Dollar sign in circle icon */}
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="12" r="10" opacity="0.1" fill="currentColor"/>
-                        <circle cx="12" cy="12" r="10" />
-                        <path d="M12 6v12M14.5 8H10.5a2 2 0 0 0 0 4h3a2 2 0 0 1 0 4H9.5" />
-                      </svg>
-                    </div>
-                    <span className="grid-item-text">Financial stress</span>
-                  </button>
-
-                  <button type="button" className="grid-item-card" onClick={() => startQuiz("No life direction")}>
-                    <div className="grid-item-icon">
-                      {/* Compass Icon */}
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="12" r="10" opacity="0.1" fill="currentColor"/>
-                        <circle cx="12" cy="12" r="10" />
-                        <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
-                      </svg>
-                    </div>
-                    <span className="grid-item-text">No life direction</span>
-                  </button>
-
-                  <button type="button" className="grid-item-card" onClick={() => startQuiz("Life partner")}>
-                    <div className="grid-item-icon">
-                      {/* Two people Icon */}
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                        <circle cx="9" cy="7" r="4" />
-                        <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                      </svg>
-                    </div>
-                    <span className="grid-item-text">Life partner</span>
-                  </button>
-
-                  <button type="button" className="grid-item-card" onClick={() => startQuiz("Family conflict")}>
-                    <div className="grid-item-icon">
-                      {/* House Icon */}
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" opacity="0.1" fill="currentColor"/>
-                        <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                        <polyline points="9 22 9 12 15 12 15 22" />
-                      </svg>
-                    </div>
-                    <span className="grid-item-text">Family conflict</span>
-                  </button>
-
-                  <button type="button" className="grid-item-card" onClick={() => startQuiz("Spiritual crisis")}>
-                    <div className="grid-item-icon">
-                      {/* Star Icon */}
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" opacity="0.1" fill="currentColor"/>
-                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                      </svg>
-                    </div>
-                    <span className="grid-item-text">Spiritual crisis</span>
-                  </button>
-
-                  <button type="button" className="grid-item-card" onClick={() => startQuiz("Career & business")}>
-                    <div className="grid-item-icon">
-                      {/* Briefcase Icon */}
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                        <rect width="20" height="14" x="2" y="7" rx="2" ry="2" opacity="0.1" fill="currentColor"/>
-                        <rect width="20" height="14" x="2" y="7" rx="2" ry="2" />
-                        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
-                      </svg>
-                    </div>
-                    <span className="grid-item-text">Career & business</span>
-                  </button>
+                <div className="hero-divider">
+                  <div className="divider-line"></div>
+                  <svg className="divider-diamond" width="8" height="8" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2 L22 12 L12 22 L2 12 Z" />
+                  </svg>
+                  <div className="divider-line"></div>
                 </div>
+
+                <p className="hero-subtitle">
+                  Share what's on your mind, and we'll guide you to the right healing, insights and support.
+                </p>
 
                 {/* Search Bar Form */}
                 <form onSubmit={handleSearchSubmit} className="search-bar-form">
                   <div className={`search-input-wrapper ${searchError ? "shake-input-error" : ""}`}>
-                    <svg className="search-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="22" height="22">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                    <input
-                      type="text"
-                      placeholder={searchError ? "Please type something first..." : "Or type what you're feeling..."}
-                      className="search-input"
-                      value={searchQuery}
-                      onChange={(e) => {
-                        setSearchQuery(e.target.value);
-                        if (e.target.value.trim()) setSearchError(false);
-                      }}
-                    />
+                    <Search className="search-icon" size={22} />
+                    <div className="search-input-main-container">
+                      <input
+                        type="text"
+                        placeholder={searchError ? "Please type something first..." : "What is stealing your peace right now?"}
+                        className="search-input"
+                        value={searchQuery}
+                        onChange={(e) => {
+                          setSearchQuery(e.target.value);
+                          if (e.target.value.trim()) setSearchError(false);
+                        }}
+                      />
+                      <span className="search-input-suggestion">
+                        Try: anxiety, relationship, self doubt, financial stress...
+                      </span>
+                    </div>
+                    <button type="submit" className="search-submit-btn">
+                      <span>Find Guidance</span>
+                      <ArrowRight size={18} />
+                    </button>
                   </div>
                 </form>
 
-                {/* Bottom Stats Section */}
-                <div className="stats-divider-line"></div>
-                <div className="landing-stats-row">
-                  <div className="stat-column">
-                    <div className="stat-value">3,200+</div>
-                    <div className="stat-label">souls healed</div>
-                  </div>
-                  <div className="stat-column relative">
-                    <div className="stat-value">Free</div>
-                    <div className="stat-label">Soul Report | no card needed</div>
-                  </div>
-                  <div className="stat-column">
-                    <div className="stat-value">Online</div>
-                    <div className="stat-label">Sessions via Google Meet</div>
+                {/* Grid of 8 options */}
+                <div className="landing-grid">
+                  <button type="button" className="grid-item-card" onClick={() => startQuiz("Anxiety & Overthinking")}>
+                    <div className="grid-item-icon">
+                      <Brain size={24} strokeWidth={1.5} />
+                    </div>
+                    <span className="grid-item-text">Anxiety & Overthinking</span>
+                  </button>
+
+                  <button type="button" className="grid-item-card" onClick={() => startQuiz("Relationship Pain")}>
+                    <div className="grid-item-icon">
+                      <Heart size={24} strokeWidth={1.5} />
+                    </div>
+                    <span className="grid-item-text">Relationship Pain</span>
+                  </button>
+
+                  <button type="button" className="grid-item-card" onClick={() => startQuiz("Financial Stress")}>
+                    <div className="grid-item-icon">
+                      <DollarSign size={24} strokeWidth={1.5} />
+                    </div>
+                    <span className="grid-item-text">Financial Stress</span>
+                  </button>
+
+                  <button type="button" className="grid-item-card" onClick={() => startQuiz("Life Direction")}>
+                    <div className="grid-item-icon">
+                      <Compass size={24} strokeWidth={1.5} />
+                    </div>
+                    <span className="grid-item-text">Life Direction</span>
+                  </button>
+
+                  <button type="button" className="grid-item-card" onClick={() => startQuiz("Family Conflict")}>
+                    <div className="grid-item-icon">
+                      <Users size={24} strokeWidth={1.5} />
+                    </div>
+                    <span className="grid-item-text">Family Conflict</span>
+                  </button>
+
+                  <button type="button" className="grid-item-card" onClick={() => startQuiz("Self Love & Confidence")}>
+                    <div className="grid-item-icon">
+                      <User size={24} strokeWidth={1.5} />
+                    </div>
+                    <span className="grid-item-text">Self Love & Confidence</span>
+                  </button>
+
+                  <button type="button" className="grid-item-card" onClick={() => startQuiz("Spiritual Crisis")}>
+                    <div className="grid-item-icon">
+                      <Sparkles size={24} strokeWidth={1.5} />
+                    </div>
+                    <span className="grid-item-text">Spiritual Crisis</span>
+                  </button>
+
+                  <button type="button" className="grid-item-card" onClick={() => router.push("/search")}>
+                    <div className="grid-item-icon">
+                      <Grid size={24} strokeWidth={1.5} />
+                    </div>
+                    <span className="grid-item-text">View All</span>
+                  </button>
+                </div>
+
+                {/* Bottom Callout Section */}
+                <div className="bottom-callout-section">
+                  <div className="bottom-callout-text-small">Not sure where to start?</div>
+                  <div className="bottom-callout-text-large">Let's take the first step together.</div>
+
+                  {/* Highlights Row */}
+                  <div className="landing-highlights-grid">
+                    <div className="highlight-item">
+                      <div className="highlight-icon-wrapper">
+                        <Shield className="highlight-icon" size={20} strokeWidth={1.5} />
+                      </div>
+                      <div className="highlight-text-wrapper">
+                        <span className="highlight-title">Confidential & Safe</span>
+                        <span className="highlight-desc">Your journey is private and protected.</span>
+                      </div>
+                    </div>
+
+                    <div className="highlight-item">
+                      <div className="highlight-icon-wrapper">
+                        <Flower className="highlight-icon" size={20} strokeWidth={1.5} />
+                      </div>
+                      <div className="highlight-text-wrapper">
+                        <span className="highlight-title">Expert Guidance</span>
+                        <span className="highlight-desc">Connect with experienced healers & experts.</span>
+                      </div>
+                    </div>
+
+                    <div className="highlight-item">
+                      <div className="highlight-icon-wrapper">
+                        <Sparkles className="highlight-icon" size={20} strokeWidth={1.5} />
+                      </div>
+                      <div className="highlight-text-wrapper">
+                        <span className="highlight-title">Holistic Healing</span>
+                        <span className="highlight-desc">Mind, body, soul - we heal it all.</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -955,99 +969,163 @@ export default function Home() {
 
       <style jsx>{`
         #section-landing {
-          background: transparent;
-          color: hsl(var(--text-cream));
+          background: linear-gradient(to bottom, rgba(255, 255, 255, 0) 40%, rgba(255, 255, 255, 0.8) 75%, #ffffff 95%), url('/images/meditation_bg.png') no-repeat center right;
+          background-size: cover;
+          color: #2e1065;
           display: flex;
           flex-direction: column;
-          justify-content: center;
+          justify-content: flex-start;
           align-items: center;
           position: relative;
-          padding-top: 15px; /* Pushed close to header as requested */
+          padding-top: 45px;
+          padding-bottom: 50px;
+          width: 100%;
+          min-height: calc(100vh - 70px);
+          overflow-y: auto;
+        }
+        #section-landing::-webkit-scrollbar {
+          width: 6px;
+        }
+        #section-landing::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        #section-landing::-webkit-scrollbar-thumb {
+          background: rgba(124, 58, 237, 0.15);
+          border-radius: 99px;
+        }
+        #section-landing::-webkit-scrollbar-thumb:hover {
+          background: rgba(124, 58, 237, 0.3);
         }
         #section-landing .hero-banner {
-          background: radial-gradient(circle at center, rgba(168, 85, 247, 0.08) 0%, transparent 75%);
           width: 100%;
-          height: 100%;
+          height: auto;
           padding: 12px 24px;
           display: flex;
           justify-content: center;
           align-items: center;
         }
         #section-landing .hero-content {
-          max-width: 950px;
+          max-width: 1050px;
           width: 100%;
           display: flex;
           flex-direction: column;
           align-items: center;
           position: relative;
-          padding-bottom: 15px; /* space for overlapping arrow */
         }
         #section-landing .hero-title {
-          font-size: 2.2rem;
-          margin-bottom: 6px;
-          background: linear-gradient(135deg, #db2777 0%, #7c3aed 60%, #2563eb 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
-          text-shadow: 0 0 40px rgba(168, 85, 247, 0.1);
-          font-family: var(--font-serif);
+          margin-bottom: 8px;
           text-align: center;
-        }
-        #section-landing .hero-subtitle {
-          font-size: 0.95rem;
-          color: hsl(var(--text-muted));
-          margin-bottom: 20px;
-          text-align: center;
-        }
-        #section-landing .landing-grid {
-          display: grid;
-          grid-template-columns: repeat(4, 1fr);
-          gap: 12px;
-          width: 100%;
-          margin-bottom: 20px;
-        }
-        #section-landing .grid-item-card {
-          background: rgba(255, 255, 255, 0.75);
-          backdrop-filter: blur(20px);
-          border: 1px solid var(--gold-border);
-          border-radius: 16px;
-          padding: 12px 10px;
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 8px;
-          color: #4c1d95;
-          cursor: pointer;
-          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-          outline: none;
         }
-        #section-landing .grid-item-card:hover {
-          background: #ffffff;
-          border-color: #7c3aed;
-          box-shadow: 0 10px 25px rgba(168, 85, 247, 0.12), 0 0 15px var(--gold-glow);
-          transform: translateY(-2px);
+        #section-landing .hero-title-sub {
+          font-family: var(--font-serif);
+          font-size: 2.1rem;
+          color: #4b1a8a;
+          font-weight: 500;
+          margin-bottom: 6px;
+          display: block;
+          letter-spacing: -0.02em;
         }
-        #section-landing .grid-item-icon {
-          color: #7c3aed;
-          transition: transform 0.3s;
+        #section-landing .hero-title-main {
+          font-family: var(--font-serif);
+          font-size: 3.4rem;
+          color: #2e1065;
+          font-weight: 600;
+          display: block;
+          letter-spacing: -0.02em;
+        }
+        #section-landing .accent-text {
+          background: linear-gradient(135deg, #db2777 0%, #7c3aed 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          color: transparent;
+          font-weight: 600;
+        }
+        #section-landing .hero-divider {
           display: flex;
           align-items: center;
           justify-content: center;
+          gap: 16px;
+          width: 100%;
+          max-width: 320px;
+          margin: 8px 0 16px;
+        }
+        #section-landing .divider-line {
+          flex: 1;
+          height: 1px;
+          background: linear-gradient(to right, transparent, rgba(124, 58, 237, 0.3), transparent);
+        }
+        #section-landing .divider-diamond {
+          color: #db2777;
+          opacity: 0.6;
+        }
+        #section-landing .hero-subtitle {
+          font-size: 1.1rem;
+          color: #4b5563;
+          margin-bottom: 24px;
+          text-align: center;
+          font-weight: 400;
+          max-width: 600px;
+        }
+        #section-landing .landing-grid {
+          display: grid;
+          grid-template-columns: repeat(8, 1fr);
+          gap: 16px;
+          width: 100%;
+          margin-bottom: 24px;
+          margin-top: 12px;
+        }
+        #section-landing .grid-item-card {
+          background: rgba(255, 255, 255, 0.85);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          border: 1px solid rgba(124, 58, 237, 0.1);
+          border-radius: 24px;
+          padding: 24px 12px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 12px;
+          color: #1e1b4b;
+          cursor: pointer;
+          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          outline: none;
+          box-shadow: 0 4px 20px rgba(124, 58, 237, 0.02);
+          min-height: 130px;
+        }
+        #section-landing .grid-item-card:hover {
+          background: #ffffff;
+          border-color: rgba(124, 58, 237, 0.5);
+          box-shadow: 0 10px 25px rgba(124, 58, 237, 0.08);
+          transform: translateY(-3px);
+        }
+        #section-landing .grid-item-icon {
+          color: #7c3aed;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: transform 0.3s;
         }
         #section-landing .grid-item-card:hover .grid-item-icon {
-          transform: scale(1.1);
+          transform: scale(1.1) rotate(2deg);
         }
         #section-landing .grid-item-text {
-          font-size: 0.85rem;
-          font-weight: 600;
+          font-size: 0.82rem;
+          font-weight: 500;
           text-align: center;
           font-family: var(--font-sans);
+          color: #374151;
+          line-height: 1.3;
         }
 
         /* Search Input */
         #section-landing .search-bar-form {
           width: 100%;
-          max-width: 750px;
+          max-width: 820px;
           margin-bottom: 24px;
         }
         #section-landing .search-input-wrapper {
@@ -1055,95 +1133,201 @@ export default function Home() {
           display: flex;
           align-items: center;
           width: 100%;
-          background: rgba(255, 255, 255, 0.95);
-          backdrop-filter: blur(12px);
-          border: 1.5px solid var(--gold-border);
+          background: #ffffff;
+          border: 1px solid rgba(124, 58, 237, 0.2);
           border-radius: 99px;
-          padding: 12px 28px;
-          box-shadow: 0 8px 32px rgba(0,0,0,0.03), 0 0 20px var(--gold-glow);
+          padding: 10px 10px 10px 28px;
+          box-shadow: 0 8px 30px rgba(124, 58, 237, 0.05);
           transition: var(--transition-smooth);
         }
         #section-landing .search-input-wrapper:focus-within {
           border-color: #7c3aed;
-          box-shadow: 0 8px 40px rgba(0,0,0,0.05), 0 0 30px rgba(168, 85, 247, 0.3);
+          box-shadow: 0 12px 40px rgba(124, 58, 237, 0.12);
         }
         #section-landing .search-icon {
-          color: #7c3aed;
-          margin-right: 12px;
+          color: #6b7280;
+          margin-right: 14px;
+          flex-shrink: 0;
+        }
+        #section-landing .search-input-main-container {
+          display: flex;
+          flex-direction: column;
+          flex: 1;
+          justify-content: center;
+          padding: 4px 0;
+          min-width: 0;
+        }
+        #section-landing .search-input-suggestion {
+          font-family: var(--font-sans);
+          font-size: 0.85rem;
+          color: #6b7280;
+          margin-top: 4px;
+          text-align: left;
+          pointer-events: none;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
         #section-landing .search-input {
-          flex: 1;
+          width: 100%;
           background: transparent;
           border: none;
           outline: none;
-          color: #1e293b;
+          color: #1f2937;
           font-size: 1.15rem;
           font-family: var(--font-sans);
+          padding: 0;
         }
         #section-landing .search-input::placeholder {
-          color: rgba(0, 0, 0, 0.4);
+          color: #9ca3af;
+        }
+        #section-landing .search-submit-btn {
+          background: linear-gradient(135deg, #e11d48 0%, #7c3aed 100%);
+          color: #ffffff;
+          border: none;
+          outline: none;
+          padding: 14px 36px;
+          border-radius: 99px;
+          font-size: 1.05rem;
+          font-weight: 600;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          cursor: pointer;
+          transition: var(--transition-fast);
+          box-shadow: 0 4px 14px rgba(124, 58, 237, 0.2);
+        }
+        #section-landing .search-submit-btn:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 6px 20px rgba(124, 58, 237, 0.35);
         }
 
-        /* Stats Section */
-        #section-landing .stats-divider-line {
-          width: 100%;
-          height: 1px;
-          background: rgba(168, 85, 247, 0.15);
-          margin-bottom: 16px;
-        }
-        #section-landing .landing-stats-row {
-          display: grid;
-          grid-template-columns: 1fr 1fr 1fr;
-          width: 100%;
-          margin-bottom: 12px;
-        }
-        #section-landing .stat-column {
+        /* Bottom Callout Section */
+        .bottom-callout-section {
           display: flex;
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          padding: 6px 0;
+          text-align: center;
+          margin-top: 32px;
+          gap: 12px;
+          width: 100%;
         }
-        #section-landing .stat-column:not(:last-child) {
-          border-right: 1px solid rgba(168, 85, 247, 0.15);
-        }
-        #section-landing .stat-value {
-          font-size: 1.45rem;
-          font-weight: 700;
-          color: #7c3aed;
+        .bottom-callout-text-small {
+          font-size: 1.25rem;
+          color: #6d28d9;
           font-family: var(--font-serif);
+          font-style: italic;
+          font-weight: 500;
         }
-        #section-landing .stat-label {
-          font-size: 0.78rem;
-          color: hsl(var(--text-muted));
-          margin-top: 2px;
+        .bottom-callout-text-large {
+          font-size: 1.95rem;
+          color: #1e1b4b;
+          font-family: var(--font-serif);
+          font-weight: 600;
+          margin-bottom: 12px;
+        }
+
+        /* Landing Highlights Grid */
+        .landing-highlights-grid {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          gap: 32px;
+          margin-top: 16px;
+          width: 100%;
+          max-width: 960px;
+        }
+        .highlight-item {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          flex: 1;
+          background: rgba(255, 255, 255, 0.5);
+          backdrop-filter: blur(8px);
+          border: 1px solid rgba(124, 58, 237, 0.08);
+          padding: 16px 20px;
+          border-radius: 20px;
+          text-align: left;
+          box-shadow: 0 4px 20px rgba(124, 58, 237, 0.02);
+        }
+        .highlight-icon-wrapper {
+          width: 44px;
+          height: 44px;
+          border-radius: 50%;
+          background: rgba(124, 58, 237, 0.08);
+          color: #7c3aed;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+        .highlight-icon {
+          color: #7c3aed;
+        }
+        .highlight-text-wrapper {
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+        }
+        .highlight-title {
+          font-family: var(--font-sans);
+          font-size: 0.95rem;
+          font-weight: 700;
+          color: #1e1b4b;
+        }
+        .highlight-desc {
+          font-family: var(--font-sans);
+          font-size: 0.8rem;
+          color: #6b7280;
+          line-height: 1.3;
+        }
+        @media (max-width: 768px) {
+          .landing-highlights-grid {
+            flex-direction: column;
+            gap: 16px;
+          }
+          .highlight-item {
+            width: 100%;
+            max-width: 340px;
+          }
+        }
+
+        @media (max-width: 1024px) {
+          #section-landing .landing-grid {
+            grid-template-columns: repeat(4, 1fr) !important;
+          }
         }
 
         @media (max-width: 768px) {
-          #section-landing .hero-title {
-            font-size: 1.8rem !important;
-            text-align: center;
+          #section-landing {
+            padding-top: 20px;
+            padding-bottom: 40px;
+            background-position: center;
+          }
+          #section-landing .hero-title-sub {
+            font-size: 1.5rem !important;
+          }
+          #section-landing .hero-title-main {
+            font-size: 2.2rem !important;
           }
           #section-landing .hero-subtitle {
             font-size: 0.95rem !important;
-            text-align: center;
+            margin-bottom: 24px !important;
           }
           #section-landing .landing-grid {
             grid-template-columns: repeat(2, 1fr) !important;
             gap: 12px !important;
           }
           #section-landing .grid-item-card {
-            padding: 16px 12px !important;
-            gap: 8px !important;
+            padding: 16px 10px !important;
+            border-radius: 20px !important;
           }
-          #section-landing .landing-stats-row {
-            grid-template-columns: 1fr !important;
-            gap: 16px !important;
+          .bottom-callout-text-small {
+            font-size: 1.05rem !important;
           }
-          #section-landing .stat-column:not(:last-child) {
-            border-right: none !important;
-            border-bottom: 1px solid rgba(168, 85, 247, 0.15) !important;
-            padding-bottom: 16px !important;
+          .bottom-callout-text-large {
+            font-size: 1.45rem !important;
           }
         }
 
@@ -1804,282 +1988,7 @@ export default function Home() {
           box-shadow: 0 4px 12px rgba(168, 85, 247, 0.06);
         }
 
-        .hero-banner {
-          flex: 1;
-          padding: 40px 24px;
-          text-align: center;
-          background: radial-gradient(circle at center, rgba(168, 85, 247, 0.08) 0%, transparent 60%);
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          flex-direction: column;
-          position: relative;
-        }
-        .hero-content {
-          max-width: 800px;
-          width: 100%;
-        }
-        .hero-title {
-          font-size: 3.2rem;
-          margin-bottom: 12px;
-          background: linear-gradient(135deg, #db2777 0%, #7c3aed 60%, #2563eb 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
-          text-shadow: 0 0 40px rgba(168, 85, 247, 0.1);
-        }
-        .hero-subtitle {
-          font-size: 1.15rem;
-          color: hsl(var(--text-muted));
-          margin-bottom: 32px;
-        }
-        .search-bar-form {
-          width: 100%;
-          display: flex;
-          justify-content: center;
-        }
-        .search-input-wrapper {
-          position: relative;
-          display: flex;
-          align-items: center;
-          width: 100%;
-          max-width: 650px;
-          background: rgba(255, 255, 255, 0.95);
-          backdrop-filter: blur(12px);
-          border: 1.5px solid var(--gold-border);
-          border-radius: 99px;
-          padding: 8px 8px 8px 20px;
-          box-shadow: 0 8px 32px rgba(0,0,0,0.03), 0 0 20px var(--gold-glow);
-          transition: var(--transition-smooth);
-        }
-        .search-input-wrapper:focus-within {
-          border-color: #7c3aed;
-          box-shadow: 0 8px 40px rgba(0,0,0,0.05), 0 0 30px rgba(168, 85, 247, 0.3);
-        }
-        .search-icon {
-          color: #7c3aed;
-          margin-right: 12px;
-        }
-        .search-input {
-          flex: 1;
-          background: transparent;
-          border: none;
-          outline: none;
-          color: #1e293b;
-          font-size: 1.05rem;
-          font-family: var(--font-sans);
-          padding-right: 16px;
-        }
-        .search-input::placeholder {
-          color: rgba(0, 0, 0, 0.4);
-        }
-        .search-submit-btn {
-          font-family: var(--font-serif);
-          font-weight: 700;
-          font-size: 0.85rem;
-          letter-spacing: 0.06em;
-          text-transform: uppercase;
-          background: var(--btn-gold-bg);
-          color: var(--btn-gold-text);
-          border: 1px solid var(--btn-gold-border);
-          padding: 13px 28px;
-          border-radius: 99px;
-          cursor: pointer;
-          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-          position: relative;
-          overflow: hidden;
-          box-shadow: 0 4px 18px var(--btn-gold-hover-shadow);
-          white-space: nowrap;
-        }
-        .search-submit-btn::after {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: -150%;
-          width: 60%;
-          height: 100%;
-          background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.35) 50%, transparent 100%);
-          transform: skewX(-20deg);
-          transition: left 0.7s ease;
-        }
-        .search-submit-btn:hover {
-          filter: brightness(1.07);
-          transform: translateY(-2px) scale(1.02);
-          box-shadow: 0 8px 28px var(--btn-gold-hover-shadow);
-        }
-        .search-submit-btn:hover::after {
-          left: 200%;
-        }
-        .search-submit-btn:active {
-          transform: translateY(0) scale(0.99);
-          box-shadow: 0 2px 8px var(--btn-gold-hover-shadow);
-        }
-        
-        .feelings-tag-container {
-          margin-top: 20px;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          flex-wrap: wrap;
-          gap: 10px;
-        }
-        .feelings-label {
-          font-size: 0.82rem;
-          color: hsl(var(--text-muted));
-          margin-right: 8px;
-        }
-        .feeling-tag {
-          background: rgba(168, 85, 247, 0.06);
-          border: 1px solid rgba(168, 85, 247, 0.2);
-          color: #6d28d9;
-          padding: 6px 14px;
-          border-radius: 99px;
-          font-size: 0.78rem;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-          position: relative;
-          overflow: hidden;
-        }
-        .feeling-tag:hover {
-          background: rgba(168, 85, 247, 0.14);
-          border-color: #7c3aed;
-          transform: translateY(-1px) scale(1.04);
-          box-shadow: 0 4px 12px rgba(168, 85, 247, 0.18);
-        }
-        .feeling-tag:active {
-          transform: translateY(0) scale(0.97);
-          box-shadow: none;
-        }
 
-        /* Process Steps Timeline Styles */
-        .process-timeline-container {
-          margin-top: 36px;
-          width: 100%;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 16px;
-        }
-        .process-timeline-title {
-          font-family: var(--font-sans);
-          font-size: 0.8rem;
-          font-weight: 700;
-          color: hsl(var(--text-muted));
-          text-transform: uppercase;
-          letter-spacing: 0.08em;
-          opacity: 0.75;
-        }
-        .process-timeline {
-          position: relative;
-          width: 100%;
-          max-width: 850px;
-          padding: 10px 0;
-        }
-        .timeline-progress-line {
-          position: absolute;
-          top: 35px;
-          left: 45px;
-          right: 45px;
-          height: 3px;
-          background: rgba(168, 85, 247, 0.08);
-          z-index: 1;
-          border-radius: 99px;
-        }
-        .timeline-progress-fill {
-          height: 100%;
-          background: linear-gradient(90deg, #34d399, #7c3aed, #60a5fa, #fb923c);
-          width: 100%;
-          transform: scaleX(0);
-          transform-origin: left center;
-        }
-        .timeline-steps {
-          display: grid;
-          grid-template-columns: repeat(4, 1fr);
-          position: relative;
-          z-index: 2;
-          width: 100%;
-        }
-        .timeline-step {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          text-align: center;
-          padding: 0 8px;
-        }
-        .step-circle {
-          width: 50px;
-          height: 50px;
-          border-radius: 50%;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          position: relative;
-          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
-          border: 1.5px solid rgba(255, 255, 255, 0.8);
-          background: #ffffff;
-          transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s;
-          margin-bottom: 12px;
-        }
-        .step-circle:hover {
-          transform: scale(1.1) translateY(-2px);
-          box-shadow: 0 8px 25px rgba(168, 85, 247, 0.15);
-        }
-        .step-num {
-          position: absolute;
-          top: -4px;
-          right: -4px;
-          width: 18px;
-          height: 18px;
-          background: #7c3aed;
-          color: #ffffff;
-          font-size: 0.65rem;
-          font-weight: 800;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border: 1px solid #ffffff;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .step-icon {
-          font-size: 1.3rem;
-        }
-        .step-info {
-          display: flex;
-          flex-direction: column;
-          gap: 2px;
-        }
-        .step-heading {
-          font-family: var(--font-serif);
-          font-size: 0.88rem;
-          font-weight: 700;
-          color: #4c1d95;
-        }
-        .step-desc {
-          font-size: 0.68rem;
-          color: hsl(var(--text-muted));
-          line-height: 1.35;
-          max-width: 170px;
-        }
-
-        /* Step circle background colors */
-        .bg-green {
-          background: linear-gradient(135deg, rgba(52, 211, 153, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%);
-          border-color: rgba(52, 211, 153, 0.35);
-        }
-        .bg-purple {
-          background: linear-gradient(135deg, rgba(167, 139, 250, 0.1) 0%, rgba(124, 58, 237, 0.05) 100%);
-          border-color: rgba(167, 139, 250, 0.35);
-        }
-        .bg-blue {
-          background: linear-gradient(135deg, rgba(96, 165, 250, 0.1) 0%, rgba(37, 99, 213, 0.05) 100%);
-          border-color: rgba(96, 165, 250, 0.35);
-        }
-        .bg-gold {
-          background: linear-gradient(135deg, rgba(251, 146, 60, 0.1) 0%, rgba(234, 88, 12, 0.05) 100%);
-          border-color: rgba(251, 146, 60, 0.35);
-        }
 
         /* Floating Vertical Stepper Styles */
         .floating-vertical-stepper {
@@ -2601,9 +2510,6 @@ export default function Home() {
           50% { opacity: 1; }
         }
         @media (max-width: 768px) {
-          .hero-title {
-            font-size: 2.2rem;
-          }
           .philosophy-quote {
             font-size: 1.25rem;
           }
