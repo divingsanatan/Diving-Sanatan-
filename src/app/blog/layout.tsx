@@ -4,6 +4,7 @@ import React, { Suspense } from "react";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { BlogSidebar } from "@/components/blog/BlogSidebar";
+import { BlogRightSidebar } from "@/components/blog/BlogRightSidebar";
 import { BlogProvider, useBlog } from "./BlogContext";
 import { usePathname } from "next/navigation";
 
@@ -13,7 +14,7 @@ function BlogLayoutInner({ children }: { children: React.ReactNode }) {
 
   // Per-page search config
   const searchConfig: Record<string, { title: string; placeholder: string }> = {
-    "/blog": { title: "Search Articles", placeholder: "Type keywords..." },
+    "/blog": { title: "Explore Blogs", placeholder: "Search blogs, topics, healers..." },
     "/blog/faq": { title: "Search Questions", placeholder: "Type your question..." },
     "/blog/glossary": { title: "Search Terms", placeholder: "Type a term..." },
     "/blog/quora-qa": { title: "Search Answers", placeholder: "Type your question..." },
@@ -35,13 +36,19 @@ function BlogLayoutInner({ children }: { children: React.ReactNode }) {
       <div className="blog-layout-container">
         {/* Sidebar on the Left */}
         <aside className="blog-sidebar-container">
-          <div className="sidebar-search-box glass-panel">
-            <h4 className="search-box-title">{config.title}</h4>
-            <div className="blog-search-wrapper">
-              <svg className="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="11" cy="11" r="8"></circle>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          <div className="sidebar-search-box">
+            <div className="sidebar-title-row">
+              <svg viewBox="0 0 100 100" className="sidebar-lotus-icon">
+                <path d="M50 25 C45 45 35 60 50 80 C65 60 55 45 50 25 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
+                <path d="M50 80 C35 75 25 60 20 40 C35 50 45 60 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
+                <path d="M50 80 C65 75 75 60 80 40 C65 50 55 60 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
+                <path d="M50 80 C30 80 10 70 5 55 C20 65 35 70 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
+                <path d="M50 80 C70 80 90 70 95 55 C80 65 65 70 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
               </svg>
+              <h4 className="sidebar-heading-small">{config.title}</h4>
+            </div>
+            
+            <div className="blog-search-wrapper">
               <input
                 type="text"
                 placeholder={config.placeholder}
@@ -49,6 +56,10 @@ function BlogLayoutInner({ children }: { children: React.ReactNode }) {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
+              <svg className="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
               {searchQuery && (
                 <button
                   className="search-clear-btn"
@@ -64,10 +75,15 @@ function BlogLayoutInner({ children }: { children: React.ReactNode }) {
           <BlogSidebar />
         </aside>
 
-        {/* Main Content on the Right */}
+        {/* Main Content on the Center */}
         <main className="blog-main-content">
           {children}
         </main>
+
+        {/* Sidebar on the Right */}
+        <aside className="blog-right-sidebar-container">
+          <BlogRightSidebar />
+        </aside>
       </div>
 
       <Footer />
@@ -77,21 +93,21 @@ function BlogLayoutInner({ children }: { children: React.ReactNode }) {
           margin-top: 24px;
         }
         .blog-layout-container {
-          max-width: 1200px;
+          max-width: 1400px;
           margin: 0 auto;
           padding: 40px 24px 24px;
           display: flex;
-          gap: 40px;
+          gap: 32px;
           width: 100%;
           align-items: flex-start;
         }
         .blog-main-content {
-          flex: 3;
+          flex: 1;
           min-width: 0;
         }
         .blog-sidebar-container {
-          flex: 0 0 260px;
-          width: 260px;
+          flex: 0 0 240px;
+          width: 240px;
           display: flex;
           flex-direction: column;
           gap: 16px;
@@ -101,63 +117,86 @@ function BlogLayoutInner({ children }: { children: React.ReactNode }) {
           max-height: calc(100vh - 110px);
           overflow-y: auto;
           overflow-x: hidden;
-          /* Hide scrollbar but keep scrollable */
           scrollbar-width: none;
           -ms-overflow-style: none;
         }
         .blog-sidebar-container::-webkit-scrollbar {
           display: none;
         }
-        .sidebar-search-box {
-          padding: 16px;
-          border-radius: 12px;
+        .blog-right-sidebar-container {
+          flex: 0 0 280px;
+          width: 280px;
           display: flex;
           flex-direction: column;
-          gap: 8px;
-          flex-shrink: 0;
+          gap: 16px;
+          position: sticky;
+          top: 94px;
+          align-self: flex-start;
+          max-height: calc(100vh - 110px);
+          overflow-y: auto;
+          overflow-x: hidden;
+          scrollbar-width: none;
+          -ms-overflow-style: none;
         }
-        .search-box-title {
-          font-size: 0.78rem;
-          font-weight: 700;
-          color: #4c1d95;
-          text-transform: uppercase;
-          letter-spacing: 0.07em;
+        .blog-right-sidebar-container::-webkit-scrollbar {
+          display: none;
+        }
+        .sidebar-search-box {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+          flex-shrink: 0;
+          margin-bottom: 24px;
+        }
+        .sidebar-title-row {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+        .sidebar-lotus-icon {
+          width: 24px;
+          height: 24px;
+          flex-shrink: 0;
+          margin-top: -2px;
+        }
+        .sidebar-heading-small {
+          font-family: var(--font-sans);
+          font-size: 1.15rem;
+          color: #111827;
+          font-weight: 700 !important;
           margin: 0;
-          transition: all 0.3s ease;
         }
         .blog-search-wrapper {
           display: flex;
           align-items: center;
-          position: relative;
           width: 100%;
+          background: #ffffff;
+          border: 1px solid rgba(168, 85, 247, 0.15);
+          border-radius: 12px;
+          padding: 0 14px;
+          box-sizing: border-box;
+          transition: var(--transition-fast);
+        }
+        .blog-search-wrapper:focus-within {
+          border-color: rgba(168, 85, 247, 0.4);
+          box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.08);
         }
         .search-icon {
-          position: absolute;
-          left: 10px;
-          color: #7c3aed;
-          pointer-events: none;
+          color: #a855f7;
           flex-shrink: 0;
+          margin-left: 4px;
         }
         .search-input {
-          width: 100%;
-          padding: 8px 30px 8px 32px;
-          border-radius: 30px;
-          background: rgba(255, 255, 255, 0.7);
-          border: 1px solid rgba(168, 85, 247, 0.2);
-          color: #1e293b;
-          font-family: var(--font-sans);
-          font-size: 0.82rem;
+          flex: 1;
+          border: none;
+          background: transparent;
           outline: none;
-          transition: var(--transition-smooth);
-        }
-        .search-input:focus {
-          background: rgba(255, 255, 255, 0.95);
-          border-color: #7c3aed;
-          box-shadow: 0 0 10px rgba(124, 58, 237, 0.15);
+          padding: 10px 0;
+          font-family: var(--font-sans);
+          font-size: 0.85rem;
+          color: #111827;
         }
         .search-clear-btn {
-          position: absolute;
-          right: 10px;
           background: none;
           border: none;
           color: hsl(var(--text-muted));
@@ -170,18 +209,15 @@ function BlogLayoutInner({ children }: { children: React.ReactNode }) {
           justify-content: center;
           transition: color 0.2s ease;
           line-height: 1;
+          margin-left: 8px;
         }
         .search-clear-btn:hover {
           color: #ef4444;
         }
 
-        @media (max-width: 1024px) {
-          .blog-layout-container {
-            gap: 24px;
-          }
-          .blog-sidebar-container {
-            flex: 0 0 220px;
-            width: 220px;
+        @media (max-width: 1200px) {
+          .blog-right-sidebar-container {
+            display: none;
           }
         }
 

@@ -455,15 +455,18 @@ export default function ServicesPage() {
                   >
                     Book a Consultation
                   </button>
-                  {/* Banner Lotus outline icon */}
-                  <svg viewBox="0 0 100 100" className="banner-lotus-icon">
-                    <path d="M50 25 C45 45 35 60 50 80 C65 60 55 45 50 25 Z" fill="none" stroke="#a855f7" strokeWidth="2.5" strokeOpacity="0.6" />
-                    <path d="M50 80 C35 75 25 60 20 40 C35 50 45 60 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="2.5" strokeOpacity="0.6" />
-                    <path d="M50 80 C65 75 75 60 80 40 C65 50 55 60 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="2.5" strokeOpacity="0.6" />
-                    <path d="M50 80 C30 80 10 70 5 55 C20 65 35 70 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="2.5" strokeOpacity="0.6" />
-                    <path d="M50 80 C70 80 90 70 95 55 C80 65 65 70 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="2.5" strokeOpacity="0.6" />
-                  </svg>
                 </div>
+              </div>
+              
+              {/* Background lotus outlines */}
+              <div className="banner-lotus-watermark">
+                <svg viewBox="0 0 100 100" className="banner-watermark-svg">
+                  <path d="M50 25 C45 45 35 60 50 80 C65 60 55 45 50 25 Z" fill="none" stroke="#a855f7" strokeWidth="2.5" strokeOpacity="0.4" />
+                  <path d="M50 80 C35 75 25 60 20 40 C35 50 45 60 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="2.5" strokeOpacity="0.4" />
+                  <path d="M50 80 C65 75 75 60 80 40 C65 50 55 60 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="2.5" strokeOpacity="0.4" />
+                  <path d="M50 80 C30 80 10 70 5 55 C20 65 35 70 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="2.5" strokeOpacity="0.4" />
+                  <path d="M50 80 C70 80 90 70 95 55 C80 65 65 70 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="2.5" strokeOpacity="0.4" />
+                </svg>
               </div>
               <div className="banner-image" />
             </div>
@@ -1034,8 +1037,8 @@ export default function ServicesPage() {
           margin-top: 14px;
         }
         .lotus-icon-line {
-          width: 120px;
-          height: 100px;
+          width: 160px;
+          height: 140px;
         }
 
         /* Hero Banner */
@@ -1100,10 +1103,17 @@ export default function ServicesPage() {
         .banner-cta:hover {
           background: #4c1d95;
         }
-        .banner-lotus-icon {
-          width: 72px;
-          height: 72px;
-          margin-left: 20px;
+        .banner-lotus-watermark {
+          position: absolute;
+          left: 45%;
+          bottom: -15px;
+          width: 120px;
+          height: 120px;
+          z-index: 1;
+        }
+        .banner-watermark-svg {
+          width: 100%;
+          height: 100%;
         }
         .banner-image {
           position: absolute;
@@ -1604,13 +1614,13 @@ export default function ServicesPage() {
         /* Callout Consultation CTA */
         .callout-cta-card {
           padding: 24px;
-          background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
-          border: none;
+          background: linear-gradient(135deg, #eedffd 0%, #fdf2f8 100%);
+          border: 1px solid rgba(168, 85, 247, 0.15);
           border-radius: 24px;
           position: relative;
           overflow: hidden;
-          box-shadow: 0 8px 30px rgba(124, 58, 237, 0.15);
-          color: #ffffff;
+          box-shadow: 0 8px 30px rgba(124, 58, 237, 0.05);
+          color: #111827;
         }
         .callout-content {
           position: relative;
@@ -1624,14 +1634,14 @@ export default function ServicesPage() {
         .callout-content h4 {
           font-family: var(--font-serif);
           font-size: 1.15rem;
-          color: #ffffff;
+          color: #3b0764;
           font-weight: 600 !important;
           line-height: 1.3;
         }
         .callout-content p {
           font-size: 0.76rem;
           line-height: 1.35;
-          color: rgba(255, 255, 255, 0.85);
+          color: #4b5563;
         }
         .callout-consult-btn {
           width: 100%;
@@ -1652,7 +1662,7 @@ export default function ServicesPage() {
         }
         .or-divider {
           font-size: 0.7rem;
-          color: rgba(255,255,255,0.6);
+          color: #6b7280;
         }
         .callout-chat-row {
           display: flex;
@@ -1660,14 +1670,15 @@ export default function ServicesPage() {
           gap: 6px;
           font-size: 0.76rem;
           font-weight: 700;
-          color: #ffffff;
+          color: #4b5563;
         }
         .chat-link {
           text-decoration: underline !important;
           cursor: pointer;
+          color: #7c3aed;
         }
         .chat-link:hover {
-          color: #f3e8ff;
+          color: #4c1d95;
         }
         .callout-lotus-bg {
           position: absolute;
@@ -1677,6 +1688,10 @@ export default function ServicesPage() {
           height: 100px;
           z-index: 1;
           pointer-events: none;
+        }
+        .callout-lotus-bg path {
+          stroke: #a855f7 !important;
+          stroke-opacity: 0.15 !important;
         }
 
         /* Cart Selection Drawer */

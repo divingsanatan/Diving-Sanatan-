@@ -1,12 +1,15 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { Card } from "@/components/ui/Card";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useBlog } from "./BlogContext";
-import { Carousel } from "@/components/ui/Carousel";
-import { ServicesCartCarousel } from "@/components/services/ServicesCartCarousel";
 import { Service } from "@/types/database";
+import { 
+  Flower, Sparkles, Heart, Volume2, User, 
+  Search, Monitor, Play, Compass, RefreshCw,
+  ChevronLeft, ChevronRight, BookOpen, Clock, Calendar
+} from "lucide-react";
 
 interface Blog {
   id: string;
@@ -22,33 +25,23 @@ interface Blog {
   section?: string | null;
 }
 
-export const getBlogImage = (img: string) => {
-  if (!img) return "/images/insight_blog.png";
-  if (img.startsWith("http://") || img.startsWith("https://") || img.startsWith("/")) {
-    return img;
-  }
-  const mappings: Record<string, string> = {
-    "amethyst_crystals": "/images/insight_blog.png",
-    "chakras_guide": "/images/insight_space.png",
-    "breathing_stress": "/images/insight_video.png",
-  };
-  return mappings[img] || "/images/insight_blog.png";
-};
-
 export default function BlogListingPage() {
+  const router = useRouter();
   const [blogs, setBlogs] = useState<Blog[]>([]);
   const [filteredBlogs, setFilteredBlogs] = useState<Blog[]>([]);
   const [services, setServices] = useState<Service[]>([]);
-  const { searchQuery, activeCategory, setActiveCategory } = useBlog();
+  const { searchQuery, activeCategory } = useBlog();
   const [loading, setLoading] = useState(true);
+
+  const servicesScrollRef = useRef<HTMLDivElement>(null);
 
   // Load blogs and services
   useEffect(() => {
-    async function loadBlogs() {
+    async function loadData() {
       try {
         const [blogsRes, servicesRes] = await Promise.all([
-          fetch("/api/blogs"),
-          fetch("/api/services"),
+          fetch(`/api/blogs?t=${Date.now()}`),
+          fetch(`/api/services?t=${Date.now()}`),
         ]);
         const json = await blogsRes.json();
         const servicesJson = await servicesRes.json();
@@ -65,7 +58,7 @@ export default function BlogListingPage() {
         setLoading(false);
       }
     }
-    loadBlogs();
+    loadData();
   }, []);
 
   // Filter blogs based on category & search query
@@ -81,361 +74,638 @@ export default function BlogListingPage() {
     setFilteredBlogs(result);
   }, [blogs, activeCategory, searchQuery]);
 
-  const categories = [
-    "all",
-    ...Array.from(new Set(blogs.map((b) => b.category).filter(Boolean)))
-  ];
+  const scrollCarousel = (ref: React.RefObject<HTMLDivElement | null>, direction: "left" | "right") => {
+    if (ref.current) {
+      const scrollAmount = 240;
+      ref.current.scrollBy({
+        left: direction === "left" ? -scrollAmount : scrollAmount,
+        behavior: "smooth"
+      });
+    }
+  };
 
-  // Separate blogs into sections for the default landing state (when no filter is active)
-  const recommendedBlogs = blogs.filter(b => b.section === "recommended");
-  const practiceBlogs = blogs.filter(b => b.section === "practice");
-  const discussBlogs = blogs.filter(b => b.section === "discuss");
-  const regularBlogs = blogs.filter(
-    b => !b.section || (b.section !== "recommended" && b.section !== "practice" && b.section !== "discuss")
-  );
+  const getServiceIcon = (name: string) => {
+    const n = name.toLowerCase();
+    if (n.includes("chakra")) return <Flower size={20} strokeWidth={1.5} />;
+    if (n.includes("aura") || n.includes("scanning")) return <Sparkles size={20} strokeWidth={1.5} />;
+    if (n.includes("reiki")) return <Heart size={20} strokeWidth={1.5} />;
+    if (n.includes("sound")) return <Volume2 size={20} strokeWidth={1.5} />;
+    return <User size={20} strokeWidth={1.5} />;
+  };
+
+  const getServiceTagline = (name: string) => {
+    const n = name.toLowerCase();
+    if (n.includes("chakra")) return "Balance & Align";
+    if (n.includes("aura") || n.includes("scanning")) return "Discover Your Energy";
+    if (n.includes("reiki")) return "Energy Restoration";
+    if (n.includes("sound")) return "Vibrational Balance";
+    if (n.includes("guidance") || n.includes("personal")) return "1:1 Consultations";
+    return "Holistic Support";
+  };
+
+
 
   const renderBlogCard = (post: Blog) => (
-    <Link key={post.id} href={`/blog/${post.id}`} className="blog-card-link">
-      <Card className="blog-card" variant="glass">
-        <div className="blog-card-image-container">
-          <img
-            src={getBlogImage(post.image)}
-            alt={post.title}
-            className="blog-card-img"
-          />
-          <span className="blog-card-badge">{post.category}</span>
-        </div>
-
-        <div className="blog-card-content">
-          <div className="blog-card-header-info">
-            <span className="blog-card-time">⏱️ {post.readTime}</span>
+    <div key={post.id} style={{ display: 'block', width: '100%', minWidth: 0 }}>
+      <Link href={`/blog/${post.id}`} style={{ display: 'block', textDecoration: 'none', color: 'inherit', width: '100%' }}>
+        <div className="blog-item-card">
+          <div className="blog-card-media-wrapper">
+            <img 
+              src={post.image || "/images/insight_blog.png"} 
+              alt={post.title} 
+              className="blog-media-img" 
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.src = "/images/insight_blog.png";
+                target.onerror = null;
+              }}
+            />
+            <span className="blog-badge-floating-left">{post.category}</span>
+            <span className="blog-badge-floating-right">{post.readTime || (post as any).read_time || '5 min read'}</span>
           </div>
-
-          <h3 className="blog-card-title">{post.title}</h3>
-          <p className="blog-card-excerpt">
-            {post.content.substring(0, 120)}...
-          </p>
-
-          <div className="blog-card-footer">
-            <span className="blog-card-author">By <strong>{post.author}</strong></span>
-            <span className="blog-card-date">{post.date}</span>
+          <div className="blog-card-body">
+            <h4 className="blog-card-title">{post.title}</h4>
+            <p className="blog-card-desc">{post.content.replace(/<[^>]*>/g, '').substring(0, 100)}...</p>
+            <div className="blog-author-row">
+              <div className="author-avatar">{post.author.charAt(0)}</div>
+              <div className="author-details">
+                <span className="author-name">{post.author}</span>
+                <span className="author-separator">•</span>
+                <span className="blog-date">{post.date}</span>
+              </div>
+            </div>
           </div>
         </div>
-      </Card>
-    </Link>
+      </Link>
+    </div>
   );
 
   const isFilteringActive = activeCategory !== "all" || searchQuery !== "";
 
   return (
-    <div className="blog-posts-page">
-      {/* Header */}
-      <section className="blog-header">
-        <h1 className="blog-title">Spiritual Guidance Blog</h1>
-      </section>
-
-      {/* Top Categories Filter */}
-      <section className="blog-controls-section glass-panel">
-        <div className="blog-tabs">
-          {categories.map(cat => (
-            <button
-              key={cat}
-              className={`blog-tab-btn ${activeCategory === cat ? "active" : ""}`}
-              onClick={() => setActiveCategory(cat)}
-            >
-              {cat === "all" ? "All Writings" : cat}
-            </button>
-          ))}
+    <div className="blog-center-dashboard">
+      {/* Title Header */}
+      <div className="blog-welcome-row">
+        <svg viewBox="0 0 100 100" className="blog-title-lotus">
+          <path d="M50 25 C45 45 35 60 50 80 C65 60 55 45 50 25 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
+          <path d="M50 80 C35 75 25 60 20 40 C35 50 45 60 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
+          <path d="M50 80 C65 75 75 60 80 40 C65 50 55 60 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
+          <path d="M50 80 C30 80 10 70 5 55 C20 65 35 70 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
+          <path d="M50 80 C70 80 90 70 95 55 C80 65 65 70 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
+        </svg>
+        <div className="welcome-text">
+          <h1 className="welcome-heading">Welcome to Our Blog</h1>
+          <p className="welcome-subheading">Explore wisdom, practices, and real stories to elevate your healing journey.</p>
         </div>
-      </section>
+      </div>
 
-      {/* Listings Grid */}
-      <section className="blog-content-section">
-        {loading ? (
-          <p className="text-muted-center-padded">Retrieving sacred scrolls...</p>
-        ) : isFilteringActive ? (
-          // FILTERED LISTING VIEW (Flat Grid)
-          <div className="filtered-results-wrapper">
-            <div className="results-header">
-              <h2 className="section-title">
-                {searchQuery
-                  ? `Search Results for "${searchQuery}"`
-                  : `${activeCategory.toUpperCase()} Articles`
-                }
-              </h2>
-              <span className="results-count">({filteredBlogs.length} articles found)</span>
+      {loading ? (
+        <p className="loading-text">Retrieving sacred scrolls...</p>
+      ) : isFilteringActive ? (
+        // FILTERED SEARCH RESULTS VIEW
+        <div className="filtered-results-container">
+          <div className="results-header-row">
+            <h3 className="section-title">
+              {searchQuery ? `Search Results for "${searchQuery}"` : `${activeCategory} Articles`}
+            </h3>
+            <span className="results-count">({filteredBlogs.length} articles found)</span>
+          </div>
+
+          {filteredBlogs.length === 0 ? (
+            <div className="empty-results-box">
+              <p>No articles found matching your query metrics.</p>
+            </div>
+          ) : (
+            <div className="latest-posts-grid">
+              {filteredBlogs.map(post => renderBlogCard(post))}
+            </div>
+          )}
+        </div>
+      ) : (
+        // DEFAULT LANDING STATE DASHBOARD
+        <div className="dashboard-content-stack">
+          
+          {/* Hero Banner Card */}
+          <div className="blog-hero-banner">
+            <div className="banner-text-content">
+              <span className="banner-tagline">HEAL. GROW. TRANSFORM.</span>
+              <h2 className="banner-main-title">Insights for Your<br />Holistic Journey</h2>
+              <button onClick={() => router.push("/services")} className="banner-explore-btn">
+                Explore All Articles
+              </button>
+            </div>
+            
+            {/* Background lotus outlines */}
+            <div className="banner-lotus-watermark">
+              <svg viewBox="0 0 100 100" className="banner-watermark-svg">
+                <path d="M50 25 C45 45 35 60 50 80 C65 60 55 45 50 25 Z" fill="none" stroke="#a855f7" strokeWidth="2.5" strokeOpacity="0.4" />
+                <path d="M50 80 C35 75 25 60 20 40 C35 50 45 60 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="2.5" strokeOpacity="0.4" />
+                <path d="M50 80 C65 75 75 60 80 40 C65 50 55 60 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="2.5" strokeOpacity="0.4" />
+                <path d="M50 80 C30 80 10 70 5 55 C20 65 35 70 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="2.5" strokeOpacity="0.4" />
+                <path d="M50 80 C70 80 90 70 95 55 C80 65 65 70 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="2.5" strokeOpacity="0.4" />
+              </svg>
+            </div>
+            <div className="banner-image-panel" />
+          </div>
+
+          {/* Our Services Carousel Section */}
+          <div className="dashboard-section">
+            <div className="section-header-row">
+              <div className="section-title-wrap">
+                <svg viewBox="0 0 100 100" className="section-title-lotus">
+                  <path d="M50 25 C45 45 35 60 50 80 C65 60 55 45 50 25 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
+                  <path d="M50 80 C35 75 25 60 20 40 C35 50 45 60 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
+                  <path d="M50 80 C65 75 75 60 80 40 C65 50 55 60 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
+                  <path d="M50 80 C30 80 10 70 5 55 C20 65 35 70 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
+                  <path d="M50 80 C70 80 90 70 95 55 C80 65 65 70 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
+                </svg>
+                <h3 className="section-title">Our Services</h3>
+              </div>
+              <div className="carousel-nav-arrows">
+                <button onClick={() => scrollCarousel(servicesScrollRef, "left")} className="arrow-btn" aria-label="Previous">
+                  <ChevronLeft size={16} />
+                </button>
+                <button onClick={() => scrollCarousel(servicesScrollRef, "right")} className="arrow-btn" aria-label="Next">
+                  <ChevronRight size={16} />
+                </button>
+              </div>
             </div>
 
-            {filteredBlogs.length === 0 ? (
-              <div className="empty-state glass-card card-pad-40-center">
-                <p>No articles found matching your query metrics.</p>
-              </div>
-            ) : (
-              <div className="blog-cards-grid">
-                {filteredBlogs.map(post => renderBlogCard(post))}
-              </div>
-            )}
+            <div ref={servicesScrollRef} className="horizontal-scroll-container">
+              {services.map((service) => (
+                <div key={service.id} onClick={() => router.push("/services")} className="service-simple-card">
+                  <div className="service-icon-circle">
+                    {getServiceIcon(service.name)}
+                  </div>
+                  <h4 className="service-card-name">{service.name}</h4>
+                  <span className="service-card-tagline">{getServiceTagline(service.name)}</span>
+                </div>
+              ))}
+            </div>
           </div>
-        ) : (
-          // DYNAMIC HOME SECTIONS VIEW
-          <div className="dashboard-sections-wrapper">
-            {/* Recommended Blogs Section */}
-            {recommendedBlogs.length > 0 && (
-              <section className="blog-showcase-section">
-                <h2 className="section-title">Recommended Readings</h2>
-                <div className="blog-cards-grid">
-                  {recommendedBlogs.map(post => renderBlogCard(post))}
-                </div>
-              </section>
-            )}
 
-            {/* Practice with us Carousel */}
-            {practiceBlogs.length > 0 && (
-              <section className="blog-showcase-section">
-                <Carousel title="Practice With Us">
-                  {practiceBlogs.map(post => renderBlogCard(post))}
-                </Carousel>
-              </section>
-            )}
+          {/* Latest Blog Posts Grid Section */}
+          <div className="dashboard-section">
+            <div className="section-header-row">
+              <div className="section-title-wrap">
+                <svg viewBox="0 0 100 100" className="section-title-lotus">
+                  <path d="M50 25 C45 45 35 60 50 80 C65 60 55 45 50 25 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
+                  <path d="M50 80 C35 75 25 60 20 40 C35 50 45 60 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
+                  <path d="M50 80 C65 75 75 60 80 40 C65 50 55 60 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
+                  <path d="M50 80 C30 80 10 70 5 55 C20 65 35 70 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
+                  <path d="M50 80 C70 80 90 70 95 55 C80 65 65 70 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
+                </svg>
+                <h3 className="section-title">Latest Blog Posts</h3>
+              </div>
+            </div>
 
-            {/* Discuss with us Carousel */}
-            {discussBlogs.length > 0 && (
-              <section className="blog-showcase-section">
-                <Carousel title="Discuss With Us">
-                  {discussBlogs.map(post => renderBlogCard(post))}
-                </Carousel>
-              </section>
-            )}
-
-            {/* General Feed */}
-            {regularBlogs.length > 0 && (
-              <section className="blog-showcase-section">
-                <h2 className="section-title">Latest Wisdom</h2>
-                <div className="blog-cards-grid">
-                  {regularBlogs.map(post => renderBlogCard(post))}
-                </div>
-              </section>
-            )}
-
-            {blogs.length === 0 && (
-              <div className="empty-state glass-card card-pad-40-center">
+            {blogs.length === 0 ? (
+              <div className="empty-results-box">
                 <p>No articles currently published in the catalog.</p>
               </div>
+            ) : (
+              <div className="latest-posts-grid">
+                {blogs.map(post => renderBlogCard(post))}
+              </div>
             )}
           </div>
-        )}
-      </section>
 
-      <ServicesCartCarousel
-        services={services}
-        title="Explore All Therapies"
-        emptyMessage="No therapies available at the moment."
-        className="blog-services-carousel"
-      />
+        </div>
+      )}
 
       <style jsx>{`
-        .blog-posts-page {
+        .blog-center-dashboard {
+          display: flex;
+          flex-direction: column;
+          gap: 28px;
+          width: 100%;
+        }
+
+        /* Title Welcome Heading */
+        .blog-welcome-row {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin-bottom: 8px;
+        }
+        .blog-title-lotus {
+          width: 38px;
+          height: 38px;
+          flex-shrink: 0;
+        }
+        .welcome-text {
+          display: flex;
+          flex-direction: column;
+        }
+        .welcome-heading {
+          font-family: var(--font-sans);
+          font-size: 1.6rem;
+          color: #111827;
+          font-weight: 800;
+          margin: 0;
+          line-height: 1.2;
+        }
+        .welcome-subheading {
+          font-size: 0.82rem;
+          color: #6b7280;
+          margin: 4px 0 0;
+        }
+        .loading-text {
+          font-size: 0.85rem;
+          color: #6b7280;
+        }
+
+        /* Dashboard Content Stack */
+        .dashboard-content-stack {
           display: flex;
           flex-direction: column;
           gap: 32px;
           width: 100%;
+          max-width: 100%;
         }
-        .blog-header {
-          text-align: center;
-          padding: 8px 0 0;
-        }
-        .blog-title {
-          font-size: 2.2rem;
-          color: #4c1d95;
-          margin-bottom: 4px;
-          text-align: center;
-          font-weight: 700;
-          letter-spacing: -0.01em;
-        }
-        .blog-controls-section {
+
+        /* Hero Banner Card */
+        .blog-hero-banner {
+          width: 100%;
+          border-radius: 24px;
+          background: linear-gradient(135deg, #f3e8ff 0%, #faf5ff 100%);
+          border: 1px solid rgba(168, 85, 247, 0.1);
+          padding: 32px;
           display: flex;
-          justify-content: center;
           align-items: center;
-          padding: 10px 20px;
+          justify-content: space-between;
+          position: relative;
+          min-height: 200px;
+          overflow: hidden;
+        }
+        .banner-text-content {
+          z-index: 2;
+          max-width: 55%;
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 12px;
+        }
+        .banner-tagline {
+          font-family: var(--font-sans);
+          font-size: 0.72rem;
+          font-weight: 800;
+          color: #7c3aed;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+        }
+        .banner-main-title {
+          font-family: var(--font-serif);
+          font-size: 1.85rem;
+          color: #111827;
+          font-weight: 700;
+          line-height: 1.2;
+          margin: 0;
+        }
+        .banner-explore-btn {
+          padding: 8px 18px;
           border-radius: 20px;
+          background: #4c1d95;
+          color: #ffffff;
+          border: none;
+          font-size: 0.76rem;
+          font-weight: 700;
+          cursor: pointer;
+          transition: background 0.2s ease;
+          margin-top: 6px;
+        }
+        .banner-explore-btn:hover {
+          background: #3b0764;
+        }
+        .banner-lotus-watermark {
+          position: absolute;
+          left: 45%;
+          bottom: -15px;
+          width: 120px;
+          height: 120px;
+          z-index: 1;
+        }
+        .banner-watermark-svg {
+          width: 100%;
+          height: 100%;
+        }
+        .banner-image-panel {
+          position: absolute;
+          top: 0;
+          right: 0;
+          bottom: 0;
+          width: 44%;
+          background-image: url("/images/blog_hero_bg.png");
+          background-size: cover;
+          background-position: right center;
+          z-index: 1;
+          mask-image: linear-gradient(to left, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%);
+          -webkit-mask-image: linear-gradient(to left, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%);
+        }
+
+        /* Dashboard Sections */
+        .dashboard-section {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+          width: 100%;
+          max-width: 100%;
+        }
+        .section-header-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
           width: 100%;
         }
-        .blog-tabs {
+        .section-title-wrap {
           display: flex;
-          gap: 8px;
           align-items: center;
-          flex-wrap: wrap;
-          justify-content: center;
+          gap: 8px;
         }
-        .blog-tab-btn {
-          background: transparent;
-          border: 1px solid transparent;
-          color: hsl(var(--text-muted));
-          font-family: var(--font-serif);
-          font-size: 0.85rem;
-          font-weight: 600;
-          padding: 6px 16px;
-          border-radius: 30px;
-          cursor: pointer;
-          letter-spacing: 0.03em;
-          text-transform: uppercase;
-          transition: var(--transition-fast);
-        }
-        .blog-tab-btn:hover {
-          color: #7c3aed;
-          background: rgba(168, 85, 247, 0.04);
-        }
-        .blog-tab-btn.active {
-          color: #7c3aed;
-          background: linear-gradient(135deg, rgba(251, 207, 232, 0.25) 0%, rgba(233, 213, 255, 0.25) 100%);
-          border-color: rgba(168, 85, 247, 0.2);
-          box-shadow: 0 4px 10px rgba(168, 85, 247, 0.05);
-        }
-        .results-header {
-          display: flex;
-          align-items: baseline;
-          gap: 12px;
-          margin-bottom: 20px;
-        }
-        .results-count {
-          font-size: 0.85rem;
-          color: hsl(var(--text-muted));
+        .section-title-lotus {
+          width: 24px;
+          height: 24px;
+          flex-shrink: 0;
         }
         .section-title {
           font-family: var(--font-serif);
-          font-size: 1.6rem;
-          color: #4c1d95;
-          margin-bottom: 16px;
-          font-weight: 700;
+          font-size: 1.25rem;
+          color: #111827;
+          font-weight: 700 !important;
+          margin: 0;
         }
-        .blog-showcase-section {
-          margin-bottom: 40px;
+        .carousel-nav-arrows {
+          display: flex;
+          gap: 6px;
         }
-        .blog-showcase-section:last-child {
-          margin-bottom: 0;
+        .arrow-btn {
+          width: 28px;
+          height: 28px;
+          border-radius: 50%;
+          border: 1px solid rgba(168, 85, 247, 0.15);
+          background: #ffffff;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #7c3aed;
+          cursor: pointer;
+          transition: all 0.2s ease;
         }
-        :global(.blog-services-carousel) {
-          margin-top: 16px;
-          padding-top: 24px;
-          padding-bottom: 0;
-          margin-bottom: 0;
-          border-top: 1px solid rgba(168, 85, 247, 0.1);
+        .arrow-btn:hover {
+          background: #eedffd;
+          border-color: rgba(168, 85, 247, 0.3);
         }
-        .blog-cards-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-          gap: 24px;
+
+        /* Carousels Horizontal Scroll */
+        .horizontal-scroll-container {
+          display: flex;
+          gap: 16px;
+          overflow-x: auto;
+          scrollbar-width: none; /* Firefox */
+          -ms-overflow-style: none; /* IE 10+ */
+          padding: 4px 4px 16px;
+          margin: -4px -4px -16px;
         }
-        :global(.blog-card-link) {
-          display: block;
-          text-decoration: none;
-          color: inherit;
-          height: 100%;
-          border-radius: 16px;
-          transition: transform 0.25s ease, box-shadow 0.25s ease;
+        .horizontal-scroll-container::-webkit-scrollbar {
+          display: none; /* Safari and Chrome */
         }
-        :global(.blog-card-link:hover) {
-          transform: translateY(-3px);
-        }
-        :global(.blog-card-link:hover .blog-card) {
-          border-color: rgba(168, 85, 247, 0.35);
-          box-shadow: 0 10px 28px rgba(124, 58, 237, 0.1);
-        }
-        :global(.blog-card) {
+        .service-simple-card {
+          flex: 0 0 170px;
+          width: 170px;
+          padding: 20px 16px;
+          border-radius: 20px;
+          background: #ffffff;
+          border: 1px solid rgba(168, 85, 247, 0.08);
           display: flex;
           flex-direction: column;
-          overflow: hidden;
-          padding: 0 !important;
-          border-radius: 16px;
-          height: 100%;
+          align-items: center;
+          text-align: center;
+          cursor: pointer;
+          transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
         }
-        :global(.blog-card-image-container) {
-          position: relative;
+        .service-simple-card:hover {
+          transform: translateY(-4px);
+          border-color: rgba(168, 85, 247, 0.2);
+          box-shadow: 0 10px 25px rgba(124, 58, 237, 0.06);
+        }
+        .service-icon-circle {
+          width: 48px;
+          height: 48px;
+          border-radius: 50%;
+          background: #faf5ff;
+          border: 1px solid rgba(168, 85, 247, 0.08);
+          color: #7c3aed;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-bottom: 14px;
+          transition: background-color 0.2s ease, color 0.2s ease;
+        }
+        .service-simple-card:hover .service-icon-circle {
+          background: #7c3aed;
+          color: #ffffff;
+        }
+        .service-card-name {
+          font-family: var(--font-sans);
+          font-size: 0.8rem;
+          font-weight: 700;
+          color: #1f2937;
+          margin: 0;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
           width: 100%;
-          height: 160px;
+        }
+        .service-card-tagline {
+          font-size: 0.68rem;
+          color: #6b7280;
+          margin-top: 4px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          width: 100%;
+        }
+
+        /* Filtered search results view */
+        .filtered-results-container {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+        .results-header-row {
+          display: flex;
+          align-items: baseline;
+          gap: 10px;
+        }
+        .results-count {
+          font-size: 0.76rem;
+          color: #6b7280;
+        }
+        .empty-results-box {
+          padding: 40px;
+          text-align: center;
+          background: #ffffff;
+          border-radius: 16px;
+          border: 1px solid rgba(168, 85, 247, 0.1);
+          color: #6b7280;
+          font-size: 0.85rem;
+        }
+      `}</style>
+
+      <style jsx global>{`
+        /* Latest Blog Posts Grid - 4 Columns */
+        .latest-posts-grid {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 16px;
+          width: 100%;
+          box-sizing: border-box;
           overflow: hidden;
         }
-        :global(.blog-card-img) {
+        @media (max-width: 1024px) {
+          .latest-posts-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
+        }
+        @media (max-width: 640px) {
+          .latest-posts-grid {
+            grid-template-columns: 1fr;
+          }
+        }
+        .blog-item-card {
+          background: #ffffff;
+          border: 1px solid rgba(168, 85, 247, 0.08);
+          border-radius: 20px;
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+          width: 100%;
+          box-sizing: border-box;
+          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
+          transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+        .blog-item-card:hover {
+          transform: translateY(-6px);
+          box-shadow: 0 12px 30px rgba(124, 58, 237, 0.12);
+        }
+        .blog-card-media-wrapper {
+          width: 100%;
+          height: 120px;
+          overflow: hidden;
+          background: #faf5ff;
+          position: relative;
+          flex-shrink: 0;
+        }
+        .blog-badge-floating-left {
+          position: absolute;
+          bottom: 12px;
+          left: 12px;
+          background: rgba(255, 255, 255, 0.95);
+          backdrop-filter: blur(4px);
+          color: #581c87;
+          font-size: 0.65rem;
+          font-weight: 700;
+          padding: 4px 10px;
+          border-radius: 20px;
+          text-transform: uppercase;
+          border: 1px solid rgba(168, 85, 247, 0.1);
+          z-index: 2;
+        }
+        .blog-badge-floating-right {
+          position: absolute;
+          bottom: 12px;
+          right: 12px;
+          background: rgba(255, 255, 255, 0.95);
+          backdrop-filter: blur(4px);
+          color: #4b5563;
+          font-size: 0.65rem;
+          font-weight: 600;
+          padding: 4px 10px;
+          border-radius: 20px;
+          border: 1px solid rgba(0, 0, 0, 0.05);
+          z-index: 2;
+        }
+        .blog-media-img {
           width: 100%;
           height: 100%;
           object-fit: cover;
-          transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+          object-position: center;
+          display: block;
+          transition: transform 0.5s ease;
         }
-        :global(.blog-card:hover .blog-card-img) {
-          transform: scale(1.06);
+        .blog-item-card:hover .blog-media-img {
+          transform: scale(1.05);
         }
-        :global(.blog-card-badge) {
-          position: absolute;
-          top: 12px;
-          left: 12px;
-          background: rgba(255, 255, 255, 0.9);
-          backdrop-filter: blur(4px);
-          border: 1px solid rgba(168, 85, 247, 0.2);
-          color: #7c3aed;
-          font-size: 0.68rem;
-          font-weight: 700;
-          padding: 3px 8px;
-          border-radius: 6px;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-        }
-        :global(.blog-card-content) {
+        .blog-card-body {
           padding: 16px;
           display: flex;
           flex-direction: column;
+          gap: 8px;
           flex: 1;
         }
-        :global(.blog-card-header-info) {
-          display: flex;
-          justify-content: flex-end;
-          margin-bottom: 6px;
-        }
-        :global(.blog-card-time) {
-          font-size: 0.7rem;
-          color: hsl(var(--text-muted));
-          font-weight: 500;
-        }
-        :global(.blog-card-title) {
-          font-family: var(--font-serif);
-          font-size: 1.15rem;
-          color: #4c1d95;
-          margin-bottom: 8px;
-          line-height: 1.35;
-          font-weight: 600;
+        .blog-card-title {
+          font-family: var(--font-sans);
+          font-size: 0.95rem;
+          color: #111827;
+          font-weight: 700 !important;
+          margin: 0;
+          line-height: 1.4;
           display: -webkit-box;
           -webkit-line-clamp: 2;
           -webkit-box-orient: vertical;
           overflow: hidden;
-          min-height: 3.1em;
+          transition: color 0.2s ease;
         }
-        :global(.blog-card-excerpt) {
-          font-size: 0.8rem;
-          line-height: 1.45;
-          color: hsl(var(--text-muted));
-          margin-bottom: 12px;
-          flex: 1;
+        .blog-item-card:hover .blog-card-title {
+          color: #7c3aed;
+        }
+        .blog-card-desc {
+          font-size: 0.76rem;
+          color: #6b7280;
+          line-height: 1.5;
+          margin: 0;
           display: -webkit-box;
-          -webkit-line-clamp: 3;
+          -webkit-line-clamp: 2;
           -webkit-box-orient: vertical;
           overflow: hidden;
+          flex: 1;
         }
-        :global(.blog-card-footer) {
+        .blog-author-row {
           display: flex;
-          justify-content: space-between;
+          align-items: center;
+          gap: 8px;
+          margin-top: 6px;
+          border-top: 1px solid rgba(0, 0, 0, 0.04);
+          padding-top: 12px;
+        }
+        .author-avatar {
+          width: 24px;
+          height: 24px;
+          border-radius: 50%;
+          background: #f3e8ff;
+          color: #6b21a8;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 0.75rem;
+          font-weight: 700;
+        }
+        .author-details {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          color: #6b7280;
           font-size: 0.72rem;
-          color: hsl(var(--text-muted));
-          border-top: 1px solid rgba(0, 0, 0, 0.05);
-          padding-top: 8px;
-          margin-top: auto;
         }
-        :global(.blog-card-author) {
-          font-weight: 500;
+        .author-name {
+          color: #4b5563;
+          font-weight: 600;
         }
-        @media (max-width: 968px) {
-          .blog-controls-section {
-            padding: 12px;
-          }
+        .author-separator {
+          color: #d1d5db;
+        }
+        .blog-date {
+          color: #9ca3af;
         }
       `}</style>
     </div>
