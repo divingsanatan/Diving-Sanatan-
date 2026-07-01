@@ -5,14 +5,21 @@ export const metadata: Metadata = {
   title: "Holistic Healing Services & Energy Programs",
   description: "Explore our professional spiritual healing services: Chakra Balancing, Aura scanning, Reiki Energy restoration, Sound Healing, and guided meditation programs. Book a consultation.",
   keywords: [
+    "Chakra healing therapy",
+    "aura cleansing",
+    "distance healing treatment",
+    "urja upchaar",
+    "non-touch therapy",
+    "nazar",
+    "urja tantra",
+    "holistic therapy",
+    "energy medicine",
+    "natural healing",
+    "inner engineers",
     "chakra healing services",
     "aura scanning",
     "reiki healing",
-    "sound healing",
-    "meditation programs",
-    "spiritual counseling",
-    "energy balancing",
-    "holistic wellness"
+    "sound healing"
   ],
   openGraph: {
     title: "Holistic Healing Services & Energy Programs | Diving Sanatan",
