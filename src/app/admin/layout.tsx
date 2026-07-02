@@ -71,6 +71,7 @@ export default function AdminLayout({
           <Link href="/admin/categories" className={`sidebar-link ${pathname === "/admin/categories" ? "active" : ""}`}>Categories</Link>
           <Link href="/admin/keywords" className={`sidebar-link ${pathname === "/admin/keywords" ? "active" : ""}`}>Keywords</Link>
           <Link href="/admin/quiz-questions" className={`sidebar-link ${pathname === "/admin/quiz-questions" ? "active" : ""}`}>Quiz Questions</Link>
+          <Link href="/admin/quora-qa" className={`sidebar-link ${pathname === "/admin/quora-qa" ? "active" : ""}`}>Q&A Board</Link>
           <Link href="/admin/blogs" className={`sidebar-link ${pathname === "/admin/blogs" ? "active" : ""}`}>Blogs</Link>
           <Link href="/admin/glossary" className={`sidebar-link ${pathname === "/admin/glossary" ? "active" : ""}`}>Glossary</Link>
           <Link href="/admin/comparisons" className={`sidebar-link ${pathname === "/admin/comparisons" ? "active" : ""}`}>Comparisons</Link>

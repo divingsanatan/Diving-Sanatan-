@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Card } from "@/components/ui/Card";
 import { useBlog } from "../BlogContext";
 import { GlossaryTerm } from "@/types/database";
 import { GlossaryTermIllustration } from "@/components/blog/GlossaryTermIllustration";
@@ -73,7 +72,7 @@ export default function GlossaryPage() {
         </p>
       </div>
 
-      <section className="glossary-controls-section glass-panel">
+      <section className="glossary-controls-section">
         {searchQuery && (
           <div className="glossary-active-search-badge">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -111,17 +110,17 @@ export default function GlossaryPage() {
 
       <div className="terms-container">
         {loading ? (
-          <div className="terms-empty glass-card">
+          <div className="terms-empty">
             <p>Loading glossary terms...</p>
           </div>
         ) : filteredTerms.length === 0 ? (
-          <div className="terms-empty glass-card">
+          <div className="terms-empty">
             <p>No glossary definitions match your search terms.</p>
           </div>
         ) : (
           <>
             {paginatedTerms.map((term) => (
-              <Card key={term.id} variant="glass" className="term-card">
+              <div key={term.id} className="term-card">
                 <div className="term-card-content">
                   <div className="term-main-info">
                     <div className="term-title-row">
@@ -149,7 +148,7 @@ export default function GlossaryPage() {
 
                   <GlossaryTermIllustration illustration={term.illustration} />
                 </div>
-              </Card>
+              </div>
             ))}
 
             {filteredTerms.length > PUBLIC_PAGE_SIZE && (
@@ -220,9 +219,9 @@ export default function GlossaryPage() {
           flex-direction: column;
           align-items: center;
           gap: 16px;
-          padding: 16px 24px;
-          border-radius: 20px;
+          padding: 16px 10px;
           width: 100%;
+          border-bottom: 1px solid rgba(168, 85, 247, 0.12);
         }
         .glossary-active-search-badge {
           display: flex;
@@ -264,13 +263,11 @@ export default function GlossaryPage() {
           border-color: #7c3aed;
           color: #7c3aed;
           background: rgba(168, 85, 247, 0.04);
-          transform: translateY(-1px);
         }
         .letter-btn.active {
           background: #7c3aed;
           color: #ffffff;
           border-color: #7c3aed;
-          box-shadow: 0 4px 10px rgba(124, 58, 237, 0.2);
         }
         .letter-btn.disabled {
           opacity: 0.3;
@@ -280,11 +277,10 @@ export default function GlossaryPage() {
         .terms-container {
           display: flex;
           flex-direction: column;
-          gap: 24px;
         }
         .term-card {
-          padding: 24px !important;
-          border-radius: 20px;
+          padding: 28px 10px;
+          border-bottom: 1px solid rgba(168, 85, 247, 0.12);
         }
         .term-card-content {
           display: flex;
@@ -336,7 +332,6 @@ export default function GlossaryPage() {
         .speak-btn:hover {
           background: #7c3aed;
           color: #ffffff;
-          box-shadow: 0 4px 10px rgba(124, 58, 237, 0.25);
           transform: scale(1.05);
         }
         .term-category-badge {
@@ -358,17 +353,15 @@ export default function GlossaryPage() {
         }
         .terms-empty {
           text-align: center;
-          padding: 40px !important;
+          padding: 40px 10px;
           color: hsl(var(--text-muted));
         }
         .public-pagination-bar {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          padding: 20px 24px;
-          border-top: 1px solid rgba(168, 85, 247, 0.08);
-          background: rgba(255, 255, 255, 0.15);
-          border-radius: 12px;
+          padding: 24px 10px 12px;
+          border-top: 1px solid rgba(168, 85, 247, 0.12);
           flex-wrap: wrap;
           gap: 12px;
           margin-top: 12px;

@@ -19,15 +19,11 @@ function BlogLayoutInner({ children }: { children: React.ReactNode }) {
     "/blog/glossary": { title: "Search Terms", placeholder: "Type a term..." },
     "/blog/quora-qa": { title: "Search Answers", placeholder: "Type your question..." },
     "/blog/case-studies": { title: "Search Case Studies", placeholder: "Type keywords..." },
-    "/blog/comparison": { title: "Search Comparisons", placeholder: "Search healing modalities... (e.g., anxiety, duration, tools)" },
     "/blog/video-transcripts": { title: "Search Transcripts", placeholder: "Type keywords..." },
   };
 
-  const comparisonSlugConfig = pathname.startsWith("/blog/comparison/") && pathname !== "/blog/comparison"
-    ? { title: "Search Comparisons", placeholder: "Search healing modalities... (e.g., anxiety, duration, tools)" }
-    : null;
-
-  const config = comparisonSlugConfig ?? searchConfig[pathname] ?? { title: "Search", placeholder: "Type keywords..." };
+  const config = searchConfig[pathname] ?? { title: "Search", placeholder: "Type keywords..." };
+  const isFullWidthPage = pathname === "/blog/faq" || pathname === "/blog/glossary" || pathname.startsWith("/blog/quora-qa");
 
   return (
     <div className="page-col">
@@ -81,9 +77,11 @@ function BlogLayoutInner({ children }: { children: React.ReactNode }) {
         </main>
 
         {/* Sidebar on the Right */}
-        <aside className="blog-right-sidebar-container">
-          <BlogRightSidebar />
-        </aside>
+        {!isFullWidthPage && (
+          <aside className="blog-right-sidebar-container">
+            <BlogRightSidebar />
+          </aside>
+        )}
       </div>
 
       <Footer />
