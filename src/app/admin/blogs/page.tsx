@@ -4,12 +4,17 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Blog, Practitioner } from "@/types/database";
+import { ImageCropperModal } from "@/components/ui/ImageCropperModal";
 
 export default function AdminBlogsPage() {
   const [blogs, setBlogs] = useState<Blog[]>([]);
   const [practitioners, setPractitioners] = useState<Practitioner[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
   
   // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -39,6 +44,11 @@ export default function AdminBlogsPage() {
   const [uploadingGalleryIdx, setUploadingGalleryIdx] = useState<number | null>(null);
   const [uploadingVideoIdx, setUploadingVideoIdx] = useState<number | null>(null);
 
+  // Cropping states
+  const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
+  const [cropType, setCropType] = useState<"cover" | "gallery" | null>(null);
+  const [cropGalleryIdx, setCropGalleryIdx] = useState<number | null>(null);
+
   // Rich text editor ref
   const editorRef = useRef<HTMLDivElement>(null);
   const [editorReady, setEditorReady] = useState(false);
@@ -59,6 +69,7 @@ export default function AdminBlogsPage() {
       if (bJson.success && pJson.success) {
         setBlogs(bJson.data);
         setPractitioners(pJson.data);
+        setCurrentPage(1);
         if (pJson.data.length > 0) {
           setSelectedPractitioner(pJson.data[0].name);
         }
@@ -183,32 +194,19 @@ export default function AdminBlogsPage() {
     setShowCustomCategory(val === "Other");
   };
 
-  // Main Cover Image Upload
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Main Cover Image Select & Crop Handlers
+  const handleCoverImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const formData = new FormData();
-    formData.append("file", file);
-    setUploadingImage(true);
-
-    try {
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        body: formData
-      });
-      const json = await res.json();
-      if (json.success) {
-        setImage(json.url);
-      } else {
-        alert("Upload failed: " + json.error);
-      }
-    } catch (err) {
-      console.error(err);
-      alert("An error occurred during file upload.");
-    } finally {
-      setUploadingImage(false);
-    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      setCropImageSrc(reader.result as string);
+      setCropType("cover");
+      setCropGalleryIdx(null);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
   };
 
   // Multiple Gallery Images Helpers
@@ -226,31 +224,76 @@ export default function AdminBlogsPage() {
     setGalleryImages(galleryImages.filter((_, i) => i !== idx));
   };
 
-  const handleGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>, idx: number) => {
+  const handleGalleryImageSelect = (e: React.ChangeEvent<HTMLInputElement>, idx: number) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const formData = new FormData();
-    formData.append("file", file);
-    setUploadingGalleryIdx(idx);
+    const reader = new FileReader();
+    reader.onload = () => {
+      setCropImageSrc(reader.result as string);
+      setCropType("gallery");
+      setCropGalleryIdx(idx);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  };
 
-    try {
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        body: formData
-      });
-      const json = await res.json();
-      if (json.success) {
-        handleUpdateGalleryImage(idx, json.url);
-      } else {
-        alert("Upload failed: " + json.error);
+  const handleCropComplete = async (croppedFile: File) => {
+    if (!cropType) return;
+
+    const formData = new FormData();
+    formData.append("file", croppedFile);
+
+    if (cropType === "cover") {
+      setUploadingImage(true);
+      try {
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          body: formData
+        });
+        const json = await res.json();
+        if (json.success) {
+          setImage(json.url);
+        } else {
+          alert("Upload failed: " + json.error);
+        }
+      } catch (err) {
+        console.error(err);
+        alert("An error occurred during file upload.");
+      } finally {
+        setUploadingImage(false);
+        setCropImageSrc(null);
+        setCropType(null);
       }
-    } catch (err) {
-      console.error(err);
-      alert("An error occurred during file upload.");
-    } finally {
-      setUploadingGalleryIdx(null);
+    } else if (cropType === "gallery" && cropGalleryIdx !== null) {
+      setUploadingGalleryIdx(cropGalleryIdx);
+      try {
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          body: formData
+        });
+        const json = await res.json();
+        if (json.success) {
+          handleUpdateGalleryImage(cropGalleryIdx, json.url);
+        } else {
+          alert("Upload failed: " + json.error);
+        }
+      } catch (err) {
+        console.error(err);
+        alert("An error occurred during file upload.");
+      } finally {
+        setUploadingGalleryIdx(null);
+        setCropImageSrc(null);
+        setCropType(null);
+        setCropGalleryIdx(null);
+      }
     }
+  };
+
+  const handleCropCancel = () => {
+    setCropImageSrc(null);
+    setCropType(null);
+    setCropGalleryIdx(null);
   };
 
   // Multiple Blog Videos Helpers
@@ -394,87 +437,132 @@ export default function AdminBlogsPage() {
         <input
           type="text"
           placeholder="Search articles by title, author, category..."
-          className="glass-input search-blogs-input"
+          className="form-control search-blogs-input"
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          onChange={(e) => {
+            setSearchQuery(e.target.value);
+            setCurrentPage(1);
+          }}
         />
       </div>
 
       {loading ? (
         <p className="admin-loading">Loading publication catalog...</p>
-      ) : (
-        <div className="admin-split-layout">
-          <div className="split-list-col">
-            <h3 className="column-title">Articles List ({filteredBlogs.length})</h3>
-            <div className="table-responsive-container">
-              <table className="admin-glass-table">
-                <thead>
-                  <tr>
-                    <th>Article Details</th>
-                    <th>Category</th>
-                    <th>Featured Section</th>
-                    <th>Author</th>
-                    <th>Read Estimate</th>
-                    <th>Date</th>
-                    <th className="text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredBlogs.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} className="admin-empty-cell">
-                        No matching articles found in catalog.
-                      </td>
-                    </tr>
-                  ) : (
-                    filteredBlogs.map(b => (
-                      <tr key={b.id}>
-                        <td>
-                          <div className="table-service-info">
-                            <span className="service-name">{b.title}</span>
-                            <span className="service-desc-tooltip">
-                              {b.content.length > 80 ? `${b.content.substring(0, 77)}...` : b.content}
-                            </span>
-                          </div>
-                        </td>
-                        <td>
-                          <span className="category-chip">{b.category}</span>
-                        </td>
-                        <td>
-                          {b.section ? (
-                            <span className="section-badge">{b.section}</span>
-                          ) : (
-                            <span className="muted-italic-sm">Regular Feed</span>
-                          )}
-                        </td>
-                        <td>
-                          <span className="duration-text">{b.author}</span>
-                        </td>
-                        <td>
-                          <span className="readtime-text">⏱️ {b.readTime}</span>
-                        </td>
-                        <td>
-                          <span className="date-text">{b.date}</span>
-                        </td>
-                        <td className="text-right">
-                          <div className="action-buttons-cell">
-                            <button className="edit-row-btn" onClick={() => handleOpenEditModal(b)}>
-                              ✎ Edit
-                            </button>
-                            <button className="delete-row-btn" onClick={() => handleDeleteBlog(b.id)}>
-                              ✕ Delete
-                            </button>
-                          </div>
-                        </td>
+      ) : (() => {
+        const totalPages = Math.ceil(filteredBlogs.length / itemsPerPage);
+        const paginatedBlogs = filteredBlogs.slice(
+          (currentPage - 1) * itemsPerPage,
+          currentPage * itemsPerPage
+        );
+        return (
+          <div className="admin-split-layout">
+            <div className="split-list-col">
+              <Card variant="glass" className="card-primary" style={{ padding: "0 !important" }}>
+                <div style={{ borderBottom: "1px solid #dee2e6", padding: "12px 20px", background: "#f8f9fa", fontWeight: "700" }}>
+                  Articles List ({filteredBlogs.length})
+                </div>
+                <div className="table-responsive-container">
+                  <table className="admin-glass-table">
+                    <thead>
+                      <tr>
+                        <th>Article Details</th>
+                        <th>Category</th>
+                        <th>Featured Section</th>
+                        <th>Author</th>
+                        <th>Read Estimate</th>
+                        <th>Date</th>
+                        <th className="text-right">Actions</th>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+                    </thead>
+                    <tbody>
+                      {paginatedBlogs.length === 0 ? (
+                        <tr>
+                          <td colSpan={7} className="admin-empty-cell text-center" style={{ padding: "20px" }}>
+                            No matching articles found in catalog.
+                          </td>
+                        </tr>
+                      ) : (
+                        paginatedBlogs.map(b => (
+                          <tr key={b.id}>
+                            <td>
+                              <div className="table-service-info">
+                                <span className="service-name"><strong>{b.title}</strong></span>
+                                <div className="service-desc-tooltip" title={b.content} style={{ fontSize: "0.78rem", color: "#6c757d", maxWidth: "250px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                  {b.content.replace(/<[^>]*>/g, " ").substring(0, 80)}...
+                                </div>
+                              </div>
+                            </td>
+                            <td>
+                              <span className="category-badge">{b.category}</span>
+                            </td>
+                            <td>
+                              {b.section ? (
+                                <span className="category-badge" style={{ background: "#cce5ff", color: "#004085", borderColor: "#b8daff" }}>{b.section}</span>
+                              ) : (
+                                <span style={{ fontSize: "0.8rem", color: "#adb5bd", fontStyle: "italic" }}>Regular Feed</span>
+                              )}
+                            </td>
+                            <td>
+                              <span>{b.author}</span>
+                            </td>
+                            <td>
+                              <span>⏱️ {b.readTime}</span>
+                            </td>
+                            <td style={{ whiteSpace: "nowrap" }}>
+                              <span>{b.date}</span>
+                            </td>
+                            <td className="text-right">
+                              <div className="action-buttons-cell" style={{ display: "flex", gap: "4px", justifyContent: "flex-end" }}>
+                                <button className="btn btn-primary btn-sm" onClick={() => window.open(`/blog/${b.id}`, '_blank')}>
+                                  👁 View
+                                </button>
+                                <button className="btn btn-secondary btn-sm" onClick={() => handleOpenEditModal(b)}>
+                                  ✎ Edit
+                                </button>
+                                <button className="btn btn-danger btn-sm" onClick={() => handleDeleteBlog(b.id)}>
+                                  ✕ Delete
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Pagination Controls */}
+                {totalPages > 1 && (
+                  <div className="admin-pagination-wrapper">
+                    <span className="pagination-info">
+                      Showing {filteredBlogs.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1} to {Math.min(filteredBlogs.length, currentPage * itemsPerPage)} of {filteredBlogs.length} entries
+                    </span>
+                    <ul className="admin-pagination">
+                      <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                        <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1}>«</button>
+                      </li>
+                      <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                        <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1}>Prev</button>
+                      </li>
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNum => (
+                        <li key={pageNum} className={`page-item ${currentPage === pageNum ? 'active' : ''}`}>
+                          <button onClick={() => setCurrentPage(pageNum)}>{pageNum}</button>
+                        </li>
+                      ))}
+                      <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+                        <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages}>Next</button>
+                      </li>
+                      <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+                        <button onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages}>»</button>
+                      </li>
+                    </ul>
+                  </div>
+                )}
+              </Card>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Modal Popup for Creating/Editing Blog */}
       {isModalOpen && (
@@ -647,7 +735,7 @@ export default function AdminBlogsPage() {
                       <input 
                         type="file" 
                         accept="image/*" 
-                        onChange={handleFileUpload}
+                        onChange={handleCoverImageSelect}
                         className="hidden-file-input"
                         disabled={uploadingImage}
                       />
@@ -684,7 +772,7 @@ export default function AdminBlogsPage() {
                             <input 
                               type="file" 
                               accept="image/*" 
-                              onChange={(e) => handleGalleryUpload(e, idx)}
+                              onChange={(e) => handleGalleryImageSelect(e, idx)}
                               className="hidden-file-input"
                               disabled={uploadingGalleryIdx !== null}
                             />
@@ -821,6 +909,16 @@ export default function AdminBlogsPage() {
             </Card>
           </div>
         </div>
+      )}
+
+      {cropImageSrc && (
+        <ImageCropperModal
+          imageSrc={cropImageSrc}
+          aspectRatio={cropType === "cover" ? "16:9" : "1:1"}
+          title={cropType === "cover" ? "Crop Cover Image (16:9)" : "Crop Gallery Image (1:1)"}
+          onCropComplete={handleCropComplete}
+          onCancel={handleCropCancel}
+        />
       )}
 
       <style jsx>{`

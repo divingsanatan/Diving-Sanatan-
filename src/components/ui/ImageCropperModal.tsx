@@ -8,12 +8,16 @@ interface ImageCropperModalProps {
   imageSrc: string;
   onCropComplete: (file: File) => void;
   onCancel: () => void;
+  aspectRatio?: "circle" | "16:9" | "1:1";
+  title?: string;
 }
 
 export const ImageCropperModal: React.FC<ImageCropperModalProps> = ({
   imageSrc,
   onCropComplete,
   onCancel,
+  aspectRatio = "circle",
+  title = "Crop Image",
 }) => {
   const [zoom, setZoom] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
@@ -24,6 +28,14 @@ export const ImageCropperModal: React.FC<ImageCropperModalProps> = ({
   const imageRef = useRef<HTMLImageElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
+  // Setup dimensions based on aspect ratio
+  const is169 = aspectRatio === "16:9";
+  const cropWidth = is169 ? 320 : 300;
+  const cropHeight = is169 ? 180 : 300;
+
+  const canvasWidth = is169 ? 1200 : 400;
+  const canvasHeight = is169 ? 675 : 400;
+
   // Reset zoom and offset when image source changes
   useEffect(() => {
     setZoom(1);
@@ -32,10 +44,9 @@ export const ImageCropperModal: React.FC<ImageCropperModalProps> = ({
 
   const handleImageLoaded = (e: React.SyntheticEvent<HTMLImageElement>) => {
     const img = e.currentTarget;
-    // Calculate scale to fill a 300x300 container
-    const scaleX = 300 / img.naturalWidth;
-    const scaleY = 300 / img.naturalHeight;
-    // We want the image to completely cover the container (min-scale is the max of both fits)
+    const scaleX = cropWidth / img.naturalWidth;
+    const scaleY = cropHeight / img.naturalHeight;
+    // We want the image to completely cover the container
     const minScale = Math.max(scaleX, scaleY);
     setBaseScale(minScale);
   };
@@ -93,37 +104,38 @@ export const ImageCropperModal: React.FC<ImageCropperModalProps> = ({
     if (!imageRef.current) return;
 
     const canvas = document.createElement("canvas");
-    canvas.width = 400;
-    canvas.height = 400;
+    canvas.width = canvasWidth;
+    canvas.height = canvasHeight;
     const ctx = canvas.getContext("2d");
 
     if (ctx) {
-      // 1. Clear background
+      // Clear background
       ctx.fillStyle = "#ffffff";
-      ctx.fillRect(0, 0, 400, 400);
+      ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
-      // 2. Translate center of canvas
-      ctx.translate(200, 200);
+      // Translate center of canvas
+      ctx.translate(canvasWidth / 2, canvasHeight / 2);
 
-      // 3. Apply offset and scale mapping from container (300px) to canvas (400px)
-      const canvasScale = 400 / 300;
+      // Apply offset and scale mapping from container to canvas
+      const canvasScale = canvasWidth / cropWidth;
       ctx.translate(offset.x * canvasScale, offset.y * canvasScale);
 
       const finalScale = zoom * baseScale * canvasScale;
       ctx.scale(finalScale, finalScale);
 
-      // 4. Draw image centered
+      // Draw image centered
       ctx.drawImage(
         imageRef.current,
         -imageRef.current.naturalWidth / 2,
         -imageRef.current.naturalHeight / 2
       );
 
-      // 5. Output cropped image blob
+      // Output cropped image blob
       canvas.toBlob(
         (blob) => {
           if (blob) {
-            const croppedFile = new File([blob], "healer-profile.jpg", {
+            const filename = aspectRatio === "circle" ? "profile.jpg" : is169 ? "blog-cover.jpg" : "gallery.jpg";
+            const croppedFile = new File([blob], filename, {
               type: "image/jpeg",
             });
             onCropComplete(croppedFile);
@@ -138,15 +150,16 @@ export const ImageCropperModal: React.FC<ImageCropperModalProps> = ({
   return (
     <div className="crop-modal-overlay">
       <Card variant="glass" className="crop-modal-card">
-        <h3 className="crop-title">Crop Profile Picture</h3>
+        <h3 className="crop-title">{title}</h3>
         <p className="crop-subtitle">
-          Drag the image to position and use the slider to zoom. The photo will be cropped to a circle.
+          Drag the image to position and use the slider to zoom. The photo will be cropped to the highlighted area.
         </p>
 
         {/* Crop Window Container */}
         <div
           ref={containerRef}
           className="crop-container"
+          style={{ width: `${cropWidth}px`, height: `${cropHeight}px` }}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
@@ -162,8 +175,10 @@ export const ImageCropperModal: React.FC<ImageCropperModalProps> = ({
             onLoad={handleImageLoaded}
             className="crop-image"
           />
-          {/* Circular mask overlay */}
-          <div className="crop-mask-circle"></div>
+          {/* Mask overlays based on aspect ratio */}
+          {aspectRatio === "circle" && <div className="crop-mask-circle"></div>}
+          {aspectRatio === "16:9" && <div className="crop-mask-rect rect-16-9"></div>}
+          {aspectRatio === "1:1" && <div className="crop-mask-rect rect-1-1"></div>}
         </div>
 
         {/* Zoom Controls */}
@@ -197,7 +212,7 @@ export const ImageCropperModal: React.FC<ImageCropperModalProps> = ({
             Cancel
           </Button>
           <Button variant="gold" onClick={handleCrop} type="button">
-            Crop & Save Profile Picture
+            Crop &amp; Upload
           </Button>
         </div>
       </Card>
@@ -243,8 +258,6 @@ export const ImageCropperModal: React.FC<ImageCropperModalProps> = ({
 
         .crop-container {
           position: relative;
-          width: 300px;
-          height: 300px;
           margin: 0 auto 24px;
           border-radius: 12px;
           overflow: hidden;
@@ -253,6 +266,7 @@ export const ImageCropperModal: React.FC<ImageCropperModalProps> = ({
           cursor: move;
           touch-action: none;
           box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8);
+          border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .crop-image {
@@ -277,6 +291,25 @@ export const ImageCropperModal: React.FC<ImageCropperModalProps> = ({
           box-shadow: 0 0 0 9999px rgba(15, 12, 30, 0.65);
           border: 2px dashed rgba(212, 175, 55, 0.7);
           pointer-events: none;
+        }
+
+        .crop-mask-rect {
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          box-shadow: 0 0 0 9999px rgba(15, 12, 30, 0.65);
+          border: 2px dashed rgba(212, 175, 55, 0.7);
+          pointer-events: none;
+        }
+
+        .crop-mask-rect.rect-16-9 {
+          border-radius: 4px;
+        }
+
+        .crop-mask-rect.rect-1-1 {
+          border-radius: 8px;
         }
 
         .crop-controls {

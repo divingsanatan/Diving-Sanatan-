@@ -80,9 +80,9 @@ export default function ComparisonIndexPage() {
 
       <style jsx>{`
         .comparison-index { display: flex; flex-direction: column; gap: 32px; }
-        .comp-header { text-align: center; }
+        .comp-header { text-align: left; }
         .page-title { font-size: 2.4rem; color: #4c1d95; margin-bottom: 8px; font-family: var(--font-serif); }
-        .page-subtitle { font-size: 1rem; color: hsl(var(--text-muted)); max-width: 600px; margin: 0 auto; }
+        .page-subtitle { font-size: 1rem; color: hsl(var(--text-muted)); max-width: 600px; margin: 0; }
         .comparison-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; }
         :global(.comparison-card-link) { text-decoration: none; }
         :global(.comparison-card) { padding: 28px !important; display: flex; flex-direction: column; gap: 12px; transition: var(--transition-smooth); cursor: pointer; height: 100%; }

@@ -9,7 +9,7 @@ import { BlogProvider, useBlog } from "./BlogContext";
 import { usePathname } from "next/navigation";
 
 function BlogLayoutInner({ children }: { children: React.ReactNode }) {
-  const { searchQuery, setSearchQuery } = useBlog();
+  const { searchQuery, setSearchQuery, activeBlog } = useBlog();
   const pathname = usePathname();
 
   // Per-page search config
@@ -25,6 +25,12 @@ function BlogLayoutInner({ children }: { children: React.ReactNode }) {
   const config = searchConfig[pathname] ?? { title: "Search", placeholder: "Type keywords..." };
   const isFullWidthPage = pathname === "/blog/faq" || pathname === "/blog/glossary" || pathname.startsWith("/blog/quora-qa");
 
+  const isVideoBlog = activeBlog && (
+    (activeBlog.videos && activeBlog.videos.length > 0) ||
+    activeBlog.category.toLowerCase() === "video transcripts" ||
+    activeBlog.category.toLowerCase() === "video blog"
+  );
+
   return (
     <div className="page-col">
       <Header />
@@ -32,41 +38,43 @@ function BlogLayoutInner({ children }: { children: React.ReactNode }) {
       <div className="blog-layout-container">
         {/* Sidebar on the Left */}
         <aside className="blog-sidebar-container">
-          <div className="sidebar-search-box">
-            <div className="sidebar-title-row">
-              <svg viewBox="0 0 100 100" className="sidebar-lotus-icon">
-                <path d="M50 25 C45 45 35 60 50 80 C65 60 55 45 50 25 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
-                <path d="M50 80 C35 75 25 60 20 40 C35 50 45 60 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
-                <path d="M50 80 C65 75 75 60 80 40 C65 50 55 60 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
-                <path d="M50 80 C30 80 10 70 5 55 C20 65 35 70 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
-                <path d="M50 80 C70 80 90 70 95 55 C80 65 65 70 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
-              </svg>
-              <h4 className="sidebar-heading-small">{config.title}</h4>
+          {!isVideoBlog && (
+            <div className="sidebar-search-box">
+              <div className="sidebar-title-row">
+                <svg viewBox="0 0 100 100" className="sidebar-lotus-icon">
+                  <path d="M50 25 C45 45 35 60 50 80 C65 60 55 45 50 25 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
+                  <path d="M50 80 C35 75 25 60 20 40 C35 50 45 60 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
+                  <path d="M50 80 C65 75 75 60 80 40 C65 50 55 60 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
+                  <path d="M50 80 C30 80 10 70 5 55 C20 65 35 70 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
+                  <path d="M50 80 C70 80 90 70 95 55 C80 65 65 70 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
+                </svg>
+                <h4 className="sidebar-heading-small">{config.title}</h4>
+              </div>
+              
+              <div className="blog-search-wrapper">
+                <input
+                  type="text"
+                  placeholder={config.placeholder}
+                  className="search-input"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                <svg className="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                {searchQuery && (
+                  <button
+                    className="search-clear-btn"
+                    onClick={() => setSearchQuery("")}
+                    aria-label="Clear search"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
             </div>
-            
-            <div className="blog-search-wrapper">
-              <input
-                type="text"
-                placeholder={config.placeholder}
-                className="search-input"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              <svg className="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="11" cy="11" r="8"></circle>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-              </svg>
-              {searchQuery && (
-                <button
-                  className="search-clear-btn"
-                  onClick={() => setSearchQuery("")}
-                  aria-label="Clear search"
-                >
-                  ✕
-                </button>
-              )}
-            </div>
-          </div>
+          )}
           
           <BlogSidebar />
         </aside>

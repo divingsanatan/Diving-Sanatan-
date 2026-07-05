@@ -4,10 +4,15 @@ import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/Card";
 import { formatCurrency } from "@/utils/formatters";
 import { Booking } from "@/types/database";
+import { RefreshCw } from "lucide-react";
 
 export default function AdminBookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
 
   const loadBookings = async () => {
     try {
@@ -16,6 +21,7 @@ export default function AdminBookingsPage() {
       const json = await res.json();
       if (json.success) {
         setBookings(json.data);
+        setCurrentPage(1); // Reset page on refresh
       }
     } catch (err) {
       console.error(err);
@@ -47,25 +53,30 @@ export default function AdminBookingsPage() {
     }
   };
 
+  // Pagination Logic
+  const totalPages = Math.ceil(bookings.length / itemsPerPage);
+  const paginatedBookings = bookings.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   return (
     <div className="dashboard-content">
-      <div className="dashboard-header-row">
-        <div>
-          <h2>Bookings Scheduler</h2>
-          <p className="admin-header-desc">
-            Monitor and coordinate scheduled appointments, manage confirmation states, and track customer payments.
-          </p>
-        </div>
-        <button className="sync-btn" onClick={loadBookings}>
-          🔄 Refresh Bookings
+      <div className="flex-between mb-3">
+        <p style={{ margin: 0, color: "#6c757d", fontSize: "0.9rem" }}>
+          Monitor and coordinate scheduled appointments, manage confirmation states, and track customer payments.
+        </p>
+        <button className="btn btn-secondary btn-sm" onClick={loadBookings}>
+          <RefreshCw size={12} style={{ marginRight: "6px" }} />
+          Refresh Bookings
         </button>
       </div>
 
       {loading ? (
-        <p className="admin-loading">Loading bookings...</p>
+        <p className="text-center" style={{ padding: "40px", color: "#6c757d" }}>Loading bookings...</p>
       ) : (
-        <Card variant="glass" className="admin-card-flush">
-          <div className="table-wrapper">
+        <Card variant="glass" className="card-primary" style={{ padding: "0 !important" }}>
+          <div className="table-responsive">
             <table className="admin-table">
               <thead>
                 <tr>
@@ -80,21 +91,21 @@ export default function AdminBookingsPage() {
                 </tr>
               </thead>
               <tbody>
-                {bookings.length === 0 ? (
+                {paginatedBookings.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="bookings-empty-cell">No scheduled appointments.</td>
+                    <td colSpan={8} className="text-center" style={{ padding: "20px" }}>No scheduled appointments.</td>
                   </tr>
                 ) : (
-                  bookings.map(b => (
+                  paginatedBookings.map(b => (
                     <tr key={b.id}>
                       <td>
                         <strong>{b.clientName}</strong>
-                        <div className="client-meta">{b.clientEmail} | {b.clientPhone}</div>
+                        <div style={{ fontSize: "0.75rem", color: "#6c757d" }}>{b.clientEmail} | {b.clientPhone}</div>
                       </td>
                       <td>{b.serviceName}</td>
                       <td>{b.practitionerName}</td>
                       <td>{b.date} ({b.timeSlot})</td>
-                      <td className="bookings-price-cell">{formatCurrency(b.price)}</td>
+                      <td style={{ fontWeight: "600" }}>{formatCurrency(b.price)}</td>
                       <td>
                         <span className={`status-badge ${b.status}`}>
                           {b.status}
@@ -106,23 +117,23 @@ export default function AdminBookingsPage() {
                         </span>
                       </td>
                       <td>
-                        <div className="action-btns-group">
+                        <div style={{ display: "flex", gap: "6px" }}>
                           {b.status === "pending" && (
-                            <button className="tbl-btn success" onClick={() => handleUpdateStatus(b.id, "status", "confirmed")}>
+                            <button className="btn btn-success btn-sm" onClick={() => handleUpdateStatus(b.id, "status", "confirmed")}>
                               Confirm
                             </button>
                           )}
                           {b.status !== "cancelled" && (
-                            <button className="tbl-btn danger" onClick={() => handleUpdateStatus(b.id, "status", "cancelled")}>
+                            <button className="btn btn-danger btn-sm" onClick={() => handleUpdateStatus(b.id, "status", "cancelled")}>
                               Cancel
                             </button>
                           )}
                           {b.paymentStatus === "unpaid" ? (
-                            <button className="tbl-btn pay" onClick={() => handleUpdateStatus(b.id, "paymentStatus", "paid")}>
+                            <button className="btn btn-primary btn-sm" onClick={() => handleUpdateStatus(b.id, "paymentStatus", "paid")}>
                               Mark Paid
                             </button>
                           ) : (
-                            <button className="tbl-btn pay-un" onClick={() => handleUpdateStatus(b.id, "paymentStatus", "unpaid")}>
+                            <button className="btn btn-secondary btn-sm" onClick={() => handleUpdateStatus(b.id, "paymentStatus", "unpaid")}>
                               Mark Unpaid
                             </button>
                           )}
@@ -134,120 +145,44 @@ export default function AdminBookingsPage() {
               </tbody>
             </table>
           </div>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="admin-pagination-wrapper">
+              <span className="pagination-info">
+                Showing {bookings.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1} to {Math.min(bookings.length, currentPage * itemsPerPage)} of {bookings.length} entries
+              </span>
+              <ul className="admin-pagination">
+                <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                  <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1}>« First</button>
+                </li>
+                <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                  <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1}>Prev</button>
+                </li>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNum => (
+                  <li key={pageNum} className={`page-item ${currentPage === pageNum ? 'active' : ''}`}>
+                    <button onClick={() => setCurrentPage(pageNum)}>{pageNum}</button>
+                  </li>
+                ))}
+                <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+                  <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages}>Next</button>
+                </li>
+                <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+                  <button onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages}>Last »</button>
+                </li>
+              </ul>
+            </div>
+          )}
         </Card>
       )}
 
       <style jsx>{`
-        .dashboard-content {
-          display: flex;
-          flex-direction: column;
-          gap: 32px;
+        .mb-3 {
+          margin-bottom: 1rem;
         }
-        .dashboard-header-row {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-        }
-        .dashboard-header-row h2 {
-          font-family: var(--font-serif);
-          color: #4c1d95;
-          font-size: 1.8rem;
-        }
-        .sync-btn {
-          background: rgba(0,0,0,0.02);
-          border: 1px solid rgba(0,0,0,0.08);
-          color: hsl(var(--text-cream));
-          padding: 10px 18px;
-          border-radius: 8px;
-          cursor: pointer;
-          font-size: 0.85rem;
-          font-weight: 600;
-          transition: var(--transition-fast);
-        }
-        .sync-btn:hover {
-          background: rgba(168, 85, 247, 0.08);
-          border-color: #7c3aed;
-          color: #7c3aed;
-        }
-        .table-wrapper {
+        .table-responsive {
           width: 100%;
           overflow-x: auto;
-        }
-        .admin-table {
-          width: 100%;
-          border-collapse: collapse;
-          text-align: left;
-          font-size: 0.88rem;
-        }
-        .admin-table th {
-          background: rgba(0,0,0,0.02);
-          border-bottom: 1px solid rgba(0,0,0,0.08);
-          padding: 16px 20px;
-          font-weight: 600;
-          text-transform: uppercase;
-          font-size: 0.75rem;
-          color: hsl(var(--text-muted));
-          letter-spacing: 0.05em;
-        }
-        .admin-table td {
-          border-bottom: 1px solid rgba(0,0,0,0.05);
-          padding: 18px 20px;
-          vertical-align: middle;
-        }
-        .client-meta {
-          font-size: 0.75rem;
-          color: hsl(var(--text-muted));
-          margin-top: 4px;
-        }
-        .status-badge {
-          font-size: 0.7rem;
-          font-weight: 700;
-          padding: 4px 10px;
-          border-radius: 6px;
-          text-transform: uppercase;
-        }
-        .status-badge.confirmed { background: rgba(34, 197, 94, 0.08); color: #15803d; border: 1px solid rgba(34, 197, 94, 0.25); }
-        .status-badge.pending { background: rgba(234, 179, 8, 0.08); color: #b45309; border: 1px solid rgba(234, 179, 8, 0.25); }
-        .status-badge.cancelled { background: rgba(239, 68, 68, 0.08); color: #b91c1c; border: 1px solid rgba(239, 68, 68, 0.25); }
- 
-        .payment-badge {
-          font-size: 0.7rem;
-          font-weight: 700;
-          padding: 4px 10px;
-          border-radius: 6px;
-          text-transform: uppercase;
-        }
-        .payment-badge.paid { background: rgba(34, 197, 94, 0.08); color: #15803d; border: 1px solid rgba(34, 197, 94, 0.25); }
-        .payment-badge.unpaid { background: rgba(239, 68, 68, 0.08); color: #b91c1c; border: 1px solid rgba(239, 68, 68, 0.25); }
-        
-        .action-btns-group {
-          display: flex;
-          gap: 6px;
-        }
-        .tbl-btn {
-          border: none;
-          padding: 6px 12px;
-          border-radius: 6px;
-          cursor: pointer;
-          font-size: 0.75rem;
-          font-weight: 600;
-          transition: var(--transition-fast);
-        }
-        .tbl-btn.success { background: rgba(34, 197, 94, 0.08); color: #15803d; border: 1px solid rgba(34, 197, 94, 0.2); }
-        .tbl-btn.success:hover { background: #15803d; color: #fff; }
-        .tbl-btn.danger { background: rgba(239, 68, 68, 0.08); color: #b91c1c; border: 1px solid rgba(239, 68, 68, 0.2); }
-        .tbl-btn.danger:hover { background: #b91c1c; color: #fff; }
-        .tbl-btn.pay { background: rgba(168, 85, 247, 0.08); color: #6d28d9; border: 1px solid rgba(168, 85, 247, 0.25); }
-        .tbl-btn.pay:hover { background: #7c3aed; color: #fff; }
-        .tbl-btn.pay-un { background: rgba(0,0,0,0.02); color: hsl(var(--text-muted)); border: 1px solid rgba(0,0,0,0.08); }
-        .tbl-btn.pay-un:hover { border-color: #ef4444; color: #ef4444; }
-        .bookings-empty-cell {
-          text-align: center;
-          padding: 32px;
-        }
-        .bookings-price-cell {
-          font-family: var(--font-serif);
-          font-weight: 600;
         }
       `}</style>
     </div>

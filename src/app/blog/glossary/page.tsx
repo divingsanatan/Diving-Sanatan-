@@ -198,7 +198,7 @@ export default function GlossaryPage() {
           width: 100%;
         }
         .glossary-header {
-          text-align: center;
+          text-align: left;
           padding: 8px 0 0;
         }
         .glossary-title {
@@ -212,12 +212,12 @@ export default function GlossaryPage() {
           font-size: 1rem;
           color: hsl(var(--text-muted));
           max-width: 650px;
-          margin: 0 auto;
+          margin: 0;
         }
         .glossary-controls-section {
           display: flex;
           flex-direction: column;
-          align-items: center;
+          align-items: flex-start;
           gap: 16px;
           padding: 16px 10px;
           width: 100%;
@@ -239,7 +239,7 @@ export default function GlossaryPage() {
         .alphabet-bar {
           display: flex;
           flex-wrap: wrap;
-          justify-content: center;
+          justify-content: flex-start;
           gap: 6px;
           width: 100%;
           max-width: 720px;

@@ -5,8 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useBlog } from "./BlogContext";
 import { Service } from "@/types/database";
-import { 
-  Flower, Sparkles, Heart, Volume2, User, 
+import {
+  Flower, Sparkles, Heart, Volume2, User,
   Search, Monitor, Play, Compass, RefreshCw,
   ChevronLeft, ChevronRight, BookOpen, Clock, Calendar
 } from "lucide-react";
@@ -32,6 +32,10 @@ export default function BlogListingPage() {
   const [services, setServices] = useState<Service[]>([]);
   const { searchQuery, activeCategory } = useBlog();
   const [loading, setLoading] = useState(true);
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
 
   const servicesScrollRef = useRef<HTMLDivElement>(null);
 
@@ -72,6 +76,7 @@ export default function BlogListingPage() {
       result = result.filter(b => b.title.toLowerCase().includes(q) || b.content.toLowerCase().includes(q));
     }
     setFilteredBlogs(result);
+    setCurrentPage(1); // Reset page on category or search filter
   }, [blogs, activeCategory, searchQuery]);
 
   const scrollCarousel = (ref: React.RefObject<HTMLDivElement | null>, direction: "left" | "right") => {
@@ -110,10 +115,10 @@ export default function BlogListingPage() {
       <Link href={`/blog/${post.id}`} style={{ display: 'block', textDecoration: 'none', color: 'inherit', width: '100%' }}>
         <div className="blog-item-card">
           <div className="blog-card-media-wrapper">
-            <img 
-              src={post.image || "/images/insight_blog.png"} 
-              alt={post.title} 
-              className="blog-media-img" 
+            <img
+              src={post.image || "/images/insight_blog.png"}
+              alt={post.title}
+              className="blog-media-img"
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
                 target.src = "/images/insight_blog.png";
@@ -127,12 +132,13 @@ export default function BlogListingPage() {
             <h4 className="blog-card-title">{post.title}</h4>
             <p className="blog-card-desc">{post.content.replace(/<[^>]*>/g, '').substring(0, 100)}...</p>
             <div className="blog-author-row">
-              <div className="author-avatar">{post.author.charAt(0)}</div>
-              <div className="author-details">
-                <span className="author-name">{post.author}</span>
-                <span className="author-separator">•</span>
-                <span className="blog-date">{post.date}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div className="author-avatar">{post.author.charAt(0)}</div>
+                <div className="author-details">
+
+                </div>
               </div>
+              <span className="blog-view-action">Read Article →</span>
             </div>
           </div>
         </div>
@@ -140,7 +146,55 @@ export default function BlogListingPage() {
     </div>
   );
 
+  const renderPaginationControls = (totalPages: number) => {
+    if (totalPages <= 1) return null;
+    return (
+      <div className="blog-pagination-wrapper">
+        <button
+          onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+          disabled={currentPage === 1}
+          className="pagination-arrow-btn"
+        >
+          <ChevronLeft size={16} />
+          <span>Prev</span>
+        </button>
+        <div className="pagination-numbers">
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNum => (
+            <button
+              key={pageNum}
+              onClick={() => setCurrentPage(pageNum)}
+              className={`pagination-number-btn ${currentPage === pageNum ? 'active' : ''}`}
+            >
+              {pageNum}
+            </button>
+          ))}
+        </div>
+        <button
+          onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+          disabled={currentPage === totalPages}
+          className="pagination-arrow-btn"
+        >
+          <span>Next</span>
+          <ChevronRight size={16} />
+        </button>
+      </div>
+    );
+  };
+
   const isFilteringActive = activeCategory !== "all" || searchQuery !== "";
+
+  // Pagination Calculations
+  const totalPagesFiltered = Math.ceil(filteredBlogs.length / itemsPerPage);
+  const paginatedFilteredBlogs = filteredBlogs.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const totalPagesAll = Math.ceil(blogs.length / itemsPerPage);
+  const paginatedAllBlogs = blogs.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   return (
     <div className="blog-center-dashboard">
@@ -176,15 +230,18 @@ export default function BlogListingPage() {
               <p>No articles found matching your query metrics.</p>
             </div>
           ) : (
-            <div className="latest-posts-grid">
-              {filteredBlogs.map(post => renderBlogCard(post))}
-            </div>
+            <>
+              <div className="latest-posts-grid">
+                {paginatedFilteredBlogs.map(post => renderBlogCard(post))}
+              </div>
+              {renderPaginationControls(totalPagesFiltered)}
+            </>
           )}
         </div>
       ) : (
         // DEFAULT LANDING STATE DASHBOARD
         <div className="dashboard-content-stack">
-          
+
           {/* Hero Banner Card */}
           <div className="blog-hero-banner">
             <div className="banner-text-content">
@@ -194,7 +251,7 @@ export default function BlogListingPage() {
                 Explore All Articles
               </button>
             </div>
-            
+
             {/* Background lotus outlines */}
             <div className="banner-lotus-watermark">
               <svg viewBox="0 0 100 100" className="banner-watermark-svg">
@@ -264,9 +321,12 @@ export default function BlogListingPage() {
                 <p>No articles currently published in the catalog.</p>
               </div>
             ) : (
-              <div className="latest-posts-grid">
-                {blogs.map(post => renderBlogCard(post))}
-              </div>
+              <>
+                <div className="latest-posts-grid">
+                  {paginatedAllBlogs.map(post => renderBlogCard(post))}
+                </div>
+                {renderPaginationControls(totalPagesAll)}
+              </>
             )}
           </div>
 
@@ -550,6 +610,71 @@ export default function BlogListingPage() {
           color: #6b7280;
           font-size: 0.85rem;
         }
+
+        /* Blog Pagination Styles */
+        .blog-pagination-wrapper {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          gap: 16px;
+          margin-top: 32px;
+          padding-top: 16px;
+          border-top: 1px solid rgba(168, 85, 247, 0.08);
+          width: 100%;
+        }
+        .pagination-arrow-btn {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          padding: 8px 16px;
+          border-radius: 20px;
+          border: 1px solid rgba(168, 85, 247, 0.15);
+          background: #ffffff;
+          color: #7c3aed;
+          font-size: 0.8rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+        .pagination-arrow-btn:hover:not(:disabled) {
+          background: #faf5ff;
+          border-color: #7c3aed;
+          transform: translateY(-1px);
+        }
+        .pagination-arrow-btn:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+        .pagination-numbers {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .pagination-number-btn {
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          border: 1px solid transparent;
+          background: transparent;
+          color: #4b5563;
+          font-size: 0.85rem;
+          font-weight: 600;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+        .pagination-number-btn:hover:not(.active) {
+          background: #faf5ff;
+          color: #7c3aed;
+          border-color: rgba(168, 85, 247, 0.15);
+        }
+        .pagination-number-btn.active {
+          background: #7c3aed;
+          color: #ffffff;
+          box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
+        }
       `}</style>
 
       <style jsx global>{`
@@ -575,7 +700,7 @@ export default function BlogListingPage() {
         .blog-item-card {
           background: #ffffff;
           border: 1px solid rgba(168, 85, 247, 0.08);
-          border-radius: 20px;
+          border-radius: 8px;
           overflow: hidden;
           display: flex;
           flex-direction: column;
@@ -590,7 +715,7 @@ export default function BlogListingPage() {
         }
         .blog-card-media-wrapper {
           width: 100%;
-          height: 120px;
+          height: 170px;
           overflow: hidden;
           background: #faf5ff;
           position: relative;
@@ -606,7 +731,7 @@ export default function BlogListingPage() {
           font-size: 0.65rem;
           font-weight: 700;
           padding: 4px 10px;
-          border-radius: 20px;
+          border-radius: 6px;
           text-transform: uppercase;
           border: 1px solid rgba(168, 85, 247, 0.1);
           z-index: 2;
@@ -621,7 +746,7 @@ export default function BlogListingPage() {
           font-size: 0.65rem;
           font-weight: 600;
           padding: 4px 10px;
-          border-radius: 20px;
+          border-radius: 6px;
           border: 1px solid rgba(0, 0, 0, 0.05);
           z-index: 2;
         }
@@ -637,7 +762,7 @@ export default function BlogListingPage() {
           transform: scale(1.05);
         }
         .blog-card-body {
-          padding: 16px;
+          padding: 18px;
           display: flex;
           flex-direction: column;
           gap: 8px;
@@ -645,7 +770,7 @@ export default function BlogListingPage() {
         }
         .blog-card-title {
           font-family: var(--font-sans);
-          font-size: 0.95rem;
+          font-size: 1.05rem;
           color: #111827;
           font-weight: 700 !important;
           margin: 0;
@@ -660,7 +785,7 @@ export default function BlogListingPage() {
           color: #7c3aed;
         }
         .blog-card-desc {
-          font-size: 0.76rem;
+          font-size: 0.8rem;
           color: #6b7280;
           line-height: 1.5;
           margin: 0;
@@ -673,10 +798,11 @@ export default function BlogListingPage() {
         .blog-author-row {
           display: flex;
           align-items: center;
-          gap: 8px;
+          justify-content: space-between;
           margin-top: 6px;
           border-top: 1px solid rgba(0, 0, 0, 0.04);
           padding-top: 12px;
+          width: 100%;
         }
         .author-avatar {
           width: 24px;
@@ -706,6 +832,19 @@ export default function BlogListingPage() {
         }
         .blog-date {
           color: #9ca3af;
+        }
+        .blog-view-action {
+          font-size: 0.72rem;
+          font-weight: 700;
+          color: #7c3aed;
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          transition: transform 0.2s ease, color 0.2s ease;
+        }
+        .blog-item-card:hover .blog-view-action {
+          color: #4c1d95;
+          transform: translateX(2px);
         }
       `}</style>
     </div>

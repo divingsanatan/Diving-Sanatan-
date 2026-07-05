@@ -3,6 +3,24 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { 
+  LayoutDashboard, 
+  Calendar, 
+  Briefcase, 
+  Users, 
+  Grid, 
+  Key, 
+  HelpCircle, 
+  MessageSquare, 
+  FileText, 
+  BookOpen, 
+  BarChart2, 
+  UserCheck, 
+  Globe, 
+  LogOut, 
+  Menu 
+} from "lucide-react";
+import "./admin-lte.css";
 
 export default function AdminLayout({
   children,
@@ -13,6 +31,25 @@ export default function AdminLayout({
   const pathname = usePathname();
   const [authenticated, setAuthenticated] = useState(false);
   const [checking, setChecking] = useState(true);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    const stored = window.localStorage.getItem("admin_sidebar_collapsed");
+    if (stored === "true") {
+      setSidebarCollapsed(true);
+    }
+  }, []);
+
+  const toggleSidebar = () => {
+    if (window.innerWidth >= 992) {
+      const nextState = !sidebarCollapsed;
+      setSidebarCollapsed(nextState);
+      window.localStorage.setItem("admin_sidebar_collapsed", String(nextState));
+    } else {
+      setSidebarOpen(!sidebarOpen);
+    }
+  };
 
   useEffect(() => {
     const isAuth = window.sessionStorage.getItem("divingsanatan_admin_auth");
@@ -35,6 +72,68 @@ export default function AdminLayout({
     router.push("/admin/login");
   };
 
+  const getSectionName = () => {
+    switch (pathname) {
+      case "/admin":
+        return "Dashboard Overview";
+      case "/admin/bookings":
+        return "Bookings Scheduler";
+      case "/admin/services":
+        return "Services & Offerings";
+      case "/admin/practitioners":
+        return "Practitioners Registry";
+      case "/admin/categories":
+        return "Healing Disciplines";
+      case "/admin/keywords":
+        return "SEO Keywords";
+      case "/admin/quiz-questions":
+        return "Diagnostic Quiz Bank";
+      case "/admin/quora-qa":
+        return "Public Q&A Board";
+      case "/admin/blogs":
+        return "Publication & Blogs";
+      case "/admin/glossary":
+        return "Sanskrit Glossary";
+      case "/admin/comparisons":
+        return "Comparisons Board";
+      case "/admin/leads":
+        return "Customer Leads Profiles";
+      default:
+        return "Admin Portal";
+    }
+  };
+
+  const getBreadcrumb = () => {
+    switch (pathname) {
+      case "/admin":
+        return null;
+      case "/admin/bookings":
+        return "Bookings";
+      case "/admin/services":
+        return "Services";
+      case "/admin/practitioners":
+        return "Practitioners";
+      case "/admin/categories":
+        return "Categories";
+      case "/admin/keywords":
+        return "Keywords";
+      case "/admin/quiz-questions":
+        return "Quiz Questions";
+      case "/admin/quora-qa":
+        return "Q&A Board";
+      case "/admin/blogs":
+        return "Blogs";
+      case "/admin/glossary":
+        return "Glossary";
+      case "/admin/comparisons":
+        return "Comparisons";
+      case "/admin/leads":
+        return "Leads";
+      default:
+        return null;
+    }
+  };
+
   // If the path is /admin/login, we do not want to show the sidebar layout wrapper
   if (pathname === "/admin/login") {
     return <>{children}</>;
@@ -42,7 +141,7 @@ export default function AdminLayout({
 
   if (checking) {
     return (
-      <div className="admin-auth-checking">
+      <div className="admin-auth-checking" style={{ padding: "40px", textAlign: "center", fontFamily: "sans-serif" }}>
         <p>Verifying credentials...</p>
       </div>
     );
@@ -52,145 +151,195 @@ export default function AdminLayout({
     return null; // Redirecting is occurring
   }
 
+  const activeBreadcrumb = getBreadcrumb();
+
   return (
-    <div className="admin-layout-wrapper">
+    <div className={`admin-lte-theme admin-layout-wrapper ${sidebarCollapsed ? "sidebar-collapsed" : ""} ${sidebarOpen ? "sidebar-open" : ""}`}>
+      {/* Mobile Sidebar Overlay */}
+      {sidebarOpen && (
+        <div 
+          className="admin-sidebar-overlay" 
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar Navigation */}
       <aside className="admin-sidebar">
         <div className="sidebar-brand">
-          <svg viewBox="0 0 50 50" width="28" height="28" fill="#db2777">
-            <path d="M25 5C25 5 18 18 12 22C10 23.5 7 24 5 24C3 24 2.5 25 3 26C4 28 10 29 15 28C21 27 24 35 25 45C26 35 29 27 35 28C40 29 46 28 47 26C47.5 25 47 24 45 24C43 24 40 23.5 38 22C32 18 25 5 25 5Z" />
-          </svg>
-          <span className="brand-label">Admin Portal</span>
+          <Globe size={22} color="#007bff" />
+          <span className="brand-label">Sanatan Admin</span>
         </div>
         
         <nav className="sidebar-nav">
-          <Link href="/admin" className={`sidebar-link ${pathname === "/admin" ? "active" : ""}`}>Overview</Link>
-          <Link href="/admin/bookings" className={`sidebar-link ${pathname === "/admin/bookings" ? "active" : ""}`}>Bookings</Link>
-          <Link href="/admin/services" className={`sidebar-link ${pathname === "/admin/services" ? "active" : ""}`}>Services</Link>
-          <Link href="/admin/practitioners" className={`sidebar-link ${pathname === "/admin/practitioners" ? "active" : ""}`}>Practitioners</Link>
-          <Link href="/admin/categories" className={`sidebar-link ${pathname === "/admin/categories" ? "active" : ""}`}>Categories</Link>
-          <Link href="/admin/keywords" className={`sidebar-link ${pathname === "/admin/keywords" ? "active" : ""}`}>Keywords</Link>
-          <Link href="/admin/quiz-questions" className={`sidebar-link ${pathname === "/admin/quiz-questions" ? "active" : ""}`}>Quiz Questions</Link>
-          <Link href="/admin/quora-qa" className={`sidebar-link ${pathname === "/admin/quora-qa" ? "active" : ""}`}>Q&A Board</Link>
-          <Link href="/admin/blogs" className={`sidebar-link ${pathname === "/admin/blogs" ? "active" : ""}`}>Blogs</Link>
-          <Link href="/admin/glossary" className={`sidebar-link ${pathname === "/admin/glossary" ? "active" : ""}`}>Glossary</Link>
-          <Link href="/admin/comparisons" className={`sidebar-link ${pathname === "/admin/comparisons" ? "active" : ""}`}>Comparisons</Link>
-          <Link href="/admin/leads" className={`sidebar-link ${pathname === "/admin/leads" ? "active" : ""}`}>Leads Profiles</Link>
-          <Link href="/" className="sidebar-link">Public Site</Link>
+          {/* Section: MONITOR */}
+          <div className="sidebar-nav-header">Dashboard Monitor</div>
+          <Link 
+            href="/admin" 
+            title="Overview" 
+            className={`sidebar-link ${pathname === "/admin" ? "active" : ""}`}
+            onClick={() => setSidebarOpen(false)}
+          >
+            <LayoutDashboard size={16} />
+            <span>Overview</span>
+          </Link>
+          <Link 
+            href="/admin/bookings" 
+            title="Bookings" 
+            className={`sidebar-link ${pathname === "/admin/bookings" ? "active" : ""}`}
+            onClick={() => setSidebarOpen(false)}
+          >
+            <Calendar size={16} />
+            <span>Bookings</span>
+          </Link>
+          <Link 
+            href="/admin/leads" 
+            title="Leads Profiles" 
+            className={`sidebar-link ${pathname === "/admin/leads" ? "active" : ""}`}
+            onClick={() => setSidebarOpen(false)}
+          >
+            <UserCheck size={16} />
+            <span>Leads Profiles</span>
+          </Link>
+          
+          {/* Section: CORE DIRECTORIES */}
+          <div className="sidebar-nav-header">Core Directories</div>
+          <Link 
+            href="/admin/services" 
+            title="Services" 
+            className={`sidebar-link ${pathname === "/admin/services" ? "active" : ""}`}
+            onClick={() => setSidebarOpen(false)}
+          >
+            <Briefcase size={16} />
+            <span>Services</span>
+          </Link>
+          <Link 
+            href="/admin/practitioners" 
+            title="Practitioners" 
+            className={`sidebar-link ${pathname === "/admin/practitioners" ? "active" : ""}`}
+            onClick={() => setSidebarOpen(false)}
+          >
+            <Users size={16} />
+            <span>Practitioners</span>
+          </Link>
+          <Link 
+            href="/admin/categories" 
+            title="Categories" 
+            className={`sidebar-link ${pathname === "/admin/categories" ? "active" : ""}`}
+            onClick={() => setSidebarOpen(false)}
+          >
+            <Grid size={16} />
+            <span>Categories</span>
+          </Link>
+          
+          {/* Section: CONTENT & DIAGNOSTICS */}
+          <div className="sidebar-nav-header">Content & Diagnostics</div>
+          <Link 
+            href="/admin/blogs" 
+            title="Blogs" 
+            className={`sidebar-link ${pathname === "/admin/blogs" ? "active" : ""}`}
+            onClick={() => setSidebarOpen(false)}
+          >
+            <FileText size={16} />
+            <span>Blogs</span>
+          </Link>
+          <Link 
+            href="/admin/quiz-questions" 
+            title="Quiz Questions" 
+            className={`sidebar-link ${pathname === "/admin/quiz-questions" ? "active" : ""}`}
+            onClick={() => setSidebarOpen(false)}
+          >
+            <HelpCircle size={16} />
+            <span>Quiz Questions</span>
+          </Link>
+          <Link 
+            href="/admin/quora-qa" 
+            title="Q&A Board" 
+            className={`sidebar-link ${pathname === "/admin/quora-qa" ? "active" : ""}`}
+            onClick={() => setSidebarOpen(false)}
+          >
+            <MessageSquare size={16} />
+            <span>Q&A Board</span>
+          </Link>
+          <Link 
+            href="/admin/glossary" 
+            title="Glossary" 
+            className={`sidebar-link ${pathname === "/admin/glossary" ? "active" : ""}`}
+            onClick={() => setSidebarOpen(false)}
+          >
+            <BookOpen size={16} />
+            <span>Glossary</span>
+          </Link>
+          <Link 
+            href="/admin/comparisons" 
+            title="Comparisons" 
+            className={`sidebar-link ${pathname === "/admin/comparisons" ? "active" : ""}`}
+            onClick={() => setSidebarOpen(false)}
+          >
+            <BarChart2 size={16} />
+            <span>Comparisons</span>
+          </Link>
+          
+          {/* Section: SEO & SETTINGS */}
+          <div className="sidebar-nav-header">SEO & Settings</div>
+          <Link 
+            href="/admin/keywords" 
+            title="Keywords" 
+            className={`sidebar-link ${pathname === "/admin/keywords" ? "active" : ""}`}
+            onClick={() => setSidebarOpen(false)}
+          >
+            <Key size={16} />
+            <span>Keywords</span>
+          </Link>
+          
+          <div style={{ borderTop: "1px solid #4b545c", margin: "10px 0" }}></div>
+          
+          <Link 
+            href="/" 
+            title="Public Site" 
+            className="sidebar-link"
+          >
+            <Globe size={16} />
+            <span>Public Site</span>
+          </Link>
         </nav>
         
         <div className="sidebar-footer">
           <button onClick={handleLogout} className="logout-btn">
-            🔒 Lock Panel
+            <LogOut size={14} style={{ marginRight: "6px", display: "inline-block", verticalAlign: "middle" }} />
+            <span>Lock Panel</span>
           </button>
         </div>
       </aside>
 
-      {/* Main Panel */}
-      <main className="admin-main-panel">
-        {children}
-      </main>
+      {/* Right Column: Navbar + Main Content */}
+      <div className="admin-body-container">
+        {/* Top Navbar */}
+        <header className="admin-top-navbar">
+          <div className="admin-navbar-left">
+            <button className="navbar-toggle-btn" onClick={toggleSidebar} aria-label="Toggle Sidebar">
+              <Menu size={18} />
+            </button>
+            <h4 className="navbar-section-title">{getSectionName()}</h4>
+          </div>
+          <div className="admin-navbar-right">
+            <span style={{ fontSize: "0.85rem", color: "#6c757d" }}>Logged in as Healer Admin</span>
+          </div>
+        </header>
 
-      <style jsx>{`
-        .admin-layout-wrapper {
-          display: flex;
-          min-height: 100vh;
-        }
-        .admin-sidebar {
-          width: 250px;
-          background: #FAF9F6;
-          border-right: 1.5px solid var(--border-glass);
-          padding: 32px 24px;
-          display: flex;
-          flex-direction: column;
-          gap: 40px;
-          flex-shrink: 0;
-        }
-        .sidebar-brand {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-        }
-        .brand-label {
-          font-family: var(--font-serif);
-          font-weight: 700;
-          color: #4c1d95;
-          font-size: 1.15rem;
-          letter-spacing: 0.05em;
-        }
-        .sidebar-nav {
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-          flex: 1;
-        }
-        .sidebar-link {
-          padding: 12px 16px;
-          border-radius: 8px;
-          color: hsl(var(--text-muted));
-          text-decoration: none;
-          font-size: 0.9rem;
-          font-weight: 600;
-          transition: var(--transition-fast);
-        }
-        .sidebar-link:hover, .sidebar-link.active {
-          background: rgba(168, 85, 247, 0.05);
-          color: #7c3aed;
-        }
-        .sidebar-footer {
-          border-top: 1px solid rgba(0,0,0,0.05);
-          padding-top: 20px;
-        }
-        .logout-btn {
-          width: 100%;
-          background: transparent;
-          border: 1px solid rgba(239, 68, 68, 0.25);
-          color: #ef4444;
-          padding: 10px;
-          border-radius: 8px;
-          font-size: 0.8rem;
-          font-weight: 600;
-          cursor: pointer;
-          transition: var(--transition-fast);
-        }
-        .logout-btn:hover {
-          background: rgba(239, 68, 68, 0.08);
-          border-color: #ef4444;
-        }
-        .admin-main-panel {
-          flex: 1;
-          background: #ffffff;
-          padding: 40px;
-          overflow-y: auto;
-        }
-        @media (max-width: 768px) {
-          .admin-layout-wrapper {
-            flex-direction: column;
-          }
-          .admin-sidebar {
-            width: 100%;
-            border-right: none;
-            border-bottom: 1.5px solid var(--border-glass);
-            flex-direction: row;
-            justify-content: space-between;
-            align-items: center;
-            padding: 16px 24px;
-            gap: 20px;
-          }
-          .sidebar-nav {
-            flex-direction: row;
-            flex: 0;
-            gap: 12px;
-          }
-          .sidebar-footer {
-            border-top: none;
-            padding-top: 0;
-          }
-          .admin-main-panel {
-            padding: 24px;
-          }
-        }
-      `}</style>
+        {/* Content Breadcrumbs */}
+        <div className="admin-content-header">
+          <div style={{ fontSize: "1.2rem", fontWeight: "600" }}>{getSectionName()}</div>
+          <ul className="admin-breadcrumbs">
+            <li><Link href="/admin">Home</Link></li>
+            {activeBreadcrumb && <li>{activeBreadcrumb}</li>}
+          </ul>
+        </div>
+
+        {/* Main Panel */}
+        <main className="admin-main-panel">
+          {children}
+        </main>
+      </div>
     </div>
   );
 }

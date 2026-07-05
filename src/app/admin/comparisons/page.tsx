@@ -17,6 +17,10 @@ export default function AdminComparisonsPage() {
   const [pages, setPages] = useState<ComparisonPage[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
@@ -46,7 +50,10 @@ export default function AdminComparisonsPage() {
       ]);
       const cJson = await cRes.json();
       const sJson = await sRes.json();
-      if (cJson.success) setPages(cJson.data);
+      if (cJson.success) {
+        setPages(cJson.data);
+        setCurrentPage(1);
+      }
       if (sJson.success) setServices(sJson.data);
     } catch (err) {
       console.error(err);
@@ -218,37 +225,74 @@ export default function AdminComparisonsPage() {
           <p className="admin-padding-msg">
             No comparison pages yet. Click &quot;+ New Comparison&quot; to create one.
           </p>
-        ) : (
-          <table className="admin-glass-table">
-            <thead>
-              <tr>
-                <th>Title</th>
-                <th>Slug</th>
-                <th>Rows</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {pages.map(page => (
-                <tr key={page.id}>
-                  <td>{page.title}</td>
-                  <td>
-                    <Link href={`/blog/comparison/${page.slug}`} target="_blank" className="slug-link">
-                      /blog/comparison/{page.slug}
-                    </Link>
-                  </td>
-                  <td>{page.rows.length}</td>
-                  <td>
-                    <div className="action-btns">
-                      <button type="button" className="edit-btn" onClick={() => handleOpenEdit(page)}>Edit</button>
-                      <button type="button" className="remove-btn" onClick={() => handleDelete(page.id)}>Remove</button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+        ) : (() => {
+          const totalPages = Math.ceil(pages.length / itemsPerPage);
+          const paginatedPages = pages.slice(
+            (currentPage - 1) * itemsPerPage,
+            currentPage * itemsPerPage
+          );
+          return (
+            <>
+              <table className="admin-glass-table">
+                <thead>
+                  <tr>
+                    <th>Title</th>
+                    <th>Slug</th>
+                    <th>Rows</th>
+                    <th className="text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedPages.map(page => (
+                    <tr key={page.id}>
+                      <td><strong>{page.title}</strong></td>
+                      <td>
+                        <Link href={`/blog/comparison/${page.slug}`} target="_blank" className="slug-link" style={{ color: "#007bff" }}>
+                          /blog/comparison/{page.slug}
+                        </Link>
+                      </td>
+                      <td>{page.rows.length}</td>
+                      <td className="text-right">
+                        <div className="action-btns" style={{ display: "flex", gap: "4px", justifyContent: "flex-end" }}>
+                          <button type="button" className="btn btn-secondary btn-sm" onClick={() => handleOpenEdit(page)}>Edit</button>
+                          <button type="button" className="btn btn-danger btn-sm" onClick={() => handleDelete(page.id)}>Remove</button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="admin-pagination-wrapper">
+                  <span className="pagination-info">
+                    Showing {pages.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1} to {Math.min(pages.length, currentPage * itemsPerPage)} of {pages.length} entries
+                  </span>
+                  <ul className="admin-pagination">
+                    <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                      <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1}>«</button>
+                    </li>
+                    <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                      <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1}>Prev</button>
+                    </li>
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNum => (
+                      <li key={pageNum} className={`page-item ${currentPage === pageNum ? 'active' : ''}`}>
+                        <button onClick={() => setCurrentPage(pageNum)}>{pageNum}</button>
+                      </li>
+                    ))}
+                    <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+                      <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages}>Next</button>
+                    </li>
+                    <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+                      <button onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages}>»</button>
+                    </li>
+                  </ul>
+                </div>
+              )}
+            </>
+          );
+        })()}
       </Card>
 
       {isModalOpen && (

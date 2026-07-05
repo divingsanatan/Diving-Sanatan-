@@ -19,9 +19,15 @@ interface CategoryItem {
 export const BlogSidebar: React.FC = () => {
   const pathname = usePathname();
   const router = useRouter();
-  const { activeCategory, setActiveCategory } = useBlog();
+  const { activeCategory, setActiveCategory, activeBlog } = useBlog();
 
   const [categoriesExpanded, setCategoriesExpanded] = React.useState(false);
+
+  const isVideoBlog = activeBlog && (
+    (activeBlog.videos && activeBlog.videos.length > 0) ||
+    activeBlog.category.toLowerCase() === "video transcripts" ||
+    activeBlog.category.toLowerCase() === "video blog"
+  );
 
   const categoryItems: CategoryItem[] = [
     { id: "chakra healing", name: "Chakra Healing", icon: <Flower size={14} strokeWidth={1.5} /> },
@@ -246,6 +252,28 @@ export const BlogSidebar: React.FC = () => {
             onClick={() => router.push("/blog")}
           >
             Explore All Blogs
+          </button>
+        </div>
+      ) : isVideoBlog ? (
+        <div className="inspiration-card wisdom-card">
+          <h4 className="wisdom-title">Wisdom in motion.</h4>
+          <p className="wisdom-desc">
+            Watch, learn, and transform through insightful videos.
+          </p>
+          <div className="wisdom-lotus-wrapper">
+            <svg viewBox="0 0 100 100" className="inspiration-lotus-icon">
+              <path d="M50 25 C45 45 35 60 50 80 C65 60 55 45 50 25 Z" fill="none" stroke="#a855f7" strokeWidth="2.5" strokeOpacity="0.3" />
+              <path d="M50 80 C35 75 25 60 20 40 C35 50 45 60 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="2.5" strokeOpacity="0.3" />
+              <path d="M50 80 C65 75 75 60 80 40 C65 50 55 60 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="2.5" strokeOpacity="0.3" />
+              <path d="M50 80 C30 80 10 70 5 55 C20 65 35 70 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="2.5" strokeOpacity="0.3" />
+              <path d="M50 80 C70 80 90 70 95 55 C80 65 65 70 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="2.5" strokeOpacity="0.3" />
+            </svg>
+          </div>
+          <button 
+            className="wisdom-btn"
+            onClick={() => router.push("/blog/video-transcripts")}
+          >
+            Explore All Videos
           </button>
         </div>
       ) : (
@@ -585,6 +613,49 @@ export const BlogSidebar: React.FC = () => {
         }
         .faq-inspiration-btn:hover {
           background: #3b0764;
+          transform: translateY(-1px);
+        }
+        .wisdom-card {
+          background: linear-gradient(180deg, #faf5ff 0%, #f3e8ff 100%) !important;
+          border: 1px solid rgba(168, 85, 247, 0.15) !important;
+          align-items: center;
+          text-align: center;
+        }
+        .wisdom-title {
+          font-family: var(--font-sans);
+          font-size: 1.1rem;
+          font-weight: 750;
+          color: #5b21b6;
+          margin: 0;
+        }
+        .wisdom-desc {
+          font-family: var(--font-sans);
+          font-size: 0.8rem;
+          color: #6b21a8;
+          line-height: 1.45;
+          margin: 0;
+        }
+        .wisdom-lotus-wrapper {
+          display: flex;
+          justify-content: center;
+          margin: 4px 0;
+        }
+        .wisdom-btn {
+          width: 100%;
+          background: #6b21a8;
+          color: #ffffff;
+          border: none;
+          padding: 10px 16px;
+          border-radius: 12px;
+          font-weight: 700;
+          font-size: 0.82rem;
+          font-family: var(--font-sans);
+          cursor: pointer;
+          transition: background-color 0.2s ease, transform 0.1s ease;
+          box-shadow: 0 4px 12px rgba(107, 33, 168, 0.2);
+        }
+        .wisdom-btn:hover {
+          background: #581c87;
           transform: translateY(-1px);
         }
       `}</style>

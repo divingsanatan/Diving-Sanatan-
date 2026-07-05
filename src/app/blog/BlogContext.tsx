@@ -2,12 +2,15 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Blog } from "@/types/database";
 
 interface BlogContextType {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   activeCategory: string;
   setActiveCategory: (category: string) => void;
+  activeBlog: Blog | null;
+  setActiveBlog: (blog: Blog | null) => void;
 }
 
 const BlogContext = createContext<BlogContextType | undefined>(undefined);
@@ -15,6 +18,7 @@ const BlogContext = createContext<BlogContextType | undefined>(undefined);
 export function BlogProvider({ children }: { children: React.ReactNode }) {
   const [searchQuery, setSearchQueryState] = useState("");
   const [activeCategory, setActiveCategoryState] = useState("all");
+  const [activeBlog, setActiveBlog] = useState<Blog | null>(null);
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -63,7 +67,16 @@ export function BlogProvider({ children }: { children: React.ReactNode }) {
   }, [pathname, router]);
 
   return (
-    <BlogContext.Provider value={{ searchQuery, setSearchQuery, activeCategory, setActiveCategory }}>
+    <BlogContext.Provider
+      value={{
+        searchQuery,
+        setSearchQuery,
+        activeCategory,
+        setActiveCategory,
+        activeBlog,
+        setActiveBlog,
+      }}
+    >
       {children}
     </BlogContext.Provider>
   );
@@ -74,3 +87,4 @@ export function useBlog() {
   if (!context) throw new Error("useBlog must be used within a BlogProvider");
   return context;
 }
+

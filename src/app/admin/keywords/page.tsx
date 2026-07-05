@@ -31,6 +31,10 @@ export default function AdminKeywordsPage() {
   const [keywords, setKeywords] = useState<Keyword[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
   
   // Modal & form states
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -61,6 +65,7 @@ export default function AdminKeywordsPage() {
       if (kJson.success && cJson.success) {
         setKeywords(kJson.data);
         setCategories(cJson.data);
+        setCurrentPage(1);
       }
     } catch (err) {
       console.error(err);
@@ -205,82 +210,127 @@ export default function AdminKeywordsPage() {
 
       {loading ? (
         <p className="admin-loading">Loading keywords database...</p>
-      ) : (
-        <div className="admin-split-layout">
-          <div className="split-list-col">
-            <h3 className="column-title">Aligned Keywords ({keywords.length})</h3>
-            <div className="table-responsive-container">
-              <table className="admin-glass-table">
-                <thead>
-                  <tr>
-                    <th>Keyword</th>
-                    <th>Linked Categories</th>
-                    <th>Linked Chakras</th>
-                    <th className="text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {keywords.length === 0 ? (
-                    <tr>
-                      <td colSpan={4} className="admin-empty-cell">
-                        No keywords aligned yet.
-                      </td>
-                    </tr>
-                  ) : (
-                    keywords.map(k => (
-                      <tr key={k.id}>
-                        <td>
-                          <span className="keyword-word">“{k.word}”</span>
-                        </td>
-                        <td>
-                          <div className="categories-chips-container">
-                            {k.categories && k.categories.length > 0 ? (
-                              k.categories.map((cat, idx) => (
-                                <span key={idx} className="category-chip">
-                                  {cat}
-                                </span>
-                              ))
-                            ) : (
-                              <span className="category-chip muted">None</span>
-                            )}
-                          </div>
-                        </td>
-                        <td>
-                          <div className="chakras-chips-container">
-                            {k.chakras && k.chakras.length > 0 ? (
-                              k.chakras.map((chk, idx) => (
-                                <span 
-                                  key={idx} 
-                                  className="chakra-chip-badge"
-                                  data-chakra={chakraKey(chk)}
-                                >
-                                  ● {chk}
-                                </span>
-                              ))
-                            ) : (
-                              <span className="chakra-chip-badge muted">None</span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="text-right">
-                          <div className="action-buttons-cell">
-                            <button className="edit-row-btn" onClick={() => handleOpenEditModal(k)}>
-                              ✎ Edit
-                            </button>
-                            <button className="delete-row-btn" onClick={() => handleDeleteKeyword(k.id)}>
-                              ✕ Delete
-                            </button>
-                          </div>
-                        </td>
+      ) : (() => {
+        const totalPages = Math.ceil(keywords.length / itemsPerPage);
+        const paginatedKeywords = keywords.slice(
+          (currentPage - 1) * itemsPerPage,
+          currentPage * itemsPerPage
+        );
+        return (
+          <div className="admin-split-layout">
+            <div className="split-list-col">
+              <Card variant="glass" className="card-primary" style={{ padding: "0 !important" }}>
+                <div style={{ borderBottom: "1px solid #dee2e6", padding: "12px 20px", background: "#f8f9fa", fontWeight: "700" }}>
+                  Aligned Keywords ({keywords.length})
+                </div>
+                <div className="table-responsive-container">
+                  <table className="admin-glass-table">
+                    <thead>
+                      <tr>
+                        <th>Keyword</th>
+                        <th>Linked Categories</th>
+                        <th>Linked Chakras</th>
+                        <th className="text-right">Actions</th>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+                    </thead>
+                    <tbody>
+                      {paginatedKeywords.length === 0 ? (
+                        <tr>
+                          <td colSpan={4} className="admin-empty-cell text-center" style={{ padding: "20px" }}>
+                            No keywords aligned yet.
+                          </td>
+                        </tr>
+                      ) : (
+                        paginatedKeywords.map(k => (
+                          <tr key={k.id}>
+                            <td>
+                              <span className="keyword-word" style={{ fontSize: "1rem", fontWeight: "bold" }}>“{k.word}”</span>
+                            </td>
+                            <td>
+                              <div className="categories-chips-container" style={{ display: "flex", flexWrap: "wrap", gap: "3px" }}>
+                                {k.categories && k.categories.length > 0 ? (
+                                  k.categories.map((cat, idx) => (
+                                    <span key={idx} className="category-badge" style={{ fontSize: "0.7rem", padding: "2px 5px" }}>
+                                      {cat}
+                                    </span>
+                                  ))
+                                ) : (
+                                  <span className="category-badge muted">None</span>
+                                )}
+                              </div>
+                            </td>
+                            <td>
+                              <div className="chakras-chips-container" style={{ display: "flex", flexWrap: "wrap", gap: "3px" }}>
+                                {k.chakras && k.chakras.length > 0 ? (
+                                  k.chakras.map((chk, idx) => (
+                                    <span 
+                                      key={idx} 
+                                      className="category-badge"
+                                      style={{
+                                        fontSize: "0.7rem",
+                                        padding: "2px 5px",
+                                        background: "#e2e8f0",
+                                        color: "#475569",
+                                        borderColor: "#cbd5e1"
+                                      }}
+                                    >
+                                      ● {chk}
+                                    </span>
+                                  ))
+                                ) : (
+                                  <span className="category-badge muted">None</span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="text-right">
+                              <div className="action-buttons-cell" style={{ display: "flex", gap: "4px", justifyContent: "flex-end" }}>
+                                <button className="btn btn-secondary btn-sm" onClick={() => handleOpenEditModal(k)}>
+                                  ✎ Edit
+                                </button>
+                                <button className="btn btn-danger btn-sm" onClick={() => handleDeleteKeyword(k.id)}>
+                                  ✕ Delete
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Pagination Controls */}
+                {totalPages > 1 && (
+                  <div className="admin-pagination-wrapper">
+                    <span className="pagination-info">
+                      Showing {keywords.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1} to {Math.min(keywords.length, currentPage * itemsPerPage)} of {keywords.length} entries
+                    </span>
+                    <ul className="admin-pagination">
+                      <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                        <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1}>«</button>
+                      </li>
+                      <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                        <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1}>Prev</button>
+                      </li>
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNum => (
+                        <li key={pageNum} className={`page-item ${currentPage === pageNum ? 'active' : ''}`}>
+                          <button onClick={() => setCurrentPage(pageNum)}>{pageNum}</button>
+                        </li>
+                      ))}
+                      <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+                        <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages}>Next</button>
+                      </li>
+                      <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+                        <button onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages}>»</button>
+                      </li>
+                    </ul>
+                  </div>
+                )}
+              </Card>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Add/Edit Keyword Modal */}
       {isModalOpen && (

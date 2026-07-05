@@ -263,7 +263,7 @@ export default function VideoTranscriptsPage() {
           width: 100%;
         }
         .transcripts-header {
-          text-align: center;
+          text-align: left;
           padding: 8px 0 0;
         }
         .page-title {
@@ -277,11 +277,11 @@ export default function VideoTranscriptsPage() {
           font-size: 1rem;
           color: hsl(var(--text-muted));
           max-width: 650px;
-          margin: 0 auto;
+          margin: 0;
         }
         .transcripts-controls-section {
           display: flex;
-          justify-content: center;
+          justify-content: flex-start;
           align-items: center;
           padding: 12px 24px;
           border-radius: 20px;

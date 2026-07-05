@@ -3,9 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
-import { Logo } from "@/components/layout/Logo";
+import { Globe } from "lucide-react";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -32,104 +30,162 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="login-overlay">
-      <Card variant="glass" className="login-card">
-        <div className="login-logo-row">
-          <Logo size={36} />
-          <h1 className="login-title">Diving Sanatan Gateway</h1>
+    <div className="login-page">
+      <div className="login-box">
+        <div className="login-logo">
+          <Link href="/">
+            <b>Diving</b> Sanatan
+          </Link>
         </div>
-        <p className="login-subtitle">Enter passcode to authorize logistics dashboard.</p>
+        
+        <div className="card card-outline card-primary">
+          <div className="card-body login-card-body">
+            <p className="login-box-msg">Sign in to start your administrator session</p>
 
-        <form onSubmit={handleLogin} className="login-form">
-          <div className="form-group">
-            <label>Passcode</label>
-            <input
-              type="password"
-              className="glass-input"
-              required
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
+            <form onSubmit={handleLogin}>
+              <div className="form-group mb-3">
+                <label style={{ fontWeight: "600", fontSize: "0.85rem" }}>Passcode</label>
+                <input
+                  type="password"
+                  className="form-control"
+                  required
+                  placeholder="Password Passcode"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+
+              {error && (
+                <div className="error-alert">
+                  {error}
+                </div>
+              )}
+
+              <div className="row">
+                <button type="submit" className="btn btn-primary btn-block">
+                  Unlock Panel
+                </button>
+              </div>
+            </form>
+
+            <p className="mb-0 mt-3" style={{ textAlign: "center" }}>
+              <Link href="/" className="text-center back-link">
+                ← Return to Public Portal
+              </Link>
+            </p>
           </div>
-
-          {error && <p className="error-text">{error}</p>}
-
-          <Button variant="gold" type="submit">
-            Unlock Panel
-          </Button>
-        </form>
-
-        <Link href="/" className="return-link">← Return to Public Portal</Link>
-      </Card>
+        </div>
+      </div>
 
       <style jsx>{`
-        .login-overlay {
-          min-height: 100vh;
-          display: flex;
+        .login-page {
           align-items: center;
-          justify-content: center;
-          padding: 24px;
-          background: radial-gradient(circle, rgba(236, 72, 153, 0.06) 0%, rgba(168, 85, 247, 0.06) 100%);
-        }
-        .login-card {
-          width: 100%;
-          max-width: 440px;
-          padding: 40px;
+          background: #e9ecef;
           display: flex;
           flex-direction: column;
-          gap: 20px;
-        }
-        .login-logo-row {
-          display: flex;
-          align-items: center;
+          height: 100vh;
           justify-content: center;
-          gap: 12px;
+          width: 100vw;
+          font-family: 'Source Sans Pro', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
-        .login-title {
-          font-family: var(--font-serif);
-          font-size: 1.6rem;
-          color: #4c1d95;
-          letter-spacing: 0.05em;
+        .login-box {
+          width: 360px;
         }
-        .login-subtitle {
+        .login-logo {
+          font-size: 2.1rem;
+          font-weight: 300;
+          margin-bottom: .9rem;
           text-align: center;
-          font-size: 0.85rem;
-          color: hsl(var(--text-muted));
-          line-height: 1.5;
         }
-        .login-form {
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
+        .login-logo a {
+          color: #495057;
+          text-decoration: none;
+        }
+        .card {
+          background-color: #fff;
+          border: 1px solid rgba(0,0,0,.125);
+          border-top: 3px solid #007bff;
+          border-radius: .25rem;
+          box-shadow: 0 0 1px rgba(0,0,0,.125), 0 1px 3px rgba(0,0,0,.2);
+          margin-bottom: 1rem;
+        }
+        .login-card-body {
+          background-color: #fff;
+          border-top: 0;
+          color: #666;
+          padding: 20px;
+        }
+        .login-box-msg {
+          margin: 0;
+          padding: 0 20px 20px;
+          text-align: center;
+          font-size: 0.9rem;
         }
         .form-group {
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
+          margin-bottom: 1rem;
         }
-        .form-group label {
-          font-size: 0.75rem;
-          color: hsl(var(--text-muted));
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          font-weight: 600;
+        .form-control {
+          display: block;
+          width: 100%;
+          height: calc(2.25rem + 2px);
+          padding: .375rem .75rem;
+          font-size: 1rem;
+          font-weight: 400;
+          line-height: 1.5;
+          color: #495057;
+          background-color: #fff;
+          border: 1px solid #ced4da;
+          border-radius: .25rem;
+          outline: none;
+          transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
         }
-        .error-text {
-          color: #ef4444;
-          font-size: 0.8rem;
+        .form-control:focus {
+          border-color: #80bdff;
+          box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+        }
+        .error-alert {
+          color: #dc3545;
+          font-size: 0.82rem;
+          background: #f8d7da;
+          border: 1px solid #f5c6cb;
+          padding: 8px 12px;
+          border-radius: 4px;
+          margin-bottom: 15px;
           text-align: center;
         }
-        .return-link {
+        .btn {
+          display: block;
+          width: 100%;
+          font-weight: 400;
+          color: #212529;
           text-align: center;
+          vertical-align: middle;
+          cursor: pointer;
+          user-select: none;
+          background-color: transparent;
+          border: 1px solid transparent;
+          padding: .375rem .75rem;
+          font-size: 1rem;
+          line-height: 1.5;
+          border-radius: .25rem;
+          transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+        }
+        .btn-primary {
+          color: #fff;
+          background-color: #007bff;
+          border-color: #007bff;
+          box-shadow: none;
+        }
+        .btn-primary:hover {
+          background-color: #0069d9;
+          border-color: #0062cc;
+        }
+        .back-link {
+          color: #007bff;
           font-size: 0.85rem;
-          color: hsl(var(--text-muted));
-          text-decoration: none;
-          transition: var(--transition-fast);
-          margin-top: 10px;
         }
-        .return-link:hover {
-          color: #7c3aed;
+        .back-link:hover {
+          text-decoration: underline;
         }
       `}</style>
     </div>

@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
 import { Category } from "@/types/database";
+import { RefreshCw } from "lucide-react";
 
 export default function AdminCategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -11,6 +11,10 @@ export default function AdminCategoriesPage() {
 
   // Form states
   const [newCatName, setNewCatName] = useState("");
+  
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
 
   const loadCategories = async () => {
     try {
@@ -19,6 +23,7 @@ export default function AdminCategoriesPage() {
       const json = await res.json();
       if (json.success) {
         setCategories(json.data);
+        setCurrentPage(1);
       }
     } catch (err) {
       console.error(err);
@@ -72,178 +77,151 @@ export default function AdminCategoriesPage() {
     }
   };
 
+  // Pagination Logic
+  const totalPages = Math.ceil(categories.length / itemsPerPage);
+  const paginatedCategories = categories.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   return (
     <div className="dashboard-content">
-      <div className="dashboard-header-row">
-        <div>
-          <h2>Categories Manager</h2>
-          <p className="admin-header-desc">
-            Add, update, or remove healing disciplines. These categories are dynamically linked to services on storefront catalogs.
-          </p>
-        </div>
-        <button className="sync-btn" onClick={loadCategories}>
-          🔄 Refresh Categories
+      <div className="flex-between mb-3">
+        <p style={{ margin: 0, color: "#6c757d", fontSize: "0.9rem" }}>
+          Add, update, or remove healing disciplines. These categories are dynamically linked to services on storefront catalogs.
+        </p>
+        <button className="btn btn-secondary btn-sm" onClick={loadCategories}>
+          <RefreshCw size={12} style={{ marginRight: "6px" }} />
+          Refresh Categories
         </button>
       </div>
 
       {loading ? (
-        <p className="admin-loading">Loading categories...</p>
+        <p className="text-center" style={{ padding: "40px", color: "#6c757d" }}>Loading categories...</p>
       ) : (
         <div className="admin-split-layout">
-          {/* List */}
+          {/* List Table */}
           <div className="split-list-col">
-            <h3 className="column-title">Categories List ({categories.length})</h3>
-            <div className="list-cards-vertical">
-              {categories.map(cat => (
-                <Card key={cat.id} variant="glass" className="admin-list-item-card">
-                  <div className="item-card-row">
-                    <div className="item-card-details">
-                      <h4>{cat.name}</h4>
-                      <span className="muted-id">ID: {cat.id}</span>
-                    </div>
-                    <button 
-                      className={`delete-row-btn${["cat-1", "cat-2", "cat-3"].includes(cat.id) ? " btn-protected" : ""}`}
-                      onClick={() => handleDeleteCategory(cat.id)}
-                      disabled={["cat-1", "cat-2", "cat-3"].includes(cat.id)}
-                    >
-                      ✕ Delete Category
-                    </button>
-                  </div>
-                </Card>
-              ))}
-            </div>
+            <Card variant="glass" className="card-primary" style={{ padding: "0 !important" }}>
+              <div style={{ borderBottom: "1px solid #dee2e6", padding: "12px 20px", background: "#f8f9fa", fontWeight: "700" }}>
+                Categories List ({categories.length})
+              </div>
+              <div className="table-responsive">
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Category Name</th>
+                      <th className="text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paginatedCategories.length === 0 ? (
+                      <tr>
+                        <td colSpan={3} className="text-center" style={{ padding: "20px" }}>No categories created yet.</td>
+                      </tr>
+                    ) : (
+                      paginatedCategories.map(cat => (
+                        <tr key={cat.id}>
+                          <td style={{ fontFamily: "monospace", fontSize: "0.85rem" }}>{cat.id}</td>
+                          <td><strong>{cat.name}</strong></td>
+                          <td className="text-right">
+                            <button 
+                              className="btn btn-danger btn-sm"
+                              onClick={() => handleDeleteCategory(cat.id)}
+                              disabled={["cat-1", "cat-2", "cat-3"].includes(cat.id)}
+                            >
+                              ✕ Delete
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="admin-pagination-wrapper">
+                  <span className="pagination-info">
+                    Showing {categories.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1} to {Math.min(categories.length, currentPage * itemsPerPage)} of {categories.length} entries
+                  </span>
+                  <ul className="admin-pagination">
+                    <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                      <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1}>«</button>
+                    </li>
+                    <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                      <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1}>Prev</button>
+                    </li>
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNum => (
+                      <li key={pageNum} className={`page-item ${currentPage === pageNum ? 'active' : ''}`}>
+                        <button onClick={() => setCurrentPage(pageNum)}>{pageNum}</button>
+                      </li>
+                    ))}
+                    <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+                      <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages}>Next</button>
+                    </li>
+                    <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+                      <button onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages}>»</button>
+                    </li>
+                  </ul>
+                </div>
+              )}
+            </Card>
           </div>
 
           {/* Form */}
           <div className="split-form-col">
-            <Card variant="glass" className="admin-form-padding">
-              <h3 className="column-title column-title-spaced">Create Category</h3>
-              <form onSubmit={handleAddCategory} className="admin-catalog-form">
-                
-                <div className="form-group">
-                  <label>Category Name</label>
-                  <input 
-                    type="text" 
-                    className="glass-input" 
-                    required 
-                    placeholder="e.g. Sound Healing"
-                    value={newCatName}
-                    onChange={(e) => setNewCatName(e.target.value)}
-                  />
-                </div>
+            <Card variant="glass" className="card-success" style={{ padding: "0 !important" }}>
+              <div style={{ borderBottom: "1px solid #dee2e6", padding: "12px 20px", background: "#f8f9fa", fontWeight: "700" }}>
+                Create Category
+              </div>
+              <div style={{ padding: "20px" }}>
+                <form onSubmit={handleAddCategory} className="admin-catalog-form">
+                  <div className="form-group">
+                    <label>Category Name</label>
+                    <input 
+                      type="text" 
+                      className="form-control" 
+                      required 
+                      placeholder="e.g. Sound Healing"
+                      value={newCatName}
+                      onChange={(e) => setNewCatName(e.target.value)}
+                    />
+                  </div>
 
-                <Button variant="gold" type="submit" className="btn-full-spaced">
-                  Create Category
-                </Button>
-              </form>
+                  <button type="submit" className="btn btn-success btn-block mt-3" style={{ width: "100%" }}>
+                    Create Category
+                  </button>
+                </form>
+              </div>
             </Card>
           </div>
         </div>
       )}
 
       <style jsx>{`
-        .dashboard-content {
-          display: flex;
-          flex-direction: column;
-          gap: 32px;
-        }
-        .dashboard-header-row {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-        }
-        .dashboard-header-row h2 {
-          font-family: var(--font-serif);
-          color: #4c1d95;
-          font-size: 1.8rem;
-        }
-        .sync-btn {
-          background: rgba(0,0,0,0.02);
-          border: 1px solid rgba(0,0,0,0.08);
-          color: hsl(var(--text-cream));
-          padding: 10px 18px;
-          border-radius: 8px;
-          cursor: pointer;
-          font-size: 0.85rem;
-          font-weight: 600;
-          transition: var(--transition-fast);
-        }
-        .sync-btn:hover {
-          background: rgba(168, 85, 247, 0.08);
-          border-color: #7c3aed;
-          color: #7c3aed;
-        }
         .admin-split-layout {
           display: grid;
           grid-template-columns: 1.5fr 1fr;
-          gap: 32px;
-        }
-        .split-list-col {
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-        }
-        .column-title {
-          font-family: var(--font-serif);
-          font-size: 1.35rem;
-          color: #4c1d95;
-        }
-        .list-cards-vertical {
-          display: flex;
-          flex-direction: column;
           gap: 20px;
         }
-        .admin-list-item-card {
-          padding: 24px;
-        }
-        .item-card-row {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          gap: 20px;
-        }
-        .item-card-details {
+        .split-list-col, .split-form-col {
           display: flex;
           flex-direction: column;
-          gap: 6px;
         }
-        .item-card-details h4 {
-          font-size: 1.2rem;
-          color: hsl(var(--text-cream));
+        .mb-3 {
+          margin-bottom: 1rem;
         }
-        .delete-row-btn {
-          background: transparent;
-          border: 1px solid rgba(239, 68, 68, 0.3);
-          color: #ef4444;
-          padding: 6px 12px;
-          border-radius: 6px;
-          cursor: pointer;
-          font-size: 0.75rem;
-          font-weight: 600;
-          transition: var(--transition-fast);
-          flex-shrink: 0;
+        .mt-3 {
+          margin-top: 1rem;
         }
-        .delete-row-btn:hover {
-          background: rgba(239, 68, 68, 0.08);
+        .table-responsive {
+          width: 100%;
+          overflow-x: auto;
         }
-        .admin-catalog-form {
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-        }
-        .form-group {
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-        }
-        .form-group label {
-          font-size: 0.75rem;
-          color: hsl(var(--text-muted));
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          font-weight: 600;
-        }
-        @media (max-width: 1024px) {
+        @media (max-width: 992px) {
           .admin-split-layout {
             grid-template-columns: 1fr;
           }

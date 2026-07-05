@@ -12,6 +12,10 @@ export default function AdminServicesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
+  
   // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
@@ -68,6 +72,7 @@ export default function AdminServicesPage() {
         setServices(sJson.data);
         setPractitioners(pJson.data);
         setCategories(cJson.data);
+        setCurrentPage(1);
         if (pJson.data.length > 0 && !servicePractitioner) {
           setServicePractitioner(pJson.data[0].name);
           setServicePractitionerId(pJson.data[0].id);
@@ -314,81 +319,120 @@ export default function AdminServicesPage() {
 
       {loading ? (
         <p className="admin-loading">Loading catalog data...</p>
-      ) : (
-        <div className="admin-split-layout">
-          <div className="split-list-col">
-            <h3 className="column-title">Services List ({services.length})</h3>
-            <div className="table-responsive-container">
-              <table className="admin-glass-table">
-                <thead>
-                  <tr>
-                    <th>Service</th>
-                    <th>Categories</th>
-                    <th>Duration</th>
-                    <th>Price</th>
-                    <th>Practitioner</th>
-                    <th className="text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {services.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} className="admin-empty-cell">
-                        No services in catalog.
-                      </td>
-                    </tr>
-                  ) : (
-                    services.map(s => (
-                      <tr key={s.id}>
-                        <td>
-                          <div className="table-service-info">
-                            <span className="service-name">{s.name}</span>
-                            <span className="service-desc-tooltip" title={s.description}>
-                              {s.description.length > 60 ? `${s.description.substring(0, 57)}...` : s.description}
-                            </span>
-                          </div>
-                        </td>
-                        <td>
-                          <div className="categories-chips-container">
-                            {s.categories && s.categories.length > 0 ? (
-                              s.categories.map((catName, idx) => (
-                                <span key={idx} className="category-chip">
-                                  {catName}
-                                </span>
-                              ))
-                            ) : (
-                              <span className="category-chip muted">Uncategorized</span>
-                            )}
-                          </div>
-                        </td>
-                        <td>
-                          <span className="duration-text">{s.duration}</span>
-                        </td>
-                        <td>
-                          <span className="price-text">{formatCurrency(s.price)}</span>
-                        </td>
-                        <td>
-                          <span className="practitioner-text">{s.practitioner}</span>
-                        </td>
-                        <td className="text-right">
-                          <div className="action-buttons-cell">
-                            <button className="edit-row-btn" onClick={() => handleOpenEditModal(s)}>
-                              ✎ Edit
-                            </button>
-                            <button className="delete-row-btn" onClick={() => handleDeleteService(s.id)}>
-                              ✕ Remove
-                            </button>
-                          </div>
-                        </td>
+      ) : (() => {
+        const totalPages = Math.ceil(services.length / itemsPerPage);
+        const paginatedServices = services.slice(
+          (currentPage - 1) * itemsPerPage,
+          currentPage * itemsPerPage
+        );
+        return (
+          <div className="admin-split-layout">
+            <div className="split-list-col">
+              <Card variant="glass" className="card-primary" style={{ padding: "0 !important" }}>
+                <div style={{ borderBottom: "1px solid #dee2e6", padding: "12px 20px", background: "#f8f9fa", fontWeight: "700" }}>
+                  Services List ({services.length})
+                </div>
+                <div className="table-responsive-container">
+                  <table className="admin-glass-table">
+                    <thead>
+                      <tr>
+                        <th>Service</th>
+                        <th>Categories</th>
+                        <th>Duration</th>
+                        <th>Price</th>
+                        <th>Practitioner</th>
+                        <th className="text-right">Actions</th>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+                    </thead>
+                    <tbody>
+                      {paginatedServices.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className="admin-empty-cell text-center" style={{ padding: "20px" }}>
+                            No services in catalog.
+                          </td>
+                        </tr>
+                      ) : (
+                        paginatedServices.map(s => (
+                          <tr key={s.id}>
+                            <td>
+                              <div className="table-service-info">
+                                <span className="service-name"><strong>{s.name}</strong></span>
+                                <span className="service-desc-tooltip" title={s.description} style={{ fontSize: "0.78rem", color: "#6c757d" }}>
+                                  {s.description.length > 60 ? `${s.description.substring(0, 57)}...` : s.description}
+                                </span>
+                              </div>
+                            </td>
+                            <td>
+                              <div className="categories-chips-container" style={{ display: "flex", flexWrap: "wrap", gap: "3px" }}>
+                                {s.categories && s.categories.length > 0 ? (
+                                  s.categories.map((catName, idx) => (
+                                    <span key={idx} className="category-badge" style={{ fontSize: "0.7rem", padding: "2px 5px" }}>
+                                      {catName}
+                                    </span>
+                                  ))
+                                ) : (
+                                  <span className="category-badge muted">Uncategorized</span>
+                                )}
+                              </div>
+                            </td>
+                            <td>
+                              <span className="duration-text">{s.duration}</span>
+                            </td>
+                            <td style={{ fontWeight: "600" }}>
+                              <span className="price-text">{formatCurrency(s.price)}</span>
+                            </td>
+                            <td>
+                              <span className="practitioner-text">{s.practitioner}</span>
+                            </td>
+                            <td className="text-right">
+                              <div className="action-buttons-cell" style={{ display: "flex", gap: "4px", justifyContent: "flex-end" }}>
+                                <button className="btn btn-secondary btn-sm" onClick={() => handleOpenEditModal(s)}>
+                                  ✎ Edit
+                                </button>
+                                <button className="btn btn-danger btn-sm" onClick={() => handleDeleteService(s.id)}>
+                                  ✕ Remove
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Pagination Controls */}
+                {totalPages > 1 && (
+                  <div className="admin-pagination-wrapper">
+                    <span className="pagination-info">
+                      Showing {services.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1} to {Math.min(services.length, currentPage * itemsPerPage)} of {services.length} entries
+                    </span>
+                    <ul className="admin-pagination">
+                      <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                        <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1}>«</button>
+                      </li>
+                      <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                        <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1}>Prev</button>
+                      </li>
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNum => (
+                        <li key={pageNum} className={`page-item ${currentPage === pageNum ? 'active' : ''}`}>
+                          <button onClick={() => setCurrentPage(pageNum)}>{pageNum}</button>
+                        </li>
+                      ))}
+                      <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+                        <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages}>Next</button>
+                      </li>
+                      <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+                        <button onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages}>»</button>
+                      </li>
+                    </ul>
+                  </div>
+                )}
+              </Card>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Modal Popup for Creating/Editing Service */}
       {isModalOpen && (

@@ -325,35 +325,29 @@ Diving Sanatan Wellness Team`);
           </div>
 
           {filteredLeads.length > 0 && (
-            <div className="pagination-bar">
+            <div className="admin-pagination-wrapper">
               <span className="pagination-info">
-                Showing {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, filteredLeads.length)} of {filteredLeads.length}
+                Showing {(safePage - 1) * PAGE_SIZE + 1} to {Math.min(safePage * PAGE_SIZE, filteredLeads.length)} of {filteredLeads.length} entries
               </span>
-              <div className="pagination-controls">
-                <button
-                  className="page-btn"
-                  disabled={safePage <= 1}
-                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                >
-                  ← Prev
-                </button>
+              <ul className="admin-pagination">
+                <li className={`page-item ${safePage === 1 ? 'disabled' : ''}`}>
+                  <button onClick={() => setCurrentPage(1)} disabled={safePage === 1}>«</button>
+                </li>
+                <li className={`page-item ${safePage === 1 ? 'disabled' : ''}`}>
+                  <button onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={safePage === 1}>Prev</button>
+                </li>
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                  <button
-                    key={page}
-                    className={`page-btn ${page === safePage ? "active" : ""}`}
-                    onClick={() => setCurrentPage(page)}
-                  >
-                    {page}
-                  </button>
+                  <li key={page} className={`page-item ${page === safePage ? 'active' : ''}`}>
+                    <button onClick={() => setCurrentPage(page)}>{page}</button>
+                  </li>
                 ))}
-                <button
-                  className="page-btn"
-                  disabled={safePage >= totalPages}
-                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                >
-                  Next →
-                </button>
-              </div>
+                <li className={`page-item ${safePage === totalPages ? 'disabled' : ''}`}>
+                  <button onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={safePage === totalPages}>Next</button>
+                </li>
+                <li className={`page-item ${safePage === totalPages ? 'disabled' : ''}`}>
+                  <button onClick={() => setCurrentPage(totalPages)} disabled={safePage === totalPages}>»</button>
+                </li>
+              </ul>
             </div>
           )}
         </Card>

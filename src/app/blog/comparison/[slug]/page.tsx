@@ -147,7 +147,7 @@ export default function ComparisonSlugPage() {
           width: 100%;
         }
         .comp-header {
-          text-align: center;
+          text-align: left;
           padding: 8px 0 0;
         }
         .page-title {
@@ -162,7 +162,7 @@ export default function ComparisonSlugPage() {
           font-size: 1rem;
           color: hsl(var(--text-muted));
           max-width: 650px;
-          margin: 0 auto;
+          margin: 0;
           line-height: 1.6;
         }
         .comparison-grid-table {

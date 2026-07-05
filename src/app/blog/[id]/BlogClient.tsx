@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { useBlog } from "@/app/blog/BlogContext";
 
 interface Blog {
   id: string;
@@ -60,19 +61,124 @@ const IconCopy = () => (
   </svg>
 );
 
-const isHtmlContent = (c: string) => /^\s*<[a-z]/.test(c);
+const isEmbeddable = (url: string) => {
+  if (!url) return false;
+  return url.includes("youtube.com") || url.includes("youtu.be") || url.includes("vimeo.com");
+};
+
+const getEmbedUrl = (url: string) => {
+  if (!url) return "";
+  if (url.includes("youtube.com/watch")) {
+    const videoId = url.split("v=")[1]?.split("&")[0];
+    return `https://www.youtube.com/embed/${videoId}`;
+  }
+  if (url.includes("youtu.be/")) {
+    const videoId = url.split("youtu.be/")[1]?.split("?")[0];
+    return `https://www.youtube.com/embed/${videoId}`;
+  }
+  if (url.includes("vimeo.com/")) {
+    const videoId = url.split("vimeo.com/")[1]?.split("?")[0];
+    return `https://player.vimeo.com/video/${videoId}`;
+  }
+  return url;
+};
+
+const isHtmlContent = (c: string) => /<[a-z/][^>]*>/i.test(c);
 
 const getContentParagraphs = (content: string): string[] =>
   content.split(/\r?\n\r?\n/).filter((p) => p.trim().length > 0).map((p) => p.trim());
 
-const extractHtmlIntro = (html: string): string => {
-  const match = html.match(/<p[^>]*>([\s\S]*?)<\/p>/i);
-  if (match) return match[1].replace(/<[^>]+>/g, "").trim();
-  return "";
+const findMatchingClosingTag = (html: string, tagName: string, startIndex: number): number => {
+  const closeTag = `</${tagName}>`;
+  let depth = 1;
+  let currentIndex = startIndex;
+  const lowerHtml = html.toLowerCase();
+  
+  const findNextOpenTag = (str: string, fromIndex: number): number => {
+    let index = fromIndex;
+    while (true) {
+      const idx = str.indexOf(`<${tagName}`, index);
+      if (idx === -1) return -1;
+      const nextChar = str[idx + tagName.length + 1];
+      if (nextChar === undefined || /\s|>|\//.test(nextChar)) {
+        return idx;
+      }
+      index = idx + 1;
+    }
+  };
+
+  while (depth > 0) {
+    const nextOpen = findNextOpenTag(lowerHtml, currentIndex);
+    const nextClose = lowerHtml.indexOf(closeTag, currentIndex);
+    
+    if (nextClose === -1) {
+      return -1;
+    }
+    
+    if (nextOpen !== -1 && nextOpen < nextClose) {
+      depth++;
+      currentIndex = nextOpen + tagName.length + 1;
+    } else {
+      depth--;
+      if (depth === 0) {
+        return nextClose;
+      }
+      currentIndex = nextClose + closeTag.length;
+    }
+  }
+  return -1;
 };
 
-const stripFirstHtmlParagraph = (html: string): string =>
-  html.replace(/<p[^>]*>[\s\S]*?<\/p>/i, "").trim();
+const parseHtmlContent = (html: string): { intro: string; body: string } => {
+  const trimmed = html.trim();
+  const blockTagRegex = /<\/?(p|div|br|h[1-6]|ul|ol|blockquote)\b[^>]*>/i;
+  const match = trimmed.match(blockTagRegex);
+  
+  if (!match) {
+    return {
+      intro: trimmed.replace(/<[^>]+>/g, "").trim(),
+      body: ""
+    };
+  }
+  
+  const tagIndex = match.index ?? 0;
+  
+  if (tagIndex > 0) {
+    const introText = trimmed.substring(0, tagIndex).trim();
+    const cleanIntro = introText.replace(/<[^>]+>/g, "").trim();
+    const bodyText = trimmed.substring(tagIndex).trim();
+    return {
+      intro: cleanIntro,
+      body: bodyText
+    };
+  } else {
+    const tagName = match[1].toLowerCase();
+    
+    if (tagName === "br") {
+      const afterBr = trimmed.substring(match[0].length).trim();
+      return parseHtmlContent(afterBr);
+    }
+    
+    const closingTag = `</${tagName}>`;
+    const closeIndex = findMatchingClosingTag(trimmed, tagName, match[0].length);
+    
+    if (closeIndex !== -1) {
+      const introHtml = trimmed.substring(0, closeIndex + closingTag.length);
+      const cleanIntro = introHtml.replace(/<[^>]+>/g, "").trim();
+      const bodyText = trimmed.substring(closeIndex + closingTag.length).trim();
+      return {
+        intro: cleanIntro,
+        body: bodyText
+      };
+    } else {
+      const plain = trimmed.replace(/<[^>]+>/g, "").trim();
+      return {
+        intro: plain.substring(0, 200),
+        body: trimmed
+      };
+    }
+  }
+};
 
 const FALLBACK_QUOTE =
   "Energy flow balances are the foundational blueprint of physical comfort. Maintain your aura, and your mind will follow.";
@@ -83,11 +189,21 @@ export default function BlogDetailsPage() {
   const router = useRouter();
   const params = useParams();
   const id = params?.id as string;
+  const { setActiveBlog } = useBlog();
 
   const [blog, setBlog] = useState<Blog | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [activeMediaIndex, setActiveMediaIndex] = useState(0);
+
+  useEffect(() => {
+    if (blog) {
+      setActiveBlog(blog);
+    }
+    return () => {
+      setActiveBlog(null);
+    };
+  }, [blog, setActiveBlog]);
 
   // User session
   const [user, setUser] = useState<any>(null);
@@ -433,13 +549,15 @@ export default function BlogDetailsPage() {
     const htmlMode = isHtmlContent(b.content);
 
     if (htmlMode) {
+      const parsed = parseHtmlContent(b.content);
       const intro =
-        extractHtmlIntro(b.content) ||
+        parsed.intro ||
         `In this guide, ${b.author} explores ${b.title.toLowerCase()} — a foundational topic in ${b.category.toLowerCase()}.`;
       return {
         htmlMode: true,
         intro,
         bodyParagraphs: [] as string[],
+        htmlBody: parsed.body || b.content,
         coverImage,
       };
     }
@@ -453,6 +571,7 @@ export default function BlogDetailsPage() {
       htmlMode: false,
       intro,
       bodyParagraphs: paras.slice(1),
+      htmlBody: "",
       coverImage,
     };
   };
@@ -471,8 +590,327 @@ export default function BlogDetailsPage() {
         <article className="blog-article-content">
           {(() => {
             const sections = getArticleSections(blog);
-            const { intro, bodyParagraphs, coverImage, htmlMode } = sections;
+            const { intro, bodyParagraphs, coverImage, htmlMode, htmlBody } = sections;
 
+            const isVideoBlog = blog && (
+              (blog.videos && blog.videos.length > 0) ||
+              blog.category.toLowerCase() === "video transcripts" ||
+              blog.category.toLowerCase() === "video blog"
+            );
+
+            // Dynamic TOC helper
+            const extractTOC = (html: string) => {
+              const headings: string[] = [];
+              const hRegex = /<h[23][^>]*>(.*?)<\/h[23]>/g;
+              let match;
+              while ((match = hRegex.exec(html)) !== null) {
+                const clean = match[1].replace(/<[^>]+>/g, "").trim();
+                if (clean) headings.push(clean);
+              }
+
+              if (headings.length === 0) {
+                // Fallback to lines starting with numbers
+                const lines = html.split(/<br\s*\/?>|<\/p>|<p>|\n/);
+                for (const line of lines) {
+                  const clean = line.replace(/<[^>]+>/g, "").trim();
+                  if (/^\d+\.\s+[A-Za-z]/.test(clean)) {
+                    headings.push(clean);
+                  }
+                }
+              }
+
+              if (headings.length === 0) {
+                return ["Introduction", "Core Practice", "Benefits", "How to practice", "Conclusion"];
+              }
+              return headings;
+            };
+
+            const tocHeadings = extractTOC(blog.content);
+
+            if (isVideoBlog) {
+              const mainVideoUrl = blog.videos?.[0] || "";
+              return (
+                <>
+                  <nav className="article-breadcrumb" aria-label="Breadcrumb">
+                    <button type="button" className="breadcrumb-link" onClick={() => router.push("/blog")}>
+                      Blog
+                    </button>
+                    <span className="breadcrumb-sep">&gt;</span>
+                    <button type="button" className="breadcrumb-link" onClick={() => router.push("/blog/video-transcripts")}>
+                      Video Transcripts
+                    </button>
+                    <span className="breadcrumb-sep">&gt;</span>
+                    <span className="breadcrumb-current">{blog.title}</span>
+                  </nav>
+
+                  <Card variant="glass" className="article-unified-card video-layout-card">
+                    <div className="article-header video-header">
+                      <span className="article-category video-badge">Video Blog</span>
+                      <h1 className="article-title">{blog.title}</h1>
+                      <p className="article-subtitle">{intro}</p>
+                      <div className="article-meta">
+                        <span>By: <strong>{blog.author}</strong></span>
+                        <span>•</span>
+                        <span>Released: <strong>{blog.date}</strong></span>
+                        <span>•</span>
+                        <span>Watch time: <strong>{blog.readTime.replace("Read", "watch")}</strong></span>
+                      </div>
+                    </div>
+
+                    {/* Main Video Section */}
+                    <div className="main-video-section">
+                      <h4 className="video-section-title">Main Video</h4>
+                      <div className="video-player-container">
+                        {mainVideoUrl ? (
+                          isEmbeddable(mainVideoUrl) ? (
+                            <iframe
+                              src={getEmbedUrl(mainVideoUrl)}
+                              className="video-iframe"
+                              allowFullScreen
+                              title={blog.title}
+                            />
+                          ) : (
+                            <video src={mainVideoUrl} controls className="video-tag" />
+                          )
+                        ) : (
+                          <div className="no-video-placeholder">No Video Attached</div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Additional Videos */}
+                    {blog.videos && blog.videos.length > 1 && (
+                      <div className="additional-videos-block">
+                        <h4 className="video-section-title">Additional Videos</h4>
+                        <div className="additional-videos-row">
+                          {blog.videos.slice(1).map((vidUrl, idx) => (
+                            <div key={idx} className="additional-video-thumbnail-card" onClick={() => window.open(vidUrl, "_blank")}>
+                              <div className="additional-video-preview">
+                                <div className="video-play-btn-overlay">▶</div>
+                              </div>
+                              <h5 className="additional-video-title">Clip {idx + 1}</h5>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Image Gallery */}
+                    {blog.images && blog.images.length > 0 && (
+                      <div className="image-gallery-block">
+                        <h4 className="video-section-title">Image Gallery</h4>
+                        <div className="gallery-images-row">
+                          {blog.images.map((imgUrl, idx) => (
+                            <div key={idx} className="gallery-image-thumbnail-card" onClick={() => window.open(getBlogImage(imgUrl), "_blank")}>
+                              <img src={getBlogImage(imgUrl)} alt={`Gallery index ${idx}`} className="gallery-img-thumb" />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* About This Video */}
+                    <div className="about-video-block">
+                      <h4 className="video-section-title">About This Video</h4>
+                      {htmlMode ? (
+                        <div
+                          className="article-rich-content"
+                          dangerouslySetInnerHTML={{
+                            __html: htmlBody,
+                          }}
+                        />
+                      ) : (
+                        <div className="article-paragraphs">
+                          {bodyParagraphs.map((para, index) => (
+                            <p key={index}>{para}</p>
+                          ))}
+                        </div>
+                      )}
+
+                      <div className="article-blockquote custom-blockquote">
+                        <span className="quote-mark">“</span>
+                        <p>
+                          Breath is the bridge between body and mind. When we control the breath, we control the mind.
+                        </p>
+                        <span className="quote-author">— Hatha Yoga Pradipika</span>
+                      </div>
+                    </div>
+
+                    {/* Key Takeaways */}
+                    <div className="takeaways-block">
+                      <h4 className="video-section-title">Key Takeaways</h4>
+                      <div className="takeaways-row-grid">
+                        <div className="takeaway-pill">
+                          <span className="takeaway-bullet">🌸</span>
+                          <span>Breath awareness calms the mind.</span>
+                        </div>
+                        <div className="takeaway-pill">
+                          <span className="takeaway-bullet">⚡</span>
+                          <span>Pranayama boosts energy & focus.</span>
+                        </div>
+                        <div className="takeaway-pill">
+                          <span className="takeaway-bullet">🔄</span>
+                          <span>Regular practice promotes balance.</span>
+                        </div>
+                        <div className="takeaway-pill">
+                          <span className="takeaway-bullet">✨</span>
+                          <span>Simple techniques, profound impact.</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Supporting Resources */}
+                    <div className="resources-block">
+                      <h4 className="video-section-title">Supporting Resources</h4>
+                      <div className="resources-column-list">
+                        <div className="resource-download-row">
+                          <div className="resource-meta">
+                            <h6>Pranayama Practice Guide (PDF)</h6>
+                            <span>A step-by-step guide to the techniques.</span>
+                          </div>
+                          <button className="download-btn-style" onClick={() => alert("Downloading: Pranayama Practice Guide PDF")}>
+                            ⬇️ Download
+                          </button>
+                        </div>
+                        <div className="resource-download-row">
+                          <div className="resource-meta">
+                            <h6>Breath Awareness Checklist (PDF)</h6>
+                            <span>Daily reminders to stay consistent.</span>
+                          </div>
+                          <button className="download-btn-style" onClick={() => alert("Downloading: Breath Awareness Checklist PDF")}>
+                            ⬇️ Download
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Interactions & Comments */}
+                    <div className="article-interactions-section">
+                      <div className="interactions-bar">
+                        <div className="interactions-left">
+                          <button
+                            type="button"
+                            className={`like-action-btn ${isLiked ? "liked" : ""}`}
+                            onClick={handleLikeToggle}
+                            disabled={loadingLikes}
+                            aria-label={isLiked ? "Unlike article" : "Like article"}
+                          >
+                            <IconHeart filled={isLiked} />
+                            <span className="likes-count-text">
+                              {loadingLikes ? "..." : likesCount}
+                            </span>
+                          </button>
+
+                          <button
+                            type="button"
+                            className={`comment-count-btn ${showCommentsPanel ? "active" : ""}`}
+                            onClick={() => setShowCommentsPanel((prev) => !prev)}
+                            aria-expanded={showCommentsPanel}
+                            aria-label="Toggle comments"
+                          >
+                            <IconComment />
+                            <span>{comments.length}</span>
+                          </button>
+
+                          <div className="share-interactive-trigger">
+                            <button
+                              type="button"
+                              className="share-action-btn"
+                              onClick={() => setShowSharePopup(!showSharePopup)}
+                              aria-label="Share article"
+                            >
+                              <IconShare />
+                              <span>Share</span>
+                            </button>
+                            {showSharePopup && (
+                              <div className="share-glass-popup glass-panel">
+                                <button type="button" className="share-popup-item" onClick={copyPageLink}>
+                                  <IconCopy /> {copiedLink ? "Link Copied!" : "Copy Link"}
+                                </button>
+                                <a href={`https://api.whatsapp.com/send?text=${encodeURIComponent("Read this beautiful wellness article on Diving Sanatan: " + window.location.href)}`} target="_blank" rel="noopener noreferrer" className="share-popup-item">
+                                  <IconComment /> WhatsApp
+                                </a>
+                                <a href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(blog.title)}`} target="_blank" rel="noopener noreferrer" className="share-popup-item">
+                                  <svg className="action-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
+                                  X / Twitter
+                                </a>
+                                <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`} target="_blank" rel="noopener noreferrer" className="share-popup-item">
+                                  <svg className="action-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" /></svg>
+                                  Facebook
+                                </a>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {showCommentsPanel && (
+                        <div id="comments-section" className="comments-interactive-section">
+                          <h4 className="media-section-title comments-heading">
+                            <IconComment />
+                            Reflections &amp; Conversation ({comments.length})
+                          </h4>
+
+                          <div className="comment-post-box">
+                            {user ? (
+                              <form onSubmit={handleCommentSubmit} className="comment-form">
+                                <textarea
+                                  rows={3}
+                                  placeholder="Share your somatic insights or thoughts on this article..."
+                                  value={commentText}
+                                  onChange={(e) => setCommentText(e.target.value)}
+                                  className="comment-textarea"
+                                  required
+                                />
+                                <Button variant="gold" type="submit" disabled={postingComment}>
+                                  {postingComment ? "Posting reflection..." : "Publish Reflection"}
+                                </Button>
+                              </form>
+                            ) : (
+                              <div className="comment-login-promo">
+                                <p>Somatic reflections are shared within our directory. Log in or sign up to leave a comment.</p>
+                                <Button variant="gold-outline" onClick={() => setShowAuthModal(true)} className="btn-fit-center">
+                                  Log In / Sign Up to Comment
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+
+                          {loadingComments ? (
+                            <p className="text-slate-italic-center">Unrolling reflections...</p>
+                          ) : comments.length > 0 ? (
+                            <div className="comments-list-container">
+                              {comments.map((comm) => (
+                                <div key={comm.id} className="single-comment-card">
+                                  <div className="comment-card-meta">
+                                    <strong className="comment-author-name">{comm.userName}</strong>
+                                    <span className="comment-timestamp">{formatCommentDate(comm.createdAt)}</span>
+                                  </div>
+                                  <p className="comment-text-content">{comm.commentText}</p>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="no-comments-fallback">No reflections yet. Be the first to share your thoughts!</p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="article-footer-actions">
+                      <Button variant="gold-outline" onClick={() => router.push("/blog")}>
+                        ← Back to Listings
+                      </Button>
+                      <Button variant="gold" onClick={() => router.push(`/search?query=${encodeURIComponent(blog.category)}`)}>
+                        Book Related Sessions
+                      </Button>
+                    </div>
+                  </Card>
+                </>
+              );
+            }
+
+            // Otherwise, render Normal Blog Layout
             return (
               <>
                 <nav className="article-breadcrumb" aria-label="Breadcrumb">
@@ -483,12 +921,12 @@ export default function BlogDetailsPage() {
                   <span className="breadcrumb-current">{blog.category}</span>
                 </nav>
 
-                <Card variant="glass" className="article-unified-card">
-                  <div className="article-header">
+                <Card variant="glass" className="article-unified-card normal-layout-card">
+                  <div className="article-header normal-header">
                     <span className="article-category">{blog.category}</span>
                     <h1 className="article-title">{blog.title}</h1>
                     <div className="article-meta">
-                      <span>Written by: <strong>{blog.author}</strong></span>
+                      <span>By: <strong>{blog.author}</strong></span>
                       <span>•</span>
                       <span>Released: <strong>{blog.date}</strong></span>
                       <span>•</span>
@@ -500,115 +938,108 @@ export default function BlogDetailsPage() {
                     <p className="first-paragraph-dropcap">{intro}</p>
                   </div>
 
-                  <div className="article-split-row hero-split">
-                    <div className="split-text-col">
-                      {htmlMode ? (
-                        <div
-                          className="article-rich-content split-preview"
-                          dangerouslySetInnerHTML={{
-                            __html: stripFirstHtmlParagraph(blog.content) || blog.content,
-                          }}
-                        />
-                      ) : bodyParagraphs.length > 0 ? (
-                        <p className="split-body-text">{bodyParagraphs[0]}</p>
-                      ) : (
-                        <>
-                          <div className="article-blockquote compact">
-                            <span className="quote-mark">"</span>
-                            <p>{FALLBACK_QUOTE}</p>
-                          </div>
-                          <p className="split-body-text">{FALLBACK_BODY}</p>
-                        </>
-                      )}
-                    </div>
-                    <figure className="split-media-col">
-                      <img
-                        src={coverImage}
-                        alt={blog.title}
-                        className="split-featured-img"
-                      />
-                    </figure>
+                  {/* Standard Featured Cover Image with constraints */}
+                  <div className="normal-featured-cover-container">
+                    <img
+                      src={coverImage}
+                      alt={blog.title}
+                      className="normal-featured-cover-img"
+                    />
                   </div>
 
-                  {bodyParagraphs.slice(1).length > 0 && (
-                    <div className="article-paragraph-wrapper">
-                      {bodyParagraphs.slice(1).map((para, index) => (
-                        <p key={index}>{para}</p>
-                      ))}
+                  {/* Video Block if available */}
+                  {blog.videos && blog.videos.length > 0 && (
+                    <div className="main-video-section">
+                      <h4 className="video-section-title">Featured Video</h4>
+                      <div className="video-player-container">
+                        {blog.videos[0] ? (
+                          isEmbeddable(blog.videos[0]) ? (
+                            <iframe
+                              src={getEmbedUrl(blog.videos[0])}
+                              className="video-iframe"
+                              allowFullScreen
+                              title={blog.title}
+                            />
+                          ) : (
+                            <video src={blog.videos[0]} controls className="video-tag" />
+                          )
+                        ) : (
+                          <div className="no-video-placeholder">No Video Attached</div>
+                        )}
+                      </div>
                     </div>
                   )}
 
-                  {(() => {
-                    const mediaItems = getMediaItems(blog);
-                    if (mediaItems.length === 0) return null;
-                    const currentItem = mediaItems[activeMediaIndex];
-                    return (
-                      <div className="article-carousel-showcase">
-                        <h4 className="media-section-title gallery-heading">Gallery &amp; Media</h4>
-                        <div className="carousel-container">
-                          <div className="carousel-viewport">
-                            {currentItem.type === "video" ? (
-                              <video
-                                key={currentItem.src}
-                                controls
-                                className="carousel-active-slide-video"
-                              >
-                                <source src={currentItem.src} type="video/mp4" />
-                                Your browser does not support the video tag.
-                              </video>
-                            ) : (
-                              <img
-                                src={currentItem.src}
-                                alt={`${blog.title} gallery ${activeMediaIndex + 1}`}
-                                className="carousel-active-slide-img"
-                                onClick={() => window.open(currentItem.src, "_blank")}
-                              />
-                            )}
-                            {currentItem.type === "video" && (
-                              <div className="carousel-media-badge">Video</div>
-                            )}
+                  {/* Additional Videos block if available */}
+                  {blog.videos && blog.videos.length > 1 && (
+                    <div className="additional-videos-block">
+                      <h4 className="video-section-title">Additional Videos</h4>
+                      <div className="additional-videos-row">
+                        {blog.videos.slice(1).map((vidUrl, idx) => (
+                          <div key={idx} className="additional-video-thumbnail-card" onClick={() => window.open(vidUrl, "_blank")}>
+                            <div className="additional-video-preview">
+                              <div className="video-play-btn-overlay">▶</div>
+                            </div>
+                            <h5 className="additional-video-title">Clip {idx + 1}</h5>
                           </div>
-
-                          {mediaItems.length > 1 && (
-                            <>
-                              <button
-                                type="button"
-                                className="carousel-control-btn prev"
-                                onClick={() => prevMedia(mediaItems.length)}
-                                aria-label="Previous slide"
-                              >
-                                ‹
-                              </button>
-                              <button
-                                type="button"
-                                className="carousel-control-btn next"
-                                onClick={() => nextMedia(mediaItems.length)}
-                                aria-label="Next slide"
-                              >
-                                ›
-                              </button>
-                              <div className="carousel-dots-indicator">
-                                {mediaItems.map((item, idx) => (
-                                  <button
-                                    key={idx}
-                                    type="button"
-                                    className={`carousel-dot-btn ${item.type === "video" ? "video-dot" : ""} ${activeMediaIndex === idx ? "active" : ""}`}
-                                    onClick={() => setActiveMediaIndex(idx)}
-                                    aria-label={`Go to ${item.type} ${idx + 1}`}
-                                  />
-                                ))}
-                              </div>
-                            </>
-                          )}
-
-                          <div className="carousel-counter">
-                            {activeMediaIndex + 1} / {mediaItems.length}
-                          </div>
-                        </div>
+                        ))}
                       </div>
-                    );
-                  })()}
+                    </div>
+                  )}
 
+                  {/* Image Gallery block if available */}
+                  {blog.images && blog.images.length > 0 && (
+                    <div className="image-gallery-block">
+                      <h4 className="video-section-title">Image Gallery</h4>
+                      <div className="gallery-images-row">
+                        {blog.images.map((imgUrl, idx) => (
+                          <div key={idx} className="gallery-image-thumbnail-card" onClick={() => window.open(getBlogImage(imgUrl), "_blank")}>
+                            <img src={getBlogImage(imgUrl)} alt={`Gallery index ${idx}`} className="gallery-img-thumb" />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* In This Article Card (Outline) */}
+                  <div className="in-this-article-card">
+                    <div className="ita-title-row">
+                      <svg viewBox="0 0 100 100" className="ita-lotus-icon">
+                        <path d="M50 25 C45 45 35 60 50 80 C65 60 55 45 50 25 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
+                        <path d="M50 80 C35 75 25 60 20 40 C35 50 45 60 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
+                        <path d="M50 80 C65 75 75 60 80 40 C65 50 55 60 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
+                      </svg>
+                      <h4 className="ita-heading">In This Article</h4>
+                    </div>
+                    <div className="ita-grid">
+                      {tocHeadings.map((heading, idx) => (
+                        <div key={idx} className="ita-item">
+                          <span className="ita-number">{idx + 1}.</span>
+                          <span className="ita-text">{heading}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Body Content */}
+                  <div className="article-body-content-wrapper">
+                    {htmlMode ? (
+                      <div
+                        className="article-rich-content"
+                        dangerouslySetInnerHTML={{
+                          __html: htmlBody,
+                        }}
+                      />
+                    ) : (
+                      <div className="article-paragraphs">
+                        {bodyParagraphs.map((para, index) => (
+                          <p key={index}>{para}</p>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Standard Interactions & Comments */}
                   <div className="article-interactions-section">
                     <div className="interactions-bar">
                       <div className="interactions-left">
@@ -635,36 +1066,36 @@ export default function BlogDetailsPage() {
                           <IconComment />
                           <span>{comments.length}</span>
                         </button>
-                      </div>
 
-                      <div className="share-interactive-trigger">
-                        <button
-                          type="button"
-                          className="share-action-btn"
-                          onClick={() => setShowSharePopup(!showSharePopup)}
-                          aria-label="Share article"
-                        >
-                          <IconShare />
-                          <span>Share</span>
-                        </button>
-                        {showSharePopup && (
-                          <div className="share-glass-popup glass-panel">
-                            <button type="button" className="share-popup-item" onClick={copyPageLink}>
-                              <IconCopy /> {copiedLink ? "Link Copied!" : "Copy Link"}
-                            </button>
-                            <a href={`https://api.whatsapp.com/send?text=${encodeURIComponent("Read this beautiful wellness article on Diving Sanatan: " + window.location.href)}`} target="_blank" rel="noopener noreferrer" className="share-popup-item">
-                              <IconComment /> WhatsApp
-                            </a>
-                            <a href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(blog.title)}`} target="_blank" rel="noopener noreferrer" className="share-popup-item">
-                              <svg className="action-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
-                              X / Twitter
-                            </a>
-                            <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`} target="_blank" rel="noopener noreferrer" className="share-popup-item">
-                              <svg className="action-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" /></svg>
-                              Facebook
-                            </a>
-                          </div>
-                        )}
+                        <div className="share-interactive-trigger">
+                          <button
+                            type="button"
+                            className="share-action-btn"
+                            onClick={() => setShowSharePopup(!showSharePopup)}
+                            aria-label="Share article"
+                          >
+                            <IconShare />
+                            <span>Share</span>
+                          </button>
+                          {showSharePopup && (
+                            <div className="share-glass-popup glass-panel">
+                              <button type="button" className="share-popup-item" onClick={copyPageLink}>
+                                <IconCopy /> {copiedLink ? "Link Copied!" : "Copy Link"}
+                              </button>
+                              <a href={`https://api.whatsapp.com/send?text=${encodeURIComponent("Read this beautiful wellness article on Diving Sanatan: " + window.location.href)}`} target="_blank" rel="noopener noreferrer" className="share-popup-item">
+                                <IconComment /> WhatsApp
+                              </a>
+                              <a href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(blog.title)}`} target="_blank" rel="noopener noreferrer" className="share-popup-item">
+                                <svg className="action-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
+                                X / Twitter
+                              </a>
+                              <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`} target="_blank" rel="noopener noreferrer" className="share-popup-item">
+                                <svg className="action-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" /></svg>
+                                Facebook
+                              </a>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
 
@@ -898,11 +1329,11 @@ export default function BlogDetailsPage() {
           border-radius: 24px !important;
         }
         .article-header {
-          text-align: center;
+          text-align: left;
           margin-bottom: 24px;
           display: flex;
           flex-direction: column;
-          align-items: center;
+          align-items: flex-start;
           gap: 12px;
           padding-bottom: 24px;
           border-bottom: 1px solid rgba(0, 0, 0, 0.06);
@@ -930,7 +1361,7 @@ export default function BlogDetailsPage() {
           color: hsl(var(--text-muted));
           margin-top: 4px;
           flex-wrap: wrap;
-          justify-content: center;
+          justify-content: flex-start;
         }
         .article-lead {
           padding: 0 0 24px;
@@ -1166,7 +1597,7 @@ export default function BlogDetailsPage() {
         .share-glass-popup {
           position: absolute;
           bottom: 125%;
-          right: 0;
+          left: 0;
           width: 180px;
           display: flex;
           flex-direction: column;
@@ -1458,7 +1889,7 @@ export default function BlogDetailsPage() {
           .article-meta {
             flex-direction: column;
             gap: 4px;
-            align-items: center;
+            align-items: flex-start;
           }
           .article-meta span:nth-child(even) {
             display: none;
@@ -1483,7 +1914,7 @@ export default function BlogDetailsPage() {
         }
 
         /* Dynamic Carousel Showcase Styles */
-        .media-section-title {
+         .media-section-title, .video-section-title {
           font-family: var(--font-serif);
           font-size: 1.4rem;
           color: #4c1d95;
@@ -1647,6 +2078,331 @@ export default function BlogDetailsPage() {
         .carousel-dot-btn.video-dot.active {
           background: #f59e0b;
           box-shadow: 0 0 8px #f59e0b;
+        }
+
+        /* Dynamic video layout cards & styling */
+        .video-layout-card, .normal-layout-card {
+          border-radius: 24px !important;
+          padding: 40px !important;
+          background: rgba(255, 255, 255, 0.9) !important;
+          border: 1px solid rgba(168, 85, 247, 0.08) !important;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.01) !important;
+        }
+        
+        .article-subtitle {
+          font-size: 1.15rem;
+          color: #4b5563;
+          line-height: 1.6;
+          margin-top: 10px;
+          font-weight: 500;
+          text-align: left;
+        }
+
+        .video-badge {
+          background: rgba(124, 58, 237, 0.08) !important;
+          border: 1px solid rgba(124, 58, 237, 0.2) !important;
+          color: #6d28d9 !important;
+        }
+
+        /* Video Player section */
+        .main-video-section {
+          margin-top: 24px;
+        }
+        .video-player-container {
+          position: relative;
+          width: 100%;
+          padding-bottom: 56.25%; /* 16:9 aspect ratio */
+          height: 0;
+          border-radius: 16px;
+          overflow: hidden;
+          background: #000;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+          border: 1px solid rgba(168, 85, 247, 0.15);
+        }
+        .video-iframe, .video-tag {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          border: none;
+          object-fit: cover;
+        }
+
+        .no-video-placeholder {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: rgba(255, 255, 255, 0.6);
+          font-style: italic;
+          font-size: 1rem;
+        }
+
+        /* Additional videos */
+        .additional-videos-block {
+          margin-top: 24px;
+        }
+        .additional-videos-row {
+          display: flex;
+          gap: 16px;
+          overflow-x: auto;
+          padding-bottom: 8px;
+          scrollbar-width: thin;
+          scrollbar-color: rgba(168, 85, 247, 0.2) transparent;
+        }
+        .additional-video-thumbnail-card {
+          flex: 0 0 160px;
+          cursor: pointer;
+          transition: transform 0.2s ease;
+        }
+        .additional-video-thumbnail-card:hover {
+          transform: translateY(-2px);
+        }
+        .additional-video-preview {
+          width: 100%;
+          height: 90px;
+          border-radius: 8px;
+          background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          position: relative;
+          box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        }
+        .video-play-btn-overlay {
+          color: white;
+          font-size: 1.25rem;
+          background: rgba(0,0,0,0.3);
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding-left: 2px;
+          box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .additional-video-title {
+          margin-top: 6px;
+          font-size: 0.8rem;
+          font-weight: 600;
+          color: #4b5563;
+          text-align: center;
+        }
+
+        /* Image Gallery */
+        .image-gallery-block {
+          margin-top: 24px;
+        }
+        .gallery-images-row {
+          display: flex;
+          gap: 12px;
+          overflow-x: auto;
+          padding-bottom: 8px;
+          scrollbar-width: thin;
+          scrollbar-color: rgba(168, 85, 247, 0.2) transparent;
+        }
+        .gallery-image-thumbnail-card {
+          flex: 0 0 220px;
+          height: 150px;
+          border-radius: 12px;
+          overflow: hidden;
+          cursor: pointer;
+          border: 1px solid rgba(168, 85, 247, 0.1);
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.03);
+          transition: transform 0.2s ease;
+        }
+        .gallery-image-thumbnail-card:hover {
+          transform: scale(1.04);
+        }
+        .gallery-img-thumb {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        /* Takeaways */
+        .takeaways-block {
+          margin-top: 32px;
+        }
+        .takeaways-row-grid {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 16px;
+        }
+        .takeaway-pill {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 14px 20px;
+          background: #faf5ff;
+          border: 1.5px solid rgba(168, 85, 247, 0.1);
+          border-radius: 16px;
+          font-size: 0.9rem;
+          font-weight: 600;
+          color: #581c87;
+          box-shadow: 0 4px 10px rgba(0, 0, 0, 0.01);
+          transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+        .takeaway-pill:hover {
+          transform: translateY(-1px);
+          border-color: rgba(168, 85, 247, 0.25);
+          background: #fdf4ff;
+        }
+        .takeaway-bullet {
+          font-size: 1.2rem;
+        }
+
+        /* Resources */
+        .resources-block {
+          margin-top: 32px;
+        }
+        .resources-column-list {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+        .resource-download-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 16px 24px;
+          background: #ffffff;
+          border: 1px solid rgba(0,0,0,0.05);
+          border-radius: 16px;
+          box-shadow: 0 4px 10px rgba(0,0,0,0.01);
+        }
+        .resource-meta {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+        .resource-meta h6 {
+          font-family: var(--font-sans);
+          font-size: 0.95rem;
+          font-weight: 700;
+          color: #1e1b4b;
+          margin: 0;
+        }
+        .resource-meta span {
+          font-size: 0.78rem;
+          color: #64748b;
+        }
+        .download-btn-style {
+          background: rgba(124, 58, 237, 0.05);
+          border: 1px solid rgba(124, 58, 237, 0.2);
+          color: #7c3aed;
+          padding: 8px 18px;
+          font-size: 0.8rem;
+          font-weight: 700;
+          border-radius: 8px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+        .download-btn-style:hover {
+          background: #7c3aed;
+          color: #ffffff;
+        }
+
+        /* Normal Featured Cover Image constraints */
+        .normal-featured-cover-container {
+          width: 100%;
+          height: 380px;
+          border-radius: 20px;
+          overflow: hidden;
+          margin: 16px 0 28px;
+          border: 1px solid var(--gold-border);
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+          background: #fafafa;
+        }
+        .normal-featured-cover-img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        /* In This Article outline box */
+        .in-this-article-card {
+          background: #fbfbfe;
+          border: 1.5px solid rgba(168, 85, 247, 0.1);
+          border-radius: 20px;
+          padding: 24px;
+          margin-bottom: 28px;
+          box-shadow: inset 0 0 20px rgba(168, 85, 247, 0.02);
+        }
+        .ita-title-row {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 16px;
+        }
+        .ita-lotus-icon {
+          width: 22px;
+          height: 22px;
+          flex-shrink: 0;
+        }
+        .ita-heading {
+          font-family: var(--font-sans);
+          font-size: 1.1rem;
+          font-weight: 750;
+          color: #1e1b4b;
+          margin: 0;
+        }
+        .ita-grid {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 12px;
+        }
+        .ita-item {
+          display: flex;
+          align-items: flex-start;
+          gap: 6px;
+        }
+        .ita-number {
+          font-weight: 700;
+          color: #7c3aed;
+          font-size: 0.88rem;
+        }
+        .ita-text {
+          font-size: 0.88rem;
+          color: #4b5563;
+          font-weight: 500;
+          line-height: 1.4;
+        }
+
+        /* Global constraints for Rich HTML images embedded in body content */
+        .article-rich-content img {
+          max-width: 100% !important;
+          height: auto !important;
+          border-radius: 16px !important;
+          object-fit: cover;
+          display: block;
+          margin: 24px auto;
+          border: 1.5px solid var(--gold-border);
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+        }
+
+        @media (max-width: 768px) {
+          .takeaways-row-grid, .ita-grid {
+            grid-template-columns: 1fr;
+          }
+          .resource-download-row {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+          }
+          .download-btn-style {
+            width: 100%;
+            text-align: center;
+          }
+          .normal-featured-cover-container {
+            height: 240px;
+          }
         }
       `}</style>
     </div>
