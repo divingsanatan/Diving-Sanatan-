@@ -548,31 +548,33 @@ export const BlogRightSidebar: React.FC = () => {
       )}
 
       {/* Most Viewed Blogs */}
-      <div className="right-sidebar-card">
-        <div className="sidebar-title-row">
-          <svg viewBox="0 0 100 100" className="sidebar-lotus-icon">
-            <path d="M50 25 C45 45 35 60 50 80 C65 60 55 45 50 25 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
-            <path d="M50 80 C35 75 25 60 20 40 C35 50 45 60 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
-            <path d="M50 80 C65 75 75 60 80 40 C65 50 55 60 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
-          </svg>
-          <h4 className="sidebar-heading">Most Viewed Blogs</h4>
+      {!activeBlog && (
+        <div className="right-sidebar-card">
+          <div className="sidebar-title-row">
+            <svg viewBox="0 0 100 100" className="sidebar-lotus-icon">
+              <path d="M50 25 C45 45 35 60 50 80 C65 60 55 45 50 25 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
+              <path d="M50 80 C35 75 25 60 20 40 C35 50 45 60 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
+              <path d="M50 80 C65 75 75 60 80 40 C65 50 55 60 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
+            </svg>
+            <h4 className="sidebar-heading">Most Viewed Blogs</h4>
+          </div>
+          
+          <div className="most-viewed-list">
+            {mostViewedFallback.map((blog, idx) => (
+              <Link key={blog.id} href={`/blog/${blog.id}`} className="most-viewed-item">
+                <div className="mv-number-badge">{idx + 1}</div>
+                <div className="mv-thumbnail-wrapper">
+                  <img src={blog.image} alt={blog.title} className="mv-thumbnail" />
+                </div>
+                <div className="mv-info">
+                  <h5>{blog.title}</h5>
+                  <span>{blog.views}</span>
+                </div>
+              </Link>
+            ))}
+          </div>
         </div>
-        
-        <div className="most-viewed-list">
-          {mostViewedFallback.map((blog, idx) => (
-            <Link key={blog.id} href={`/blog/${blog.id}`} className="most-viewed-item">
-              <div className="mv-number-badge">{idx + 1}</div>
-              <div className="mv-thumbnail-wrapper">
-                <img src={blog.image} alt={blog.title} className="mv-thumbnail" />
-              </div>
-              <div className="mv-info">
-                <h5>{blog.title}</h5>
-                <span>{blog.views}</span>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </div>
+      )}
 
       {/* Related Blogs */}
       {relatedBlogs.length > 0 && (
@@ -593,7 +595,7 @@ export const BlogRightSidebar: React.FC = () => {
                   <img src={getBlogImage(b.image)} alt={b.title} />
                 </div>
                 <div className="related-meta-info">
-                  <h6>{b.title}</h6>
+                  <h5>{b.title}</h5>
                   <span>{b.readTime}</span>
                 </div>
               </Link>
@@ -786,12 +788,12 @@ export const BlogRightSidebar: React.FC = () => {
         .related-blogs-list {
           display: flex;
           flex-direction: column;
-          gap: 12px;
+          gap: 14px;
         }
         .related-blog-row {
           display: flex;
           align-items: center;
-          gap: 10px;
+          gap: 12px;
           text-decoration: none;
           color: inherit;
           transition: transform 0.2s ease;
@@ -800,12 +802,13 @@ export const BlogRightSidebar: React.FC = () => {
           transform: translateX(4px);
         }
         .related-thumb {
-          width: 58px;
-          height: 40px;
-          border-radius: 6px;
+          width: 52px;
+          height: 52px;
+          border-radius: 10px;
           overflow: hidden;
           background: #f3e8ff;
           flex-shrink: 0;
+          border: 1px solid rgba(168, 85, 247, 0.05);
         }
         .related-thumb img {
           width: 100%;
@@ -818,22 +821,23 @@ export const BlogRightSidebar: React.FC = () => {
           gap: 2px;
           min-width: 0;
         }
-        .related-meta-info h6 {
+        .related-meta-info h5 {
           font-family: var(--font-sans);
-          font-size: 0.78rem;
+          font-size: 0.8rem;
           font-weight: 600;
           color: #1f2937;
           margin: 0;
-          line-height: 1.3;
-          white-space: nowrap;
+          line-height: 1.35;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
           overflow: hidden;
-          text-overflow: ellipsis;
         }
-        .related-blog-row:hover h6 {
+        .related-blog-row:hover h5 {
           color: #7c3aed;
         }
         .related-meta-info span {
-          font-size: 0.68rem;
+          font-size: 0.7rem;
           color: #6b7280;
         }
 
