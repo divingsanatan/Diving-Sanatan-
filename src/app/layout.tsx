@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import StyledJsxRegistry from "./registry";
 
 export const metadata: Metadata = {
   title: {
@@ -60,7 +61,7 @@ export default function RootLayout({
           <div className="glow-orb-1"></div>
           <div className="glow-orb-2"></div>
         </div>
-        {children}
+        <StyledJsxRegistry>{children}</StyledJsxRegistry>
       </body>
     </html>
   );

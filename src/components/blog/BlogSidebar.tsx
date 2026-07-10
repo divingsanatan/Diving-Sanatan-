@@ -16,12 +16,28 @@ interface CategoryItem {
   icon: React.ReactNode;
 }
 
+const getCategoryIcon = (name: string) => {
+  const n = name.toLowerCase();
+  if (n.includes("chakra")) return <Flower size={14} strokeWidth={1.5} />;
+  if (n.includes("aura") || n.includes("energy")) return <Sparkles size={14} strokeWidth={1.5} />;
+  if (n.includes("meditation") || n.includes("mindfulness")) return <Compass size={14} strokeWidth={1.5} />;
+  if (n.includes("reiki")) return <Heart size={14} strokeWidth={1.5} />;
+  if (n.includes("sound")) return <Volume2 size={14} strokeWidth={1.5} />;
+  if (n.includes("manifest")) return <Flame size={14} strokeWidth={1.5} />;
+  if (n.includes("spiritual") || n.includes("growth")) return <Leaf size={14} strokeWidth={1.5} />;
+  if (n.includes("ritual") || n.includes("sacred")) return <Flame size={14} strokeWidth={1.5} />;
+  if (n.includes("wellness") || n.includes("holistic")) return <Shield size={14} strokeWidth={1.5} />;
+  return <Leaf size={14} strokeWidth={1.5} />;
+};
+
 export const BlogSidebar: React.FC = () => {
   const pathname = usePathname();
   const router = useRouter();
   const { activeCategory, setActiveCategory, activeBlog } = useBlog();
 
   const [categoriesExpanded, setCategoriesExpanded] = React.useState(false);
+  const [categoryItems, setCategoryItems] = React.useState<CategoryItem[]>([]);
+  const [loading, setLoading] = React.useState(true);
 
   const isVideoBlog = activeBlog && (
     (activeBlog.videos && activeBlog.videos.length > 0) ||
@@ -29,26 +45,36 @@ export const BlogSidebar: React.FC = () => {
     activeBlog.category.toLowerCase() === "video blog"
   );
 
-  const categoryItems: CategoryItem[] = [
-    { id: "chakra healing", name: "Chakra Healing", icon: <Flower size={14} strokeWidth={1.5} /> },
-    { id: "aura & energy", name: "Aura & Energy", icon: <Sparkles size={14} strokeWidth={1.5} /> },
-    { id: "meditation & mindfulness", name: "Meditation & Mindfulness", icon: <Compass size={14} strokeWidth={1.5} /> },
-    { id: "reiki healing", name: "Reiki Healing", icon: <Heart size={14} strokeWidth={1.5} /> },
-    { id: "sound healing", name: "Sound Healing", icon: <Volume2 size={14} strokeWidth={1.5} /> },
-    { id: "manifestation", name: "Manifestation", icon: <Flame size={14} strokeWidth={1.5} /> },
-    { id: "spiritual growth", name: "Spiritual Growth", icon: <Leaf size={14} strokeWidth={1.5} /> },
-    { id: "sacred rituals", name: "Sacred Rituals", icon: <Flame size={14} strokeWidth={1.5} /> },
-    { id: "holistic wellness", name: "Holistic Wellness", icon: <Shield size={14} strokeWidth={1.5} /> },
-  ];
+  React.useEffect(() => {
+    async function fetchCategories() {
+      try {
+        const res = await fetch("/api/categories");
+        const json = await res.json();
+        if (json.success) {
+          const items = json.data.map((cat: any) => ({
+            id: cat.name.toLowerCase(),
+            name: cat.name,
+            icon: getCategoryIcon(cat.name)
+          }));
+          setCategoryItems(items);
+        }
+      } catch (err) {
+        console.error("Failed to load categories:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchCategories();
+  }, []);
 
-  const categoryIds = categoryItems.map(item => item.id);
+  const categoryIds = React.useMemo(() => categoryItems.map(item => item.id), [categoryItems]);
 
   // Auto-expand categories if we are on /blog and a subcategory is active
   React.useEffect(() => {
     if (pathname === "/blog" && categoryIds.includes(activeCategory.toLowerCase())) {
       setCategoriesExpanded(true);
     }
-  }, [activeCategory, pathname]);
+  }, [activeCategory, pathname, categoryIds]);
 
   const isCategoryActive = pathname === "/blog" && categoryIds.includes(activeCategory.toLowerCase());
 

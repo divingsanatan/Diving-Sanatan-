@@ -1,10 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import { Card } from "@/components/ui/Card";
 
 interface Practitioner {
   id: string;
@@ -14,309 +13,1777 @@ interface Practitioner {
   rating: number;
   reviewsCount: number;
   image: string;
+  expertise?: string[];
+  certifications?: string[];
 }
 
-export default function AboutPage() {
-  const [practitioners, setPractitioners] = useState<Practitioner[]>([]);
-  const [loading, setLoading] = useState(true);
+interface Service {
+  id: string;
+  name: string;
+  price: number;
+  duration: string;
+  rating: number;
+  practitioner: string;
+  image: string;
+  description: string;
+  category?: string;
+  categories?: string[];
+}
 
+interface Testimonial {
+  comment: string;
+  author: string;
+  location: string;
+}
+
+export default function AboutClient() {
+  // Dynamic Data States
+  const [services, setServices] = useState<Service[]>([]);
+  const [healers, setHealers] = useState<Practitioner[]>([]);
+  const [loadingServices, setLoadingServices] = useState(true);
+  const [loadingHealers, setLoadingHealers] = useState(true);
+
+  // Search & Navigation States
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeSection, setActiveSection] = useState("story");
+
+  // Carousel scroll position trackers (to highlight active dots)
+  const [servicesScrollProgress, setServicesScrollProgress] = useState(0);
+  const [healersScrollProgress, setHealersScrollProgress] = useState(0);
+  const [teamScrollProgress, setTeamScrollProgress] = useState(0);
+
+  // Testimonial States
+  const [testimonialIndex, setTestimonialIndex] = useState(0);
+
+  // Modal States
+  const [showStoryModal, setShowStoryModal] = useState(false);
+  const [showCertsModal, setShowCertsModal] = useState(false);
+
+  // Refs for carousels
+  const servicesCarouselRef = useRef<HTMLDivElement>(null);
+  const healersCarouselRef = useRef<HTMLDivElement>(null);
+  const teamCarouselRef = useRef<HTMLDivElement>(null);
+
+  // Static Team Data
+  const staticTeam = [
+    {
+      id: "team-1",
+      name: "Priya Sharma",
+      role: "Founder & CEO",
+      image: "https://i.pravatar.cc/100?img=49"
+    },
+    {
+      id: "team-2",
+      name: "Arjun Malhotra",
+      role: "Head of Healing",
+      image: "https://i.pravatar.cc/100?img=15"
+    },
+    {
+      id: "team-3",
+      name: "Kavya Nair",
+      role: "Content & Education",
+      image: "https://i.pravatar.cc/100?img=45"
+    },
+    {
+      id: "team-4",
+      name: "Vikram Das",
+      role: "Operations Manager",
+      image: "https://i.pravatar.cc/100?img=13"
+    },
+    {
+      id: "team-5",
+      name: "Ishita Verma",
+      role: "Community Manager",
+      image: "https://i.pravatar.cc/100?img=20"
+    }
+  ];
+
+  // Static Testimonials (as fallbacks or rotation items)
+  const staticTestimonials: Testimonial[] = [
+    {
+      comment: "Diving Sanatan changed my life. I found clarity, peace, and purpose through their guidance.",
+      author: "Ananya",
+      location: "Mumbai"
+    },
+    {
+      comment: "The chakra balancing helped release months of heavy work stress. It was truly transcendental.",
+      author: "Sarah",
+      location: "London"
+    },
+    {
+      comment: "The acoustic sound healing sessions have completely rewritten my sleeping patterns. I feel lightweight and centered.",
+      author: "Jonathan",
+      location: "Saint Petersburg"
+    }
+  ];
+
+  const menuItems = [
+    { id: "story", label: "Our Story", icon: "🏠" },
+    { id: "mission-values", label: "Our Mission & Values", icon: "🎯" },
+    { id: "services", label: "Our Services", icon: "⚙" },
+    { id: "healers", label: "Our Healers", icon: "👥" },
+    { id: "team", label: "Our Team", icon: "👤" },
+    { id: "certifications", label: "Certifications", icon: "📍" },
+    { id: "testimonials", label: "Testimonials", icon: "✓" },
+    { id: "media-features", label: "Media & Features", icon: "📰" }
+  ];
+
+  // Load Services and Healers from DB APIs
   useEffect(() => {
-    async function loadPractitioners() {
+    async function fetchServices() {
+      try {
+        const res = await fetch("/api/services");
+        const json = await res.json();
+        if (json.success) {
+          // Keep only featured/primary services or all services for listing
+          setServices(json.data);
+        }
+      } catch (err) {
+        console.error("Failed to load services", err);
+      } finally {
+        setLoadingServices(false);
+      }
+    }
+
+    async function fetchPractitioners() {
       try {
         const res = await fetch("/api/practitioners");
         const json = await res.json();
         if (json.success) {
-          setPractitioners(json.data);
+          setHealers(json.data);
         }
       } catch (err) {
         console.error("Failed to load practitioners", err);
       } finally {
-        setLoading(false);
+        setLoadingHealers(false);
       }
     }
-    loadPractitioners();
+
+    fetchServices();
+    fetchPractitioners();
   }, []);
 
-  const values = [
-    {
-      title: "Resonance Alignment",
-      desc: "We focus on realigning biological vibration with cognitive focus, correcting blockages at the energetic source.",
-      symbol: "⚡"
-    },
-    {
-      title: "Holistic Purification",
-      desc: "Every layout uses natural minerals, tuning acoustics, and thermal layouts configured to your local environmental conditions.",
-      symbol: "💎"
-    },
-    {
-      title: "Spiritual Autonomy",
-      desc: "Our healers act as counselors and guides, equipping you with somatic breath exercises to continue self-purification.",
-      symbol: "🧘"
+  // Intersection Observer for scroll-spy active state tracking
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setActiveSection(entry.target.id);
+          }
+        });
+      },
+      { threshold: 0.15, rootMargin: "-80px 0px -40% 0px" }
+    );
+
+    menuItems.forEach((item) => {
+      const el = document.getElementById(item.id);
+      if (el) observer.observe(el);
+    });
+
+    return () => observer.disconnect();
+  }, [loadingServices, loadingHealers]);
+
+  // Testimonial auto-rotation
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTestimonialIndex((prev) => (prev + 1) % staticTestimonials.length);
+    }, 5500);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Image & icon mapping helper functions
+  const getServiceImage = (imgName: string, serviceName: string) => {
+    if (imgName && (imgName.startsWith("http") || imgName.startsWith("/")) && !imgName.includes("aura_balancing")) {
+      return imgName;
     }
-  ];
+    const name = serviceName.toLowerCase();
+    if (name.includes("chakra")) return "https://images.unsplash.com/photo-1545389336-cf090694435e?w=300&h=200&fit=crop";
+    if (name.includes("aura")) return "https://images.unsplash.com/photo-1559757175-5700dde675bc?w=300&h=200&fit=crop";
+    if (name.includes("reiki")) return "https://images.unsplash.com/photo-1604881991720-f91add269bed?w=300&h=200&fit=crop";
+    if (name.includes("sound")) return "https://images.unsplash.com/photo-1591291621164-2c6367723315?w=300&h=200&fit=crop";
+    if (name.includes("guidance") || name.includes("personal") || name.includes("counseling")) return "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=300&h=200&fit=crop";
+    return "https://images.unsplash.com/photo-1545389336-cf090694435e?w=300&h=200&fit=crop";
+  };
+
+  const getServiceIconSymbol = (serviceName: string) => {
+    const name = serviceName.toLowerCase();
+    if (name.includes("chakra")) return "☸";
+    if (name.includes("aura")) return "👁";
+    if (name.includes("reiki")) return "✋";
+    if (name.includes("sound")) return "♪";
+    if (name.includes("guidance") || name.includes("personal") || name.includes("counseling")) return "👤";
+    return "✦";
+  };
+
+  const getHealerAvatar = (imgName: string, healerName: string) => {
+    if (imgName && (imgName.startsWith("http") || imgName.startsWith("/")) && imgName !== "elara_vance") {
+      return imgName;
+    }
+    const name = healerName.toLowerCase();
+    if (name.includes("anara")) return "https://i.pravatar.cc/100?img=47";
+    if (name.includes("elena") || name.includes("vance")) return "https://i.pravatar.cc/100?img=48";
+    if (name.includes("rohan") || name.includes("zephyr")) return "https://i.pravatar.cc/100?img=33";
+    if (name.includes("meera") || name.includes("celeste")) return "https://i.pravatar.cc/100?img=44";
+    if (name.includes("dev") || name.includes("arora")) return "https://i.pravatar.cc/100?img=12";
+    return "https://i.pravatar.cc/100?img=47";
+  };
+
+  // Scroll spy helper to scroll page content smoothly
+  const scrollToSection = (id: string) => {
+    const el = document.getElementById(id);
+    if (el) {
+      const offset = 85; // header spacer offset
+      const bodyRect = document.body.getBoundingClientRect().top;
+      const elementRect = el.getBoundingClientRect().top;
+      const elementPosition = elementRect - bodyRect;
+      const offsetPosition = elementPosition - offset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: "smooth"
+      });
+    }
+  };
+
+  // Carousel control helpers
+  const handleCarouselScroll = (ref: React.RefObject<HTMLDivElement | null>, direction: "left" | "right", setScrollProgress: (prog: number) => void) => {
+    if (ref.current) {
+      const container = ref.current;
+      const cardWidth = container.querySelector(".card, .healer-card")?.clientWidth || 240;
+      const scrollAmount = cardWidth + 14; // card width + gap
+      const targetScroll = container.scrollLeft + (direction === "left" ? -scrollAmount : scrollAmount);
+      
+      container.scrollTo({
+        left: targetScroll,
+        behavior: "smooth"
+      });
+    }
+  };
+
+  const updateScrollProgress = (ref: React.RefObject<HTMLDivElement | null>, setScrollProgress: (prog: number) => void) => {
+    if (ref.current) {
+      const container = ref.current;
+      const maxScroll = container.scrollWidth - container.clientWidth;
+      if (maxScroll <= 0) {
+        setScrollProgress(0);
+        return;
+      }
+      const progress = container.scrollLeft / maxScroll;
+      setScrollProgress(progress);
+    }
+  };
+
+  // Live Filtering
+  const filteredServices = services.filter((srv) => {
+    const q = searchQuery.toLowerCase().trim();
+    if (!q) return true;
+    return (
+      srv.name.toLowerCase().includes(q) ||
+      srv.description.toLowerCase().includes(q) ||
+      (srv.category && srv.category.toLowerCase().includes(q))
+    );
+  });
+
+  const filteredHealers = healers.filter((prac) => {
+    const q = searchQuery.toLowerCase().trim();
+    if (!q) return true;
+    return (
+      prac.name.toLowerCase().includes(q) ||
+      prac.specialty.toLowerCase().includes(q) ||
+      prac.bio.toLowerCase().includes(q)
+    );
+  });
+
+  const filteredTeam = staticTeam.filter((member) => {
+    const q = searchQuery.toLowerCase().trim();
+    if (!q) return true;
+    return (
+      member.name.toLowerCase().includes(q) ||
+      member.role.toLowerCase().includes(q)
+    );
+  });
 
   return (
     <div className="page-shell">
       <Header />
 
-      <main className="about-container">
-        
-        {/* Header */}
-        <section className="about-header">
-          <h1 className="about-title">Our Sanctuary</h1>
-          <p className="about-subtitle">
-            Diving Sanatan was established to bridge ancient energy medicine techniques with modern cognitive therapy standards.
-          </p>
-        </section>
+      <div className="page">
+        {/* ================= LEFT SIDEBAR ================= */}
+        <aside className="sidebar">
+          <div className="sidebar-sticky-content">
+            <div className="sidebar-title">
+              <span className="lotus">❀</span>
+              <span>About Us</span>
+            </div>
+            
+            <ul className="menu-list">
+              {menuItems.map((item) => (
+                <li key={item.id}>
+                  <button
+                    onClick={() => scrollToSection(item.id)}
+                    className={`menu-item ${activeSection === item.id ? "active" : ""}`}
+                  >
+                    <span className="icon">{item.icon}</span>
+                    <span>{item.label}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
 
-        {/* Mission Statement */}
-        <section className="mission-section glass-panel">
-          <div className="mission-content">
-            <h2 className="mission-heading">The Healing Manifesto</h2>
-            <p className="mission-desc">
-              We believe that fatigue, anxiety, and mental stress are rarely isolated occurrences. They are biological and auric signals indicating that our energetic nodes have become stagnant. By combining tactile reiki, natural mineral crystals, and sound bowls, we generate high-frequency currents that release tension, reset parasympathetic systems, and guide seekers back to cognitive stillness.
-            </p>
+            <div className="search-box">
+              <input
+                type="text"
+                placeholder="Search in about us..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+
+            <div className="quote-card">
+              <h3>"We believe healing is a journey, not a destination."</h3>
+              <p>We walk beside you with wisdom, compassion, and ancient practices for modern lives.</p>
+              <div className="quote-lotus">❀</div>
+            </div>
           </div>
-        </section>
+        </aside>
 
-        {/* Core Values */}
-        <section className="values-section">
-          <h2 className="section-title">Core Tenets</h2>
-          <div className="values-grid">
-            {values.map((v, i) => (
-              <Card key={i} variant="glass" className="value-card">
-                <span className="value-symbol">{v.symbol}</span>
-                <h3 className="value-title">{v.title}</h3>
-                <p className="value-desc">{v.desc}</p>
-              </Card>
-            ))}
-          </div>
-        </section>
+        {/* ================= MAIN COLUMN ================= */}
+        <main className="main">
+          {/* Story Hero */}
+          <section id="story" className="story-hero">
+            <div className="story-content">
+              <h2>Our Story</h2>
+              <h1>Healing Ancient Wisdom for Modern Lives</h1>
+              <p>
+                Diving Sanatan was founded in 2000 with a simple yet powerful vision – to make holistic healing accessible, authentic, and transformative for all. We bridge time-tested ancient energy patterns with state-of-the-art cognitive wellness structures, guiding seekers back to somatic quietude.
+              </p>
+              <button className="learn-btn" onClick={() => setShowStoryModal(true)}>
+                Learn Our Journey
+              </button>
+            </div>
+            <div className="story-image"></div>
+          </section>
 
-        {/* Healers/Practitioners list */}
-        <section className="practitioners-section">
-          <h2 className="section-title">Certified Healers & Guides</h2>
-          <p className="about-section-desc">
-            Meet the team of master physicians committed to your cosmic balance.
-          </p>
+          {/* Our Services */}
+          <section id="services" className="section">
+            <div className="section-header">
+              <span className="lotus">❀</span> Our Services
+            </div>
+            <div className="carousel-wrap">
+              <button
+                className="arrow left"
+                onClick={() => handleCarouselScroll(servicesCarouselRef, "left", setServicesScrollProgress)}
+                aria-label="Scroll left"
+              >
+                ‹
+              </button>
+              <button
+                className="arrow right"
+                onClick={() => handleCarouselScroll(servicesCarouselRef, "right", setServicesScrollProgress)}
+                aria-label="Scroll right"
+              >
+                ›
+              </button>
 
-          {loading ? (
-            <p className="text-center">Aligning healing frequencies...</p>
-          ) : (
-            <div className="practitioners-grid">
-              {practitioners.map(prac => (
-                <Card key={prac.id} variant="glass" className="prac-card">
-                  <div className="prac-avatar-container">
-                    {prac.image ? (
-                      <img 
-                        src={prac.image} 
-                        alt={prac.name} 
-                        className="prac-avatar-img"
-                      />
-                    ) : (
-                      <div className="prac-placeholder-avatar">
-                        {prac.name.split(" ").map(n => n[0]).join("")}
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="prac-card-info">
-                    <h3 className="prac-name">{prac.name}</h3>
-                    <span className="prac-spec">{prac.specialty}</span>
-                    
-                    <div className="prac-rating">
-                      <span className="stars">★ ★ ★ ★ ★</span>
-                      <span className="score">{prac.rating} ({prac.reviewsCount} Reviews)</span>
+              <div
+                className="cards-carousel"
+                ref={servicesCarouselRef}
+                onScroll={() => updateScrollProgress(servicesCarouselRef, setServicesScrollProgress)}
+              >
+                {loadingServices ? (
+                  Array.from({ length: 3 }).map((_, i) => (
+                    <div className="card skeleton-card" key={i}>
+                      <div className="skeleton skeleton-img"></div>
+                      <div className="skeleton skeleton-title"></div>
+                      <div className="skeleton skeleton-desc"></div>
                     </div>
+                  ))
+                ) : filteredServices.length === 0 ? (
+                  <div className="no-results">No matching services found.</div>
+                ) : (
+                  filteredServices.map((srv) => (
+                    <div className="card" key={srv.id}>
+                      <img
+                        className="card-img"
+                        src={getServiceImage(srv.image, srv.name)}
+                        alt={srv.name}
+                      />
+                      <div className="card-body">
+                        <div className="card-icon">
+                          {getServiceIconSymbol(srv.name)}
+                        </div>
+                        <h4>{srv.name}</h4>
+                        <p>{srv.description}</p>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
 
-                    <p className="prac-bio">{prac.bio}</p>
+              {filteredServices.length > 0 && (
+                <div className="dots">
+                  {Array.from({ length: Math.ceil(filteredServices.length / 2) }).map((_, idx) => {
+                    const activeIndex = Math.min(
+                      Math.round(servicesScrollProgress * (Math.ceil(filteredServices.length / 2) - 1)),
+                      Math.ceil(filteredServices.length / 2) - 1
+                    );
+                    return (
+                      <div
+                        key={idx}
+                        className={`dot ${activeIndex === idx ? "active" : ""}`}
+                        onClick={() => {
+                          if (servicesCarouselRef.current) {
+                            const maxScroll = servicesCarouselRef.current.scrollWidth - servicesCarouselRef.current.clientWidth;
+                            servicesCarouselRef.current.scrollTo({
+                              left: (idx / (Math.ceil(filteredServices.length / 2) - 1)) * maxScroll,
+                              behavior: "smooth"
+                            });
+                          }
+                        }}
+                      />
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </section>
 
-                    <Link href={`/team/${prac.id}`} className="view-profile-link">
-                      View Full Profile & Book →
-                    </Link>
-                  </div>
-                </Card>
+          {/* Our Healers */}
+          <section id="healers" className="section">
+            <div className="section-header">
+              <span className="lotus">❀</span> Our Healers
+            </div>
+            <div className="carousel-wrap">
+              <button
+                className="arrow left"
+                onClick={() => handleCarouselScroll(healersCarouselRef, "left", setHealersScrollProgress)}
+                aria-label="Scroll left"
+              >
+                ‹
+              </button>
+              <button
+                className="arrow right"
+                onClick={() => handleCarouselScroll(healersCarouselRef, "right", setHealersScrollProgress)}
+                aria-label="Scroll right"
+              >
+                ›
+              </button>
+
+              <div
+                className="cards-carousel"
+                ref={healersCarouselRef}
+                onScroll={() => updateScrollProgress(healersCarouselRef, setHealersScrollProgress)}
+              >
+                {loadingHealers ? (
+                  Array.from({ length: 3 }).map((_, i) => (
+                    <div className="healer-card skeleton-card" key={i}>
+                      <div className="skeleton skeleton-avatar"></div>
+                      <div className="skeleton skeleton-title"></div>
+                      <div className="skeleton skeleton-role"></div>
+                    </div>
+                  ))
+                ) : filteredHealers.length === 0 ? (
+                  <div className="no-results">No matching healers found.</div>
+                ) : (
+                  filteredHealers.map((prac) => (
+                    <div className="healer-card" key={prac.id}>
+                      <img
+                        className="healer-avatar"
+                        src={getHealerAvatar(prac.image, prac.name)}
+                        alt={prac.name}
+                      />
+                      <h4>{prac.name}</h4>
+                      <div className="role">{prac.specialty}</div>
+                      <div className="exp">
+                        {prac.reviewsCount > 50 ? "12+ Years Exp." : "8+ Years Exp."}
+                      </div>
+                      <Link href={`/team/${prac.id}`} className="healer-card-link">
+                        View Inner Bio & Details →
+                      </Link>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {filteredHealers.length > 0 && (
+                <div className="dots">
+                  {Array.from({ length: Math.ceil(filteredHealers.length / 2) }).map((_, idx) => {
+                    const activeIndex = Math.min(
+                      Math.round(healersScrollProgress * (Math.ceil(filteredHealers.length / 2) - 1)),
+                      Math.ceil(filteredHealers.length / 2) - 1
+                    );
+                    return (
+                      <div
+                        key={idx}
+                        className={`dot ${activeIndex === idx ? "active" : ""}`}
+                        onClick={() => {
+                          if (healersCarouselRef.current) {
+                            const maxScroll = healersCarouselRef.current.scrollWidth - healersCarouselRef.current.clientWidth;
+                            healersCarouselRef.current.scrollTo({
+                              left: (idx / (Math.ceil(filteredHealers.length / 2) - 1)) * maxScroll,
+                              behavior: "smooth"
+                            });
+                          }
+                        }}
+                      />
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </section>
+
+          {/* Our Team */}
+          <section id="team" className="section">
+            <div className="section-header">
+              <span className="lotus">❀</span> Our Team
+            </div>
+            <div className="carousel-wrap">
+              <button
+                className="arrow left"
+                onClick={() => handleCarouselScroll(teamCarouselRef, "left", setTeamScrollProgress)}
+                aria-label="Scroll left"
+              >
+                ‹
+              </button>
+              <button
+                className="arrow right"
+                onClick={() => handleCarouselScroll(teamCarouselRef, "right", setTeamScrollProgress)}
+                aria-label="Scroll right"
+              >
+                ›
+              </button>
+
+              <div
+                className="cards-carousel"
+                ref={teamCarouselRef}
+                onScroll={() => updateScrollProgress(teamCarouselRef, setTeamScrollProgress)}
+              >
+                {filteredTeam.length === 0 ? (
+                  <div className="no-results">No matching team members found.</div>
+                ) : (
+                  filteredTeam.map((member) => (
+                    <div className="healer-card" key={member.id}>
+                      <img
+                        className="healer-avatar"
+                        src={member.image}
+                        alt={member.name}
+                      />
+                      <h4>{member.name}</h4>
+                      <div className="role">{member.role}</div>
+                      <div className="exp" style={{ visibility: "hidden" }}>.</div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {filteredTeam.length > 0 && (
+                <div className="dots">
+                  {Array.from({ length: Math.ceil(filteredTeam.length / 2) }).map((_, idx) => {
+                    const activeIndex = Math.min(
+                      Math.round(teamScrollProgress * (Math.ceil(filteredTeam.length / 2) - 1)),
+                      Math.ceil(filteredTeam.length / 2) - 1
+                    );
+                    return (
+                      <div
+                        key={idx}
+                        className={`dot ${activeIndex === idx ? "active" : ""}`}
+                        onClick={() => {
+                          if (teamCarouselRef.current) {
+                            const maxScroll = teamCarouselRef.current.scrollWidth - teamCarouselRef.current.clientWidth;
+                            teamCarouselRef.current.scrollTo({
+                              left: (idx / (Math.ceil(filteredTeam.length / 2) - 1)) * maxScroll,
+                              behavior: "smooth"
+                            });
+                          }
+                        }}
+                      />
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </section>
+
+          {/* Media & Features */}
+          <section id="media-features" className="section media-features-section">
+            <div className="section-header">
+              <span className="lotus">❀</span> Media &amp; Features
+            </div>
+            <div className="media-grid">
+              <div className="media-item">
+                <div className="media-logo-placeholder">Times Health</div>
+                <h5>Top Wellness Sanctuary of the Year</h5>
+                <p>Recognized for authentic integration of Vedic wisdom with contemporary clinical metrics.</p>
+              </div>
+              <div className="media-item">
+                <div className="media-logo-placeholder">Yoga Digest</div>
+                <h5>Realigning Biological Vibrations</h5>
+                <p>A deep editorial feature on our acoustic tuning and targeted crystal alignment methodologies.</p>
+              </div>
+            </div>
+          </section>
+        </main>
+
+        {/* ================= RIGHT PANEL ================= */}
+        <aside className="right-panel">
+          <div id="mission-values">
+            {/* Our Mission */}
+            <div className="panel">
+              <h3><span className="lotus">❀</span> Our Mission</h3>
+              <p>To guide individuals on their path to healing and self-discovery through ancient wisdom, modern practices, and compassionate support.</p>
+            </div>
+
+            {/* Our Values */}
+            <div className="panel">
+              <h3><span className="lotus">❀</span> Our Values</h3>
+              <div className="value">
+                <div className="value-icon">🌱</div>
+                <div>
+                  <h5>Authenticity</h5>
+                  <p>Rooted in ancient Sanatan wisdom</p>
+                </div>
+              </div>
+              <div className="value">
+                <div className="value-icon">♥</div>
+                <div>
+                  <h5>Compassion</h5>
+                  <p>Healing with empathy and understanding</p>
+                </div>
+              </div>
+              <div className="value">
+                <div className="value-icon">🛡</div>
+                <div>
+                  <h5>Integrity</h5>
+                  <p>Honest practices and true guidance</p>
+                </div>
+              </div>
+              <div className="value">
+                <div className="value-icon">👥</div>
+                <div>
+                  <h5>Community</h5>
+                  <p>Building a supportive healing space</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Our Impact */}
+          <div className="panel">
+            <h3><span className="lotus">❀</span> Our Impact</h3>
+            <div className="impact-grid">
+              <div className="impact-box">
+                <div className="impact-num">25K+</div>
+                <div className="impact-label">Lives Transformed</div>
+              </div>
+              <div className="impact-box">
+                <div className="impact-num">50+</div>
+                <div className="impact-label">Expert Healers</div>
+              </div>
+              <div className="impact-box">
+                <div className="impact-num">100+</div>
+                <div className="impact-label">Holistic Modalities</div>
+              </div>
+              <div className="impact-box">
+                <div className="impact-num">20+</div>
+                <div className="impact-label">Years of Trust</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Certifications */}
+          <div id="certifications" className="panel">
+            <h3><span className="lotus">❀</span> Certifications &amp; Recognition</h3>
+            <div className="certs">
+              <div className="cert">ISO 9001<br/>Certified</div>
+              <div className="cert">IARA<br/>Accredited</div>
+              <div className="cert">AADP<br/>Member</div>
+            </div>
+            <button className="view-btn" onClick={() => setShowCertsModal(true)}>
+              View All Certifications
+            </button>
+          </div>
+
+          {/* Testimonial Panel */}
+          <div id="testimonials" className="panel">
+            <div className="testimonial">
+              <div className="quote-mark">"</div>
+              <p>{staticTestimonials[testimonialIndex].comment}</p>
+              <div className="author">
+                – {staticTestimonials[testimonialIndex].author},{" "}
+                {staticTestimonials[testimonialIndex].location}
+              </div>
+            </div>
+            <div className="dots" style={{ marginTop: "14px" }}>
+              {staticTestimonials.map((_, idx) => (
+                <div
+                  key={idx}
+                  className={`dot ${testimonialIndex === idx ? "active" : ""}`}
+                  onClick={() => setTestimonialIndex(idx)}
+                  style={{ cursor: "pointer" }}
+                />
               ))}
             </div>
-          )}
-        </section>
+          </div>
+        </aside>
+      </div>
 
-      </main>
+      {/* ================= MODAL DIALOGS ================= */}
+      {showStoryModal && (
+        <div className="modal-overlay" onClick={() => setShowStoryModal(false)}>
+          <div className="modal-content glass-panel" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close-btn" onClick={() => setShowStoryModal(false)}>
+              &times;
+            </button>
+            <h3>Our Journey Since 2000</h3>
+            <div className="modal-body-scroll">
+              <p>
+                Founded at the turn of the millennium, Diving Sanatan set out to restore balance to lives overwhelmed by modern acceleration. What began as a small sanctuary with just two master practitioners has grown into a globally trusted network of expert healers, life coaches, and sound therapists.
+              </p>
+              <div className="timeline">
+                <div className="timeline-item">
+                  <span className="year">2000</span>
+                  <p>Inception of Diving Sanatan in Mumbai as a local energetic sanctuary.</p>
+                </div>
+                <div className="timeline-item">
+                  <span className="year">2006</span>
+                  <p>Accredited by the International Alliance of Reiki Practitioners.</p>
+                </div>
+                <div className="timeline-item">
+                  <span className="year">2012</span>
+                  <p>Incorporated sound healing methodologies and built our physical acoustic dome.</p>
+                </div>
+                <div className="timeline-item">
+                  <span className="year">2018</span>
+                  <p>Launched the 1:1 online coaching division, helping over 10,000 seekers globally.</p>
+                </div>
+                <div className="timeline-item">
+                  <span className="year">2023</span>
+                  <p>Completed 25,000 successful sessions across 40 countries.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showCertsModal && (
+        <div className="modal-overlay" onClick={() => setShowCertsModal(false)}>
+          <div className="modal-content glass-panel" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close-btn" onClick={() => setShowCertsModal(false)}>
+              &times;
+            </button>
+            <h3>Certifications & Accreditations</h3>
+            <div className="modal-body-scroll">
+              <ul className="certs-detail-list">
+                <li>
+                  <div className="badge">ISO 9001:2015</div>
+                  <div>
+                    <h5>Quality Management Standards</h5>
+                    <p>Certified for maintaining international quality standards in wellness consulting and online education delivery models.</p>
+                  </div>
+                </li>
+                <li>
+                  <div className="badge">IARA</div>
+                  <div>
+                    <h5>International Association of Reiki Professionals</h5>
+                    <p>Accredited curriculum ensuring that all reiki healing practices align with the authentic Usui lineage.</p>
+                  </div>
+                </li>
+                <li>
+                  <div className="badge">AADP</div>
+                  <div>
+                    <h5>American Association of Drugless Practitioners</h5>
+                    <p>Professional membership verifying that our practitioners adhere to holistic drugless health standards and ethics.</p>
+                  </div>
+                </li>
+                <li>
+                  <div className="badge">GSHC</div>
+                  <div>
+                    <h5>Global Sound Healing Coalition</h5>
+                    <p>Certified sound therapies calibrated strictly to sound frequency guidelines for psychological restoration.</p>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Footer />
 
       <style jsx>{`
-        .about-container {
-          max-width: 1200px;
+        /* ===== Layout ===== */
+        .page {
+          display: grid;
+          grid-template-columns: 260px 1fr 260px;
+          gap: 28px;
+          padding: 28px 40px;
+          max-width: 1600px;
           margin: 0 auto;
-          padding: 60px 24px 40px;
+          background: #fafafa;
+          min-height: 100vh;
+        }
+
+        /* ===== Left Sidebar ===== */
+        .sidebar {
+          position: relative;
+        }
+
+        .sidebar-sticky-content {
+          position: sticky;
+          top: 98px;
           display: flex;
           flex-direction: column;
-          gap: 60px;
+          gap: 24px;
+          background: white;
+          border-radius: 18px;
+          padding: 24px;
+          border: 1px solid #f3e8ff;
+          box-shadow: 0 4px 20px rgba(124, 58, 237, 0.03);
+        }
+
+        .sidebar-title {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          color: #4a2b6e;
+          font-size: 20px;
+          font-weight: 700;
+          font-family: var(--font-serif) !important;
+        }
+
+        .lotus {
+          color: #7c3aed;
+          font-size: 20px;
+        }
+
+        .menu-list {
+          list-style: none;
+          padding: 0;
+          margin: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+
+        .menu-item {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 11px 16px;
+          border-radius: 10px;
+          color: #4a2b6e;
+          font-size: 14px;
+          font-weight: 600;
+          text-align: left;
+          background: none;
+          border: none;
+          cursor: pointer;
+          transition: all 0.25s ease;
+        }
+
+        .menu-item .icon {
+          width: 22px;
+          color: #7c3aed;
+          text-align: center;
+          font-size: 16px;
+          transition: transform 0.25s ease;
+        }
+
+        .menu-item:hover {
+          background: #f7eeff;
+          color: #7c3aed;
+        }
+
+        .menu-item:hover .icon {
+          transform: scale(1.15);
+        }
+
+        .menu-item.active {
+          background: #ede0ff;
+          color: #4a2b6e;
+        }
+
+        .search-box {
+          position: relative;
+        }
+
+        .search-box input {
+          width: 100%;
+          padding: 12px 38px 12px 16px;
+          border: 1px solid #ede0ff;
+          border-radius: 10px;
+          background: white;
+          font-size: 13px;
+          outline: none;
+          color: #4a2b6e;
+          transition: all 0.3s ease;
+        }
+
+        .search-box input:focus {
+          border-color: #7c3aed;
+          box-shadow: 0 0 10px rgba(124, 58, 237, 0.1);
+        }
+
+        .search-box::after {
+          content: "🔍";
+          position: absolute;
+          right: 14px;
+          top: 50%;
+          transform: translateY(-50%);
+          font-size: 14px;
+          color: #7c3aed;
+          pointer-events: none;
+        }
+
+        .quote-card {
+          background: #fbf7ff;
+          border-radius: 12px;
+          padding: 20px;
+          text-align: center;
+          color: #4a2b6e;
+          border: 1px solid #f3e8ff;
+          transition: transform 0.3s ease;
+        }
+
+        .quote-card:hover {
+          transform: translateY(-2px);
+        }
+
+        .quote-card h3 {
+          font-style: italic;
+          font-weight: 500;
+          font-size: 16px;
+          line-height: 1.5;
+          margin-bottom: 12px;
+          font-family: var(--font-serif) !important;
+        }
+
+        .quote-card p {
+          font-size: 12px;
+          color: #6b4d8a;
+          margin-bottom: 12px;
+          line-height: 1.6;
+        }
+
+        .quote-lotus {
+          font-size: 44px;
+          color: #d4b8e8;
+          line-height: 1;
+        }
+
+        /* ===== Main Column ===== */
+        .main {
+          display: flex;
+          flex-direction: column;
+          gap: 28px;
+          min-width: 0; /* Prevents flex items from breaking layout widths */
+        }
+
+        /* Story Hero */
+        .story-hero {
+          background: white;
+          border-radius: 18px;
+          padding: 36px;
+          display: grid;
+          grid-template-columns: 1.1fr 0.9fr;
+          gap: 28px;
+          border: 1px solid #f3e8ff;
+          position: relative;
+          overflow: hidden;
+          box-shadow: 0 4px 20px rgba(124, 58, 237, 0.02);
+        }
+
+        .story-content {
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+        }
+
+        .story-content h2 {
+          text-transform: uppercase;
+          letter-spacing: 2px;
+          color: #7c3aed;
+          font-size: 12px;
+          font-weight: 700;
+          margin-bottom: 14px;
+        }
+
+        .story-content h1 {
+          color: #2d1b4e;
+          font-size: 34px;
+          font-weight: 700;
+          line-height: 1.25;
+          margin-bottom: 18px;
+          font-family: var(--font-serif) !important;
+        }
+
+        .story-content p {
+          color: #5b4d7a;
+          font-size: 14px;
+          margin-bottom: 24px;
+          line-height: 1.7;
+        }
+
+        .learn-btn {
+          background: #4a2b6e;
+          color: white;
+          padding: 12px 26px;
+          border-radius: 8px;
+          font-weight: 600;
+          font-size: 14px;
+          width: fit-content;
+          transition: all 0.3s ease;
+          box-shadow: 0 4px 15px rgba(74, 43, 110, 0.15);
+        }
+
+        .learn-btn:hover {
+          background: #7c3aed;
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(124, 58, 237, 0.2);
+        }
+
+        .story-image {
+          background: url('https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=600&h=400&fit=crop') center/cover;
+          border-radius: 12px;
+          position: relative;
+          min-height: 250px;
+          box-shadow: inset 0 0 20px rgba(0,0,0,0.05);
+        }
+
+        .story-image::after {
+          content: "❀";
+          position: absolute;
+          bottom: 16px;
+          left: 16px;
+          color: rgba(255,255,255,0.75);
+          font-size: 40px;
+          line-height: 1;
+        }
+
+        /* Sections */
+        .section {
+          background: white;
+          border-radius: 18px;
+          padding: 28px;
+          border: 1px solid #f3e8ff;
+          box-shadow: 0 4px 20px rgba(124, 58, 237, 0.02);
+        }
+
+        .section-header {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-bottom: 24px;
+          color: #4a2b6e;
+          font-size: 20px;
+          font-weight: 700;
+          font-family: var(--font-serif) !important;
+        }
+
+        .carousel-wrap {
+          position: relative;
+        }
+
+        .cards-carousel {
+          display: flex;
+          gap: 16px;
+          overflow-x: auto;
+          scroll-behavior: smooth;
+          padding: 4px 2px 12px;
           width: 100%;
         }
-        .about-title {
-          font-size: 2.8rem;
-          color: #4c1d95;
-          margin-bottom: 12px;
+
+        .cards-carousel::-webkit-scrollbar {
+          display: none;
+        }
+
+        .card {
+          flex: 0 0 240px;
+          background: white;
+          border-radius: 12px;
+          overflow: hidden;
+          border: 1px solid #f3e8ff;
+          padding-bottom: 16px;
+          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          display: flex;
+          flex-direction: column;
+        }
+
+        .card:hover {
+          transform: translateY(-6px);
+          box-shadow: 0 10px 25px rgba(124, 58, 237, 0.08);
+          border-color: #ede0ff;
+        }
+
+        .card-img {
+          width: 100%;
+          height: 110px;
+          object-fit: cover;
+          display: block;
+        }
+
+        .card-body {
+          padding: 12px 12px 0;
           text-align: center;
-        }
-        .about-subtitle {
-          font-size: 1.05rem;
-          color: hsl(var(--text-muted));
-          text-align: center;
-          max-width: 700px;
-          margin: 0 auto;
-        }
-        .mission-section {
-          padding: 48px;
-        }
-        .mission-heading {
-          font-family: var(--font-serif);
-          font-size: 1.8rem;
-          color: #4c1d95;
-          margin-bottom: 16px;
-          text-align: center;
-        }
-        .mission-desc {
-          font-size: 1.05rem;
-          line-height: 1.8;
-          color: hsl(var(--text-cream));
-          max-width: 900px;
-          margin: 0 auto;
-          text-align: center;
-        }
-        .section-title {
-          font-family: var(--font-serif);
-          font-size: 2rem;
-          color: #4c1d95;
-          text-align: center;
-          margin-bottom: 40px;
-        }
-        .values-grid {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 32px;
-        }
-        .value-card {
-          padding: 32px;
           display: flex;
           flex-direction: column;
           align-items: center;
-          text-align: center;
-          gap: 16px;
         }
-        .value-symbol {
-          font-size: 2.5rem;
-          margin-bottom: 8px;
-        }
-        .value-title {
-          font-family: var(--font-serif);
-          font-size: 1.25rem;
-          color: #4c1d95;
-        }
-        .value-desc {
-          font-size: 0.9rem;
-          line-height: 1.6;
-        }
-        .practitioners-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
-          gap: 32px;
-        }
-        .prac-card {
-          padding: 32px;
-          display: flex;
-          gap: 24px;
-          align-items: flex-start;
-        }
-        .prac-avatar-container {
-          flex-shrink: 0;
-        }
-        .prac-avatar-img {
-          width: 80px;
-          height: 80px;
+
+        .card-icon {
+          width: 36px;
+          height: 36px;
+          background: #ede0ff;
           border-radius: 50%;
-          background: var(--btn-gold-bg);
-          border: 2px solid var(--gold-border);
-          object-fit: cover;
-          box-shadow: 0 4px 15px rgba(168,85,247,0.1);
-        }
-        .prac-placeholder-avatar {
-          width: 80px;
-          height: 80px;
-          border-radius: 50%;
-          background: var(--btn-gold-bg);
-          border: 2px solid var(--gold-border);
           display: flex;
           align-items: center;
           justify-content: center;
-          font-family: var(--font-serif);
-          font-weight: 700;
-          color: #4c1d95;
-          font-size: 1.5rem;
-          box-shadow: 0 4px 15px rgba(168,85,247,0.1);
+          color: #7c3aed;
+          margin: -24px auto 10px;
+          border: 2px solid white;
+          font-size: 16px;
+          box-shadow: 0 4px 10px rgba(124, 58, 237, 0.1);
         }
-        .prac-card-info {
+
+        .card h4 {
+          color: #2d1b4e;
+          font-size: 14px;
+          font-weight: 700;
+          margin-bottom: 6px;
+          font-family: var(--font-serif) !important;
+        }
+
+        .card p {
+          color: #6b4d8a;
+          font-size: 12px;
+          line-height: 1.5;
+        }
+
+        /* Healers */
+        .healer-card {
+          flex: 0 0 220px;
+          text-align: center;
+          background: #fbf7ff;
+          border-radius: 12px;
+          padding: 20px 14px 16px;
+          border: 1px solid #f3e8ff;
+          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
           display: flex;
           flex-direction: column;
-          gap: 8px;
-          width: 100%;
-        }
-        .prac-name {
-          font-family: var(--font-serif);
-          font-size: 1.3rem;
-          color: #4c1d95;
-        }
-        .prac-spec {
-          font-size: 0.85rem;
-          color: #0d9488;
-          font-weight: 600;
-          text-transform: uppercase;
-        }
-        .prac-rating {
-          display: flex;
-          gap: 8px;
           align-items: center;
-          margin: 4px 0;
         }
-        .stars {
-          color: #d97706;
-          font-size: 0.8rem;
+
+        .healer-card:hover {
+          transform: translateY(-6px);
+          background: white;
+          box-shadow: 0 10px 25px rgba(124, 58, 237, 0.08);
+          border-color: #ede0ff;
         }
-        .score {
-          font-size: 0.75rem;
-          color: hsl(var(--text-muted));
+
+        .healer-avatar {
+          width: 64px;
+          height: 64px;
+          border-radius: 50%;
+          margin: 0 auto 12px;
+          object-fit: cover;
+          background: #ede0ff;
+          border: 2px solid white;
+          box-shadow: 0 4px 12px rgba(124, 58, 237, 0.1);
         }
-        .prac-bio {
-          font-size: 0.85rem;
+
+        .healer-card h4 {
+          color: #2d1b4e;
+          font-size: 14px;
+          font-weight: 700;
+          margin-bottom: 4px;
+          font-family: var(--font-serif) !important;
+        }
+
+        .healer-card .role {
+          color: #5b4d7a;
+          font-size: 12px;
+          margin-bottom: 4px;
+          font-weight: 500;
+          line-height: 1.3;
+        }
+
+        .healer-card .exp {
+          color: #7c3aed;
+          font-size: 11px;
+          font-weight: 600;
+          margin-bottom: 12px;
+        }
+
+        .healer-card-link {
+          font-size: 11px;
+          font-weight: 700;
+          color: #7c3aed;
+          text-decoration: none;
+          transition: all 0.2s ease;
+          border-bottom: 1px solid transparent;
+          padding-bottom: 2px;
+        }
+
+        .healer-card-link:hover {
+          color: #4a2b6e;
+          border-color: #4a2b6e;
+        }
+
+        /* Arrows */
+        .arrow {
+          position: absolute;
+          top: 50%;
+          transform: translateY(-60%);
+          width: 36px;
+          height: 36px;
+          background: white;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #4a2b6e;
+          box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+          font-size: 20px;
+          z-index: 10;
+          cursor: pointer;
+          transition: all 0.25s ease;
+          border: 1px solid #f3e8ff;
+        }
+
+        .arrow:hover {
+          background: #7c3aed;
+          color: white;
+          border-color: #7c3aed;
+          transform: translateY(-60%) scale(1.08);
+        }
+
+        .arrow.left {
+          left: -16px;
+        }
+
+        .arrow.right {
+          right: -16px;
+        }
+
+        /* Dots */
+        .dots {
+          display: flex;
+          justify-content: center;
+          gap: 8px;
+          margin-top: 20px;
+        }
+
+        .dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background: #ede0ff;
+          transition: all 0.3s ease;
+          cursor: pointer;
+        }
+
+        .dot.active {
+          background: #7c3aed;
+          width: 18px;
+          border-radius: 4px;
+        }
+
+        /* Media & Features */
+        .media-features-section {
+          background: white;
+        }
+
+        .media-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 20px;
+        }
+
+        .media-item {
+          background: #fbf7ff;
+          border: 1px solid #f3e8ff;
+          border-radius: 12px;
+          padding: 24px;
+          transition: all 0.3s ease;
+        }
+
+        .media-item:hover {
+          transform: translateY(-3px);
+          background: white;
+          box-shadow: 0 8px 25px rgba(124, 58, 237, 0.06);
+        }
+
+        .media-logo-placeholder {
+          font-family: var(--font-serif) !important;
+          font-size: 18px;
+          font-weight: 700;
+          color: #7c3aed;
+          margin-bottom: 12px;
+          letter-spacing: 0.5px;
+        }
+
+        .media-item h5 {
+          color: #2d1b4e;
+          font-size: 14px;
+          font-weight: 700;
+          margin-bottom: 8px;
+          font-family: var(--font-serif) !important;
+        }
+
+        .media-item p {
+          color: #6b4d8a;
+          font-size: 12px;
           line-height: 1.6;
         }
-        .view-profile-link {
-          margin-top: 4px;
-          display: inline-block;
-          font-size: 0.85rem;
-          color: #7c3aed;
+
+        /* ===== Right Panel ===== */
+        .right-panel {
+          display: flex;
+          flex-direction: column;
+          gap: 24px;
+        }
+
+        .panel {
+          background: white;
+          border-radius: 18px;
+          padding: 24px;
+          border: 1px solid #f3e8ff;
+          box-shadow: 0 4px 20px rgba(124, 58, 237, 0.02);
+        }
+
+        .panel h3 {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          color: #4a2b6e;
+          font-size: 17px;
           font-weight: 700;
-          text-decoration: none;
+          margin-bottom: 16px;
+          font-family: var(--font-serif) !important;
+        }
+
+        .panel p {
+          color: #5b4d7a;
+          font-size: 13px;
+          line-height: 1.6;
+        }
+
+        .value {
+          display: flex;
+          gap: 12px;
+          margin-bottom: 16px;
+          align-items: flex-start;
+        }
+
+        .value:last-child {
+          margin-bottom: 0;
+        }
+
+        .value-icon {
+          width: 32px;
+          height: 32px;
+          min-width: 32px;
+          background: #ede0ff;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #7c3aed;
+          font-size: 15px;
+          box-shadow: 0 2px 8px rgba(124, 58, 237, 0.08);
+        }
+
+        .value h5 {
+          color: #2d1b4e;
+          font-size: 13px;
+          font-weight: 700;
+          margin-bottom: 3px;
+          font-family: var(--font-serif) !important;
+        }
+
+        .value p {
+          font-size: 11.5px;
+          line-height: 1.4;
+        }
+
+        /* Impact */
+        .impact-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 12px;
+        }
+
+        .impact-box {
+          background: #fbf7ff;
+          border-radius: 12px;
+          padding: 16px 10px;
+          text-align: center;
+          border: 1px solid #f3e8ff;
+          transition: transform 0.3s ease;
+        }
+
+        .impact-box:hover {
+          transform: translateY(-2px);
+          background: white;
+          border-color: #ede0ff;
+        }
+
+        .impact-num {
+          color: #7c3aed;
+          font-size: 22px;
+          font-weight: 700;
+          margin-bottom: 4px;
+        }
+
+        .impact-label {
+          color: #5b4d7a;
+          font-size: 11px;
+          font-weight: 500;
+        }
+
+        /* Certs */
+        .certs {
+          display: flex;
+          gap: 10px;
+          margin-bottom: 18px;
+          justify-content: center;
+        }
+
+        .cert {
+          width: 80px;
+          height: 60px;
+          background: #f7eeff;
+          border-radius: 8px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border: 1px solid #ede0ff;
+          font-size: 10px;
+          color: #7c3aed;
+          text-align: center;
+          font-weight: 700;
+          line-height: 1.3;
+          transition: all 0.3s ease;
+        }
+
+        .cert:hover {
+          transform: scale(1.05);
+          background: white;
+          border-color: #7c3aed;
+          box-shadow: 0 4px 12px rgba(124, 58, 237, 0.08);
+        }
+
+        .view-btn {
+          width: 100%;
+          background: #4a2b6e;
+          color: white;
+          padding: 11px;
+          border-radius: 8px;
+          font-weight: 600;
+          font-size: 13px;
+          transition: all 0.3s ease;
+        }
+
+        .view-btn:hover {
+          background: #7c3aed;
+          box-shadow: 0 4px 15px rgba(124, 58, 237, 0.25);
+        }
+
+        /* Testimonial Box */
+        .testimonial {
+          text-align: center;
+          padding: 10px 0;
+          min-height: 140px;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+        }
+
+        .testimonial .quote-mark {
+          color: #d4b8e8;
+          font-size: 40px;
+          line-height: 1;
+          font-family: serif;
+          margin-bottom: -10px;
+        }
+
+        .testimonial p {
+          color: #4a2b6e;
+          font-style: italic;
+          font-size: 13.5px;
+          margin: 6px 0 12px;
+          line-height: 1.6;
+        }
+
+        .testimonial .author {
+          color: #7c3aed;
+          font-size: 12px;
+          font-weight: 600;
+        }
+
+        /* ===== Modal Overlay ===== */
+        .modal-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(45, 27, 78, 0.45);
+          backdrop-filter: blur(8px);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 2000;
+          padding: 20px;
+          animation: fadeIn 0.35s ease;
+        }
+
+        .modal-content {
+          background: white;
+          border-radius: 20px;
+          width: 100%;
+          max-width: 550px;
+          padding: 36px;
+          position: relative;
+          box-shadow: 0 20px 50px rgba(74, 43, 110, 0.2);
+          border: 1px solid rgba(168, 85, 247, 0.25);
+          animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+          max-height: 90vh;
+          display: flex;
+          flex-direction: column;
+        }
+
+        .modal-close-btn {
+          position: absolute;
+          right: 20px;
+          top: 20px;
+          font-size: 28px;
+          color: #6b4d8a;
+          cursor: pointer;
+          background: none;
+          border: none;
+          line-height: 1;
           transition: color 0.2s ease;
         }
-        .view-profile-link:hover {
-          color: #d4af37;
+
+        .modal-close-btn:hover {
+          color: #7c3aed;
         }
-        @media (max-width: 1024px) {
-          .values-grid {
+
+        .modal-content h3 {
+          color: #4a2b6e;
+          font-size: 22px;
+          font-weight: 700;
+          margin-bottom: 20px;
+          font-family: var(--font-serif) !important;
+          border-bottom: 1.5px solid #ede0ff;
+          padding-bottom: 10px;
+        }
+
+        .modal-body-scroll {
+          overflow-y: auto;
+          padding-right: 8px;
+          font-size: 14px;
+          color: #5b4d7a;
+          line-height: 1.7;
+        }
+
+        .modal-body-scroll p {
+          margin-bottom: 20px;
+        }
+
+        /* Timeline in modal */
+        .timeline {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+          border-left: 2px solid #ede0ff;
+          padding-left: 18px;
+          margin-top: 10px;
+        }
+
+        .timeline-item {
+          position: relative;
+        }
+
+        .timeline-item::before {
+          content: "";
+          position: absolute;
+          left: -24px;
+          top: 4px;
+          width: 10px;
+          height: 10px;
+          border-radius: 50%;
+          background: #7c3aed;
+          border: 2px solid white;
+          box-shadow: 0 0 0 2px #ede0ff;
+        }
+
+        .timeline-item .year {
+          font-weight: 700;
+          color: #7c3aed;
+          font-size: 13px;
+        }
+
+        .timeline-item p {
+          margin-top: 2px;
+          margin-bottom: 0;
+          font-size: 12.5px;
+          color: #6b4d8a;
+        }
+
+        /* Certs detail list */
+        .certs-detail-list {
+          list-style: none;
+          padding: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+        }
+
+        .certs-detail-list li {
+          display: flex;
+          gap: 16px;
+          align-items: flex-start;
+          border-bottom: 1px dashed #f0e8f5;
+          padding-bottom: 14px;
+        }
+
+        .certs-detail-list li:last-child {
+          border-bottom: none;
+          padding-bottom: 0;
+        }
+
+        .certs-detail-list .badge {
+          background: #ede0ff;
+          color: #4a2b6e;
+          font-weight: 700;
+          font-size: 11px;
+          padding: 6px 12px;
+          border-radius: 6px;
+          min-width: 90px;
+          text-align: center;
+        }
+
+        .certs-detail-list h5 {
+          color: #2d1b4e;
+          font-size: 14px;
+          font-weight: 700;
+          margin-bottom: 4px;
+          font-family: var(--font-serif) !important;
+        }
+
+        .certs-detail-list p {
+          font-size: 12px;
+          margin-bottom: 0;
+          line-height: 1.5;
+        }
+
+        /* Skeletons */
+        .skeleton {
+          background: linear-gradient(
+            90deg,
+            #f0e8f5 25%,
+            #fbf7ff 50%,
+            #f0e8f5 75%
+          );
+          background-size: 200% 100%;
+          animation: pulse-shimmer 1.5s infinite linear;
+          border-radius: 8px;
+        }
+
+        .skeleton-img {
+          width: 100%;
+          height: 110px;
+          border-radius: 12px 12px 0 0;
+        }
+
+        .skeleton-avatar {
+          width: 64px;
+          height: 64px;
+          border-radius: 50%;
+          margin: 0 auto 12px;
+        }
+
+        .skeleton-title {
+          width: 60%;
+          height: 14px;
+          margin: 12px auto 6px;
+        }
+
+        .skeleton-desc {
+          width: 80%;
+          height: 10px;
+          margin: 0 auto 12px;
+        }
+
+        .skeleton-role {
+          width: 50%;
+          height: 10px;
+          margin: 0 auto 12px;
+        }
+
+        .no-results {
+          padding: 30px;
+          text-align: center;
+          color: #6b4d8a;
+          font-size: 14px;
+          width: 100%;
+        }
+
+        @keyframes pulse-shimmer {
+          0% {
+            background-position: 200% 0;
+          }
+          100% {
+            background-position: -200% 0;
+          }
+        }
+
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ===== Responsive Layout ===== */
+        @media (max-width: 1200px) {
+          .page {
+            grid-template-columns: 240px 1fr;
+            padding: 20px;
+            gap: 20px;
+          }
+          .right-panel {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+          }
+        }
+
+        @media (max-width: 850px) {
+          .page {
             grid-template-columns: 1fr;
           }
-        }
-        @media (max-width: 640px) {
-          .prac-card {
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
+          .sidebar {
+            display: none; /* Hide sidebar list on mobile/tablet */
           }
-          .prac-rating {
-            justify-content: center;
+          .right-panel {
+            grid-template-columns: 1fr;
+          }
+          .story-hero {
+            grid-template-columns: 1fr;
+          }
+          .story-image {
+            min-height: 200px;
           }
         }
       `}</style>

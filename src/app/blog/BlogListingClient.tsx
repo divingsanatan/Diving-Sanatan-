@@ -39,45 +39,66 @@ export default function BlogListingPage() {
 
   const servicesScrollRef = useRef<HTMLDivElement>(null);
 
-  // Load blogs and services
+  // Load services once on mount
   useEffect(() => {
-    async function loadData() {
+    async function loadServices() {
       try {
-        const [blogsRes, servicesRes] = await Promise.all([
-          fetch(`/api/blogs?t=${Date.now()}`),
-          fetch(`/api/services?t=${Date.now()}`),
-        ]);
-        const json = await blogsRes.json();
-        const servicesJson = await servicesRes.json();
+        const res = await fetch(`/api/services?t=${Date.now()}`);
+        const json = await res.json();
         if (json.success) {
-          setBlogs(json.data);
-          setFilteredBlogs(json.data);
-        }
-        if (servicesJson.success) {
-          setServices(servicesJson.data);
+          setServices(json.data);
         }
       } catch (err) {
-        console.error(err);
+        console.error("Failed to load services:", err);
+      }
+    }
+    loadServices();
+  }, []);
+
+  // Load blogs whenever activeCategory changes
+  useEffect(() => {
+    async function loadBlogs() {
+      try {
+        setLoading(true);
+        const url = activeCategory && activeCategory !== "all"
+          ? `/api/blogs?category=${encodeURIComponent(activeCategory)}&t=${Date.now()}`
+          : `/api/blogs?t=${Date.now()}`;
+        const res = await fetch(url);
+        const json = await res.json();
+        if (json.success) {
+          setBlogs(json.data);
+        }
+      } catch (err) {
+        console.error("Failed to load blogs:", err);
       } finally {
         setLoading(false);
       }
     }
-    loadData();
-  }, []);
+    loadBlogs();
+  }, [activeCategory]);
 
-  // Filter blogs based on category & search query
+  // Filter blogs based on search query
   useEffect(() => {
     let result = [...blogs];
-    if (activeCategory !== "all") {
-      result = result.filter(b => b.category.toLowerCase() === activeCategory.toLowerCase());
-    }
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       result = result.filter(b => b.title.toLowerCase().includes(q) || b.content.toLowerCase().includes(q));
     }
     setFilteredBlogs(result);
-    setCurrentPage(1); // Reset page on category or search filter
-  }, [blogs, activeCategory, searchQuery]);
+    setCurrentPage(1); // Reset page on search filter
+  }, [blogs, searchQuery]);
+
+  // Utility to format category name beautifully
+  const formatCategoryName = (cat: string) => {
+    if (!cat) return "";
+    return cat
+      .split(" ")
+      .map(word => {
+        if (word === "&" || word === "and") return word;
+        return word.charAt(0).toUpperCase() + word.slice(1);
+      })
+      .join(" ");
+  };
 
   const scrollCarousel = (ref: React.RefObject<HTMLDivElement | null>, direction: "left" | "right") => {
     if (ref.current) {
@@ -220,7 +241,7 @@ export default function BlogListingPage() {
         <div className="filtered-results-container">
           <div className="results-header-row">
             <h3 className="section-title">
-              {searchQuery ? `Search Results for "${searchQuery}"` : `${activeCategory} Articles`}
+              {searchQuery ? `Search Results for "${searchQuery}"` : `${formatCategoryName(activeCategory)} Articles`}
             </h3>
             <span className="results-count">({filteredBlogs.length} articles found)</span>
           </div>

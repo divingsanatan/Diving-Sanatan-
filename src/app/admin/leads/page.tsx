@@ -527,6 +527,8 @@ Diving Sanatan Wellness Team`);
           font-size: 0.85rem;
           font-weight: 600;
           transition: var(--transition-fast);
+          white-space: nowrap;
+          flex-shrink: 0;
         }
         .sync-btn:hover {
           background: rgba(168, 85, 247, 0.08);
@@ -583,6 +585,7 @@ Diving Sanatan Wellness Team`);
         .table-wrapper {
           width: 100%;
           overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
         }
         .admin-table {
           width: 100%;
@@ -897,16 +900,69 @@ Diving Sanatan Wellness Team`);
           font-weight: 600;
           border-radius: 8px;
           cursor: pointer;
-          width: fit-content;
-          align-self: flex-end;
+          width: 100%;
           display: block;
-          margin-left: auto;
         }
         .send-report-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-        @media (max-width: 768px) {
-          .filters-row { flex-direction: column; align-items: stretch; }
+
+        /* ── Responsive: table ── */
+        .admin-table { min-width: 620px; }
+
+        /* ── Responsive: tablet (≤ 900px) ── */
+        @media (max-width: 900px) {
+          .filters-row { flex-direction: column; align-items: stretch; gap: 12px; }
           .search-input { width: 100%; }
-          .dashboard-header-row { flex-direction: column; gap: 12px; align-items: flex-start; }
+          .category-filters { justify-content: flex-start; }
+          .dashboard-header-row { flex-wrap: wrap; gap: 10px; }
+        }
+
+        /* ── Responsive: mobile (≤ 640px) ── */
+        @media (max-width: 640px) {
+          .dashboard-header-row { flex-direction: column; align-items: flex-start; gap: 10px; }
+          .dashboard-header-row h2 { font-size: 1.4rem; }
+          .sync-btn { width: 100%; justify-content: center; }
+
+          /* Pagination stacks vertically */
+          .admin-pagination-wrapper {
+            flex-direction: column;
+            align-items: flex-start;
+            padding: 12px 14px;
+            gap: 8px;
+          }
+          .admin-pagination { flex-wrap: wrap; }
+
+          /* Modal slides up from bottom on mobile */
+          .modal-overlay { padding: 0; align-items: flex-end; }
+          .modal-panel {
+            border-radius: 20px 20px 0 0;
+            max-height: 95vh;
+            max-width: 100%;
+          }
+          .modal-header { padding: 16px 16px 0; }
+          .modal-header h3 { font-size: 1.05rem; }
+          .modal-body { padding: 14px 16px 24px; }
+
+          /* Profile grid → 2 cols */
+          .profile-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+          }
+
+          /* Chakra sliders → 2 cols */
+          .chakra-sliders-grid { grid-template-columns: repeat(2, 1fr); }
+
+          /* Table: tighter padding */
+          .admin-table th,
+          .admin-table td { padding: 10px 10px; }
+
+          .send-report-btn { padding: 12px 16px; }
+        }
+
+        /* ── Responsive: very small (≤ 400px) ── */
+        @media (max-width: 400px) {
+          .profile-grid { grid-template-columns: 1fr; }
+          .chakra-sliders-grid { grid-template-columns: 1fr; }
+          .filter-btn { padding: 7px 12px; font-size: 0.8rem; }
         }
       `}</style>
     </div>

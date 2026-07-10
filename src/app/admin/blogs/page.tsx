@@ -53,18 +53,20 @@ export default function AdminBlogsPage() {
   const editorRef = useRef<HTMLDivElement>(null);
   const [editorReady, setEditorReady] = useState(false);
 
-  const categories = ["Crystals", "Energy Healing", "Mindfulness", "Other"];
+  const [categories, setCategories] = useState<string[]>([]);
 
   const loadData = async () => {
     try {
       setLoading(true);
-      const [bRes, pRes] = await Promise.all([
+      const [bRes, pRes, cRes] = await Promise.all([
         fetch("/api/blogs"),
-        fetch("/api/practitioners")
+        fetch("/api/practitioners"),
+        fetch("/api/categories")
       ]);
 
       const bJson = await bRes.json();
       const pJson = await pRes.json();
+      const cJson = await cRes.json();
 
       if (bJson.success && pJson.success) {
         setBlogs(bJson.data);
@@ -73,6 +75,10 @@ export default function AdminBlogsPage() {
         if (pJson.data.length > 0) {
           setSelectedPractitioner(pJson.data[0].name);
         }
+      }
+
+      if (cJson.success) {
+        setCategories(cJson.data.map((cat: any) => cat.name));
       }
     } catch (err) {
       console.error("Failed to load admin blogs data:", err);
@@ -87,7 +93,7 @@ export default function AdminBlogsPage() {
 
   const resetForm = () => {
     setTitle("");
-    setCategory("Crystals");
+    setCategory(categories[0] || "Other");
     setCustomCategory("");
     setShowCustomCategory(false);
     
@@ -121,7 +127,7 @@ export default function AdminBlogsPage() {
     setEditBlogId(blog.id);
     setTitle(blog.title);
     
-    const isStandardCategory = ["crystals", "energy healing", "mindfulness"].includes(blog.category.toLowerCase());
+    const isStandardCategory = categories.some(c => c.toLowerCase() === blog.category.toLowerCase());
     if (isStandardCategory) {
       const matched = categories.find(c => c.toLowerCase() === blog.category.toLowerCase()) || blog.category;
       setCategory(matched);
@@ -600,6 +606,7 @@ export default function AdminBlogsPage() {
                       {categories.map(cat => (
                         <option key={cat} value={cat}>{cat}</option>
                       ))}
+                      <option value="Other">Other</option>
                     </select>
                   </div>
                   {showCustomCategory && (
