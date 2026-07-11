@@ -4,6 +4,9 @@ import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import {
+  BookOpen, Target, Wrench, Users, User, Award, MessageSquare, Newspaper
+} from "lucide-react";
 
 interface Practitioner {
   id: string;
@@ -118,14 +121,10 @@ export default function AboutClient() {
   ];
 
   const menuItems = [
-    { id: "story", label: "Our Story", icon: "🏠" },
-    { id: "mission-values", label: "Our Mission & Values", icon: "🎯" },
-    { id: "services", label: "Our Services", icon: "⚙" },
-    { id: "healers", label: "Our Healers", icon: "👥" },
-    { id: "team", label: "Our Team", icon: "👤" },
-    { id: "certifications", label: "Certifications", icon: "📍" },
-    { id: "testimonials", label: "Testimonials", icon: "✓" },
-    { id: "media-features", label: "Media & Features", icon: "📰" }
+    { id: "story", label: "Our Story", icon: <BookOpen size={16} strokeWidth={1.5} /> },
+    { id: "services", label: "Our Services", icon: <Wrench size={16} strokeWidth={1.5} /> },
+    { id: "healers", label: "Our Healers", icon: <Users size={16} strokeWidth={1.5} /> },
+    { id: "team", label: "Our Team", icon: <User size={16} strokeWidth={1.5} /> },
   ];
 
   // Load Services and Healers from DB APIs
@@ -253,7 +252,7 @@ export default function AboutClient() {
       const cardWidth = container.querySelector(".card, .healer-card")?.clientWidth || 240;
       const scrollAmount = cardWidth + 14; // card width + gap
       const targetScroll = container.scrollLeft + (direction === "left" ? -scrollAmount : scrollAmount);
-      
+
       container.scrollTo({
         left: targetScroll,
         behavior: "smooth"
@@ -311,40 +310,47 @@ export default function AboutClient() {
       <div className="page">
         {/* ================= LEFT SIDEBAR ================= */}
         <aside className="sidebar">
-          <div className="sidebar-sticky-content">
-            <div className="sidebar-title">
-              <span className="lotus">❀</span>
-              <span>About Us</span>
+          <div className="sidebar-sticky-wrapper">
+
+            {/* Search header card */}
+            <div className="about-sidebar-search-box">
+              <div className="about-sidebar-title-row">
+                <svg viewBox="0 0 100 100" className="about-sidebar-lotus-icon">
+                  <path d="M50 25 C45 45 35 60 50 80 C65 60 55 45 50 25 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
+                  <path d="M50 80 C35 75 25 60 20 40 C35 50 45 60 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
+                  <path d="M50 80 C65 75 75 60 80 40 C65 50 55 60 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
+                  <path d="M50 80 C30 80 10 70 5 55 C20 65 35 70 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
+                  <path d="M50 80 C70 80 90 70 95 55 C80 65 65 70 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
+                </svg>
+                <h4 className="about-sidebar-heading">About Us</h4>
+              </div>
             </div>
-            
-            <ul className="menu-list">
-              {menuItems.map((item) => (
-                <li key={item.id}>
+
+            {/* Navigation menu card */}
+            <div className="about-sidebar-menu-card">
+              <div className="about-sidebar-menu">
+                {menuItems.map((item) => (
                   <button
+                    key={item.id}
                     onClick={() => scrollToSection(item.id)}
-                    className={`menu-item ${activeSection === item.id ? "active" : ""}`}
+                    className={`about-sidebar-item ${activeSection === item.id ? "active" : ""}`}
                   >
-                    <span className="icon">{item.icon}</span>
-                    <span>{item.label}</span>
+                    {item.icon}
+                    <div className="about-item-text-container">
+                      <span className="about-item-name">{item.label}</span>
+                    </div>
                   </button>
-                </li>
-              ))}
-            </ul>
-
-            <div className="search-box">
-              <input
-                type="text"
-                placeholder="Search in about us..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
+                ))}
+              </div>
             </div>
 
-            <div className="quote-card">
+            {/* Quote card */}
+            <div className="about-quote-card">
               <h3>"We believe healing is a journey, not a destination."</h3>
               <p>We walk beside you with wisdom, compassion, and ancient practices for modern lives.</p>
-              <div className="quote-lotus">❀</div>
+              <div className="about-quote-lotus">❀</div>
             </div>
+
           </div>
         </aside>
 
@@ -605,25 +611,6 @@ export default function AboutClient() {
               )}
             </div>
           </section>
-
-          {/* Media & Features */}
-          <section id="media-features" className="section media-features-section">
-            <div className="section-header">
-              <span className="lotus">❀</span> Media &amp; Features
-            </div>
-            <div className="media-grid">
-              <div className="media-item">
-                <div className="media-logo-placeholder">Times Health</div>
-                <h5>Top Wellness Sanctuary of the Year</h5>
-                <p>Recognized for authentic integration of Vedic wisdom with contemporary clinical metrics.</p>
-              </div>
-              <div className="media-item">
-                <div className="media-logo-placeholder">Yoga Digest</div>
-                <h5>Realigning Biological Vibrations</h5>
-                <p>A deep editorial feature on our acoustic tuning and targeted crystal alignment methodologies.</p>
-              </div>
-            </div>
-          </section>
         </main>
 
         {/* ================= RIGHT PANEL ================= */}
@@ -696,9 +683,9 @@ export default function AboutClient() {
           <div id="certifications" className="panel">
             <h3><span className="lotus">❀</span> Certifications &amp; Recognition</h3>
             <div className="certs">
-              <div className="cert">ISO 9001<br/>Certified</div>
-              <div className="cert">IARA<br/>Accredited</div>
-              <div className="cert">AADP<br/>Member</div>
+              <div className="cert">ISO 9001<br />Certified</div>
+              <div className="cert">IARA<br />Accredited</div>
+              <div className="cert">AADP<br />Member</div>
             </div>
             <button className="view-btn" onClick={() => setShowCertsModal(true)}>
               View All Certifications
@@ -817,12 +804,12 @@ export default function AboutClient() {
         /* ===== Layout ===== */
         .page {
           display: grid;
-          grid-template-columns: 260px 1fr 260px;
-          gap: 28px;
-          padding: 28px 40px;
+          grid-template-columns: 240px 1fr 260px;
+          gap: 32px;
+          padding: 40px 24px 24px;
           max-width: 1600px;
           margin: 0 auto;
-          background: #fafafa;
+          background: transparent;
           min-height: 100vh;
         }
 
@@ -831,148 +818,230 @@ export default function AboutClient() {
           position: relative;
         }
 
-        .sidebar-sticky-content {
+        .sidebar-sticky-wrapper {
           position: sticky;
-          top: 98px;
+          top: 94px;
           display: flex;
           flex-direction: column;
-          gap: 24px;
-          background: white;
-          border-radius: 18px;
-          padding: 24px;
-          border: 1px solid #f3e8ff;
-          box-shadow: 0 4px 20px rgba(124, 58, 237, 0.03);
+          gap: 16px;
+          max-height: calc(100vh - 110px);
+          overflow-y: auto;
+          overflow-x: hidden;
+          scrollbar-width: none;
+          -ms-overflow-style: none;
         }
 
-        .sidebar-title {
+        .sidebar-sticky-wrapper::-webkit-scrollbar {
+          display: none;
+        }
+
+        /* === Search header (matches blog sidebar-search-box) === */
+        .about-sidebar-search-box {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+          flex-shrink: 0;
+        }
+
+        .about-sidebar-title-row {
           display: flex;
           align-items: center;
-          gap: 10px;
-          color: #4a2b6e;
-          font-size: 20px;
-          font-weight: 700;
-          font-family: var(--font-serif) !important;
+          gap: 6px;
         }
 
-        .lotus {
-          color: #7c3aed;
-          font-size: 20px;
+        .about-sidebar-lotus-icon {
+          width: 24px;
+          height: 24px;
+          flex-shrink: 0;
+          margin-top: -2px;
         }
 
-        .menu-list {
-          list-style: none;
-          padding: 0;
+        .about-sidebar-heading {
+          font-family: var(--font-sans);
+          font-size: 1.15rem;
+          color: #111827;
+          font-weight: 700 !important;
           margin: 0;
+        }
+
+        .about-blog-search-wrapper {
+          display: flex;
+          align-items: center;
+          width: 100%;
+          background: #ffffff;
+          border: 1px solid rgba(168, 85, 247, 0.15);
+          border-radius: 12px;
+          padding: 0 14px;
+          box-sizing: border-box;
+          transition: var(--transition-fast);
+        }
+
+        .about-blog-search-wrapper:focus-within {
+          border-color: rgba(168, 85, 247, 0.4);
+          box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.08);
+        }
+
+        .about-search-icon {
+          color: #a855f7;
+          flex-shrink: 0;
+          margin-left: 4px;
+        }
+
+        .about-search-input {
+          flex: 1;
+          border: none;
+          background: transparent;
+          outline: none;
+          padding: 10px 0;
+          font-family: var(--font-sans);
+          font-size: 0.85rem;
+          color: #111827;
+        }
+
+        .about-search-clear-btn {
+          background: none;
+          border: none;
+          color: hsl(var(--text-muted));
+          cursor: pointer;
+          font-size: 0.75rem;
+          padding: 2px 4px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: color 0.2s ease;
+          line-height: 1;
+          margin-left: 8px;
+        }
+
+        .about-search-clear-btn:hover {
+          color: #ef4444;
+        }
+
+        /* === Navigation menu (no card — matches blog sidebar transparent style) === */
+        .about-sidebar-menu-card {
+          background: transparent;
+          border-radius: 0;
+          border: none;
+          box-shadow: none;
+          padding: 0;
+        }
+
+        .about-sidebar-menu {
           display: flex;
           flex-direction: column;
-          gap: 4px;
+          gap: 6px;
         }
 
-        .menu-item {
+        /* === Sidebar item (matches blog .sidebar-item exactly) === */
+        .about-sidebar-item {
           width: 100%;
+          padding: 10px 14px;
+          background: transparent;
+          border: none;
+          border-radius: 10px;
           display: flex;
           align-items: center;
           gap: 12px;
-          padding: 11px 16px;
-          border-radius: 10px;
-          color: #4a2b6e;
-          font-size: 14px;
-          font-weight: 600;
-          text-align: left;
-          background: none;
-          border: none;
           cursor: pointer;
-          transition: all 0.25s ease;
+          font-family: var(--font-sans);
+          transition: var(--transition-fast);
+          text-align: left;
         }
 
-        .menu-item .icon {
-          width: 22px;
+        .about-sidebar-item svg {
+          color: #a855f7;
+          transition: var(--transition-fast);
+          width: 16px;
+          height: 16px;
+          opacity: 0.8;
+          flex-shrink: 0;
+        }
+
+        .about-sidebar-item:hover {
+          background: rgba(168, 85, 247, 0.04);
+        }
+
+        .about-sidebar-item:hover svg {
           color: #7c3aed;
+          opacity: 1;
+        }
+
+        .about-sidebar-item:hover .about-item-name {
+          color: #7c3aed;
+        }
+
+        .about-sidebar-item.active {
+          background: #f3e8ff;
+        }
+
+        .about-sidebar-item.active svg {
+          color: #6b21a8;
+          opacity: 1;
+        }
+
+        .about-sidebar-item.active .about-item-name {
+          color: #581c87;
+          font-weight: 600;
+        }
+
+        .about-item-text-container {
+          display: flex;
+          flex-direction: column;
+        }
+
+        .about-item-name {
+          font-size: 0.85rem;
+          font-weight: 500;
+          color: #4b5563;
+          font-family: var(--font-sans);
+          transition: var(--transition-fast);
+        }
+
+        /* === Quote card (inspiration card style) === */
+        .about-quote-card {
+          background: #fdf4ff;
+          border: 1px solid rgba(168, 85, 247, 0.08);
+          border-radius: 20px;
+          padding: 24px 20px;
           text-align: center;
-          font-size: 16px;
-          transition: transform 0.25s ease;
-        }
-
-        .menu-item:hover {
-          background: #f7eeff;
-          color: #7c3aed;
-        }
-
-        .menu-item:hover .icon {
-          transform: scale(1.15);
-        }
-
-        .menu-item.active {
-          background: #ede0ff;
           color: #4a2b6e;
-        }
-
-        .search-box {
-          position: relative;
-        }
-
-        .search-box input {
-          width: 100%;
-          padding: 12px 38px 12px 16px;
-          border: 1px solid #ede0ff;
-          border-radius: 10px;
-          background: white;
-          font-size: 13px;
-          outline: none;
-          color: #4a2b6e;
-          transition: all 0.3s ease;
-        }
-
-        .search-box input:focus {
-          border-color: #7c3aed;
-          box-shadow: 0 0 10px rgba(124, 58, 237, 0.1);
-        }
-
-        .search-box::after {
-          content: "🔍";
-          position: absolute;
-          right: 14px;
-          top: 50%;
-          transform: translateY(-50%);
-          font-size: 14px;
-          color: #7c3aed;
-          pointer-events: none;
-        }
-
-        .quote-card {
-          background: #fbf7ff;
-          border-radius: 12px;
-          padding: 20px;
-          text-align: center;
-          color: #4a2b6e;
-          border: 1px solid #f3e8ff;
           transition: transform 0.3s ease;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
         }
 
-        .quote-card:hover {
+        .about-quote-card:hover {
           transform: translateY(-2px);
         }
 
-        .quote-card h3 {
+        .about-quote-card h3 {
           font-style: italic;
-          font-weight: 500;
-          font-size: 16px;
+          font-weight: 500 !important;
+          font-size: 0.95rem;
           line-height: 1.5;
-          margin-bottom: 12px;
+          color: #3b0764;
           font-family: var(--font-serif) !important;
         }
 
-        .quote-card p {
-          font-size: 12px;
+        .about-quote-card p {
+          font-size: 0.8rem;
           color: #6b4d8a;
-          margin-bottom: 12px;
           line-height: 1.6;
+          margin: 0;
         }
 
-        .quote-lotus {
-          font-size: 44px;
+        .about-quote-lotus {
+          font-size: 36px;
           color: #d4b8e8;
           line-height: 1;
+        }
+
+        /* keep legacy .lotus for section headers */
+        .lotus {
+          color: #7c3aed;
+          font-size: 20px;
         }
 
         /* ===== Main Column ===== */
@@ -1758,8 +1827,8 @@ export default function AboutClient() {
         @media (max-width: 1200px) {
           .page {
             grid-template-columns: 240px 1fr;
-            padding: 20px;
-            gap: 20px;
+            padding: 30px 20px 24px;
+            gap: 24px;
           }
           .right-panel {
             grid-column: 1 / -1;
@@ -1769,12 +1838,18 @@ export default function AboutClient() {
           }
         }
 
-        @media (max-width: 850px) {
+        @media (max-width: 968px) {
           .page {
             grid-template-columns: 1fr;
+            padding: 30px 20px 24px;
           }
           .sidebar {
-            display: none; /* Hide sidebar list on mobile/tablet */
+            width: 100%;
+          }
+          .sidebar-sticky-wrapper {
+            position: static;
+            max-height: none;
+            overflow: visible;
           }
           .right-panel {
             grid-template-columns: 1fr;

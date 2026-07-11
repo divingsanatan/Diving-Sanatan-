@@ -71,7 +71,7 @@ export const Header: React.FC = () => {
 
           {/* CTA Buttons */}
           <div className="nav-actions">
-            <Link href="/search" className="cart-badge-container">
+            <Link href="/cart" className="cart-badge-container">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="cart-icon">
                 <circle cx="9" cy="21" r="1" />
                 <circle cx="20" cy="21" r="1" />
