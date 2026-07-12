@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { Practitioner, Expertise } from "@/types/database";
 import { ImageCropperModal } from "@/components/ui/ImageCropperModal";
 import { RefreshCw, Edit, Trash2 } from "lucide-react";
+import StatsDashboard from "@/components/admin/StatsDashboard";
 
 export default function AdminPractitionersPage() {
   const [practitioners, setPractitioners] = useState<Practitioner[]>([]);
@@ -318,23 +319,21 @@ export default function AdminPractitionersPage() {
 
   return (
     <div className="dashboard-content">
-      <div className="dashboard-header-row" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-        <div>
-          <h2 style={{ fontFamily: "var(--font-serif)", color: "#4c1d95", fontSize: "1.8rem", margin: 0 }}>Practitioners Registry</h2>
-          <p style={{ margin: "4px 0 0 0", color: "#6c757d", fontSize: "0.9rem" }}>
-            Maintain professional directories, register new healers, update credentials, upload certifications, and verify qualifications.
-          </p>
-        </div>
-        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-          <button className="btn btn-secondary btn-sm" onClick={loadPractitioners}>
-            <RefreshCw size={12} style={{ marginRight: "6px" }} />
-            Refresh Healers
-          </button>
-          <Button variant="gold" size="sm" onClick={handleOpenCreateModal}>
-            ➕ Add Healer
-          </Button>
-        </div>
-      </div>
+      <StatsDashboard
+        pageType="practitioners"
+        actions={
+          <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+            <button className="btn btn-secondary btn-sm" onClick={loadPractitioners}>
+              <RefreshCw size={12} style={{ marginRight: "6px" }} />
+              Refresh Healers
+            </button>
+            <Button variant="gold" size="sm" onClick={handleOpenCreateModal}>
+              ➕ Add Healer
+            </Button>
+          </div>
+        }
+      />
+
 
       {loading ? (
         <p className="text-center" style={{ padding: "40px", color: "#6c757d" }}>Loading directory...</p>

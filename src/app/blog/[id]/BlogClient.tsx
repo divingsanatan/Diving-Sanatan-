@@ -1327,16 +1327,22 @@ export default function BlogDetailsPage() {
         .article-unified-card {
           padding: 36px 40px !important;
           border-radius: 24px !important;
+          border: 1px solid transparent !important;
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06) !important;
         }
         .article-header {
-          text-align: left;
-          margin-bottom: 24px;
+          text-align: center;
+          align-items: center;
+          margin-bottom: 32px;
           display: flex;
           flex-direction: column;
-          align-items: flex-start;
-          gap: 12px;
-          padding-bottom: 24px;
-          border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+          gap: 16px;
+          padding: 80px 40px;
+          background: linear-gradient(135deg, #FAF7FF 0%, #FFFFFF 100%);
+          border-radius: 20px;
+          border: 1px solid rgba(124, 58, 237, 0.05);
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+          width: 100%;
         }
         .article-category {
           background: rgba(16, 185, 129, 0.08);
@@ -1652,10 +1658,11 @@ export default function BlogDetailsPage() {
           color: #7c3aed;
         }
         .comment-post-box {
-          padding: 20px !important;
-          border-radius: 16px !important;
-          background: rgba(255, 255, 255, 0.6) !important;
-          border-color: rgba(168, 85, 247, 0.08) !important;
+          padding: 24px !important;
+          border-radius: 20px !important;
+          background: rgba(255, 255, 255, 0.8) !important;
+          border: 1px solid transparent !important;
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04) !important;
         }
         .comment-form {
           display: flex;
@@ -1699,10 +1706,10 @@ export default function BlogDetailsPage() {
         }
         .single-comment-card {
           padding: 16px 20px !important;
-          border-radius: 16px !important;
-          background: rgba(255, 255, 255, 0.4) !important;
-          border-color: rgba(0, 0, 0, 0.03) !important;
-          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.01) !important;
+          border-radius: 20px !important;
+          background: rgba(255, 255, 255, 0.6) !important;
+          border: 1px solid transparent !important;
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04) !important;
         }
         .comment-card-meta {
           display: flex;

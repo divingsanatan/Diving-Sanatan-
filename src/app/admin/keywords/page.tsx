@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Keyword, Category } from "@/types/database";
+import StatsDashboard from "@/components/admin/StatsDashboard";
 
 const CHAKRAS_LIST = [
   { name: "Crown", color: "#a855f7", key: "crown" },
@@ -191,22 +192,20 @@ export default function AdminKeywordsPage() {
 
   return (
     <div className="dashboard-content">
-      <div className="dashboard-header-row">
-        <div>
-          <h2>Keywords Resonance Manager</h2>
-          <p className="admin-header-desc">
-            Create and align search words to specific healing categories and primary chakras.
-          </p>
-        </div>
-        <div className="header-actions">
-          <button className="sync-btn" onClick={loadData}>
-            🔄 Refresh Keywords
-          </button>
-          <Button variant="gold" onClick={handleOpenCreateModal}>
-            ➕ Add Keyword
-          </Button>
-        </div>
-      </div>
+      <StatsDashboard
+        pageType="keywords"
+        actions={
+          <div className="header-actions">
+            <button className="sync-btn" onClick={loadData}>
+              🔄 Refresh Keywords
+            </button>
+            <Button variant="gold" onClick={handleOpenCreateModal}>
+              ➕ Add Keyword
+            </Button>
+          </div>
+        }
+      />
+
 
       {loading ? (
         <p className="admin-loading">Loading keywords database...</p>

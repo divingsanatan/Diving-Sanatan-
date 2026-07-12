@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/Card";
 import { Category } from "@/types/database";
 import { RefreshCw } from "lucide-react";
+import StatsDashboard from "@/components/admin/StatsDashboard";
 
 export default function AdminCategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -86,15 +87,16 @@ export default function AdminCategoriesPage() {
 
   return (
     <div className="dashboard-content">
-      <div className="flex-between mb-3">
-        <p style={{ margin: 0, color: "#6c757d", fontSize: "0.9rem" }}>
-          Add, update, or remove healing disciplines. These categories are dynamically linked to services on storefront catalogs.
-        </p>
-        <button className="btn btn-secondary btn-sm" onClick={loadCategories}>
-          <RefreshCw size={12} style={{ marginRight: "6px" }} />
-          Refresh Categories
-        </button>
-      </div>
+      <StatsDashboard
+        pageType="categories"
+        actions={
+          <button className="btn btn-secondary btn-sm" onClick={loadCategories}>
+            <RefreshCw size={12} style={{ marginRight: "6px" }} />
+            Refresh Categories
+          </button>
+        }
+      />
+
 
       {loading ? (
         <p className="text-center" style={{ padding: "40px", color: "#6c757d" }}>Loading categories...</p>

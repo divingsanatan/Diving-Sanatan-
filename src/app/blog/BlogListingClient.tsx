@@ -286,6 +286,37 @@ export default function BlogListingPage() {
             <div className="banner-image-panel" />
           </div>
 
+
+
+          {/* Latest Blog Posts Grid Section */}
+          <div className="dashboard-section">
+            <div className="section-header-row">
+              <div className="section-title-wrap">
+                <svg viewBox="0 0 100 100" className="section-title-lotus">
+                  <path d="M50 25 C45 45 35 60 50 80 C65 60 55 45 50 25 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
+                  <path d="M50 80 C35 75 25 60 20 40 C35 50 45 60 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
+                  <path d="M50 80 C65 75 75 60 80 40 C65 50 55 60 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
+                  <path d="M50 80 C30 80 10 70 5 55 C20 65 35 70 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
+                  <path d="M50 80 C70 80 90 70 95 55 C80 65 65 70 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
+                </svg>
+                <h3 className="section-title">Latest Blog Posts</h3>
+              </div>
+            </div>
+
+            {blogs.length === 0 ? (
+              <div className="empty-results-box">
+                <p>No articles currently published in the catalog.</p>
+              </div>
+            ) : (
+              <>
+                <div className="latest-posts-grid">
+                  {paginatedAllBlogs.map(post => renderBlogCard(post))}
+                </div>
+                {renderPaginationControls(totalPagesAll)}
+              </>
+            )}
+          </div>
+
           {/* Our Services Carousel Section */}
           <div className="dashboard-section">
             <div className="section-header-row">
@@ -320,35 +351,6 @@ export default function BlogListingPage() {
                 </div>
               ))}
             </div>
-          </div>
-
-          {/* Latest Blog Posts Grid Section */}
-          <div className="dashboard-section">
-            <div className="section-header-row">
-              <div className="section-title-wrap">
-                <svg viewBox="0 0 100 100" className="section-title-lotus">
-                  <path d="M50 25 C45 45 35 60 50 80 C65 60 55 45 50 25 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
-                  <path d="M50 80 C35 75 25 60 20 40 C35 50 45 60 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
-                  <path d="M50 80 C65 75 75 60 80 40 C65 50 55 60 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
-                  <path d="M50 80 C30 80 10 70 5 55 C20 65 35 70 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
-                  <path d="M50 80 C70 80 90 70 95 55 C80 65 65 70 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
-                </svg>
-                <h3 className="section-title">Latest Blog Posts</h3>
-              </div>
-            </div>
-
-            {blogs.length === 0 ? (
-              <div className="empty-results-box">
-                <p>No articles currently published in the catalog.</p>
-              </div>
-            ) : (
-              <>
-                <div className="latest-posts-grid">
-                  {paginatedAllBlogs.map(post => renderBlogCard(post))}
-                </div>
-                {renderPaginationControls(totalPagesAll)}
-              </>
-            )}
           </div>
 
         </div>
@@ -409,15 +411,16 @@ export default function BlogListingPage() {
         .blog-hero-banner {
           width: 100%;
           border-radius: 24px;
-          background: linear-gradient(135deg, #f3e8ff 0%, #faf5ff 100%);
-          border: 1px solid rgba(168, 85, 247, 0.1);
-          padding: 32px;
+          background: linear-gradient(135deg, #FAF7FF 0%, #FFFFFF 100%);
+          border: 1px solid rgba(168, 85, 247, 0.08);
+          padding: 90px 40px;
           display: flex;
           align-items: center;
           justify-content: space-between;
           position: relative;
-          min-height: 200px;
+          min-height: 300px;
           overflow: hidden;
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
         }
         .banner-text-content {
           z-index: 2;
@@ -556,18 +559,18 @@ export default function BlogListingPage() {
           padding: 20px 16px;
           border-radius: 20px;
           background: #ffffff;
-          border: 1px solid rgba(168, 85, 247, 0.08);
+          border: 1px solid transparent;
           display: flex;
           flex-direction: column;
           align-items: center;
           text-align: center;
           cursor: pointer;
-          transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .service-simple-card:hover {
-          transform: translateY(-4px);
-          border-color: rgba(168, 85, 247, 0.2);
-          box-shadow: 0 10px 25px rgba(124, 58, 237, 0.06);
+          transform: translateY(-6px) scale(1.025);
+          box-shadow: 0 16px 36px rgba(0, 0, 0, 0.09);
         }
         .service-icon-circle {
           width: 48px;
@@ -720,19 +723,19 @@ export default function BlogListingPage() {
         }
         .blog-item-card {
           background: #ffffff;
-          border: 1px solid rgba(168, 85, 247, 0.08);
-          border-radius: 8px;
+          border: 1px solid transparent;
+          border-radius: 20px;
           overflow: hidden;
           display: flex;
           flex-direction: column;
           width: 100%;
           box-sizing: border-box;
-          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
-          transition: transform 0.25s ease, box-shadow 0.25s ease;
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .blog-item-card:hover {
-          transform: translateY(-6px);
-          box-shadow: 0 12px 30px rgba(124, 58, 237, 0.12);
+          transform: translateY(-6px) scale(1.025);
+          box-shadow: 0 16px 36px rgba(0, 0, 0, 0.09);
         }
         .blog-card-media-wrapper {
           width: 100%;

@@ -3,22 +3,22 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { 
-  LayoutDashboard, 
-  Calendar, 
-  Briefcase, 
-  Users, 
-  Grid, 
-  Key, 
-  HelpCircle, 
-  MessageSquare, 
-  FileText, 
-  BookOpen, 
-  BarChart2, 
-  UserCheck, 
-  Globe, 
-  LogOut, 
-  Menu 
+import {
+  LayoutDashboard,
+  Calendar,
+  Briefcase,
+  Users,
+  Grid,
+  Key,
+  HelpCircle,
+  MessageSquare,
+  FileText,
+  BookOpen,
+  BarChart2,
+  UserCheck,
+  Globe,
+  LogOut,
+  Menu
 } from "lucide-react";
 import "./admin-lte.css";
 
@@ -94,6 +94,8 @@ export default function AdminLayout({
         return "Publication & Blogs";
       case "/admin/glossary":
         return "Sanskrit Glossary";
+      case "/admin/faq":
+        return "FAQs Manager";
       case "/admin/comparisons":
         return "Comparisons Board";
       case "/admin/leads":
@@ -125,6 +127,8 @@ export default function AdminLayout({
         return "Blogs";
       case "/admin/glossary":
         return "Glossary";
+      case "/admin/faq":
+        return "FAQs";
       case "/admin/comparisons":
         return "Comparisons";
       case "/admin/leads":
@@ -157,8 +161,8 @@ export default function AdminLayout({
     <div className={`admin-lte-theme admin-layout-wrapper ${sidebarCollapsed ? "sidebar-collapsed" : ""} ${sidebarOpen ? "sidebar-open" : ""}`}>
       {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
-        <div 
-          className="admin-sidebar-overlay" 
+        <div
+          className="admin-sidebar-overlay"
           onClick={() => setSidebarOpen(false)}
         />
       )}
@@ -169,140 +173,149 @@ export default function AdminLayout({
           <Globe size={22} color="#007bff" />
           <span className="brand-label">Sanatan Admin</span>
         </div>
-        
+
         <nav className="sidebar-nav">
           {/* Section: MONITOR */}
           <div className="sidebar-nav-header">Dashboard Monitor</div>
-          <Link 
-            href="/admin" 
-            title="Overview" 
+          <Link
+            href="/admin"
+            title="Overview"
             className={`sidebar-link ${pathname === "/admin" ? "active" : ""}`}
             onClick={() => setSidebarOpen(false)}
           >
             <LayoutDashboard size={16} />
             <span>Overview</span>
           </Link>
-          <Link 
-            href="/admin/bookings" 
-            title="Bookings" 
+          <Link
+            href="/admin/bookings"
+            title="Bookings"
             className={`sidebar-link ${pathname === "/admin/bookings" ? "active" : ""}`}
             onClick={() => setSidebarOpen(false)}
           >
             <Calendar size={16} />
             <span>Bookings</span>
           </Link>
-          <Link 
-            href="/admin/leads" 
-            title="Leads Profiles" 
+          <Link
+            href="/admin/leads"
+            title="Leads Profiles"
             className={`sidebar-link ${pathname === "/admin/leads" ? "active" : ""}`}
             onClick={() => setSidebarOpen(false)}
           >
             <UserCheck size={16} />
             <span>Leads Profiles</span>
           </Link>
-          
+
           {/* Section: CORE DIRECTORIES */}
           <div className="sidebar-nav-header">Core Directories</div>
-          <Link 
-            href="/admin/services" 
-            title="Services" 
+          <Link
+            href="/admin/services"
+            title="Services"
             className={`sidebar-link ${pathname === "/admin/services" ? "active" : ""}`}
             onClick={() => setSidebarOpen(false)}
           >
             <Briefcase size={16} />
             <span>Services</span>
           </Link>
-          <Link 
-            href="/admin/practitioners" 
-            title="Practitioners" 
-            className={`sidebar-link ${pathname === "/admin/practitioners" ? "active" : ""}`}
-            onClick={() => setSidebarOpen(false)}
-          >
-            <Users size={16} />
-            <span>Practitioners</span>
-          </Link>
-          <Link 
-            href="/admin/categories" 
-            title="Categories" 
-            className={`sidebar-link ${pathname === "/admin/categories" ? "active" : ""}`}
-            onClick={() => setSidebarOpen(false)}
-          >
-            <Grid size={16} />
-            <span>Categories</span>
-          </Link>
-          
-          {/* Section: CONTENT & DIAGNOSTICS */}
-          <div className="sidebar-nav-header">Content & Diagnostics</div>
-          <Link 
-            href="/admin/blogs" 
-            title="Blogs" 
-            className={`sidebar-link ${pathname === "/admin/blogs" ? "active" : ""}`}
-            onClick={() => setSidebarOpen(false)}
-          >
-            <FileText size={16} />
-            <span>Blogs</span>
-          </Link>
-          <Link 
-            href="/admin/quiz-questions" 
-            title="Quiz Questions" 
+          <Link
+            href="/admin/quiz-questions"
+            title="Quiz Questions"
             className={`sidebar-link ${pathname === "/admin/quiz-questions" ? "active" : ""}`}
             onClick={() => setSidebarOpen(false)}
           >
             <HelpCircle size={16} />
             <span>Quiz Questions</span>
           </Link>
-          <Link 
-            href="/admin/quora-qa" 
-            title="Q&A Board" 
+          <Link
+            href="/admin/practitioners"
+            title="Practitioners"
+            className={`sidebar-link ${pathname === "/admin/practitioners" ? "active" : ""}`}
+            onClick={() => setSidebarOpen(false)}
+          >
+            <Users size={16} />
+            <span>Practitioners</span>
+          </Link>
+          <Link
+            href="/admin/categories"
+            title="Categories"
+            className={`sidebar-link ${pathname === "/admin/categories" ? "active" : ""}`}
+            onClick={() => setSidebarOpen(false)}
+          >
+            <Grid size={16} />
+            <span>Categories</span>
+          </Link>
+
+          {/* Section: CONTENT & DIAGNOSTICS */}
+          <div className="sidebar-nav-header">Content & Diagnostics</div>
+          <Link
+            href="/admin/blogs"
+            title="Blogs"
+            className={`sidebar-link ${pathname === "/admin/blogs" ? "active" : ""}`}
+            onClick={() => setSidebarOpen(false)}
+          >
+            <FileText size={16} />
+            <span>Blogs</span>
+          </Link>
+          <Link
+            href="/admin/quora-qa"
+            title="Q&A Board"
             className={`sidebar-link ${pathname === "/admin/quora-qa" ? "active" : ""}`}
             onClick={() => setSidebarOpen(false)}
           >
             <MessageSquare size={16} />
             <span>Q&A Board</span>
           </Link>
-          <Link 
-            href="/admin/glossary" 
-            title="Glossary" 
+          <Link
+            href="/admin/glossary"
+            title="Glossary"
             className={`sidebar-link ${pathname === "/admin/glossary" ? "active" : ""}`}
             onClick={() => setSidebarOpen(false)}
           >
             <BookOpen size={16} />
             <span>Glossary</span>
           </Link>
-          <Link 
-            href="/admin/comparisons" 
-            title="Comparisons" 
+          <Link
+            href="/admin/faq"
+            title="FAQs"
+            className={`sidebar-link ${pathname === "/admin/faq" ? "active" : ""}`}
+            onClick={() => setSidebarOpen(false)}
+          >
+            <HelpCircle size={16} />
+            <span>FAQs</span>
+          </Link>
+          <Link
+            href="/admin/comparisons"
+            title="Comparisons"
             className={`sidebar-link ${pathname === "/admin/comparisons" ? "active" : ""}`}
             onClick={() => setSidebarOpen(false)}
           >
             <BarChart2 size={16} />
             <span>Comparisons</span>
           </Link>
-          
+
           {/* Section: SEO & SETTINGS */}
           <div className="sidebar-nav-header">SEO & Settings</div>
-          <Link 
-            href="/admin/keywords" 
-            title="Keywords" 
+          <Link
+            href="/admin/keywords"
+            title="Keywords"
             className={`sidebar-link ${pathname === "/admin/keywords" ? "active" : ""}`}
             onClick={() => setSidebarOpen(false)}
           >
             <Key size={16} />
             <span>Keywords</span>
           </Link>
-          
+
           <div style={{ borderTop: "1px solid #4b545c", margin: "10px 0" }}></div>
-          
-          <Link 
-            href="/" 
-            title="Public Site" 
+
+          <Link
+            href="/"
+            title="Public Site"
             className="sidebar-link"
           >
             <Globe size={16} />
             <span>Public Site</span>
           </Link>
         </nav>
-        
+
         <div className="sidebar-footer">
           <button onClick={handleLogout} className="logout-btn">
             <LogOut size={14} style={{ marginRight: "6px", display: "inline-block", verticalAlign: "middle" }} />

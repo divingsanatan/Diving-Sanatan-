@@ -1,12 +1,21 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import Link from "next/link";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import {
-  BookOpen, Target, Wrench, Users, User, Award, MessageSquare, Newspaper
+  BookOpen, Target, Wrench, Users, User, Award, MessageSquare, Newspaper, ChevronLeft, ChevronRight, ArrowRight
 } from "lucide-react";
+
+// Mockup featured services order
+const featuredOrder = [
+  "Chakra Healing",
+  "Aura Scanning",
+  "Reiki Healing",
+  "Sound Healing",
+  "Personal Guidance"
+];
 
 interface Practitioner {
   id: string;
@@ -49,6 +58,10 @@ export default function AboutClient() {
   // Search & Navigation States
   const [searchQuery, setSearchQuery] = useState("");
   const [activeSection, setActiveSection] = useState("story");
+
+  // Featured Services Carousel States
+  const [featuredIndex, setFeaturedIndex] = useState(0);
+  const [visibleCount, setVisibleCount] = useState(3);
 
   // Carousel scroll position trackers (to highlight active dots)
   const [servicesScrollProgress, setServicesScrollProgress] = useState(0);
@@ -122,9 +135,9 @@ export default function AboutClient() {
 
   const menuItems = [
     { id: "story", label: "Our Story", icon: <BookOpen size={16} strokeWidth={1.5} /> },
-    { id: "services", label: "Our Services", icon: <Wrench size={16} strokeWidth={1.5} /> },
     { id: "healers", label: "Our Healers", icon: <Users size={16} strokeWidth={1.5} /> },
     { id: "team", label: "Our Team", icon: <User size={16} strokeWidth={1.5} /> },
+    { id: "services", label: "Our Services", icon: <Wrench size={16} strokeWidth={1.5} /> },
   ];
 
   // Load Services and Healers from DB APIs
@@ -191,18 +204,83 @@ export default function AboutClient() {
     return () => clearInterval(timer);
   }, []);
 
-  // Image & icon mapping helper functions
-  const getServiceImage = (imgName: string, serviceName: string) => {
-    if (imgName && (imgName.startsWith("http") || imgName.startsWith("/")) && !imgName.includes("aura_balancing")) {
-      return imgName;
+  // Handle responsive visibleCount for featured services slider dynamically
+  useEffect(() => {
+    const handleResize = () => {
+      const width = window.innerWidth;
+      if (width <= 600) {
+        setVisibleCount(1);
+      } else if (width <= 968) {
+        setVisibleCount(2);
+      } else {
+        setVisibleCount(3);
+      }
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // Filter & sort featured services
+  const featuredServices = useMemo(() => {
+    const list = services.filter(
+      s => !s.duration?.includes("Sessions") && !s.duration?.includes("Days")
+    );
+    return list.sort((a, b) => {
+      const nameA = a.name || "";
+      const nameB = b.name || "";
+      const idxA = featuredOrder.indexOf(nameA);
+      const idxB = featuredOrder.indexOf(nameB);
+      if (idxA === -1 && idxB === -1) return nameA.localeCompare(nameB);
+      if (idxA === -1) return 1;
+      if (idxB === -1) return -1;
+      return idxA - idxB;
+    });
+  }, [services]);
+
+  const maxFeaturedIndex = useMemo(() => {
+    return Math.max(featuredServices.length - visibleCount, 0);
+  }, [featuredServices.length, visibleCount]);
+
+  // Auto-reset index if bounds shrink
+  useEffect(() => {
+    if (featuredIndex > maxFeaturedIndex) {
+      setFeaturedIndex(maxFeaturedIndex);
     }
-    const name = serviceName.toLowerCase();
-    if (name.includes("chakra")) return "https://images.unsplash.com/photo-1545389336-cf090694435e?w=300&h=200&fit=crop";
-    if (name.includes("aura")) return "https://images.unsplash.com/photo-1559757175-5700dde675bc?w=300&h=200&fit=crop";
-    if (name.includes("reiki")) return "https://images.unsplash.com/photo-1604881991720-f91add269bed?w=300&h=200&fit=crop";
-    if (name.includes("sound")) return "https://images.unsplash.com/photo-1591291621164-2c6367723315?w=300&h=200&fit=crop";
-    if (name.includes("guidance") || name.includes("personal") || name.includes("counseling")) return "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=300&h=200&fit=crop";
-    return "https://images.unsplash.com/photo-1545389336-cf090694435e?w=300&h=200&fit=crop";
+  }, [featuredIndex, maxFeaturedIndex]);
+
+  const handlePrevFeatured = () => {
+    setFeaturedIndex(prev => Math.max(prev - 1, 0));
+  };
+
+  const handleNextFeatured = () => {
+    setFeaturedIndex(prev => Math.min(prev + 1, maxFeaturedIndex));
+  };
+
+  // Image & icon mapping helper functions
+  const getServiceImage = (imgName: string) => {
+    if (!imgName) return "/images/service_chakra_healing.png";
+    if (imgName.startsWith("http") || imgName.startsWith("/")) return imgName;
+    const mappings: Record<string, string> = {
+      chakra_healing: "/images/service_chakra_healing.png",
+      aura_scanning: "/images/service_aura_scanning.png",
+      reiki_healing: "/images/service_reiki_healing.png",
+      sound_healing: "/images/service_sound_healing.png",
+      personal_guidance: "/images/service_personal_guidance.png",
+      meditation_program: "/images/service_meditation_program.png",
+      full_moon_program: "/images/service_full_moon_program.png",
+      manifestation_program: "/images/service_manifestation_program.png",
+      // Fallback mappings for dynamic entries
+      chakra_program: "/images/service_chakra_healing.png",
+      aura_balancing: "/images/service_aura_scanning.png",
+      chakra_clearing: "/images/service_chakra_healing.png",
+      crystal_healing: "/images/service_reiki_healing.png",
+      free_energy_session: "/images/service_aura_scanning.png",
+      mindfulness_meditation: "/images/service_meditation_program.png",
+      spiritual_counseling: "/images/service_personal_guidance.png",
+      anxiety_release: "/images/service_reiki_healing.png"
+    };
+    return mappings[imgName] || "/images/service_chakra_healing.png";
   };
 
   const getServiceIconSymbol = (serviceName: string) => {
@@ -371,89 +449,6 @@ export default function AboutClient() {
             <div className="story-image"></div>
           </section>
 
-          {/* Our Services */}
-          <section id="services" className="section">
-            <div className="section-header">
-              <span className="lotus">❀</span> Our Services
-            </div>
-            <div className="carousel-wrap">
-              <button
-                className="arrow left"
-                onClick={() => handleCarouselScroll(servicesCarouselRef, "left", setServicesScrollProgress)}
-                aria-label="Scroll left"
-              >
-                ‹
-              </button>
-              <button
-                className="arrow right"
-                onClick={() => handleCarouselScroll(servicesCarouselRef, "right", setServicesScrollProgress)}
-                aria-label="Scroll right"
-              >
-                ›
-              </button>
-
-              <div
-                className="cards-carousel"
-                ref={servicesCarouselRef}
-                onScroll={() => updateScrollProgress(servicesCarouselRef, setServicesScrollProgress)}
-              >
-                {loadingServices ? (
-                  Array.from({ length: 3 }).map((_, i) => (
-                    <div className="card skeleton-card" key={i}>
-                      <div className="skeleton skeleton-img"></div>
-                      <div className="skeleton skeleton-title"></div>
-                      <div className="skeleton skeleton-desc"></div>
-                    </div>
-                  ))
-                ) : filteredServices.length === 0 ? (
-                  <div className="no-results">No matching services found.</div>
-                ) : (
-                  filteredServices.map((srv) => (
-                    <div className="card" key={srv.id}>
-                      <img
-                        className="card-img"
-                        src={getServiceImage(srv.image, srv.name)}
-                        alt={srv.name}
-                      />
-                      <div className="card-body">
-                        <div className="card-icon">
-                          {getServiceIconSymbol(srv.name)}
-                        </div>
-                        <h4>{srv.name}</h4>
-                        <p>{srv.description}</p>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-
-              {filteredServices.length > 0 && (
-                <div className="dots">
-                  {Array.from({ length: Math.ceil(filteredServices.length / 2) }).map((_, idx) => {
-                    const activeIndex = Math.min(
-                      Math.round(servicesScrollProgress * (Math.ceil(filteredServices.length / 2) - 1)),
-                      Math.ceil(filteredServices.length / 2) - 1
-                    );
-                    return (
-                      <div
-                        key={idx}
-                        className={`dot ${activeIndex === idx ? "active" : ""}`}
-                        onClick={() => {
-                          if (servicesCarouselRef.current) {
-                            const maxScroll = servicesCarouselRef.current.scrollWidth - servicesCarouselRef.current.clientWidth;
-                            servicesCarouselRef.current.scrollTo({
-                              left: (idx / (Math.ceil(filteredServices.length / 2) - 1)) * maxScroll,
-                              behavior: "smooth"
-                            });
-                          }
-                        }}
-                      />
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          </section>
 
           {/* Our Healers */}
           <section id="healers" className="section">
@@ -611,6 +606,128 @@ export default function AboutClient() {
               )}
             </div>
           </section>
+
+
+          {/* Our Services */}
+          <section id="services" className="section">
+            <div className="section-header">
+              <span className="lotus">❀</span> Our Featured Services
+            </div>
+
+            {loadingServices ? (
+              <div className="carousel-viewport">
+                <div className="carousel-track" style={{ display: "flex", gap: "16px" }}>
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="carousel-slide-item"
+                      style={{
+                        flex: `0 0 ${100 / visibleCount}%`,
+                        width: `${100 / visibleCount}%`,
+                        boxSizing: "border-box",
+                        padding: "0 8px"
+                      }}
+                    >
+                      <div className="featured-item-card skeleton-card">
+                        <div className="featured-card-media-wrapper skeleton skeleton-img"></div>
+                        <div className="featured-card-body">
+                          <div className="skeleton skeleton-title"></div>
+                          <div className="skeleton skeleton-desc"></div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : featuredServices.length === 0 ? (
+              <div className="empty-catalog-card glass-panel" style={{ padding: "30px", textAlign: "center", color: "#6b4d8a" }}>
+                No featured services found.
+              </div>
+            ) : (
+              <div className="carousel-container-relative">
+                {maxFeaturedIndex > 0 && (
+                  <button
+                    onClick={handlePrevFeatured}
+                    disabled={featuredIndex === 0}
+                    className="arrow-nav-btn absolute-left"
+                    aria-label="Previous service"
+                  >
+                    <ChevronLeft size={16} />
+                  </button>
+                )}
+
+                <div className="carousel-viewport">
+                  <div
+                    className="carousel-track"
+                    style={{
+                      transform: `translateX(-${featuredIndex * (100 / visibleCount)}%)`,
+                      transition: "transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)",
+                      display: "flex",
+                      width: "100%"
+                    }}
+                  >
+                    {featuredServices.map((srv) => (
+                      <div
+                        key={srv.id}
+                        className="carousel-slide-item"
+                        style={{
+                          flex: `0 0 ${100 / visibleCount}%`,
+                          width: `${100 / visibleCount}%`,
+                          boxSizing: "border-box",
+                          padding: "0 8px"
+                        }}
+                      >
+                        <div className="featured-item-card">
+                          <div className="featured-card-media-wrapper">
+                            <img
+                              src={getServiceImage(srv.image)}
+                              alt={srv.name}
+                              className="featured-media-img"
+                            />
+                          </div>
+                          <div className="featured-card-body">
+                            <h4 className="featured-card-title">{srv.name}</h4>
+                            <p className="featured-card-desc">{srv.description}</p>
+                            <Link
+                              href={`/services/${srv.id}`}
+                              className="learn-more-link"
+                            >
+                              Learn More <ArrowRight size={14} className="arrow-icon" />
+                            </Link>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {maxFeaturedIndex > 0 && (
+                  <button
+                    onClick={handleNextFeatured}
+                    disabled={featuredIndex >= maxFeaturedIndex}
+                    className="arrow-nav-btn absolute-right"
+                    aria-label="Next service"
+                  >
+                    <ChevronRight size={16} />
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* Slider pagination dots for slides slider controls */}
+            {maxFeaturedIndex > 0 && (
+              <div className="carousel-dots">
+                {Array.from({ length: maxFeaturedIndex + 1 }).map((_, idx) => (
+                  <button
+                    key={idx}
+                    className={`carousel-dot ${featuredIndex === idx ? "active" : ""}`}
+                    onClick={() => setFeaturedIndex(idx)}
+                  />
+                ))}
+              </div>
+            )}
+          </section>
+
         </main>
 
         {/* ================= RIGHT PANEL ================= */}
@@ -677,19 +794,6 @@ export default function AboutClient() {
                 <div className="impact-label">Years of Trust</div>
               </div>
             </div>
-          </div>
-
-          {/* Certifications */}
-          <div id="certifications" className="panel">
-            <h3><span className="lotus">❀</span> Certifications &amp; Recognition</h3>
-            <div className="certs">
-              <div className="cert">ISO 9001<br />Certified</div>
-              <div className="cert">IARA<br />Accredited</div>
-              <div className="cert">AADP<br />Member</div>
-            </div>
-            <button className="view-btn" onClick={() => setShowCertsModal(true)}>
-              View All Certifications
-            </button>
           </div>
 
           {/* Testimonial Panel */}
@@ -1151,6 +1255,158 @@ export default function AboutClient() {
           font-size: 20px;
           font-weight: 700;
           font-family: var(--font-serif) !important;
+        }
+
+        /* Carousel Catalog Layout */
+        .carousel-container-relative {
+          position: relative;
+          width: 100%;
+        }
+        .carousel-viewport {
+          width: 100%;
+          overflow: hidden;
+          padding: 6px 0;
+        }
+        .arrow-nav-btn {
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          background: #ffffff;
+          border: 1px solid rgba(168, 85, 247, 0.15);
+          color: #7c3aed;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+          transition: var(--transition-fast);
+        }
+        .arrow-nav-btn.absolute-left {
+          position: absolute;
+          left: -18px;
+          top: 36%;
+          transform: translateY(-50%);
+          z-index: 10;
+        }
+        .arrow-nav-btn.absolute-right {
+          position: absolute;
+          right: -18px;
+          top: 36%;
+          transform: translateY(-50%);
+          z-index: 10;
+        }
+        .arrow-nav-btn:hover:not(:disabled) {
+          background: #fbf8ff;
+          border-color: #7c3aed;
+          box-shadow: 0 4px 16px rgba(124, 58, 237, 0.12);
+        }
+        .arrow-nav-btn:disabled {
+          opacity: 0.3;
+          cursor: not-allowed;
+        }
+
+        /* Featured Cards */
+        .featured-item-card {
+          background: transparent;
+          border: none;
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          text-align: left;
+          transition: var(--transition-smooth);
+          width: 100%;
+        }
+        .featured-item-card:hover {
+          transform: translateY(-4px);
+        }
+        .featured-card-media-wrapper {
+          width: 100%;
+          aspect-ratio: 4/3;
+          border-radius: 16px;
+          overflow: hidden;
+          background: #fbf8ff;
+          margin-bottom: 16px;
+          box-shadow: 0 8px 24px rgba(124, 58, 237, 0.08);
+        }
+        .featured-media-img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          transition: transform 0.5s ease;
+        }
+        .featured-item-card:hover .featured-media-img {
+          transform: scale(1.05);
+        }
+        .featured-card-body {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 8px;
+          padding: 0 4px;
+          width: 100%;
+        }
+        .featured-card-title {
+          font-family: var(--font-serif);
+          font-size: 1.1rem;
+          color: #1e1b4b;
+          font-weight: 700 !important;
+          line-height: 1.2;
+          margin: 0;
+        }
+        .featured-card-desc {
+          font-size: 0.78rem;
+          line-height: 1.45;
+          color: #6b7280;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+          margin: 0;
+        }
+        .learn-more-link {
+          background: transparent;
+          border: none;
+          color: #7c3aed;
+          font-size: 0.78rem;
+          font-weight: 700;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          padding: 4px 0;
+          transition: var(--transition-fast);
+          margin-top: 4px;
+          text-decoration: none;
+        }
+        .learn-more-link:hover {
+          color: #4c1d95;
+        }
+        .learn-more-link:hover .arrow-icon {
+          transform: translateX(2px);
+        }
+        .arrow-icon {
+          transition: transform 0.2s ease;
+        }
+
+        .carousel-dots {
+          display: flex;
+          justify-content: center;
+          gap: 6px;
+          margin-top: 10px;
+        }
+        .carousel-dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: rgba(168, 85, 247, 0.15);
+          border: none;
+          cursor: pointer;
+          transition: var(--transition-fast);
+        }
+        .carousel-dot.active {
+          background: #7c3aed;
+          width: 14px;
+          border-radius: 99px;
         }
 
         .carousel-wrap {

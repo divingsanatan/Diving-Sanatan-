@@ -109,7 +109,7 @@ export default function Home() {
       if (query) {
         const decodedQuery = decodeURIComponent(query);
         setSearchQuery(decodedQuery);
-        
+
         // Match the category based on query contents
         const q = decodedQuery.toLowerCase();
         let category = "Stress";
@@ -122,9 +122,9 @@ export default function Home() {
         } else if (q.includes("direction") || q.includes("lost") || q.includes("career") || q.includes("purpose")) {
           category = "No life direction";
         }
-        
+
         startQuiz(category);
-        
+
         // Clean up the URL query params so it doesn't re-trigger on reload
         const newUrl = window.location.pathname;
         window.history.replaceState({}, document.title, newUrl);

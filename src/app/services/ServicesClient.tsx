@@ -337,7 +337,7 @@ export default function ServicesPage() {
 
       <main className="services-main-container">
         <div className="services-grid-layout">
-          
+
           {/* ================= LEFT SIDEBAR ================= */}
           <aside className="left-sidebar">
             {/* Search Input Box */}
@@ -457,7 +457,7 @@ export default function ServicesPage() {
                   </button>
                 </div>
               </div>
-              
+
               {/* Background lotus outlines */}
               <div className="banner-lotus-watermark">
                 <svg viewBox="0 0 100 100" className="banner-watermark-svg">
@@ -599,7 +599,7 @@ export default function ServicesPage() {
                       <div key={prg.id} className="program-item-card">
                         {isPopular && <span className="prog-badge badge-popular">Popular</span>}
                         {isNew && <span className="prog-badge badge-new">New</span>}
-                        
+
                         <div className="program-media">
                           <img
                             src={getServiceImage(prg.image)}
@@ -646,7 +646,7 @@ export default function ServicesPage() {
                   <h5>1. Choose a Service</h5>
                   <p>Explore and select the service that resonates with you.</p>
                 </div>
-                
+
                 <div className="flow-arrow">
                   <ChevronRight size={16} strokeWidth={1.5} />
                 </div>

@@ -86,18 +86,23 @@
 }
 
 .admin-lte-theme .logout-btn {
-  background-color: #dc3545 !important;
-  color: #fff !important;
-  border: none !important;
-  border-radius: 4px !important;
-  padding: 8px !important;
+  background-color: rgba(239, 68, 68, 0.08) !important;
+  color: #f87171 !important;
+  border: 1px solid rgba(239, 68, 68, 0.25) !important;
+  border-radius: 8px !important;
+  padding: 10px !important;
   font-size: 0.85rem !important;
   width: 100% !important;
+  font-weight: 600 !important;
   cursor: pointer !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .admin-lte-theme .logout-btn:hover {
-  background-color: #c82333 !important;
+  background-color: #dc3545 !important;
+  color: #fff !important;
+  border-color: #dc3545 !important;
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.25) !important;
 }
 
 /* Header & Content Panel */
@@ -105,6 +110,7 @@
   background-color: var(--admin-bg-base) !important;
   padding: 20px !important;
   flex: 1 !important;
+  min-width: 0 !important;
 }
 
 /* Header Navbar */
@@ -157,6 +163,7 @@
   display: flex !important;
   flex-direction: column !important;
   flex: 1 !important;
+  min-width: 0 !important;
 }
 
 /* Breadcrumbs Section */
@@ -400,8 +407,8 @@
   display: flex !important;
   padding-left: 0 !important;
   list-style: none !important;
-  border-radius: 4px !important;
   margin: 0 !important;
+  gap: 6px !important;
 }
 
 .admin-lte-theme .page-item {
@@ -410,134 +417,141 @@
 
 .admin-lte-theme .page-item button {
   position: relative !important;
-  display: block !important;
-  padding: .5rem .75rem !important;
-  margin-left: -1px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 12px !important;
+  min-width: 34px !important;
+  height: 34px !important;
   line-height: 1.25 !important;
-  color: #007bff !important;
+  color: #4b5563 !important;
   background-color: #fff !important;
-  border: 1px solid #dee2e6 !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  border-radius: 8px !important;
   font-size: 0.85rem !important;
+  font-weight: 500 !important;
   cursor: pointer !important;
-  transition: all 0.1s ease !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .admin-lte-theme .page-item button:hover {
-  color: #0056b3 !important;
-  background-color: #e9ecef !important;
-  border-color: #dee2e6 !important;
+  color: #7c3aed !important;
+  background-color: rgba(124, 58, 237, 0.05) !important;
+  border-color: rgba(124, 58, 237, 0.2) !important;
 }
 
 .admin-lte-theme .page-item.active button {
   z-index: 3 !important;
   color: #fff !important;
-  background-color: #007bff !important;
-  border-color: #007bff !important;
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%) !important;
+  border-color: #7c3aed !important;
+  box-shadow: 0 4px 10px rgba(124, 58, 237, 0.2) !important;
 }
 
 .admin-lte-theme .page-item.disabled button {
-  color: #6c757d !important;
+  color: #9ca3af !important;
   pointer-events: none !important;
-  cursor: auto !important;
-  background-color: #fff !important;
-  border-color: #dee2e6 !important;
-  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+  background-color: rgba(0, 0, 0, 0.02) !important;
+  border-color: rgba(0, 0, 0, 0.04) !important;
+  opacity: 0.5 !important;
 }
 
-/* Button overrides */
-.admin-lte-theme button.premium-interactive-button,
+/* Button overrides - styled for premium look */
 .admin-lte-theme .btn,
 .admin-lte-theme .sync-btn,
 .admin-lte-theme .tbl-btn {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  font-weight: 400 !important;
-  color: #212529 !important;
+  font-weight: 600 !important;
+  color: #334155 !important;
   text-align: center !important;
   vertical-align: middle !important;
   cursor: pointer !important;
   user-select: none !important;
-  background-color: transparent !important;
-  border: 1px solid transparent !important;
-  padding: .375rem .75rem !important;
+  background-color: rgba(0, 0, 0, 0.04) !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  padding: 0.5rem 1.25rem !important;
   font-size: 0.88rem !important;
   line-height: 1.5 !important;
-  border-radius: .25rem !important;
-  transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out !important;
+  border-radius: 10px !important;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
   transform: none !important;
   box-shadow: none !important;
 }
 
-.admin-lte-theme button.premium-interactive-button:hover,
-.admin-lte-theme .btn:hover {
-  transform: none !important;
+.admin-lte-theme .btn:hover,
+.admin-lte-theme .sync-btn:hover,
+.admin-lte-theme .tbl-btn:hover {
+  transform: translateY(-2.5px) !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
+}
+
+.admin-lte-theme .btn:active,
+.admin-lte-theme .sync-btn:active,
+.admin-lte-theme .tbl-btn:active {
+  transform: translateY(0) !important;
   box-shadow: none !important;
 }
 
-.admin-lte-theme button.premium-interactive-button[data-variant="gold"],
-.admin-lte-theme button.premium-interactive-button[data-variant="primary"],
 .admin-lte-theme .btn-primary {
   color: #fff !important;
-  background-color: #007bff !important;
-  border-color: #007bff !important;
+  background-color: #7c3aed !important;
+  border-color: #7c3aed !important;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.15) !important;
 }
 
-.admin-lte-theme button.premium-interactive-button[data-variant="gold"]:hover,
-.admin-lte-theme button.premium-interactive-button[data-variant="primary"]:hover,
 .admin-lte-theme .btn-primary:hover {
-  background-color: #0069d9 !important;
-  border-color: #0062cc !important;
+  background-color: #6d28d9 !important;
+  border-color: #6d28d9 !important;
+  box-shadow: 0 6px 16px rgba(124, 58, 237, 0.25) !important;
 }
 
-.admin-lte-theme button.premium-interactive-button[data-variant="secondary"],
-.admin-lte-theme .btn-secondary {
-  color: #fff !important;
-  background-color: #6c757d !important;
-  border-color: #6c757d !important;
+.admin-lte-theme .btn-secondary,
+.admin-lte-theme .sync-btn {
+  color: #475569 !important;
+  background-color: rgba(0, 0, 0, 0.04) !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
 }
 
-.admin-lte-theme button.premium-interactive-button[data-variant="secondary"]:hover,
-.admin-lte-theme .btn-secondary:hover {
-  background-color: #5a6268 !important;
-  border-color: #545b62 !important;
+.admin-lte-theme .btn-secondary:hover,
+.admin-lte-theme .sync-btn:hover {
+  color: #7c3aed !important;
+  background-color: rgba(124, 58, 237, 0.05) !important;
+  border-color: rgba(124, 58, 237, 0.25) !important;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.08) !important;
 }
 
-.admin-lte-theme button.premium-interactive-button[data-variant="danger"],
 .admin-lte-theme .btn-danger {
-  color: #fff !important;
-  background-color: #dc3545 !important;
-  border-color: #dc3545 !important;
+  color: #991b1b !important;
+  background-color: #fee2e2 !important;
+  border: 1px solid rgba(239, 68, 68, 0.2) !important;
 }
 
-.admin-lte-theme button.premium-interactive-button[data-variant="danger"]:hover,
 .admin-lte-theme .btn-danger:hover {
-  background-color: #c82333 !important;
-  border-color: #bd2130 !important;
+  background-color: #fecaca !important;
+  border-color: rgba(239, 68, 68, 0.4) !important;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15) !important;
 }
 
 .admin-lte-theme .btn-success {
-  color: #fff !important;
-  background-color: #28a745 !important;
-  border-color: #28a745 !important;
+  color: #064e3b !important;
+  background-color: #a7f3d0 !important;
+  border: 1px solid rgba(16, 185, 129, 0.2) !important;
 }
 
 .admin-lte-theme .btn-success:hover {
-  background-color: #218838 !important;
-  border-color: #1e7e34 !important;
+  background-color: #6ee7b7 !important;
+  border-color: rgba(16, 185, 129, 0.4) !important;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15) !important;
 }
 
 /* Small Buttons */
 .admin-lte-theme .btn-sm {
-  padding: .25rem .5rem !important;
+  padding: 6px 14px !important;
   font-size: .78rem !important;
-  line-height: 1.5 !important;
-  border-radius: .2rem !important;
-}
-
-/* Sweep shine disables */
-.admin-lte-theme .button-sweep-shine {
-  display: none !important;
+  border-radius: 8px !important;
 }
 
 /* Modals */
@@ -556,7 +570,7 @@
 /* Utilities */
 .admin-lte-theme .text-right { text-align: right !important; }
 .admin-lte-theme .text-center { text-align: center !important; }
-.admin-lte-theme .flex-between { display: flex !important; justify-content: space-between !important; align-items: center !important; }
+.admin-lte-theme .flex-between { display: flex !important; justify-content: space-between !important; align-items: center !important; flex-wrap: wrap !important; gap: 10px !important; }
 .admin-lte-theme .category-badge,
 .admin-lte-theme .badge-span,
 .admin-lte-theme .type-badge,
@@ -678,3 +692,120 @@
   z-index: 1040 !important;
   transition: opacity 0.3s ease !important;
 }
+
+/* Modern Dashboard Header & Card Styling */
+.admin-lte-theme .dashboard-header-section {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+  gap: 15px !important;
+  margin-bottom: 24px !important;
+}
+
+.admin-lte-theme .dashboard-title {
+  font-size: 1.8rem !important;
+  font-weight: 700 !important;
+  color: #4c1d95 !important; /* Deep Premium Purple */
+  margin: 0 0 6px 0 !important;
+  letter-spacing: -0.5px !important;
+  font-family: var(--font-serif), inherit !important;
+}
+
+.admin-lte-theme .dashboard-subtitle {
+  font-size: 0.95rem !important;
+  color: #6b7280 !important;
+  margin: 0 !important;
+}
+
+.admin-lte-theme .stats-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
+  gap: 20px !important;
+  margin-bottom: 28px !important;
+  width: 100% !important;
+}
+
+.admin-lte-theme .stat-card-modern {
+  background-color: #ffffff !important;
+  border: 1px solid rgba(124, 58, 237, 0.08) !important;
+  border-radius: 16px !important;
+  padding: 20px 24px !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.01) !important;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.admin-lte-theme .stat-card-modern:hover {
+  transform: translateY(-4px) !important;
+  box-shadow: 0 12px 20px -4px rgba(124, 58, 237, 0.08), 0 4px 12px -2px rgba(124, 58, 237, 0.04) !important;
+  border-color: rgba(124, 58, 237, 0.2) !important;
+}
+
+.admin-lte-theme .stat-card-left {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.admin-lte-theme .stat-card-label {
+  font-size: 0.85rem !important;
+  color: #6b7280 !important;
+  font-weight: 500 !important;
+  margin-bottom: 6px !important;
+  text-transform: none !important;
+  letter-spacing: normal !important;
+}
+
+.admin-lte-theme .stat-card-value {
+  font-size: 1.85rem !important;
+  font-weight: 700 !important;
+  color: #1e1b4b !important;
+  line-height: 1.2 !important;
+  margin-bottom: 6px !important;
+}
+
+.admin-lte-theme .stat-card-trend {
+  font-size: 0.8rem !important;
+  font-weight: 600 !important;
+}
+
+.admin-lte-theme .stat-card-trend.up {
+  color: #10b981 !important; /* Premium Green */
+}
+
+.admin-lte-theme .stat-card-trend.attention {
+  color: #f59e0b !important; /* Warm Amber */
+}
+
+.admin-lte-theme .stat-card-trend.neutral {
+  color: #6b7280 !important; /* Neutral Muted */
+}
+
+.admin-lte-theme .stat-card-right {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.admin-lte-theme .stat-icon-wrapper {
+  width: 44px !important;
+  height: 44px !important;
+  border-radius: 12px !important;
+  background-color: rgba(124, 58, 237, 0.08) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: #7c3aed !important;
+  transition: all 0.3s ease !important;
+}
+
+.admin-lte-theme .stat-card-modern:hover .stat-icon-wrapper {
+  background-color: #7c3aed !important;
+  color: #ffffff !important;
+  transform: scale(1.05) !important;
+}
+

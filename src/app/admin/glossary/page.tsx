@@ -3,7 +3,9 @@
 import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { GlossaryTerm, GlossaryIllustration } from "@/types/database";
+import { GlossaryTerm, GlossaryIllustration, GlossaryCategory } from "@/types/database";
+import { ImageCropperModal } from "@/components/ui/ImageCropperModal";
+import StatsDashboard from "@/components/admin/StatsDashboard";
 
 const ILLUSTRATION_OPTIONS: { value: GlossaryIllustration; label: string }[] = [
   { value: null, label: "None" },
@@ -19,12 +21,24 @@ export default function AdminGlossaryPage() {
   const [editMode, setEditMode] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
 
+  // Tab & Category states
+  const [activeTab, setActiveTab] = useState<"terms" | "categories">("terms");
+  const [categories, setCategories] = useState<GlossaryCategory[]>([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+
+  // Category form states
+  const [categoryName, setCategoryName] = useState("");
+  const [editCategoryMode, setEditCategoryMode] = useState(false);
+  const [editCategoryId, setEditCategoryId] = useState<string | null>(null);
+
   // Form states
   const [word, setWord] = useState("");
   const [phonetic, setPhonetic] = useState("");
   const [category, setCategory] = useState("");
   const [definition, setDefinition] = useState("");
-  const [illustration, setIllustration] = useState<GlossaryIllustration>(null);
+  const [illustration, setIllustration] = useState("");
+  const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   // Modal and pagination state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -46,16 +60,97 @@ export default function AdminGlossaryPage() {
     }
   };
 
+  const loadCategories = async () => {
+    try {
+      setCategoriesLoading(true);
+      const res = await fetch("/api/glossary/categories");
+      const json = await res.json();
+      if (json.success) {
+        setCategories(json.data);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setCategoriesLoading(false);
+    }
+  };
+
   useEffect(() => {
     loadTerms();
+    loadCategories();
   }, []);
+
+  const resetCategoryForm = () => {
+    setCategoryName("");
+    setEditCategoryMode(false);
+    setEditCategoryId(null);
+  };
+
+  const handleEditCategory = (cat: GlossaryCategory) => {
+    setEditCategoryMode(true);
+    setEditCategoryId(cat.id);
+    setCategoryName(cat.name);
+  };
+
+  const handleCategorySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!categoryName.trim()) {
+      alert("Category name is required.");
+      return;
+    }
+
+    const payload = {
+      name: categoryName.trim(),
+    };
+
+    try {
+      const url = "/api/glossary/categories";
+      const method = editCategoryMode && editCategoryId ? "PUT" : "POST";
+      const body = editCategoryMode && editCategoryId ? { id: editCategoryId, ...payload } : payload;
+
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const json = await res.json();
+      if (json.success) {
+        alert(editCategoryMode ? "Category updated successfully!" : "Category created successfully!");
+        resetCategoryForm();
+        loadCategories();
+        loadTerms();
+      } else {
+        alert(json.error || "Operation failed.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Something went wrong. Please try again.");
+    }
+  };
+
+  const handleDeleteCategory = async (id: string, name: string) => {
+    if (!confirm(`Delete glossary category "${name}"? This will unlink it from all associated glossary terms.`)) return;
+    try {
+      const res = await fetch(`/api/glossary/categories?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+      const json = await res.json();
+      if (json.success) {
+        resetCategoryForm();
+        loadCategories();
+        loadTerms();
+      } else {
+        alert(json.error || "Failed to delete category.");
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const resetForm = () => {
     setWord("");
     setPhonetic("");
     setCategory("");
     setDefinition("");
-    setIllustration(null);
+    setIllustration("");
     setEditMode(false);
     setEditId(null);
     setIsModalOpen(false);
@@ -68,7 +163,7 @@ export default function AdminGlossaryPage() {
     setPhonetic("");
     setCategory("");
     setDefinition("");
-    setIllustration(null);
+    setIllustration("");
     setIsModalOpen(true);
   };
 
@@ -79,7 +174,7 @@ export default function AdminGlossaryPage() {
     setPhonetic(term.phonetic);
     setCategory(term.category);
     setDefinition(term.definition);
-    setIllustration(term.illustration ?? null);
+    setIllustration(term.illustration ?? "");
     setIsModalOpen(true);
   };
 
@@ -95,7 +190,7 @@ export default function AdminGlossaryPage() {
       phonetic: phonetic.trim(),
       category: category.trim(),
       definition: definition.trim(),
-      illustration,
+      illustration: illustration.trim() || null,
     };
 
     try {
@@ -116,6 +211,55 @@ export default function AdminGlossaryPage() {
       console.error(err);
       alert("Something went wrong. Please try again.");
     }
+  };
+
+  // File upload and cropping helpers
+  const uploadFile = async (file: File): Promise<string | null> => {
+    const formData = new FormData();
+    formData.append("file", file);
+    try {
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+      const json = await res.json();
+      if (json.success) {
+        return json.url;
+      } else {
+        alert("Upload failed: " + json.error);
+        return null;
+      }
+    } catch (err) {
+      console.error("Upload error", err);
+      alert("An error occurred during file upload.");
+      return null;
+    }
+  };
+
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setCropImageSrc(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  };
+
+  const handleCropComplete = async (croppedFile: File) => {
+    setCropImageSrc(null);
+    setUploadingPhoto(true);
+    const url = await uploadFile(croppedFile);
+    if (url) {
+      setIllustration(url);
+    }
+    setUploadingPhoto(false);
+  };
+
+  const handleCropCancel = () => {
+    setCropImageSrc(null);
   };
 
   const handleDelete = async (id: string, termWord: string) => {
@@ -141,129 +285,269 @@ export default function AdminGlossaryPage() {
 
   return (
     <div className="dashboard-content">
-      <div className="dashboard-header-row">
-        <div>
-          <h2>Glossary Manager</h2>
-          <p className="admin-header-desc">
-            Add, edit, or remove metaphysical glossary terms shown on the public glossary page.
-          </p>
-        </div>
-        <div className="header-actions">
-          <button type="button" className="sync-btn" onClick={loadTerms}>
-            Refresh Terms
-          </button>
-          <Button variant="gold" onClick={handleOpenCreate}>
-            + New Term
-          </Button>
-        </div>
+      <StatsDashboard
+        pageType="glossary"
+        actions={
+          <div className="header-actions">
+            {activeTab === "terms" ? (
+              <>
+                <button type="button" className="sync-btn" onClick={loadTerms}>
+                  Refresh Terms
+                </button>
+                <Button variant="gold" onClick={handleOpenCreate}>
+                  + New Term
+                </Button>
+              </>
+            ) : (
+              <button type="button" className="sync-btn" onClick={loadCategories}>
+                Refresh Categories
+              </button>
+            )}
+          </div>
+        }
+      />
+
+
+      <div className="tabs-header">
+        <button
+          type="button"
+          className={`tab-btn ${activeTab === "terms" ? "active" : ""}`}
+          onClick={() => setActiveTab("terms")}
+        >
+          Terms ({terms.length})
+        </button>
+        <button
+          type="button"
+          className={`tab-btn ${activeTab === "categories" ? "active" : ""}`}
+          onClick={() => setActiveTab("categories")}
+        >
+          Categories ({categories.length})
+        </button>
       </div>
 
-      {loading ? (
-        <p className="admin-loading">Loading glossary terms...</p>
+      {activeTab === "terms" ? (
+        loading ? (
+          <p className="admin-loading">Loading glossary terms...</p>
+        ) : (
+          <div className="admin-full-layout">
+            <Card variant="glass" className="admin-table-card">
+              <div className="table-header-bar">
+                <h3 className="column-title">Terms Index ({terms.length})</h3>
+              </div>
+              
+              <div className="table-wrapper">
+                {terms.length === 0 ? (
+                  <div className="empty-state-padding">
+                    <p className="empty-list-msg">No glossary terms found. Click &quot;+ New Term&quot; to create one.</p>
+                  </div>
+                ) : (
+                  <table className="admin-table">
+                    <thead>
+                      <tr>
+                        <th>Term</th>
+                        <th>Category</th>
+                        <th>Definition</th>
+                        <th>Illustration</th>
+                        <th style={{ textAlign: "right" }}>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {paginatedTerms.map((term) => (
+                        <tr key={term.id}>
+                          <td>
+                            <div className="term-word-cell">
+                              <strong>{term.word}</strong>
+                              {term.phonetic && <span className="phonetic-sub">{term.phonetic}</span>}
+                            </div>
+                          </td>
+                          <td>
+                            {term.category ? (
+                              <span className="category-badge">{term.category}</span>
+                            ) : (
+                              <span className="term-meta-uncategorized">None</span>
+                            )}
+                          </td>
+                          <td>
+                            <div className="term-def-cell" title={term.definition}>
+                              {term.definition}
+                            </div>
+                          </td>
+                          <td>
+                            {term.illustration ? (
+                              term.illustration.startsWith("http") || term.illustration.startsWith("/") ? (
+                                <div className="table-illustration-wrapper">
+                                  <a
+                                    href={term.illustration}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    title="View original image"
+                                  >
+                                    <img
+                                      src={term.illustration}
+                                      alt="Illustration preview"
+                                      className="table-illustration-thumb"
+                                    />
+                                  </a>
+                                  <span className="illustration-badge upload-badge" title={term.illustration}>
+                                    Image
+                                  </span>
+                                </div>
+                              ) : (
+                                <span className="illustration-badge">{term.illustration}</span>
+                              )
+                            ) : (
+                              <span className="illustration-none">—</span>
+                            )}
+                          </td>
+                          <td>
+                            <div className="action-btns-row">
+                              <button
+                                type="button"
+                                className="edit-row-btn"
+                                onClick={() => handleEdit(term)}
+                              >
+                                Edit
+                              </button>
+                              <button
+                                type="button"
+                                className="delete-row-btn"
+                                onClick={() => handleDelete(term.id, term.word)}
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+
+              {terms.length > 0 && (
+                <div className="admin-pagination-wrapper">
+                  <span className="pagination-info">
+                    Showing {(safePage - 1) * PAGE_SIZE + 1} to {Math.min(safePage * PAGE_SIZE, terms.length)} of {terms.length} entries
+                  </span>
+                  <ul className="admin-pagination">
+                    <li className={`page-item ${safePage === 1 ? 'disabled' : ''}`}>
+                      <button onClick={() => setCurrentPage(1)} disabled={safePage === 1}>«</button>
+                    </li>
+                    <li className={`page-item ${safePage === 1 ? 'disabled' : ''}`}>
+                      <button onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={safePage === 1}>Prev</button>
+                    </li>
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                      <li key={page} className={`page-item ${page === safePage ? 'active' : ''}`}>
+                        <button onClick={() => setCurrentPage(page)}>{page}</button>
+                      </li>
+                    ))}
+                    <li className={`page-item ${safePage === totalPages ? 'disabled' : ''}`}>
+                      <button onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={safePage === totalPages}>Next</button>
+                    </li>
+                    <li className={`page-item ${safePage === totalPages ? 'disabled' : ''}`}>
+                      <button onClick={() => setCurrentPage(totalPages)} disabled={safePage === totalPages}>»</button>
+                    </li>
+                  </ul>
+                </div>
+              )}
+            </Card>
+          </div>
+        )
       ) : (
-        <div className="admin-full-layout">
-          <Card variant="glass" className="admin-table-card">
-            <div className="table-header-bar">
-              <h3 className="column-title">Terms Index ({terms.length})</h3>
+        categoriesLoading ? (
+          <p className="admin-loading">Loading categories...</p>
+        ) : (
+          <div className="admin-split-layout">
+            <div className="split-list-col">
+              <Card variant="glass" className="admin-table-card">
+                <div className="table-header-bar">
+                  <h3 className="column-title">Categories List ({categories.length})</h3>
+                </div>
+                <div className="table-wrapper">
+                  <table className="admin-table">
+                    <thead>
+                      <tr>
+                        <th>ID</th>
+                        <th>Category Name</th>
+                        <th style={{ textAlign: "right" }}>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {categories.length === 0 ? (
+                        <tr>
+                          <td colSpan={3} className="text-center" style={{ padding: "24px", color: "hsl(var(--text-muted))" }}>
+                            No categories found. Create one to get started.
+                          </td>
+                        </tr>
+                      ) : (
+                        categories.map((cat) => (
+                          <tr key={cat.id}>
+                            <td style={{ fontFamily: "monospace", fontSize: "0.82rem" }}>{cat.id}</td>
+                            <td><strong>{cat.name}</strong></td>
+                            <td>
+                              <div className="action-btns-row">
+                                <button
+                                  type="button"
+                                  className="edit-row-btn"
+                                  onClick={() => handleEditCategory(cat)}
+                                >
+                                  Edit
+                                </button>
+                                <button
+                                  type="button"
+                                  className="delete-row-btn"
+                                  onClick={() => handleDeleteCategory(cat.id, cat.name)}
+                                >
+                                  Delete
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </Card>
             </div>
             
-            <div className="table-wrapper">
-              {terms.length === 0 ? (
-                <div className="empty-state-padding">
-                  <p className="empty-list-msg">No glossary terms found. Click &quot;+ New Term&quot; to create one.</p>
-                </div>
-              ) : (
-                <table className="admin-table">
-                  <thead>
-                    <tr>
-                      <th>Term</th>
-                      <th>Category</th>
-                      <th>Definition</th>
-                      <th>Illustration</th>
-                      <th style={{ textAlign: "right" }}>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {paginatedTerms.map((term) => (
-                      <tr key={term.id}>
-                        <td>
-                          <div className="term-word-cell">
-                            <strong>{term.word}</strong>
-                            {term.phonetic && <span className="phonetic-sub">{term.phonetic}</span>}
-                          </div>
-                        </td>
-                        <td>
-                          {term.category ? (
-                            <span className="category-badge">{term.category}</span>
-                          ) : (
-                            <span className="term-meta-uncategorized">None</span>
-                          )}
-                        </td>
-                        <td>
-                          <div className="term-def-cell" title={term.definition}>
-                            {term.definition}
-                          </div>
-                        </td>
-                        <td>
-                          {term.illustration ? (
-                            <span className="illustration-badge">{term.illustration}</span>
-                          ) : (
-                            <span className="illustration-none">—</span>
-                          )}
-                        </td>
-                        <td>
-                          <div className="action-btns-row">
-                            <button
-                              type="button"
-                              className="edit-row-btn"
-                              onClick={() => handleEdit(term)}
-                            >
-                              Edit
-                            </button>
-                            <button
-                              type="button"
-                              className="delete-row-btn"
-                              onClick={() => handleDelete(term.id, term.word)}
-                            >
-                              Delete
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
+            <div className="split-form-col">
+              <Card variant="glass" className="category-form-card" style={{ padding: "24px" }}>
+                <h3 style={{ fontFamily: "var(--font-serif)", color: "#4c1d95", fontSize: "1.2rem", marginBottom: "16px" }}>
+                  {editCategoryMode ? "Edit Category" : "Create Category"}
+                </h3>
+                <form onSubmit={handleCategorySubmit} className="admin-catalog-form">
+                  <div className="form-group" style={{ marginBottom: "16px" }}>
+                    <label>Category Name *</label>
+                    <input
+                      type="text"
+                      className="glass-input"
+                      required
+                      placeholder="e.g. Ritual Practice"
+                      value={categoryName}
+                      onChange={(e) => setCategoryName(e.target.value)}
+                    />
+                  </div>
+                  <div style={{ display: "flex", gap: "10px" }}>
+                    {editCategoryMode && (
+                      <button
+                        type="button"
+                        className="modal-cancel-btn"
+                        onClick={resetCategoryForm}
+                        style={{ flex: 1 }}
+                      >
+                        Cancel
+                      </button>
+                    )}
+                    <Button variant="gold" type="submit" style={{ flex: 2 }}>
+                      {editCategoryMode ? "Update Category" : "Create Category"}
+                    </Button>
+                  </div>
+                </form>
+              </Card>
             </div>
-
-            {terms.length > 0 && (
-              <div className="admin-pagination-wrapper">
-                <span className="pagination-info">
-                  Showing {(safePage - 1) * PAGE_SIZE + 1} to {Math.min(safePage * PAGE_SIZE, terms.length)} of {terms.length} entries
-                </span>
-                <ul className="admin-pagination">
-                  <li className={`page-item ${safePage === 1 ? 'disabled' : ''}`}>
-                    <button onClick={() => setCurrentPage(1)} disabled={safePage === 1}>«</button>
-                  </li>
-                  <li className={`page-item ${safePage === 1 ? 'disabled' : ''}`}>
-                    <button onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={safePage === 1}>Prev</button>
-                  </li>
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                    <li key={page} className={`page-item ${page === safePage ? 'active' : ''}`}>
-                      <button onClick={() => setCurrentPage(page)}>{page}</button>
-                    </li>
-                  ))}
-                  <li className={`page-item ${safePage === totalPages ? 'disabled' : ''}`}>
-                    <button onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={safePage === totalPages}>Next</button>
-                  </li>
-                  <li className={`page-item ${safePage === totalPages ? 'disabled' : ''}`}>
-                    <button onClick={() => setCurrentPage(totalPages)} disabled={safePage === totalPages}>»</button>
-                  </li>
-                </ul>
-              </div>
-            )}
-          </Card>
-        </div>
+          </div>
+        )
       )}
 
       {/* Slide / Popup Modal Form */}
@@ -301,13 +585,18 @@ export default function AdminGlossaryPage() {
 
                   <div className="form-group">
                     <label>Category</label>
-                    <input
-                      type="text"
+                    <select
                       className="glass-input"
-                      placeholder="e.g. Bio-Energy"
                       value={category}
                       onChange={(e) => setCategory(e.target.value)}
-                    />
+                    >
+                      <option value="">Select a Category...</option>
+                      {categories.map((cat) => (
+                        <option key={cat.id} value={cat.name}>
+                          {cat.name}
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
                   <div className="form-group">
@@ -323,22 +612,45 @@ export default function AdminGlossaryPage() {
                   </div>
 
                   <div className="form-group">
-                    <label>Illustration</label>
-                    <select
-                      className="glass-input"
-                      value={illustration ?? ""}
-                      onChange={(e) =>
-                        setIllustration(
-                          e.target.value === "" ? null : (e.target.value as GlossaryIllustration)
-                        )
-                      }
-                    >
-                      {ILLUSTRATION_OPTIONS.map((opt) => (
-                        <option key={opt.label} value={opt.value ?? ""}>
-                          {opt.label}
-                        </option>
-                      ))}
-                    </select>
+                    <label>Illustration Image</label>
+                    <div className="media-input-row">
+                      <input
+                        type="text"
+                        className="glass-input"
+                        placeholder="Image URL or upload a file..."
+                        value={illustration}
+                        onChange={(e) => setIllustration(e.target.value)}
+                      />
+                      <label className="upload-media-btn">
+                        {uploadingPhoto ? "⌛ Uplo..." : "⬆️ Image"}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handlePhotoUpload}
+                          className="hidden-file-input"
+                          style={{ display: "none" }}
+                          disabled={uploadingPhoto}
+                        />
+                      </label>
+                    </div>
+                    {illustration && (
+                      <div className="media-preview-container">
+                        <img
+                          src={illustration}
+                          alt="Illustration Preview"
+                          className="media-preview-img"
+                          style={{ width: "80px", height: "80px", objectFit: "contain", borderRadius: "6px", border: "1px solid rgba(0,0,0,0.1)" }}
+                        />
+                        <button
+                          type="button"
+                          className="delete-row-btn"
+                          style={{ padding: "4px 8px", fontSize: "0.72rem" }}
+                          onClick={() => setIllustration("")}
+                        >
+                          ✕ Clear
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -354,6 +666,15 @@ export default function AdminGlossaryPage() {
             </Card>
           </div>
         </div>
+      )}
+
+      {cropImageSrc && (
+        <ImageCropperModal
+          imageSrc={cropImageSrc}
+          onCropComplete={handleCropComplete}
+          onCancel={handleCropCancel}
+          aspectRatio="1:1"
+        />
       )}
 
       <style jsx>{`
@@ -492,6 +813,34 @@ export default function AdminGlossaryPage() {
           border-radius: 6px;
           text-transform: uppercase;
           white-space: nowrap;
+          max-width: 180px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          display: inline-block;
+          vertical-align: middle;
+        }
+        .table-illustration-wrapper {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .table-illustration-thumb {
+          width: 36px;
+          height: 36px;
+          object-fit: cover;
+          border-radius: 6px;
+          border: 1px solid rgba(168, 85, 247, 0.2);
+          cursor: pointer;
+          transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+        .table-illustration-thumb:hover {
+          transform: scale(1.1);
+          border-color: #7c3aed;
+        }
+        .illustration-badge.upload-badge {
+          background: rgba(168, 85, 247, 0.04);
+          border: 1px solid rgba(168, 85, 247, 0.15);
+          color: #7c3aed;
         }
         .illustration-none {
           color: hsl(var(--text-muted));
@@ -675,6 +1024,89 @@ export default function AdminGlossaryPage() {
         .empty-list-msg {
           color: hsl(var(--text-muted));
           font-size: 0.95rem;
+        }
+        .media-input-row {
+          display: flex;
+          gap: 12px;
+        }
+        .media-input-row input {
+          flex: 1;
+        }
+        .upload-media-btn {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: rgba(168, 85, 247, 0.08);
+          border: 1.5px dashed rgba(168, 85, 247, 0.4);
+          color: #7c3aed;
+          padding: 0 18px;
+          font-size: 0.85rem;
+          font-weight: 600;
+          border-radius: 10px;
+          cursor: pointer;
+          white-space: nowrap;
+          transition: all 0.2s ease;
+        }
+        .upload-media-btn:hover {
+          background: rgba(168, 85, 247, 0.12);
+          border-color: #7c3aed;
+        }
+        .media-preview-container {
+          margin-top: 6px;
+          background: rgba(0, 0, 0, 0.02);
+          border: 1px solid rgba(0, 0, 0, 0.06);
+          border-radius: 10px;
+          padding: 10px;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+        .media-preview-img {
+          width: 80px;
+          height: 60px;
+          object-fit: cover;
+          border-radius: 6px;
+        }
+        .tabs-header {
+          display: flex;
+          gap: 16px;
+          border-bottom: 2px solid rgba(168, 85, 247, 0.08);
+          margin-bottom: 24px;
+        }
+        .tab-btn {
+          background: transparent;
+          border: none;
+          border-bottom: 3px solid transparent;
+          padding: 12px 16px;
+          font-family: var(--font-serif);
+          font-size: 1.1rem;
+          font-weight: 600;
+          color: hsl(var(--text-muted));
+          cursor: pointer;
+          transition: all 0.2s ease;
+          margin-bottom: -2px;
+        }
+        .tab-btn:hover {
+          color: #7c3aed;
+        }
+        .tab-btn.active {
+          color: #4c1d95;
+          border-bottom-color: #7c3aed;
+        }
+        .admin-split-layout {
+          display: grid;
+          grid-template-columns: 1.5fr 1fr;
+          gap: 24px;
+          width: 100%;
+        }
+        .split-list-col, .split-form-col {
+          display: flex;
+          flex-direction: column;
+        }
+        @media (max-width: 992px) {
+          .admin-split-layout {
+            grid-template-columns: 1fr;
+          }
         }
       `}</style>
     </div>

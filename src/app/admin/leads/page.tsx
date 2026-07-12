@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/Card";
+import StatsDashboard from "@/components/admin/StatsDashboard";
 
 interface LeadAnswer {
   id: string;
@@ -228,17 +229,14 @@ Diving Sanatan Wellness Team`);
 
   return (
     <div className="dashboard-content">
-      <div className="dashboard-header-row">
-        <div>
-          <h2>User Profiles</h2>
-          <p className="admin-header-desc">
-            Unified leads &amp; auth users — one record per email, no duplicates.
-          </p>
-        </div>
-        <button className="sync-btn" onClick={fetchLeads}>
-          🔄 Refresh
-        </button>
-      </div>
+      <StatsDashboard
+        pageType="leads"
+        actions={
+          <button className="sync-btn" onClick={fetchLeads}>
+            🔄 Refresh
+          </button>
+        }
+      />
 
       <div className="filters-row">
         <input

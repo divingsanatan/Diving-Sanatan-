@@ -5,8 +5,10 @@ import { Card } from "@/components/ui/Card";
 import { 
   Trash2, Edit, CheckCircle2, AlertCircle, PlusCircle, Search, Filter, MessageSquare, Trash 
 } from "lucide-react";
+import StatsDashboard from "@/components/admin/StatsDashboard";
 
 interface HealerReply {
+
   healerName: string;
   healerAvatar: string;
   healerRole: string;
@@ -161,6 +163,18 @@ export default function QuoraQAAdmin() {
   const [activeCategory, setActiveCategory] = useState("all");
   const [activeTab, setActiveTab] = useState("all"); // all, answered, unanswered
 
+  const defaultCategories = [
+    "Mind & Emotions",
+    "Chakra Healing",
+    "Aura & Energy",
+    "Meditation & Mindfulness",
+    "Reiki Healing"
+  ];
+
+  const [categories, setCategories] = useState<string[]>([]);
+  const [showCatModal, setShowCatModal] = useState(false);
+  const [newCatName, setNewCatName] = useState("");
+
   // Modals States
   const [showQModal, setShowQModal] = useState(false);
   const [isEditingQ, setIsEditingQ] = useState(false);
@@ -207,6 +221,19 @@ export default function QuoraQAAdmin() {
       setQuestions(initialQuestions);
       localStorage.setItem("divingsanatan_quora_questions", JSON.stringify(initialQuestions));
     }
+
+    const storedCats = localStorage.getItem("divingsanatan_quora_categories");
+    if (storedCats) {
+      try {
+        setCategories(JSON.parse(storedCats));
+      } catch (e) {
+        setCategories(defaultCategories);
+      }
+    } else {
+      setCategories(defaultCategories);
+      localStorage.setItem("divingsanatan_quora_categories", JSON.stringify(defaultCategories));
+    }
+
     setLoading(false);
   }, []);
 
@@ -215,12 +242,44 @@ export default function QuoraQAAdmin() {
     localStorage.setItem("divingsanatan_quora_questions", JSON.stringify(newQuestions));
   };
 
+  const saveCategoriesToStorage = (newCats: string[]) => {
+    setCategories(newCats);
+    localStorage.setItem("divingsanatan_quora_categories", JSON.stringify(newCats));
+  };
+
+  const handleAddCategory = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = newCatName.trim();
+    if (!trimmed) return;
+    if (categories.some(c => c.toLowerCase() === trimmed.toLowerCase())) {
+      alert("Category already exists!");
+      return;
+    }
+    const updated = [...categories, trimmed];
+    saveCategoriesToStorage(updated);
+    setNewCatName("");
+    triggerToast(`Category "${trimmed}" added.`);
+  };
+
+  const handleDeleteCategory = (catToDelete: string) => {
+    const count = questions.filter(q => q.category === catToDelete).length;
+    let confirmMsg = `Are you sure you want to delete the category "${catToDelete}"?`;
+    if (count > 0) {
+      confirmMsg = `Warning: There are ${count} question(s) currently assigned to "${catToDelete}". Deleting it will keep the questions but remove the category from the list. Are you sure you want to proceed?`;
+    }
+    if (!window.confirm(confirmMsg)) return;
+
+    const updated = categories.filter(c => c !== catToDelete);
+    saveCategoriesToStorage(updated);
+    triggerToast(`Category "${catToDelete}" removed.`);
+  };
+
   // Question Handlers
   const handleOpenAddQ = () => {
     setIsEditingQ(false);
     setQTitle("");
     setQDesc("");
-    setQCategory("Mind & Emotions");
+    setQCategory(categories[0] || "Mind & Emotions");
     setQAskedBy("Admin Healer");
     setShowQModal(true);
   };
@@ -372,21 +431,27 @@ export default function QuoraQAAdmin() {
         </div>
       )}
 
-      {/* Toolbar Filters Row */}
-      <div className="flex-between mb-3">
-        <p style={{ margin: 0, color: "#6c757d", fontSize: "0.9rem" }}>
-          Manage public spiritual questions and provide expert healer answers.
-        </p>
-        <button className="btn btn-primary btn-sm" onClick={handleOpenAddQ}>
-          <PlusCircle size={12} style={{ marginRight: '6px' }} />
-          Create Question
-        </button>
-      </div>
+      <StatsDashboard
+        pageType="quora-qa"
+        actions={
+          <div style={{ display: "flex", gap: "8px" }}>
+            <button className="btn btn-secondary btn-sm" onClick={() => setShowCatModal(true)}>
+              <Filter size={12} style={{ marginRight: '6px' }} />
+              Manage Categories
+            </button>
+            <button className="btn btn-primary btn-sm" onClick={handleOpenAddQ}>
+              <PlusCircle size={12} style={{ marginRight: '6px' }} />
+              Create Question
+            </button>
+          </div>
+        }
+      />
+
 
       {/* Filter and Search Bar */}
       <div className="filters-bar mb-3">
-        <div style={{ display: "flex", gap: "10px", width: "100%" }}>
-          <div style={{ flex: 1, position: "relative" }}>
+        <div style={{ display: "flex", gap: "10px", width: "100%", flexWrap: "wrap" }}>
+          <div style={{ flex: "1 1 250px", position: "relative" }}>
             <input 
               type="text" 
               placeholder="Search questions by text context..." 
@@ -399,7 +464,7 @@ export default function QuoraQAAdmin() {
             />
           </div>
 
-          <div style={{ width: "200px" }}>
+          <div style={{ flex: "0 1 200px", minWidth: "150px" }}>
             <select 
               value={activeCategory} 
               onChange={(e) => {
@@ -409,11 +474,9 @@ export default function QuoraQAAdmin() {
               className="form-control"
             >
               <option value="all">All Categories</option>
-              <option value="Mind & Emotions">Mind & Emotions</option>
-              <option value="Chakra Healing">Chakra Healing</option>
-              <option value="Aura & Energy">Aura & Energy</option>
-              <option value="Meditation & Mindfulness">Meditation & Mindfulness</option>
-              <option value="Reiki Healing">Reiki Healing</option>
+              {categories.map(cat => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
             </select>
           </div>
         </div>
@@ -454,7 +517,7 @@ export default function QuoraQAAdmin() {
       {loading ? (
         <p className="text-center" style={{ padding: "40px", color: "#6c757d" }}>Loading board data...</p>
       ) : (
-        <Card variant="glass" className="card-primary" style={{ padding: "0 !important" }}>
+        <Card variant="glass" className="admin-table-card card-primary">
           <div className="table-responsive">
             <table className="admin-table">
               <thead>
@@ -465,7 +528,7 @@ export default function QuoraQAAdmin() {
                   <th>Date</th>
                   <th>Status</th>
                   <th>Healer Reply</th>
-                  <th className="text-right">Actions</th>
+                  <th className="text-right" style={{ minWidth: "180px" }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -480,8 +543,10 @@ export default function QuoraQAAdmin() {
                         <span className="category-badge">{q.category}</span>
                       </td>
                       <td>
-                        <strong>{q.title}</strong>
-                        <div style={{ fontSize: "0.78rem", color: "#6c757d", maxWidth: "250px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={q.description}>
+                        <div className="question-title-cell" title={q.title}>
+                          {q.title}
+                        </div>
+                        <div className="question-desc-cell" title={q.description}>
                           {q.description || "No context description."}
                         </div>
                       </td>
@@ -496,7 +561,7 @@ export default function QuoraQAAdmin() {
                         {q.bestAnswer ? (
                           <div style={{ fontSize: "0.8rem", color: "#6d28d9" }}>
                             <strong>{q.bestAnswer.healerName}</strong>
-                            <div style={{ fontSize: "0.72rem", color: "#6c757d", maxWidth: "160px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            <div className="healer-reply-text-cell" title={q.bestAnswer.content}>
                               {q.bestAnswer.content}
                             </div>
                           </div>
@@ -504,7 +569,7 @@ export default function QuoraQAAdmin() {
                           <span style={{ fontSize: "0.8rem", color: "#adb5bd", fontStyle: "italic" }}>No reply yet</span>
                         )}
                       </td>
-                      <td className="text-right">
+                      <td className="text-right" style={{ minWidth: "180px" }}>
                         <div style={{ display: "flex", gap: "4px", justifyContent: "flex-end" }}>
                           <button className="btn btn-primary btn-sm" onClick={() => handleOpenAnswer(q)}>
                             <MessageSquare size={12} style={{ marginRight: "3px" }} />
@@ -560,6 +625,68 @@ export default function QuoraQAAdmin() {
         </Card>
       )}
 
+      {/* Manage Categories Modal */}
+      {showCatModal && (
+        <div className="modal-overlay">
+          <div className="modal-content card card-primary" style={{ width: "450px", padding: "0 !important" }}>
+            <div style={{ borderBottom: "1px solid #dee2e6", padding: "12px 20px", background: "#f8f9fa", fontWeight: "700", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span>Manage Q&A Categories</span>
+              <button style={{ border: "none", background: "none", fontSize: "1.2rem", cursor: "pointer" }} onClick={() => setShowCatModal(false)}>✕</button>
+            </div>
+            
+            <div style={{ padding: "20px" }}>
+              {/* Category list */}
+              <div style={{ maxHeight: "250px", overflowY: "auto", marginBottom: "20px", border: "1px solid #e9ecef", borderRadius: "6px", padding: "10px" }}>
+                {categories.length === 0 ? (
+                  <p style={{ color: "#6c757d", fontStyle: "italic", textAlign: "center", margin: "10px 0" }}>No categories defined. Please add one below.</p>
+                ) : (
+                  categories.map(cat => (
+                    <div key={cat} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", borderBottom: "1px solid #f8f9fa" }} className="category-item-row">
+                      <span style={{ fontWeight: 600, color: "#4b5563" }}>{cat}</span>
+                      <button 
+                        type="button" 
+                        className="btn btn-danger btn-sm" 
+                        style={{ padding: "4px 8px" }} 
+                        onClick={() => handleDeleteCategory(cat)}
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Add category form */}
+              <form onSubmit={handleAddCategory}>
+                <div className="form-group">
+                  <label style={{ fontWeight: 600, marginBottom: "6px", display: "block" }}>Add New Category</label>
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <input 
+                      type="text" 
+                      value={newCatName}
+                      onChange={(e) => setNewCatName(e.target.value)}
+                      placeholder="e.g., Crystal Healing"
+                      className="form-control"
+                      required
+                    />
+                    <button type="submit" className="btn btn-primary" style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                      <PlusCircle size={14} />
+                      Add
+                    </button>
+                  </div>
+                </div>
+              </form>
+
+              <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "20px" }}>
+                <button type="button" className="btn btn-secondary" onClick={() => setShowCatModal(false)}>
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Create / Edit Question Modal */}
       {showQModal && (
         <div className="modal-overlay">
@@ -600,11 +727,9 @@ export default function QuoraQAAdmin() {
                     onChange={(e) => setQCategory(e.target.value)}
                     className="form-control"
                   >
-                    <option value="Mind & Emotions">Mind & Emotions</option>
-                    <option value="Chakra Healing">Chakra Healing</option>
-                    <option value="Aura & Energy">Aura & Energy</option>
-                    <option value="Meditation & Mindfulness">Meditation & Mindfulness</option>
-                    <option value="Reiki Healing">Reiki Healing</option>
+                    {categories.map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
                   </select>
                 </div>
 
@@ -756,15 +881,51 @@ export default function QuoraQAAdmin() {
         .mb-3 {
           margin-bottom: 1rem;
         }
+        :global(.admin-table-card) {
+          padding: 0 !important;
+          overflow: hidden;
+        }
         .table-responsive {
           width: 100%;
           overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+        }
+        .question-title-cell {
+          font-weight: 700;
+          color: #4c1d95;
+          font-size: 0.9rem;
+          line-height: 1.4;
+          max-width: 250px;
+          word-break: break-word;
+          overflow: hidden;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+        }
+        .question-desc-cell {
+          font-size: 0.78rem;
+          color: #6c757d;
+          max-width: 250px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          margin-top: 2px;
+        }
+        .healer-reply-text-cell {
+          font-size: 0.72rem;
+          color: #6c757d;
+          max-width: 160px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
         }
         .category-tabs {
           display: flex;
           border-bottom: 1px solid #dee2e6;
           padding-bottom: 8px;
           gap: 6px;
+          overflow-x: auto;
+          white-space: nowrap;
         }
         .category-tab {
           background: transparent;
@@ -775,6 +936,7 @@ export default function QuoraQAAdmin() {
           color: #6c757d;
           font-size: 0.88rem;
           border-radius: 4px;
+          flex-shrink: 0;
         }
         .category-tab.active, .category-tab:hover {
           background: #e9ecef;

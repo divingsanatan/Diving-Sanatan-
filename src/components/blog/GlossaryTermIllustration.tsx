@@ -132,5 +132,58 @@ export function GlossaryTermIllustration({ illustration }: GlossaryTermIllustrat
     );
   }
 
+  if (illustration && (illustration.startsWith("http") || illustration.startsWith("/"))) {
+    return (
+      <div className="term-graphic-container">
+        <span className="graphic-label">Illustration</span>
+        <div className="aura-chart-svg-wrapper">
+          <img
+            src={illustration}
+            alt="Glossary Term Illustration"
+            style={{ width: "100%", height: "150px", objectFit: "contain", borderRadius: "8px" }}
+          />
+        </div>
+        <style jsx>{`
+          .term-graphic-container {
+            width: 180px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            border-left: 1px solid rgba(0, 0, 0, 0.05);
+            padding-left: 24px;
+          }
+          .graphic-label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: hsl(var(--text-muted));
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+          }
+          .aura-chart-svg-wrapper {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 12px;
+            border: 1px solid rgba(0, 0, 0, 0.03);
+            padding: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+          @media (max-width: 680px) {
+            .term-graphic-container {
+              width: 100%;
+              border-left: none;
+              border-top: 1px solid rgba(0, 0, 0, 0.05);
+              padding-left: 0;
+              padding-top: 20px;
+            }
+          }
+        `}</style>
+      </div>
+    );
+  }
+
   return null;
 }

@@ -10,10 +10,7 @@ function mapGlossaryTerm(row: Record<string, unknown>): GlossaryTerm {
     phonetic: (row.phonetic as string) || "",
     category: (row.category as string) || "",
     definition: row.definition as string,
-    illustration:
-      illustration === "aura-chart" || illustration === "chakra-system"
-        ? illustration
-        : null,
+    illustration: illustration || null,
     createdAt: row.created_at as string | undefined,
   };
 }

@@ -5,9 +5,8 @@ import { useBlog } from "@/app/blog/BlogContext";
 import { usePathname, useRouter } from "next/navigation";
 import { 
   Grid, Flower, Sparkles, Compass, Heart, Volume2, 
-  Flame, Leaf, Shield, BookOpen, Eye, Briefcase, Megaphone, Quote,
-  HelpCircle, MessageSquare, Video, User, Scale, GitFork, ChevronDown, ChevronUp,
-  Library
+  Flame, Leaf, Shield, BookOpen, Quote,
+  HelpCircle, MessageSquare, Video, GitFork, ChevronDown, ChevronUp
 } from "lucide-react";
 
 interface CategoryItem {
@@ -48,7 +47,7 @@ export const BlogSidebar: React.FC = () => {
   React.useEffect(() => {
     async function fetchCategories() {
       try {
-        const res = await fetch("/api/categories");
+        const res = await fetch("/api/blogs/categories");
         const json = await res.json();
         if (json.success) {
           const items = json.data.map((cat: any) => ({
@@ -175,61 +174,6 @@ export const BlogSidebar: React.FC = () => {
           <Video size={16} strokeWidth={1.5} />
           <div className="item-text-container">
             <span className="item-name">Video Transcripts</span>
-          </div>
-        </button>
-
-        {/* Case Studies */}
-        <button 
-          onClick={() => router.push("/blog/case-studies")} 
-          className={`sidebar-item ${pathname === "/blog/case-studies" ? "active" : ""}`}
-        >
-          <Briefcase size={16} strokeWidth={1.5} />
-          <div className="item-text-container">
-            <span className="item-name">Case Studies</span>
-          </div>
-        </button>
-
-        {/* Guided Practices */}
-        <button 
-          onClick={() => router.push("/blog/guided-practices")} 
-          className={`sidebar-item ${pathname === "/blog/guided-practices" ? "active" : ""}`}
-        >
-          <Compass size={16} strokeWidth={1.5} />
-          <div className="item-text-container">
-            <span className="item-name">Guided Practices</span>
-          </div>
-        </button>
-
-        {/* Healer Stories */}
-        <button 
-          onClick={() => router.push("/blog/healer-stories")} 
-          className={`sidebar-item ${pathname === "/blog/healer-stories" ? "active" : ""}`}
-        >
-          <User size={16} strokeWidth={1.5} />
-          <div className="item-text-container">
-            <span className="item-name">Healer Stories</span>
-          </div>
-        </button>
-
-        {/* Media Library */}
-        <button 
-          onClick={() => router.push("/blog/media-library")} 
-          className={`sidebar-item ${pathname === "/blog/media-library" ? "active" : ""}`}
-        >
-          <Library size={16} strokeWidth={1.5} />
-          <div className="item-text-container">
-            <span className="item-name">Media Library</span>
-          </div>
-        </button>
-
-        {/* Announcements */}
-        <button 
-          onClick={() => router.push("/blog/announcements")} 
-          className={`sidebar-item ${pathname === "/blog/announcements" ? "active" : ""}`}
-        >
-          <Megaphone size={16} strokeWidth={1.5} />
-          <div className="item-text-container">
-            <span className="item-name">Announcements</span>
           </div>
         </button>
 

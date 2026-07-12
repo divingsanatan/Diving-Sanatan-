@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/Card";
 import { Plus, Edit, Trash2 } from "lucide-react";
+import StatsDashboard from "@/components/admin/StatsDashboard";
 
 interface Question {
   id: string;
@@ -156,15 +157,15 @@ export default function QuizQuestionsAdmin() {
 
   return (
     <div className="dashboard-content">
-      <div className="flex-between mb-3">
-        <p style={{ margin: 0, color: "#6c757d", fontSize: "0.9rem" }}>
-          Manage emotional query questions served to users on storefront landing pages.
-        </p>
-        <button className="btn btn-primary btn-sm" onClick={handleOpenAdd}>
-          <Plus size={12} style={{ marginRight: "6px" }} />
-          Create Question
-        </button>
-      </div>
+      <StatsDashboard
+        pageType="quiz-questions"
+        actions={
+          <button className="btn btn-primary btn-sm" onClick={handleOpenAdd}>
+            <Plus size={12} style={{ marginRight: "6px" }} />
+            Create Question
+          </button>
+        }
+      />
 
       {/* Tabs / Filter Navigation */}
       <div className="category-tabs mb-3">

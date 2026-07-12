@@ -106,7 +106,7 @@ export interface Blog {
   createdAt?: string;
 }
 
-export type GlossaryIllustration = "aura-chart" | "chakra-system" | null;
+export type GlossaryIllustration = string | null;
 
 export interface GlossaryTerm {
   id: string;
@@ -117,6 +117,19 @@ export interface GlossaryTerm {
   illustration?: GlossaryIllustration;
   createdAt?: string;
 }
+
+export interface GlossaryCategory {
+  id: string;
+  name: string;
+  createdAt?: string;
+}
+
+export interface BlogCategory {
+  id: string;
+  name: string;
+  createdAt?: string;
+}
+
 
 export interface ComparisonRowItem {
   label: string;
@@ -143,5 +156,14 @@ export interface ComparisonPage {
   rows: ComparisonRowItem[];
   media: ComparisonMediaItem[];
   serviceIds: string[];
+  createdAt?: string;
+}
+
+export interface FAQItem {
+  id: string;
+  question: string;
+  answer: string;
+  verified: boolean;
+  isPublished: boolean;
   createdAt?: string;
 }

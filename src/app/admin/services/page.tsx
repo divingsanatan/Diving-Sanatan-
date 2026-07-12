@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { formatCurrency } from "@/utils/formatters";
 import { Service, Practitioner, Category } from "@/types/database";
+import StatsDashboard from "@/components/admin/StatsDashboard";
 
 export default function AdminServicesPage() {
   const [services, setServices] = useState<Service[]>([]);
@@ -300,22 +301,20 @@ export default function AdminServicesPage() {
 
   return (
     <div className="dashboard-content">
-      <div className="dashboard-header-row">
-        <div>
-          <h2>Services Catalog</h2>
-          <p className="admin-header-desc">
-            Add new treatments, edit specifications, classify under disciplines, and allocate certified healers.
-          </p>
-        </div>
-        <div className="header-actions">
-          <button className="sync-btn" onClick={loadData}>
-            🔄 Refresh Services
-          </button>
-          <Button variant="gold" onClick={handleOpenCreateModal}>
-            ➕ Add Service
-          </Button>
-        </div>
-      </div>
+      <StatsDashboard
+        pageType="services"
+        actions={
+          <div className="header-actions">
+            <button className="sync-btn" onClick={loadData}>
+              🔄 Refresh Services
+            </button>
+            <Button variant="gold" onClick={handleOpenCreateModal}>
+              ➕ Add Service
+            </Button>
+          </div>
+        }
+      />
+
 
       {loading ? (
         <p className="admin-loading">Loading catalog data...</p>

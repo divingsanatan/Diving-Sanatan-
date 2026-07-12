@@ -10,6 +10,7 @@ import {
   ComparisonMediaItem,
   Service,
 } from "@/types/database";
+import StatsDashboard from "@/components/admin/StatsDashboard";
 
 const emptyRow = (): ComparisonRowItem => ({ label: "", valueA: "", valueB: "" });
 
@@ -210,13 +211,16 @@ export default function AdminComparisonsPage() {
 
   return (
     <div className="dashboard-content">
-      <div className="dashboard-header-row">
-        <h2>Comparison Pages</h2>
-        <div className="header-actions">
-          <button type="button" className="sync-btn" onClick={loadData}>↻ Refresh</button>
-          <Button variant="gold" onClick={handleOpenCreate}>+ New Comparison</Button>
-        </div>
-      </div>
+      <StatsDashboard
+        pageType="comparisons"
+        actions={
+          <div className="header-actions">
+            <button type="button" className="sync-btn" onClick={loadData}>↻ Refresh</button>
+            <Button variant="gold" onClick={handleOpenCreate}>+ New Comparison</Button>
+          </div>
+        }
+      />
+
 
       <Card variant="glass" className="admin-card-flush">
         {loading ? (

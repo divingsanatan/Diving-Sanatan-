@@ -3,8 +3,9 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { Blog, Practitioner } from "@/types/database";
+import { Blog, Practitioner, BlogCategory } from "@/types/database";
 import { ImageCropperModal } from "@/components/ui/ImageCropperModal";
+import StatsDashboard from "@/components/admin/StatsDashboard";
 
 export default function AdminBlogsPage() {
   const [blogs, setBlogs] = useState<Blog[]>([]);
@@ -20,6 +21,9 @@ export default function AdminBlogsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [editBlogId, setEditBlogId] = useState<string | null>(null);
+
+  // Tab state
+  const [activeTab, setActiveTab] = useState<"articles" | "categories">("articles");
 
   // Form states
   const [title, setTitle] = useState("");
@@ -53,7 +57,11 @@ export default function AdminBlogsPage() {
   const editorRef = useRef<HTMLDivElement>(null);
   const [editorReady, setEditorReady] = useState(false);
 
-  const [categories, setCategories] = useState<string[]>([]);
+  // Blog Category states
+  const [categories, setCategories] = useState<BlogCategory[]>([]);
+  const [categoryName, setCategoryName] = useState("");
+  const [editCategoryMode, setEditCategoryMode] = useState(false);
+  const [editCategoryId, setEditCategoryId] = useState<string | null>(null);
 
   const loadData = async () => {
     try {
@@ -61,7 +69,7 @@ export default function AdminBlogsPage() {
       const [bRes, pRes, cRes] = await Promise.all([
         fetch("/api/blogs"),
         fetch("/api/practitioners"),
-        fetch("/api/categories")
+        fetch("/api/blogs/categories")
       ]);
 
       const bJson = await bRes.json();
@@ -72,13 +80,13 @@ export default function AdminBlogsPage() {
         setBlogs(bJson.data);
         setPractitioners(pJson.data);
         setCurrentPage(1);
-        if (pJson.data.length > 0) {
+        if (pJson.data.length > 0 && !selectedPractitioner) {
           setSelectedPractitioner(pJson.data[0].name);
         }
       }
 
       if (cJson.success) {
-        setCategories(cJson.data.map((cat: any) => cat.name));
+        setCategories(cJson.data || []);
       }
     } catch (err) {
       console.error("Failed to load admin blogs data:", err);
@@ -91,9 +99,72 @@ export default function AdminBlogsPage() {
     loadData();
   }, []);
 
+  const resetCategoryForm = () => {
+    setCategoryName("");
+    setEditCategoryMode(false);
+    setEditCategoryId(null);
+  };
+
+  const handleEditCategory = (cat: BlogCategory) => {
+    setEditCategoryMode(true);
+    setEditCategoryId(cat.id);
+    setCategoryName(cat.name);
+  };
+
+  const handleCategorySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!categoryName.trim()) {
+      alert("Category name is required.");
+      return;
+    }
+
+    const payload = {
+      name: categoryName.trim(),
+    };
+
+    try {
+      const url = "/api/blogs/categories";
+      const method = editCategoryMode && editCategoryId ? "PUT" : "POST";
+      const body = editCategoryMode && editCategoryId ? { id: editCategoryId, ...payload } : payload;
+
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const json = await res.json();
+      if (json.success) {
+        alert(editCategoryMode ? "Category updated successfully!" : "Category created successfully!");
+        resetCategoryForm();
+        loadData();
+      } else {
+        alert(json.error || "Operation failed.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Something went wrong. Please try again.");
+    }
+  };
+
+  const handleDeleteCategory = async (id: string, name: string) => {
+    if (!confirm(`Delete blog category "${name}"? This will set all matching blogs to category "Other".`)) return;
+    try {
+      const res = await fetch(`/api/blogs/categories?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+      const json = await res.json();
+      if (json.success) {
+        resetCategoryForm();
+        loadData();
+      } else {
+        alert(json.error || "Failed to delete category.");
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const resetForm = () => {
     setTitle("");
-    setCategory(categories[0] || "Other");
+    setCategory(categories[0]?.name || "Other");
     setCustomCategory("");
     setShowCustomCategory(false);
     
@@ -127,9 +198,9 @@ export default function AdminBlogsPage() {
     setEditBlogId(blog.id);
     setTitle(blog.title);
     
-    const isStandardCategory = categories.some(c => c.toLowerCase() === blog.category.toLowerCase());
+    const isStandardCategory = categories.some(c => c.name.toLowerCase() === blog.category.toLowerCase());
     if (isStandardCategory) {
-      const matched = categories.find(c => c.toLowerCase() === blog.category.toLowerCase()) || blog.category;
+      const matched = categories.find(c => c.name.toLowerCase() === blog.category.toLowerCase())?.name || blog.category;
       setCategory(matched);
       setShowCustomCategory(false);
     } else {
@@ -422,153 +493,274 @@ export default function AdminBlogsPage() {
 
   return (
     <div className="dashboard-content">
-      <div className="dashboard-header-row">
-        <div>
-          <h2>Publication & Blogs Control</h2>
-          <p className="admin-header-desc">
-            Create and edit dynamic articles, manage publications, classify guidance categories, and coordinate authors.
-          </p>
-        </div>
-        <div className="header-actions">
-          <button className="sync-btn" onClick={loadData}>
-            🔄 Refresh Publications
-          </button>
-          <Button variant="gold" onClick={handleOpenCreateModal}>
-            ➕ Add Article
-          </Button>
-        </div>
-      </div>
+      <StatsDashboard
+        pageType="blogs"
+        actions={
+          <div className="header-actions">
+            {activeTab === "articles" ? (
+              <>
+                <button className="sync-btn" onClick={loadData}>
+                  🔄 Refresh Publications
+                </button>
+                <Button variant="gold" onClick={handleOpenCreateModal}>
+                  ➕ Add Article
+                </Button>
+              </>
+            ) : (
+              <button className="sync-btn" onClick={loadData}>
+                🔄 Refresh Categories
+              </button>
+            )}
+          </div>
+        }
+      />
 
-      <div className="search-bar-row">
-        <input
-          type="text"
-          placeholder="Search articles by title, author, category..."
-          className="form-control search-blogs-input"
-          value={searchQuery}
-          onChange={(e) => {
-            setSearchQuery(e.target.value);
+      <div className="tabs-header">
+        <button
+          type="button"
+          className={`tab-btn ${activeTab === "articles" ? "active" : ""}`}
+          onClick={() => {
+            setActiveTab("articles");
             setCurrentPage(1);
           }}
-        />
+        >
+          Articles ({filteredBlogs.length})
+        </button>
+        <button
+          type="button"
+          className={`tab-btn ${activeTab === "categories" ? "active" : ""}`}
+          onClick={() => setActiveTab("categories")}
+        >
+          Categories ({categories.length})
+        </button>
       </div>
 
-      {loading ? (
-        <p className="admin-loading">Loading publication catalog...</p>
-      ) : (() => {
-        const totalPages = Math.ceil(filteredBlogs.length / itemsPerPage);
-        const paginatedBlogs = filteredBlogs.slice(
-          (currentPage - 1) * itemsPerPage,
-          currentPage * itemsPerPage
-        );
-        return (
-          <div className="admin-split-layout">
-            <div className="split-list-col">
-              <Card variant="glass" className="card-primary" style={{ padding: "0 !important" }}>
-                <div style={{ borderBottom: "1px solid #dee2e6", padding: "12px 20px", background: "#f8f9fa", fontWeight: "700" }}>
-                  Articles List ({filteredBlogs.length})
+      {activeTab === "articles" ? (
+        <>
+          <div className="search-bar-row">
+            <input
+              type="text"
+              placeholder="Search articles by title, author, category..."
+              className="form-control search-blogs-input"
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1);
+              }}
+            />
+          </div>
+
+          {loading ? (
+            <p className="admin-loading">Loading publication catalog...</p>
+          ) : (() => {
+            const totalPages = Math.ceil(filteredBlogs.length / itemsPerPage);
+            const paginatedBlogs = filteredBlogs.slice(
+              (currentPage - 1) * itemsPerPage,
+              currentPage * itemsPerPage
+            );
+            return (
+              <div className="admin-split-layout">
+                <div className="split-list-col">
+                  <Card variant="glass" className="card-primary" style={{ padding: "0 !important" }}>
+                    <div style={{ borderBottom: "1px solid #dee2e6", padding: "12px 20px", background: "#f8f9fa", fontWeight: "700" }}>
+                      Articles List ({filteredBlogs.length})
+                    </div>
+                    <div className="table-responsive-container">
+                      <table className="admin-glass-table">
+                        <thead>
+                          <tr>
+                            <th>Article Details</th>
+                            <th>Category</th>
+                            <th>Featured Section</th>
+                            <th>Author</th>
+                            <th>Read Estimate</th>
+                            <th>Date</th>
+                            <th className="text-right">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {paginatedBlogs.length === 0 ? (
+                            <tr>
+                              <td colSpan={7} className="admin-empty-cell text-center" style={{ padding: "20px" }}>
+                                No matching articles found in catalog.
+                              </td>
+                            </tr>
+                          ) : (
+                            paginatedBlogs.map(b => (
+                              <tr key={b.id}>
+                                <td>
+                                  <div className="table-service-info">
+                                    <span className="service-name"><strong>{b.title}</strong></span>
+                                    <div className="service-desc-tooltip" title={b.content} style={{ fontSize: "0.78rem", color: "#6c757d", maxWidth: "250px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                      {b.content.replace(/<[^>]*>/g, " ").substring(0, 80)}...
+                                    </div>
+                                  </div>
+                                </td>
+                                <td>
+                                  <span className="category-badge">{b.category}</span>
+                                </td>
+                                <td>
+                                  {b.section ? (
+                                    <span className="category-badge" style={{ background: "#cce5ff", color: "#004085", borderColor: "#b8daff" }}>{b.section}</span>
+                                  ) : (
+                                    <span style={{ fontSize: "0.8rem", color: "#adb5bd", fontStyle: "italic" }}>Regular Feed</span>
+                                  )}
+                                </td>
+                                <td>
+                                  <span>{b.author}</span>
+                                </td>
+                                <td>
+                                  <span>⏱️ {b.readTime}</span>
+                                </td>
+                                <td style={{ whiteSpace: "nowrap" }}>
+                                  <span>{b.date}</span>
+                                </td>
+                                <td className="text-right">
+                                  <div className="action-buttons-cell" style={{ display: "flex", gap: "4px", justifyContent: "flex-end" }}>
+                                    <button className="btn btn-primary btn-sm" onClick={() => window.open(`/blog/${b.id}`, '_blank')}>
+                                      👁 View
+                                    </button>
+                                    <button className="btn btn-secondary btn-sm" onClick={() => handleOpenEditModal(b)}>
+                                      ✎ Edit
+                                    </button>
+                                    <button className="btn btn-danger btn-sm" onClick={() => handleDeleteBlog(b.id)}>
+                                      ✕ Delete
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Pagination Controls */}
+                    {totalPages > 1 && (
+                      <div className="admin-pagination-wrapper">
+                        <span className="pagination-info">
+                          Showing {filteredBlogs.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1} to {Math.min(filteredBlogs.length, currentPage * itemsPerPage)} of {filteredBlogs.length} entries
+                        </span>
+                        <ul className="admin-pagination">
+                          <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                            <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1}>«</button>
+                          </li>
+                          <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                            <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1}>Prev</button>
+                          </li>
+                          {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNum => (
+                            <li key={pageNum} className={`page-item ${currentPage === pageNum ? 'active' : ''}`}>
+                              <button onClick={() => setCurrentPage(pageNum)}>{pageNum}</button>
+                            </li>
+                          ))}
+                          <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+                            <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages}>Next</button>
+                          </li>
+                          <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+                            <button onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages}>»</button>
+                          </li>
+                        </ul>
+                      </div>
+                    )}
+                  </Card>
                 </div>
-                <div className="table-responsive-container">
-                  <table className="admin-glass-table">
-                    <thead>
+              </div>
+            );
+          })()}
+        </>
+      ) : (
+        <div className="admin-split-layout">
+          {/* List Table */}
+          <div className="split-list-col">
+            <Card variant="glass" className="card-primary" style={{ padding: "0 !important" }}>
+              <div style={{ borderBottom: "1px solid #dee2e6", padding: "12px 20px", background: "#f8f9fa", fontWeight: "700" }}>
+                Categories List ({categories.length})
+              </div>
+              <div className="table-responsive-container">
+                <table className="admin-glass-table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Category Name</th>
+                      <th className="text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {categories.length === 0 ? (
                       <tr>
-                        <th>Article Details</th>
-                        <th>Category</th>
-                        <th>Featured Section</th>
-                        <th>Author</th>
-                        <th>Read Estimate</th>
-                        <th>Date</th>
-                        <th className="text-right">Actions</th>
+                        <td colSpan={3} className="text-center" style={{ padding: "20px" }}>No categories created yet.</td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {paginatedBlogs.length === 0 ? (
-                        <tr>
-                          <td colSpan={7} className="admin-empty-cell text-center" style={{ padding: "20px" }}>
-                            No matching articles found in catalog.
+                    ) : (
+                      categories.map(cat => (
+                        <tr key={cat.id}>
+                          <td style={{ fontFamily: "monospace", fontSize: "0.85rem" }}>{cat.id}</td>
+                          <td><strong>{cat.name}</strong></td>
+                          <td className="text-right">
+                            <div className="action-buttons-cell" style={{ display: "flex", gap: "4px", justifyContent: "flex-end" }}>
+                              <button 
+                                className="btn btn-secondary btn-sm"
+                                onClick={() => handleEditCategory(cat)}
+                              >
+                                ✎ Edit
+                              </button>
+                              <button 
+                                className="btn btn-danger btn-sm"
+                                onClick={() => handleDeleteCategory(cat.id, cat.name)}
+                              >
+                                ✕ Delete
+                              </button>
+                            </div>
                           </td>
                         </tr>
-                      ) : (
-                        paginatedBlogs.map(b => (
-                          <tr key={b.id}>
-                            <td>
-                              <div className="table-service-info">
-                                <span className="service-name"><strong>{b.title}</strong></span>
-                                <div className="service-desc-tooltip" title={b.content} style={{ fontSize: "0.78rem", color: "#6c757d", maxWidth: "250px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                  {b.content.replace(/<[^>]*>/g, " ").substring(0, 80)}...
-                                </div>
-                              </div>
-                            </td>
-                            <td>
-                              <span className="category-badge">{b.category}</span>
-                            </td>
-                            <td>
-                              {b.section ? (
-                                <span className="category-badge" style={{ background: "#cce5ff", color: "#004085", borderColor: "#b8daff" }}>{b.section}</span>
-                              ) : (
-                                <span style={{ fontSize: "0.8rem", color: "#adb5bd", fontStyle: "italic" }}>Regular Feed</span>
-                              )}
-                            </td>
-                            <td>
-                              <span>{b.author}</span>
-                            </td>
-                            <td>
-                              <span>⏱️ {b.readTime}</span>
-                            </td>
-                            <td style={{ whiteSpace: "nowrap" }}>
-                              <span>{b.date}</span>
-                            </td>
-                            <td className="text-right">
-                              <div className="action-buttons-cell" style={{ display: "flex", gap: "4px", justifyContent: "flex-end" }}>
-                                <button className="btn btn-primary btn-sm" onClick={() => window.open(`/blog/${b.id}`, '_blank')}>
-                                  👁 View
-                                </button>
-                                <button className="btn btn-secondary btn-sm" onClick={() => handleOpenEditModal(b)}>
-                                  ✎ Edit
-                                </button>
-                                <button className="btn btn-danger btn-sm" onClick={() => handleDeleteBlog(b.id)}>
-                                  ✕ Delete
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* Pagination Controls */}
-                {totalPages > 1 && (
-                  <div className="admin-pagination-wrapper">
-                    <span className="pagination-info">
-                      Showing {filteredBlogs.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1} to {Math.min(filteredBlogs.length, currentPage * itemsPerPage)} of {filteredBlogs.length} entries
-                    </span>
-                    <ul className="admin-pagination">
-                      <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
-                        <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1}>«</button>
-                      </li>
-                      <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
-                        <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1}>Prev</button>
-                      </li>
-                      {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNum => (
-                        <li key={pageNum} className={`page-item ${currentPage === pageNum ? 'active' : ''}`}>
-                          <button onClick={() => setCurrentPage(pageNum)}>{pageNum}</button>
-                        </li>
-                      ))}
-                      <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
-                        <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages}>Next</button>
-                      </li>
-                      <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
-                        <button onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages}>»</button>
-                      </li>
-                    </ul>
-                  </div>
-                )}
-              </Card>
-            </div>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
           </div>
-        );
-      })()}
+
+          {/* Form */}
+          <div className="split-form-col">
+            <Card variant="glass" className="card-success" style={{ padding: "0 !important" }}>
+              <div style={{ borderBottom: "1px solid #dee2e6", padding: "12px 20px", background: "#f8f9fa", fontWeight: "700" }}>
+                {editCategoryMode ? "Edit Category" : "Create Category"}
+              </div>
+              <div style={{ padding: "20px" }}>
+                <form onSubmit={handleCategorySubmit} className="admin-catalog-form">
+                  <div className="form-group">
+                    <label>Category Name *</label>
+                    <input 
+                      type="text" 
+                      className="glass-input" 
+                      required 
+                      placeholder="e.g. Breathwork"
+                      value={categoryName}
+                      onChange={(e) => setCategoryName(e.target.value)}
+                    />
+                  </div>
+
+                  <div style={{ display: "flex", gap: "10px", marginTop: "1.5rem" }}>
+                    {editCategoryMode && (
+                      <button
+                        type="button"
+                        className="btn btn-secondary"
+                        onClick={resetCategoryForm}
+                        style={{ flex: 1 }}
+                      >
+                        Cancel
+                      </button>
+                    )}
+                    <Button variant="gold" type="submit" style={{ flex: 2, width: "100%" }}>
+                      {editCategoryMode ? "Update Category" : "Create Category"}
+                    </Button>
+                  </div>
+                </form>
+              </div>
+            </Card>
+          </div>
+        </div>
+      )}
 
       {/* Modal Popup for Creating/Editing Blog */}
       {isModalOpen && (
@@ -604,7 +796,7 @@ export default function AdminBlogsPage() {
                       onChange={(e) => handleCategoryChange(e.target.value)}
                     >
                       {categories.map(cat => (
-                        <option key={cat} value={cat}>{cat}</option>
+                        <option key={cat.id} value={cat.name}>{cat.name}</option>
                       ))}
                       <option value="Other">Other</option>
                     </select>
@@ -933,6 +1125,32 @@ export default function AdminBlogsPage() {
           display: flex;
           flex-direction: column;
           gap: 32px;
+        }
+        .tabs-header {
+          display: flex;
+          gap: 16px;
+          border-bottom: 2px solid rgba(168, 85, 247, 0.08);
+          margin-bottom: 24px;
+        }
+        .tab-btn {
+          background: transparent;
+          border: none;
+          border-bottom: 3px solid transparent;
+          padding: 12px 16px;
+          font-family: var(--font-serif);
+          font-size: 1.1rem;
+          font-weight: 600;
+          color: hsl(var(--text-muted));
+          cursor: pointer;
+          transition: all 0.2s ease;
+          margin-bottom: -2px;
+        }
+        .tab-btn:hover {
+          color: #7c3aed;
+        }
+        .tab-btn.active {
+          color: #4c1d95;
+          border-bottom-color: #7c3aed;
         }
         .dashboard-header-row {
           display: flex;

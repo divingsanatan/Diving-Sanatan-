@@ -80,6 +80,15 @@ function QuoraQAInner() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
 
+  const defaultCategories = [
+    "Mind & Emotions",
+    "Chakra Healing",
+    "Aura & Energy",
+    "Meditation & Mindfulness",
+    "Reiki Healing"
+  ];
+  const [categories, setCategories] = useState<string[]>(defaultCategories);
+
   // Edit Question Modal State
   const [showEditQModal, setShowEditQModal] = useState(false);
   const [editQId, setEditQId] = useState("");
@@ -465,7 +474,7 @@ function QuoraQAInner() {
     }
   ]);
 
-  // Load questions from localStorage or initialize with defaults
+  // Load questions and categories from localStorage or initialize with defaults
   useEffect(() => {
     const stored = localStorage.getItem("divingsanatan_quora_questions");
     if (stored) {
@@ -473,6 +482,20 @@ function QuoraQAInner() {
         setQuestions(JSON.parse(stored));
       } catch (e) {
         console.error("Failed to parse stored questions", e);
+      }
+    }
+
+    const storedCats = localStorage.getItem("divingsanatan_quora_categories");
+    if (storedCats) {
+      try {
+        const parsed = JSON.parse(storedCats);
+        setCategories(parsed);
+        if (parsed.length > 0) {
+          setNewQCategory(parsed[0]);
+          setEditQCategory(parsed[0]);
+        }
+      } catch (e) {
+        console.error("Failed to parse stored categories", e);
       }
     }
     setIsLoaded(true);
@@ -1067,11 +1090,9 @@ function QuoraQAInner() {
                           onChange={(e) => setNewQCategory(e.target.value)}
                           className="category-dropdown"
                         >
-                          <option value="Mind & Emotions">Mind & Emotions</option>
-                          <option value="Chakra Healing">Chakra Healing</option>
-                          <option value="Aura & Energy">Aura & Energy</option>
-                          <option value="Meditation & Mindfulness">Meditation & Mindfulness</option>
-                          <option value="Reiki Healing">Reiki Healing</option>
+                          {categories.map(cat => (
+                            <option key={cat} value={cat}>{cat}</option>
+                          ))}
                         </select>
                       </div>
 
@@ -1959,11 +1980,9 @@ function QuoraQAInner() {
                   onChange={(e) => setEditQCategory(e.target.value)}
                   className="category-dropdown"
                 >
-                  <option value="Mind & Emotions">Mind & Emotions</option>
-                  <option value="Chakra Healing">Chakra Healing</option>
-                  <option value="Aura & Energy">Aura & Energy</option>
-                  <option value="Meditation & Mindfulness">Meditation & Mindfulness</option>
-                  <option value="Reiki Healing">Reiki Healing</option>
+                  {categories.map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
                 </select>
               </div>
 

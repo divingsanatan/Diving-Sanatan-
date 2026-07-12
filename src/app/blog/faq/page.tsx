@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
 import { useBlog } from "../BlogContext";
 import { useRouter } from "next/navigation";
+import { FAQItem } from "@/types/database";
 import {
   Plus,
   Minus,
@@ -22,225 +23,6 @@ import {
   User,
   Quote
 } from "lucide-react";
-
-interface FAQItem {
-  id: string;
-  category: string;
-  question: string;
-  answer: string;
-  verified: boolean;
-}
-
-// 27 FAQ Questions to match counts in Browse Category Grid
-const FAQ_DATA: FAQItem[] = [
-  // Practices (6 items)
-  {
-    id: "prac-1",
-    category: "practices",
-    question: "How do I choose the right healing practice for me?",
-    answer: "Choosing the right healing practice begins with identifying your primary goals—whether physical, emotional, or spiritual. We recommend starting with a holistic consultation or trying gentle practices like yoga or meditation to see what resonates with you.",
-    verified: true,
-  },
-  {
-    id: "prac-2",
-    category: "practices",
-    question: "Are your practices safe for beginners?",
-    answer: "Yes, all of our guided practices are designed to be accessible to beginners. Our healers provide step-by-step guidance, and we encourage you to go at your own comfortable pace.",
-    verified: true,
-  },
-  {
-    id: "prac-3",
-    category: "practices",
-    question: "What is the difference between meditation and pranayama?",
-    answer: "Meditation focuses on quietening the mind and cultivating mindfulness, whereas pranayama is the yogic practice of breath control. Breathwork is often used as a powerful precursor to deepen meditation states.",
-    verified: false,
-  },
-  {
-    id: "prac-4",
-    category: "practices",
-    question: "How often should I engage in guided practices?",
-    answer: "For optimal benefits, we recommend daily practice, even if only for 10-15 minutes. Consistency is much more effective than doing long, infrequent sessions.",
-    verified: true,
-  },
-  {
-    id: "prac-5",
-    category: "practices",
-    question: "Do I need any special equipment for breathwork?",
-    answer: "No special equipment is needed. A comfortable, quiet space to sit or lie down, a yoga mat or cushion, and comfortable clothing are all you need to start.",
-    verified: false,
-  },
-  {
-    id: "prac-6",
-    category: "practices",
-    question: "Can I practice chakra alignment on my own?",
-    answer: "Yes, while professional sessions provide deep diagnostics and clearing, you can maintain your energy flow through daily meditation, using seed mantras, and visualization techniques.",
-    verified: true,
-  },
-
-  // Healing (5 items)
-  {
-    id: "heal-1",
-    category: "healing",
-    question: "What is holistic healing?",
-    answer: "Holistic healing is an approach that considers the whole person—body, mind, emotions, and spirit. It aims to restore balance and promote overall well-being through natural practices, energy work, and mindful living.",
-    verified: true,
-  },
-  {
-    id: "heal-2",
-    category: "healing",
-    question: "What can I expect in a healing session?",
-    answer: "In a standard healing session, you will discuss your history and goals, followed by a non-invasive energetic scan or alignment technique. You'll remain fully clothed and comfortable, feeling deep relaxation, gentle warmth, or emotional release.",
-    verified: true,
-  },
-  {
-    id: "heal-3",
-    category: "healing",
-    question: "How long does it take to see results?",
-    answer: "While many clients report immediate feelings of peace, stress relief, or clarity after their first session, long-term healing is a journey. Committing to a consistent 3 to 6-week practice typically yields the most profound, lasting shifts.",
-    verified: true,
-  },
-  {
-    id: "heal-4",
-    category: "healing",
-    question: "Can energy healing help with physical ailments?",
-    answer: "Energy healing is a complementary therapy that helps release somatic tension and lower stress. While it does not replace medical treatment, it supports the body's natural healing systems and improves recovery times.",
-    verified: false,
-  },
-  {
-    id: "heal-5",
-    category: "healing",
-    question: "How does distance healing work?",
-    answer: "Distance healing operates on the principle that energy is not bound by space or time. The practitioner establishes a conscious connection with your energy field through focused intention and conducts the session remotely.",
-    verified: true,
-  },
-
-  // Spirituality (7 items)
-  {
-    id: "spirit-1",
-    category: "spirituality",
-    question: "What is spiritual well-being?",
-    answer: "Spiritual well-being involves finding meaning, purpose, and connection in life. It doesn't require adhering to a specific religion; it's about connecting with your inner self, nature, or a higher consciousness.",
-    verified: true,
-  },
-  {
-    id: "spirit-2",
-    category: "spirituality",
-    question: "How does grounding help my spiritual growth?",
-    answer: "Grounding anchors your energy to the Earth, helping to discharge excess emotional or mental static. It provides a stable foundation, allowing you to explore higher spiritual states without feeling spaced out.",
-    verified: true,
-  },
-  {
-    id: "spirit-3",
-    category: "spirituality",
-    question: "What is the meaning of the lotus symbol in spiritual traditions?",
-    answer: "The lotus represents purity, spiritual awakening, and resilience. Just as the lotus grows in muddy water and blooms untarnished, it symbolizes the soul's path to overcoming challenges and achieving enlightenment.",
-    verified: false,
-  },
-  {
-    id: "spirit-4",
-    category: "spirituality",
-    question: "What are Solfeggio frequencies?",
-    answer: "Solfeggio frequencies are an ancient 6-tone scale of sound vibrations used in sacred music and healing. Each frequency (like 528Hz or 432Hz) is associated with specific energetic qualities, such as emotional release or transformation.",
-    verified: true,
-  },
-  {
-    id: "spirit-5",
-    category: "spirituality",
-    question: "How can I identify my primary chakra blockage?",
-    answer: "Blockages often manifest physically or emotionally in areas corresponding to the chakra. For instance, difficulty speaking your truth indicates a Throat Chakra block, while feeling anxious about survival points to the Root Chakra.",
-    verified: true,
-  },
-  {
-    id: "spirit-6",
-    category: "spirituality",
-    question: "What is the role of crystals in spiritual practice?",
-    answer: "Crystals act as energetic amplifiers. Their stable mineral structures vibrate at specific frequencies, which can help align and stabilize our own energy fields when held, worn, or placed nearby.",
-    verified: false,
-  },
-  {
-    id: "spirit-7",
-    category: "spirituality",
-    question: "How do I connect with my intuition?",
-    answer: "Connecting with intuition requires quietening the analytical mind. Meditation, spending time in silence, journaling, and learning to trust your initial gut feelings are all effective ways to strengthen this inner guidance.",
-    verified: true,
-  },
-
-  // Account & Booking (4 items)
-  {
-    id: "book-1",
-    category: "booking",
-    question: "How do I book a consultation?",
-    answer: "You can book a session by clicking the 'Book a Consultation' button at the top of the page, choosing your preferred practitioner and time slot, and completing the secure checkout process.",
-    verified: true,
-  },
-  {
-    id: "book-2",
-    category: "booking",
-    question: "What is your cancellation policy?",
-    answer: "We allow free cancellations or rescheduling up to 24 hours before your scheduled session. Within 24 hours, cancellations may be subject to a 50% reservation fee.",
-    verified: true,
-  },
-  {
-    id: "book-3",
-    category: "booking",
-    question: "Can I book a session for someone else?",
-    answer: "Yes, you can purchase a session as a gift. Just enter the recipient's details during booking, or contact our support team to issue a personalized gift voucher.",
-    verified: false,
-  },
-  {
-    id: "book-4",
-    category: "booking",
-    question: "Do you offer package discounts?",
-    answer: "Yes! We offer discounted bundles for 3, 5, or 10 sessions. You can browse these package options in our Services section or discuss them during your initial consultation.",
-    verified: true,
-  },
-
-  // General (5 items)
-  {
-    id: "gen-1",
-    category: "general",
-    question: "How do I contact customer support?",
-    answer: "You can reach our support team by clicking 'Contact Support' at the bottom of the page, or by emailing us directly at support@divingsanatan.com. We aim to respond within 24 hours.",
-    verified: true,
-  },
-  {
-    id: "gen-2",
-    category: "general",
-    question: "Where are you located?",
-    answer: "We offer both online virtual sessions worldwide and in-person consultations at our serene wellness center in Rishikesh, India.",
-    verified: true,
-  },
-  {
-    id: "gen-3",
-    category: "general",
-    question: "Are my sessions confidential?",
-    answer: "Yes, absolute confidentiality is a cornerstone of our practice. Any information shared during consultations or healing sessions remains completely private between you and your practitioner.",
-    verified: true,
-  },
-  {
-    id: "gen-4",
-    category: "general",
-    question: "Is holistic wellness suitable for all ages?",
-    answer: "Yes, our gentle practices are safe and beneficial for individuals of all ages, from children to seniors. We adapt our techniques to suit the specific physical and emotional needs of each client.",
-    verified: false,
-  },
-  {
-    id: "gen-5",
-    category: "general",
-    question: "Do you offer custom wellness plans?",
-    answer: "Yes, we specialize in tailoring holistic packages that combine energy healing, guided meditation, and lifestyle guidance based on your personal wellness assessment.",
-    verified: true,
-  },
-];
-
-const CATEGORY_NAMES: Record<string, string> = {
-  all: "All",
-  practices: "Practices",
-  healing: "Healing",
-  spirituality: "Spirituality",
-  booking: "Account & Booking",
-  general: "General",
-};
 
 // Premium Animated Crystal Ball SVG
 const CrystalBallSVG = () => (
@@ -406,22 +188,44 @@ const CTALanternSVG = () => (
 export default function FAQPage() {
   const router = useRouter();
   const { searchQuery, setSearchQuery } = useBlog();
-  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [faqs, setFaqs] = useState<FAQItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
   // Custom accordions state
-  const [openAccordions, setOpenAccordions] = useState<Record<string, boolean>>({
-    "heal-1": true, // open holistic healing by default
-  });
+  const [openAccordions, setOpenAccordions] = useState<Record<string, boolean>>({});
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  // Reset page when category or search changes
+  // Load FAQs on mount
+  useEffect(() => {
+    const loadFaqs = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch("/api/faq");
+        const json = await res.json();
+        if (json.success) {
+          const published = (json.data || []).filter((f: FAQItem) => f.isPublished);
+          setFaqs(published);
+          // Auto-open first item if available
+          if (published.length > 0) {
+            const firstItem = published.find((f: FAQItem) => f.id === "heal-1") || published[0];
+            setOpenAccordions({ [firstItem.id]: true });
+          }
+        }
+      } catch (err) {
+        console.error("Error loading FAQs:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadFaqs();
+  }, []);
+
+  // Reset page when search changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedCategory, searchQuery]);
-
-  const categories = ["all", "practices", "healing", "spirituality", "booking", "general"];
+  }, [searchQuery]);
 
   // Handle accordion toggle
   const toggleAccordion = (id: string) => {
@@ -441,9 +245,8 @@ export default function FAQPage() {
 
   // Click on a trending question in the right sidebar
   const handleTrendingClick = (faqId: string) => {
-    // 1. Clear search and set category to All so the item is visible
+    // 1. Clear search so the item is visible
     setSearchQuery("");
-    setSelectedCategory("all");
 
     // 2. Open this specific accordion
     setOpenAccordions((prev) => ({
@@ -460,13 +263,12 @@ export default function FAQPage() {
     }, 150);
   };
 
-  // Filter FAQs based on active chip and search query
-  const filteredFAQs = FAQ_DATA.filter((faq) => {
-    const matchesCategory = selectedCategory === "all" || faq.category === selectedCategory;
+  // Filter FAQs based on search query
+  const filteredFAQs = faqs.filter((faq) => {
     const matchesSearch =
       faq.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
       faq.answer.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
+    return matchesSearch;
   });
 
   const totalPages = Math.ceil(filteredFAQs.length / itemsPerPage);
@@ -474,15 +276,6 @@ export default function FAQPage() {
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
-
-  // Category statistics counts
-  const categoryCounts = {
-    practices: FAQ_DATA.filter(f => f.category === "practices").length,
-    healing: FAQ_DATA.filter(f => f.category === "healing").length,
-    spirituality: FAQ_DATA.filter(f => f.category === "spirituality").length,
-    booking: FAQ_DATA.filter(f => f.category === "booking").length,
-    general: FAQ_DATA.filter(f => f.category === "general").length,
-  };
 
   return (
     <div className="faq-columns-layout" id="faq-root">
@@ -511,42 +304,6 @@ export default function FAQPage() {
           </div>
         </div>
 
-        {/* Interactive Search input synced with layout search */}
-        <div className="page-search-section">
-          <div className="page-search-wrapper">
-            <Search className="page-search-icon" size={18} strokeWidth={2} />
-            <input
-              type="text"
-              placeholder="Search your question..."
-              className="page-search-input"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            {searchQuery && (
-              <button
-                className="page-search-clear"
-                onClick={() => setSearchQuery("")}
-                aria-label="Clear search"
-              >
-                ✕
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Category Filter Chips */}
-        <div className="category-chips-row">
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              className={`category-chip ${selectedCategory === cat ? "active" : ""}`}
-              onClick={() => setSelectedCategory(cat)}
-            >
-              {CATEGORY_NAMES[cat]}
-            </button>
-          ))}
-        </div>
-
         {/* Popular Questions Section */}
         <div className="faq-section-header" id="popular-questions">
           <Settings className="settings-gear-icon" size={20} strokeWidth={2} />
@@ -555,12 +312,17 @@ export default function FAQPage() {
 
         {/* Accordions List */}
         <div className="faq-accordions-list">
-          {filteredFAQs.length === 0 ? (
+          {loading ? (
+            <div className="faq-empty-card">
+              <p className="empty-title">Loading FAQs...</p>
+              <p className="empty-desc">Please wait while we fetch the latest questions.</p>
+            </div>
+          ) : filteredFAQs.length === 0 ? (
             <div className="faq-empty-card">
               <HelpCircle className="empty-icon" size={40} />
               <p className="empty-title">No questions found</p>
               <p className="empty-desc">We couldn't find any results matching "{searchQuery}". Try editing your keyword search.</p>
-              <Button variant="gold-outline" size="sm" onClick={() => { setSelectedCategory("all"); setSearchQuery(""); }}>
+              <Button variant="gold-outline" size="sm" onClick={() => setSearchQuery("")}>
                 Reset Filters
               </Button>
             </div>
@@ -580,11 +342,7 @@ export default function FAQPage() {
                   >
                     <div className="trigger-left-content">
                       <div className="category-icon-circle">
-                        {faq.category === "practices" && <Flower size={16} className="lucide-practices" />}
-                        {faq.category === "healing" && <Sparkles size={16} className="lucide-healing" />}
-                        {faq.category === "spirituality" && <Compass size={16} className="lucide-spirituality" />}
-                        {faq.category === "booking" && <Calendar size={16} className="lucide-booking" />}
-                        {faq.category === "general" && <HelpCircle size={16} className="lucide-general" />}
+                        <HelpCircle size={16} className="lucide-general" />
                       </div>
                       <span className="question-title-text">{faq.question}</span>
                     </div>
@@ -605,16 +363,8 @@ export default function FAQPage() {
                       <div className="faq-card-footer">
                         <div className="footer-tags">
                           <span className="footer-tag">
-                            {faq.category === "practices" && <Flower size={12} />}
-                            {faq.category === "healing" && <Sparkles size={12} />}
-                            {faq.category === "spirituality" && <Compass size={12} />}
-                            {faq.category === "booking" && <Calendar size={12} />}
-                            {faq.category === "general" && <HelpCircle size={12} />}
-                            <span className="tag-name">{CATEGORY_NAMES[faq.category]}</span>
-                          </span>
-                          <span className="footer-tag">
                             <MessageSquare size={12} />
-                            <span className="tag-name">General</span>
+                            <span className="tag-name">FAQ</span>
                           </span>
                         </div>
 
@@ -666,86 +416,6 @@ export default function FAQPage() {
           </div>
         )}
 
-        <div className="category-cards-grid">
-          {/* Card 1: Practices */}
-          <div
-            className={`category-grid-card practices-card ${selectedCategory === "practices" ? "selected" : ""}`}
-            onClick={() => { setSelectedCategory("practices"); scrollToSection("faq-root"); }}
-          >
-            <div className="grid-card-icon-circle practices-circle">
-              <Flower size={20} />
-            </div>
-            <div className="grid-card-info">
-              <h4 className="grid-card-title">Practices</h4>
-              <span className="grid-card-count">{categoryCounts.practices} Questions</span>
-            </div>
-          </div>
-
-          {/* Card 2: Healing */}
-          <div
-            className={`category-grid-card healing-card ${selectedCategory === "healing" ? "selected" : ""}`}
-            onClick={() => { setSelectedCategory("healing"); scrollToSection("faq-root"); }}
-          >
-            <div className="grid-card-icon-circle healing-circle">
-              <Sparkles size={20} />
-            </div>
-            <div className="grid-card-info">
-              <h4 className="grid-card-title">Healing</h4>
-              <span className="grid-card-count">{categoryCounts.healing} Questions</span>
-            </div>
-          </div>
-
-          {/* Card 3: Spirituality */}
-          <div
-            className={`category-grid-card spirituality-card ${selectedCategory === "spirituality" ? "selected" : ""}`}
-            onClick={() => { setSelectedCategory("spirituality"); scrollToSection("faq-root"); }}
-          >
-            <div className="grid-card-icon-circle spirituality-circle">
-              <Compass size={20} />
-            </div>
-            <div className="grid-card-info">
-              <h4 className="grid-card-title">Spirituality</h4>
-              <span className="grid-card-count">{categoryCounts.spirituality} Questions</span>
-            </div>
-          </div>
-
-          {/* Card 4: Account & Booking */}
-          <div
-            className={`category-grid-card booking-card ${selectedCategory === "booking" ? "selected" : ""}`}
-            onClick={() => { setSelectedCategory("booking"); scrollToSection("faq-root"); }}
-          >
-            <div className="grid-card-icon-circle booking-circle">
-              <Calendar size={20} />
-            </div>
-            <div className="grid-card-info">
-              <h4 className="grid-card-title">Account & Booking</h4>
-              <span className="grid-card-count">{categoryCounts.booking} Questions</span>
-            </div>
-          </div>
-
-          {/* Card 5: General */}
-          <div
-            className={`category-grid-card general-card ${selectedCategory === "general" ? "selected" : ""}`}
-            onClick={() => { setSelectedCategory("general"); scrollToSection("faq-root"); }}
-          >
-            <div className="grid-card-icon-circle general-circle">
-              <HelpCircle size={20} />
-            </div>
-            <div className="grid-card-info">
-              <h4 className="grid-card-title">General</h4>
-              <span className="grid-card-count">{categoryCounts.general} Questions</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Load More Button */}
-        <div className="load-more-container">
-          <button className="load-more-btn" onClick={() => alert("All questions loaded successfully.")}>
-            <span>Load More Questions</span>
-            <ChevronDown size={14} />
-          </button>
-        </div>
-
         {/* bottom CTA Banner */}
         <div className="bottom-cta-banner" id="cta-section">
           <div className="cta-left">
@@ -781,10 +451,6 @@ export default function FAQPage() {
             <li onClick={() => scrollToSection("popular-questions")}>
               <span className="bullet-dot" />
               <span>Popular Questions</span>
-            </li>
-            <li onClick={() => scrollToSection("browse-questions")}>
-              <span className="bullet-dot" />
-              <span>Browse All Questions</span>
             </li>
             <li onClick={() => scrollToSection("cta-section")}>
               <span className="bullet-dot" />
@@ -828,7 +494,6 @@ export default function FAQPage() {
               <div className="trending-number">1</div>
               <div className="trending-info">
                 <span className="trending-question">What is holistic healing?</span>
-                <span className="trending-tag">Healing</span>
               </div>
             </div>
 
@@ -837,7 +502,6 @@ export default function FAQPage() {
               <div className="trending-number">2</div>
               <div className="trending-info">
                 <span className="trending-question">What can I expect in a healing session?</span>
-                <span className="trending-tag">Healing</span>
               </div>
             </div>
 
@@ -846,7 +510,6 @@ export default function FAQPage() {
               <div className="trending-number">3</div>
               <div className="trending-info">
                 <span className="trending-question">How do I book a consultation?</span>
-                <span className="trending-tag">Account & Booking</span>
               </div>
             </div>
 
@@ -855,7 +518,6 @@ export default function FAQPage() {
               <div className="trending-number">4</div>
               <div className="trending-info">
                 <span className="trending-question">Are your practices safe for beginners?</span>
-                <span className="trending-tag">Practices</span>
               </div>
             </div>
 
@@ -864,16 +526,14 @@ export default function FAQPage() {
               <div className="trending-number">5</div>
               <div className="trending-info">
                 <span className="trending-question">How can I contact customer support?</span>
-                <span className="trending-tag">General</span>
               </div>
             </div>
           </div>
 
-          <button className="trending-view-all-btn" onClick={() => setSelectedCategory("all")}>
+          <button className="trending-view-all-btn" onClick={() => setSearchQuery("")}>
             View All Trending
           </button>
         </div>
-
         {/* Need Personalized Help / Booking consultation widget */}
         <div className="sidebar-widget help-widget">
           <h4 className="widget-title">Need personalized help?</h4>

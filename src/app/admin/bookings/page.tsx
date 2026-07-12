@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/Card";
 import { formatCurrency } from "@/utils/formatters";
 import { Booking } from "@/types/database";
 import { RefreshCw } from "lucide-react";
+import StatsDashboard from "@/components/admin/StatsDashboard";
 
 export default function AdminBookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -62,15 +63,16 @@ export default function AdminBookingsPage() {
 
   return (
     <div className="dashboard-content">
-      <div className="flex-between mb-3">
-        <p style={{ margin: 0, color: "#6c757d", fontSize: "0.9rem" }}>
-          Monitor and coordinate scheduled appointments, manage confirmation states, and track customer payments.
-        </p>
-        <button className="btn btn-secondary btn-sm" onClick={loadBookings}>
-          <RefreshCw size={12} style={{ marginRight: "6px" }} />
-          Refresh Bookings
-        </button>
-      </div>
+      <StatsDashboard
+        pageType="bookings"
+        actions={
+          <button className="btn btn-secondary btn-sm" onClick={loadBookings}>
+            <RefreshCw size={12} style={{ marginRight: "6px" }} />
+            Refresh Bookings
+          </button>
+        }
+      />
+
 
       {loading ? (
         <p className="text-center" style={{ padding: "40px", color: "#6c757d" }}>Loading bookings...</p>
