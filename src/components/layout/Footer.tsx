@@ -261,6 +261,16 @@ export const Footer: React.FC = () => {
             gap: 32px;
           }
         }
+        @media (max-width: 480px) {
+          .newsletter-form {
+            flex-direction: column;
+            gap: 12px;
+          }
+          .newsletter-btn {
+            width: 100%;
+            padding: 12px 0;
+          }
+        }
       `}</style>
     </footer>
   );

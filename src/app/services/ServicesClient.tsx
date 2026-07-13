@@ -95,11 +95,17 @@ export default function ServicesPage() {
   // Database States
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [cartSelections, setCartSelections] = useState<Service[]>([]);
+
+  // Auto-close mobile menu on category changes
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [selectedCategory]);
 
   // UI Interactive States
   const [activeTestimonial, setActiveTestimonial] = useState(0);
@@ -339,10 +345,16 @@ export default function ServicesPage() {
         <div className="services-grid-layout">
 
           {/* ================= LEFT SIDEBAR ================= */}
-          <aside className="left-sidebar">
-            {/* Search Input Box */}
-            <div className="sidebar-group">
-              <div className="sidebar-title-row title-small">
+          <aside className={`left-sidebar ${isMobileMenuOpen ? "mobile-open" : "mobile-collapsed"}`}>
+            {/* Mobile Menu Toggle Bar */}
+            <button 
+              type="button"
+              className="services-mobile-menu-toggle"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              aria-expanded={isMobileMenuOpen}
+              aria-label="Toggle services menu"
+            >
+              <div className="toggle-label-group">
                 <svg viewBox="0 0 100 100" className="sidebar-lotus-icon">
                   <path d="M50 25 C45 45 35 60 50 80 C65 60 55 45 50 25 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
                   <path d="M50 80 C35 75 25 60 20 40 C35 50 45 60 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
@@ -350,90 +362,122 @@ export default function ServicesPage() {
                   <path d="M50 80 C30 80 10 70 5 55 C20 65 35 70 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
                   <path d="M50 80 C70 80 90 70 95 55 C80 65 65 70 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
                 </svg>
-                <h4 className="sidebar-heading-small">Explore Services</h4>
+                <span className="toggle-label">
+                  {selectedCategory === "all" ? "All Services" : selectedCategory}
+                </span>
               </div>
-              <div className="search-input-field">
-                <input
-                  type="text"
-                  placeholder="Search services, healings..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="search-field-control"
-                />
-                <Search size={14} className="search-field-icon" />
+              <div className="toggle-icon-wrapper">
+                {isMobileMenuOpen ? (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                ) : (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                  </svg>
+                )}
               </div>
-            </div>
+            </button>
 
-            {/* Category Filter list (Scrollable) */}
-            <div className="categories-list-card">
-              <button
-                className={`category-item-btn ${selectedCategory === "all" ? "active" : ""}`}
-                onClick={() => { setSelectedCategory("all"); setFeaturedIndex(0); }}
-              >
-                <Grid size={16} strokeWidth={1.5} />
-                <span>All Services</span>
-              </button>
-              {sortedCategories.map((cat) => (
+            <div className="sidebar-mobile-content">
+              {/* Search Input Box */}
+              <div className="sidebar-group">
+                <div className="sidebar-title-row title-small">
+                  <svg viewBox="0 0 100 100" className="sidebar-lotus-icon">
+                    <path d="M50 25 C45 45 35 60 50 80 C65 60 55 45 50 25 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
+                    <path d="M50 80 C35 75 25 60 20 40 C35 50 45 60 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
+                    <path d="M50 80 C65 75 75 60 80 40 C65 50 55 60 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
+                    <path d="M50 80 C30 80 10 70 5 55 C20 65 35 70 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
+                    <path d="M50 80 C70 80 90 70 95 55 C80 65 65 70 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
+                  </svg>
+                  <h4 className="sidebar-heading-small">Explore Services</h4>
+                </div>
+                <div className="search-input-field">
+                  <input
+                    type="text"
+                    placeholder="Search services, healings..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="search-field-control"
+                  />
+                  <Search size={14} className="search-field-icon" />
+                </div>
+              </div>
+
+              {/* Category Filter list (Scrollable) */}
+              <div className="categories-list-card">
                 <button
-                  key={cat.id}
-                  className={`category-item-btn ${selectedCategory.toLowerCase() === (cat.name || "").toLowerCase() ? "active" : ""}`}
-                  onClick={() => { setSelectedCategory(cat.name || ""); setFeaturedIndex(0); }}
+                  className={`category-item-btn ${selectedCategory === "all" ? "active" : ""}`}
+                  onClick={() => { setSelectedCategory("all"); setFeaturedIndex(0); }}
                 >
-                  {getCategoryIcon(cat.name || "")}
-                  <span>{cat.name}</span>
+                  <Grid size={16} strokeWidth={1.5} />
+                  <span>All Services</span>
                 </button>
-              ))}
-            </div>
-
-            {/* Why Choose Us */}
-            <div className="why-choose-card">
-              <h4 className="sidebar-heading">Why Choose Our Services?</h4>
-              <div className="reasons-stack">
-                <div className="reason-item">
-                  <div className="reason-icon-wrapper">
-                    <Heart size={16} strokeWidth={1.5} />
-                  </div>
-                  <div className="reason-text">
-                    <h5>Authentic & Ancient Practices</h5>
-                    <p>Rooted in ancient wisdom and modern healing.</p>
-                  </div>
-                </div>
-                <div className="reason-item">
-                  <div className="reason-icon-wrapper">
-                    <User size={16} strokeWidth={1.5} />
-                  </div>
-                  <div className="reason-text">
-                    <h5>Experienced Practitioners</h5>
-                    <p>Learn from verified and compassionate experts.</p>
-                  </div>
-                </div>
-                <div className="reason-item">
-                  <div className="reason-icon-wrapper">
-                    <Compass size={16} strokeWidth={1.5} />
-                  </div>
-                  <div className="reason-text">
-                    <h5>Personalized Approach</h5>
-                    <p>Tailored guidance for your unique journey.</p>
-                  </div>
-                </div>
-                <div className="reason-item">
-                  <div className="reason-icon-wrapper">
-                    <Shield size={16} strokeWidth={1.5} />
-                  </div>
-                  <div className="reason-text">
-                    <h5>Safe & Supportive Space</h5>
-                    <p>Your healing and privacy are our priority.</p>
-                  </div>
-                </div>
+                {sortedCategories.map((cat) => (
+                  <button
+                    key={cat.id}
+                    className={`category-item-btn ${selectedCategory.toLowerCase() === (cat.name || "").toLowerCase() ? "active" : ""}`}
+                    onClick={() => { setSelectedCategory(cat.name || ""); setFeaturedIndex(0); }}
+                  >
+                    {getCategoryIcon(cat.name || "")}
+                    <span>{cat.name}</span>
+                  </button>
+                ))}
               </div>
 
-              {/* Elegant Lotus outline graphic */}
-              <div className="lotus-graphic-wrapper">
-                <svg viewBox="0 0 100 100" className="lotus-icon-line">
-                  <path d="M50 15 C40 32 20 45 50 85 C80 45 60 32 50 15 Z" fill="none" stroke="#7c3aed" strokeWidth="1" strokeOpacity="0.25" />
-                  <path d="M50 35 C30 45 10 55 50 85 C90 55 70 45 50 35 Z" fill="none" stroke="#7c3aed" strokeWidth="1" strokeOpacity="0.25" />
-                  <path d="M50 50 C38 55 25 65 50 85 C75 65 62 55 50 50 Z" fill="none" stroke="#7c3aed" strokeWidth="1" strokeOpacity="0.25" />
-                </svg>
+              {/* Why Choose Us */}
+              <div className="why-choose-card">
+                <h4 className="sidebar-heading">Why Choose Our Services?</h4>
+                <div className="reasons-stack">
+                  <div className="reason-item">
+                    <div className="reason-icon-wrapper">
+                      <Heart size={16} strokeWidth={1.5} />
+                    </div>
+                    <div className="reason-text">
+                      <h5>Authentic & Ancient Practices</h5>
+                      <p>Rooted in ancient wisdom and modern healing.</p>
+                    </div>
+                  </div>
+                  <div className="reason-item">
+                    <div className="reason-icon-wrapper">
+                      <User size={16} strokeWidth={1.5} />
+                    </div>
+                    <div className="reason-text">
+                      <h5>Experienced Practitioners</h5>
+                      <p>Learn from verified and compassionate experts.</p>
+                    </div>
+                  </div>
+                  <div className="reason-item">
+                    <div className="reason-icon-wrapper">
+                      <Compass size={16} strokeWidth={1.5} />
+                    </div>
+                    <div className="reason-text">
+                      <h5>Personalized Approach</h5>
+                      <p>Tailored guidance for your unique journey.</p>
+                    </div>
+                  </div>
+                  <div className="reason-item">
+                    <div className="reason-icon-wrapper">
+                      <Shield size={16} strokeWidth={1.5} />
+                    </div>
+                    <div className="reason-text">
+                      <h5>Safe & Supportive Space</h5>
+                      <p>Your healing and privacy are our priority.</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Elegant Lotus outline graphic */}
+                <div className="lotus-graphic-wrapper">
+                  <svg viewBox="0 0 100 100" className="lotus-icon-line">
+                    <path d="M50 15 C40 32 20 45 50 85 C80 45 60 32 50 15 Z" fill="none" stroke="#7c3aed" strokeWidth="1" strokeOpacity="0.25" />
+                    <path d="M50 35 C30 45 10 55 50 85 C90 55 70 45 50 35 Z" fill="none" stroke="#7c3aed" strokeWidth="1" strokeOpacity="0.25" />
+                    <path d="M50 50 C38 55 25 65 50 85 C75 65 62 55 50 50 Z" fill="none" stroke="#7c3aed" strokeWidth="1" strokeOpacity="0.25" />
+                  </svg>
+                </div>
               </div>
             </div>
           </aside>
@@ -824,11 +868,7 @@ export default function ServicesPage() {
         html, body {
           overflow-y: auto !important;
         }
-        /* Override Header & Footer container max-width to match spacious 1400px layout */
-        .header-nav .nav-container {
-          max-width: 1400px !important;
-          width: 100% !important;
-        }
+        /* Override Footer container max-width to match spacious 1400px layout */
         .footer-container .footer-grid,
         .footer-container .footer-bottom {
           max-width: 1400px !important;
@@ -988,6 +1028,10 @@ export default function ServicesPage() {
         }
         .category-item-btn:focus {
           outline: none !important;
+        }
+
+        .services-mobile-menu-toggle {
+          display: none;
         }
 
         .why-choose-card {
@@ -1827,7 +1871,7 @@ export default function ServicesPage() {
           }
         }
 
-        @media (max-width: 1200px) and (min-width: 901px) {
+        @media (max-width: 1200px) and (min-width: 1025px) {
           .services-grid-layout {
             grid-template-columns: 200px 1fr 240px;
             gap: 20px;
@@ -1845,25 +1889,95 @@ export default function ServicesPage() {
           }
         }
 
-        @media (max-width: 900px) {
+        @media (max-width: 1024px) {
+          .right-sidebar {
+            display: none !important;
+          }
+        }
+
+        @media (max-width: 1024px) and (min-width: 901px) {
           .services-grid-layout {
-            grid-template-columns: 180px 1fr;
-            gap: 16px;
+            grid-template-columns: 200px 1fr;
+            gap: 20px;
           }
           .left-sidebar {
             position: relative;
             top: 0;
           }
-          .right-sidebar {
-            position: relative;
-            top: 0;
-            grid-column: 1 / -1;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
+          .carousel-viewport {
+            overflow: hidden;
+          }
+        }
+
+        @media (max-width: 900px) {
+          .services-grid-layout {
+            grid-template-columns: 1fr;
             gap: 20px;
           }
-          .callout-cta-card {
-            grid-column: 1 / -1;
+          .left-sidebar {
+            width: 100%;
+            position: static;
+            max-height: none;
+            overflow: visible;
+            margin-bottom: 0px;
+          }
+          .services-mobile-menu-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            padding: 12px 18px;
+            background: linear-gradient(135deg, #faf5ff 0%, #fdf4ff 100%);
+            border: 1px solid rgba(168, 85, 247, 0.15);
+            border-radius: 12px;
+            cursor: pointer;
+            font-family: var(--font-sans);
+            font-size: 0.92rem;
+            font-weight: 700;
+            color: #6b21a8;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.03);
+          }
+          .services-mobile-menu-toggle:hover {
+            background: linear-gradient(135deg, #f5f3ff 0%, #edd8fc 100%);
+            border-color: rgba(168, 85, 247, 0.3);
+            box-shadow: 0 6px 16px rgba(124, 58, 237, 0.08);
+          }
+          .toggle-label-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+          }
+          .toggle-label-group .sidebar-lotus-icon {
+            width: 20px;
+            height: 20px;
+            margin: 0;
+          }
+          .toggle-label {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 200px;
+          }
+          .toggle-icon-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #7c3aed;
+          }
+          .sidebar-mobile-content {
+            display: none;
+            flex-direction: column;
+            gap: 16px;
+            margin-top: 12px;
+            padding: 16px;
+            background: #ffffff;
+            border: 1px solid rgba(168, 85, 247, 0.1);
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(124, 58, 237, 0.03);
+          }
+          .left-sidebar.mobile-open .sidebar-mobile-content {
+            display: flex;
           }
           .programs-grid {
             grid-template-columns: repeat(2, 1fr);
@@ -1875,9 +1989,6 @@ export default function ServicesPage() {
 
         @media (max-width: 768px) {
           .services-grid-layout {
-            grid-template-columns: 1fr;
-          }
-          .right-sidebar {
             grid-template-columns: 1fr;
           }
           .banner-content {

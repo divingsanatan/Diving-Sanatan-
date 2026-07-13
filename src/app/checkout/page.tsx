@@ -687,6 +687,17 @@ export default function CheckoutPage() {
             grid-template-columns: 1fr;
           }
         }
+        @media (max-width: 480px) {
+          .payment-options-row {
+            flex-direction: column !important;
+            gap: 8px !important;
+            padding: 8px !important;
+          }
+          .pay-opt-btn {
+            width: 100% !important;
+            padding: 12px 0 !important;
+          }
+        }
       `}</style>
     </div>
   );

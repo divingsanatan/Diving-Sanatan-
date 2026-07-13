@@ -809,3 +809,93 @@
   transform: scale(1.05) !important;
 }
 
+/* Global Admin Modal Responsiveness */
+@media (max-width: 600px) {
+  .admin-lte-theme .modal-overlay {
+    padding: 10px !important;
+  }
+  
+  .admin-lte-theme .modal-content,
+  .admin-lte-theme .modal-content-wrapper,
+  .admin-lte-theme div[class*="modal-content"],
+  .admin-lte-theme div[class*="modal-inner"] {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    border-radius: 12px !important;
+    padding: 16px !important;
+  }
+
+  /* Stack form rows inside modals */
+  .admin-lte-theme .form-row, 
+  .admin-lte-theme .form-row-2,
+  .admin-lte-theme .flex-row-gap {
+    flex-direction: column !important;
+    gap: 12px !important;
+  }
+  
+  .admin-lte-theme .form-group-flex, 
+  .admin-lte-theme .form-group-flex-wide {
+    width: 100% !important;
+    flex: none !important;
+  }
+}
+
+/* Responsive Tables & Containers */
+.admin-lte-theme .table-responsive,
+.admin-lte-theme .table-responsive-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  margin-bottom: 1rem !important;
+  border-radius: 8px !important;
+  border: 1px solid var(--admin-border-color) !important;
+}
+.admin-lte-theme .table-responsive table,
+.admin-lte-theme .table-responsive-container table {
+  margin-bottom: 0 !important;
+  min-width: 600px !important; /* Ensure columns don't squish too much, forces scroll */
+}
+
+/* Split Layouts Responsiveness (side-by-side list & form) */
+@media (max-width: 992px) {
+  .admin-lte-theme .admin-split-layout {
+    flex-direction: column !important;
+    gap: 24px !important;
+  }
+  .admin-lte-theme .split-list-col,
+  .admin-lte-theme .split-form-col {
+    width: 100% !important;
+  }
+}
+
+/* Dashboard stats responsiveness */
+@media (max-width: 768px) {
+  .admin-lte-theme .stats-row {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px !important;
+  }
+  .admin-lte-theme .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px !important;
+  }
+}
+@media (max-width: 480px) {
+  .admin-lte-theme .stats-row {
+    grid-template-columns: 1fr !important;
+  }
+  .admin-lte-theme .stats-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .admin-lte-theme .admin-content-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+    padding: 15px 15px 5px 15px !important;
+  }
+  .admin-lte-theme .admin-main-panel {
+    padding: 12px !important;
+  }
+}
+
+

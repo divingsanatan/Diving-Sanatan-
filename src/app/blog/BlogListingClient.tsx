@@ -132,8 +132,8 @@ export default function BlogListingPage() {
 
 
   const renderBlogCard = (post: Blog) => (
-    <div key={post.id} style={{ display: 'block', width: '100%', minWidth: 0 }}>
-      <Link href={`/blog/${post.id}`} style={{ display: 'block', textDecoration: 'none', color: 'inherit', width: '100%' }}>
+    <div key={post.id} style={{ display: 'block', width: '100%', minWidth: 0, boxSizing: 'border-box' }}>
+      <Link href={`/blog/${post.id}`} style={{ display: 'block', textDecoration: 'none', color: 'inherit', width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
         <div className="blog-item-card">
           <div className="blog-card-media-wrapper">
             <img
@@ -150,13 +150,17 @@ export default function BlogListingPage() {
             <span className="blog-badge-floating-right">{post.readTime || (post as any).read_time || '5 min read'}</span>
           </div>
           <div className="blog-card-body">
-            <h4 className="blog-card-title">{post.title}</h4>
-            <p className="blog-card-desc">{post.content.replace(/<[^>]*>/g, '').substring(0, 100)}...</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <h4 className="blog-card-title">{post.title}</h4>
+              <p className="blog-card-desc">{post.content.replace(/<[^>]*>/g, '').substring(0, 160)}...</p>
+            </div>
             <div className="blog-author-row">
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <div className="author-avatar">{post.author.charAt(0)}</div>
                 <div className="author-details">
-
+                  <span className="author-name">{post.author}</span>
+                  <span className="author-separator">•</span>
+                  <span className="blog-date">{post.date}</span>
                 </div>
               </div>
               <span className="blog-view-action">Read Article →</span>
@@ -699,47 +703,120 @@ export default function BlogListingPage() {
           color: #ffffff;
           box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
         }
+
+        @media (max-width: 1024px) {
+          .blog-welcome-row {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 8px;
+            margin-bottom: 4px;
+          }
+          .welcome-heading {
+            font-size: 1.4rem;
+          }
+          .blog-hero-banner {
+            padding: 40px 20px;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 20px;
+            min-height: auto;
+          }
+          .banner-text-content {
+            max-width: 100%;
+          }
+          .banner-main-title {
+            font-size: 1.5rem;
+          }
+          .banner-image-panel {
+            display: none;
+          }
+          .banner-lotus-watermark {
+            left: auto;
+            right: -20px;
+            bottom: -20px;
+            opacity: 0.3;
+          }
+        }
+
+        @media (max-width: 768px) {
+          .blog-welcome-row {
+            display: none;
+          }
+          .blog-hero-banner {
+            display: none;
+          }
+        }
+
+        @media (max-width: 640px) {
+          .blog-pagination-wrapper {
+            gap: 8px;
+            flex-wrap: wrap;
+          }
+          .pagination-arrow-btn {
+            padding: 8px 12px;
+            font-size: 0.75rem;
+          }
+          .pagination-numbers {
+            gap: 4px;
+          }
+          .pagination-number-btn {
+            width: 30px;
+            height: 30px;
+            font-size: 0.75rem;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .welcome-heading {
+            font-size: 1.25rem;
+          }
+          .welcome-subheading {
+            font-size: 0.78rem;
+          }
+          .blog-hero-banner {
+            padding: 30px 16px;
+            border-radius: 16px;
+          }
+          .banner-main-title {
+            font-size: 1.3rem;
+          }
+          .banner-explore-btn {
+            width: 100%;
+            text-align: center;
+          }
+        }
       `}</style>
 
       <style jsx global>{`
-        /* Latest Blog Posts Grid - 4 Columns */
+        /* Latest Blog Grid - Responsive Vertical List */
         .latest-posts-grid {
-          display: grid;
-          grid-template-columns: repeat(4, 1fr);
-          gap: 16px;
+          display: flex;
+          flex-direction: column;
+          gap: 24px;
           width: 100%;
           box-sizing: border-box;
           overflow: hidden;
-        }
-        @media (max-width: 1024px) {
-          .latest-posts-grid {
-            grid-template-columns: repeat(2, 1fr);
-          }
-        }
-        @media (max-width: 640px) {
-          .latest-posts-grid {
-            grid-template-columns: 1fr;
-          }
-        }
-        .blog-item-card {
+              .blog-item-card {
           background: #ffffff;
           border: 1px solid transparent;
           border-radius: 20px;
           overflow: hidden;
           display: flex;
-          flex-direction: column;
+          flex-direction: row;
           width: 100%;
+          max-width: 100%;
+          min-width: 0;
           box-sizing: border-box;
           box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
           transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .blog-item-card:hover {
-          transform: translateY(-6px) scale(1.025);
+          transform: translateY(-4px);
           box-shadow: 0 16px 36px rgba(0, 0, 0, 0.09);
         }
         .blog-card-media-wrapper {
-          width: 100%;
-          height: 170px;
+          width: 280px;
+          height: 190px;
           overflow: hidden;
           background: #faf5ff;
           position: relative;
@@ -786,15 +863,19 @@ export default function BlogListingPage() {
           transform: scale(1.05);
         }
         .blog-card-body {
-          padding: 18px;
+          padding: 20px 24px;
           display: flex;
           flex-direction: column;
-          gap: 8px;
+          gap: 10px;
           flex: 1;
+          min-width: 0;
+          max-width: 100%;
+          box-sizing: border-box;
+          justify-content: space-between;
         }
         .blog-card-title {
           font-family: var(--font-sans);
-          font-size: 1.05rem;
+          font-size: 1.15rem;
           color: #111827;
           font-weight: 700 !important;
           margin: 0;
@@ -809,21 +890,20 @@ export default function BlogListingPage() {
           color: #7c3aed;
         }
         .blog-card-desc {
-          font-size: 0.8rem;
+          font-size: 0.82rem;
           color: #6b7280;
           line-height: 1.5;
           margin: 0;
           display: -webkit-box;
-          -webkit-line-clamp: 2;
+          -webkit-line-clamp: 3;
           -webkit-box-orient: vertical;
           overflow: hidden;
-          flex: 1;
         }
         .blog-author-row {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          margin-top: 6px;
+          margin-top: 12px;
           border-top: 1px solid rgba(0, 0, 0, 0.04);
           padding-top: 12px;
           width: 100%;
@@ -869,6 +949,58 @@ export default function BlogListingPage() {
         .blog-item-card:hover .blog-view-action {
           color: #4c1d95;
           transform: translateX(2px);
+        }
+ 
+        /* Responsive styling for Vertical List */
+        @media (max-width: 768px) {
+          .latest-posts-grid {
+            gap: 20px;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+          }
+          .blog-item-card {
+            flex-direction: column;
+            width: 100%;
+            max-width: 100%;
+            min-width: 0;
+            box-sizing: border-box;
+          }
+          .blog-item-card:hover {
+            transform: translateY(-4px);
+          }
+          .blog-card-media-wrapper {
+            width: 100%;
+            height: 180px;
+          }
+          .blog-card-body {
+            padding: 16px;
+            gap: 12px;
+            width: 100%;
+            max-width: 100%;
+            min-width: 0;
+            box-sizing: border-box;
+          }
+          .blog-card-title {
+            font-size: 1.05rem;
+          }
+          .blog-card-desc {
+            -webkit-line-clamp: 2;
+          }
+          .blog-author-row {
+            margin-top: 8px;
+            flex-wrap: wrap;
+            gap: 8px;
+          }
+          .author-details {
+            flex-wrap: wrap;
+            gap: 4px;
+          }
+        }
+        @media (max-width: 480px) {
+          .blog-view-action {
+            display: none;
+          }
         }
       `}</style>
     </div>

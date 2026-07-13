@@ -2100,7 +2100,7 @@ export default function AboutClient() {
             padding: 30px 20px 24px;
           }
           .sidebar {
-            width: 100%;
+            display: none;
           }
           .sidebar-sticky-wrapper {
             position: static;

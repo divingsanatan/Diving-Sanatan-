@@ -1034,6 +1034,25 @@ function BookingContent() {
             position: static;
           }
         }
+        @media (max-width: 480px) {
+          .calendar-card {
+            padding: 16px !important;
+          }
+          .calendar-date-cell {
+            height: 32px !important;
+            font-size: 0.8rem !important;
+          }
+          .calendar-day-header {
+            font-size: 0.65rem !important;
+          }
+          .slots-grid {
+            grid-template-columns: repeat(auto-fill, minmax(75px, 1fr)) !important;
+          }
+          .slot-btn {
+            font-size: 0.75rem !important;
+            padding: 6px 0 !important;
+          }
+        }
       `}</style>
     </div>
   );

@@ -406,6 +406,27 @@ export default function GlossaryPage() {
             align-items: stretch;
             gap: 20px;
           }
+          .glossary-title {
+            font-size: 1.8rem;
+          }
+          .term-word {
+            font-size: 1.4rem;
+          }
+          .term-definition-text {
+            font-size: 0.95rem;
+            line-height: 1.6;
+          }
+        }
+        @media (max-width: 480px) {
+          .letter-btn {
+            width: 28px;
+            height: 28px;
+            font-size: 0.75rem;
+          }
+          .alphabet-bar {
+            gap: 4px;
+            justify-content: center;
+          }
         }
       `}</style>
     </div>

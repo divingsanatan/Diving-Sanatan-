@@ -2410,6 +2410,29 @@ export default function BlogDetailsPage() {
         }
 
         @media (max-width: 768px) {
+          .article-unified-card, .video-layout-card, .normal-layout-card {
+            padding: 20px 16px !important;
+          }
+          .article-header {
+            padding: 30px 16px !important;
+            margin-bottom: 20px !important;
+          }
+          .article-title {
+            font-size: 1.6rem !important;
+          }
+          .article-lead p {
+            font-size: 1.05rem !important;
+          }
+          .article-split-row {
+            grid-template-columns: 1fr !important;
+            gap: 20px !important;
+          }
+          .article-split-row.reversed .split-text-col {
+            order: 1 !important;
+          }
+          .article-split-row.reversed .split-media-col {
+            order: 2 !important;
+          }
           .takeaways-row-grid, .ita-grid {
             grid-template-columns: 1fr;
           }

@@ -1331,6 +1331,35 @@ export default function Home() {
           }
         }
 
+        @media (max-width: 640px) {
+          #section-landing .search-input-wrapper {
+            flex-direction: column !important;
+            border-radius: 24px !important;
+            padding: 16px !important;
+            gap: 12px !important;
+            align-items: stretch !important;
+          }
+          #section-landing .search-icon {
+            display: none !important;
+          }
+          #section-landing .search-input-main-container {
+            width: 100% !important;
+          }
+          #section-landing .search-input {
+            text-align: center !important;
+            font-size: 1rem !important;
+          }
+          #section-landing .search-input-suggestion {
+            text-align: center !important;
+          }
+          #section-landing .search-submit-btn {
+            width: 100% !important;
+            justify-content: center !important;
+            padding: 12px !important;
+            font-size: 0.95rem !important;
+          }
+        }
+
         /* Dynamic shake animation for input error */
         @keyframes shake {
           0%, 100% { transform: translateX(0); }
@@ -2317,6 +2346,16 @@ export default function Home() {
           box-shadow: 0 0 10px rgba(124, 58, 237, 0.08);
         }
 
+        @media (max-width: 600px) {
+          .profile-capture-card {
+            padding: 24px 16px !important;
+          }
+          .form-group-row {
+            flex-direction: column !important;
+            gap: 16px !important;
+          }
+        }
+
         /* Soul Report CTA Button */
         .soul-report-btn {
           width: 100% !important;
@@ -2519,6 +2558,13 @@ export default function Home() {
           }
           .loading-grid {
             grid-template-columns: 1fr;
+          }
+          .report-columns-grid {
+            grid-template-columns: 1fr !important;
+            gap: 24px !important;
+          }
+          .report-left-column, .report-right-column {
+            padding: 24px 16px !important;
           }
         }
       `}</style>
