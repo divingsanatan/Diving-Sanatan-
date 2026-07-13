@@ -17,6 +17,7 @@ interface Blog {
   image: string;
   images?: string[];
   videos?: string[];
+  is_show_featured_page?: boolean;
 }
 
 const getBlogImage = (img: string) => {
@@ -81,6 +82,16 @@ const getEmbedUrl = (url: string) => {
     return `https://player.vimeo.com/video/${videoId}`;
   }
   return url;
+};
+
+const cleanHtmlToPlainText = (html: string): string => {
+  if (!html) return "";
+  return html
+    .replace(/<style[^>]*>([\s\S]*?)<\/style>/gi, "")
+    .replace(/<script[^>]*>([\s\S]*?)<\/script>/gi, "")
+    .replace(/<[^>]+>/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
 };
 
 const isHtmlContent = (c: string) => /<[a-z/][^>]*>/i.test(c);
@@ -549,15 +560,15 @@ export default function BlogDetailsPage() {
     const htmlMode = isHtmlContent(b.content);
 
     if (htmlMode) {
-      const parsed = parseHtmlContent(b.content);
+      const cleanIntro = cleanHtmlToPlainText(b.content);
       const intro =
-        parsed.intro ||
+        cleanIntro.substring(0, 200) ||
         `In this guide, ${b.author} explores ${b.title.toLowerCase()} — a foundational topic in ${b.category.toLowerCase()}.`;
       return {
         htmlMode: true,
         intro,
         bodyParagraphs: [] as string[],
-        htmlBody: parsed.body || b.content,
+        htmlBody: b.content,
         coverImage,
       };
     }
@@ -934,18 +945,22 @@ export default function BlogDetailsPage() {
                     </div>
                   </div>
 
-                  <div className="article-lead">
-                    <p className="first-paragraph-dropcap">{intro}</p>
-                  </div>
+                  {!htmlMode && (
+                    <div className="article-lead">
+                      <p className="first-paragraph-dropcap">{intro}</p>
+                    </div>
+                  )}
 
                   {/* Standard Featured Cover Image with constraints */}
-                  <div className="normal-featured-cover-container">
-                    <img
-                      src={coverImage}
-                      alt={blog.title}
-                      className="normal-featured-cover-img"
-                    />
-                  </div>
+                  {blog.is_show_featured_page !== false && (
+                    <div className="normal-featured-cover-container">
+                      <img
+                        src={coverImage}
+                        alt={blog.title}
+                        className="normal-featured-cover-img"
+                      />
+                    </div>
+                  )}
 
                   {/* Video Block if available */}
                   {blog.videos && blog.videos.length > 0 && (

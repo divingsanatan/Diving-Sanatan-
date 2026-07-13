@@ -62,7 +62,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { title, category, author, content, date, readTime, image, images, videos, section } = body;
+    const { title, category, author, content, date, readTime, image, images, videos, section, is_show_featured_page } = body;
     
     if (!title || !category || !author || !content || !date || !readTime) {
       return NextResponse.json({ success: false, error: "Missing required blog fields" }, { status: 400 });
@@ -80,6 +80,7 @@ export async function POST(req: NextRequest) {
       images: Array.isArray(images) ? images : [],
       videos: Array.isArray(videos) ? videos : [],
       section: section || null,
+      is_show_featured_page: is_show_featured_page !== undefined ? is_show_featured_page : true,
     };
     
     const { data, error } = await supabaseServer
@@ -109,7 +110,7 @@ export async function POST(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   try {
     const body = await req.json();
-    const { id, title, category, author, content, date, readTime, image, images, videos, section } = body;
+    const { id, title, category, author, content, date, readTime, image, images, videos, section, is_show_featured_page } = body;
     
     if (!id) {
       return NextResponse.json({ success: false, error: "Blog ID is required" }, { status: 400 });
@@ -126,6 +127,7 @@ export async function PUT(req: NextRequest) {
     if (images !== undefined) updates.images = Array.isArray(images) ? images : [];
     if (videos !== undefined) updates.videos = Array.isArray(videos) ? videos : [];
     if (section !== undefined) updates.section = section;
+    if (is_show_featured_page !== undefined) updates.is_show_featured_page = is_show_featured_page;
     
     const { data, error } = await supabaseServer
       .from("blogs")

@@ -12,11 +12,11 @@ export default function AdminBlogsPage() {
   const [practitioners, setPractitioners] = useState<Practitioner[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  
+
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
-  
+
   // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
@@ -30,17 +30,18 @@ export default function AdminBlogsPage() {
   const [category, setCategory] = useState("Crystals");
   const [customCategory, setCustomCategory] = useState("");
   const [showCustomCategory, setShowCustomCategory] = useState(false);
-  
+
   const [authorType, setAuthorType] = useState<"practitioner" | "custom">("practitioner");
   const [selectedPractitioner, setSelectedPractitioner] = useState("");
   const [customAuthor, setCustomAuthor] = useState("");
-  
+
   const [content, setContent] = useState("");
   const [date, setDate] = useState("");
   const [readTime, setReadTime] = useState("");
   const [image, setImage] = useState("");
   const [uploadingImage, setUploadingImage] = useState(false);
   const [section, setSection] = useState("");
+  const [isShowFeaturedPage, setIsShowFeaturedPage] = useState(true);
 
   // Multiple media states
   const [galleryImages, setGalleryImages] = useState<string[]>([]);
@@ -56,6 +57,7 @@ export default function AdminBlogsPage() {
   // Rich text editor ref
   const editorRef = useRef<HTMLDivElement>(null);
   const [editorReady, setEditorReady] = useState(false);
+  const [isHtmlMode, setIsHtmlMode] = useState(false);
 
   // Blog Category states
   const [categories, setCategories] = useState<BlogCategory[]>([]);
@@ -167,7 +169,7 @@ export default function AdminBlogsPage() {
     setCategory(categories[0]?.name || "Other");
     setCustomCategory("");
     setShowCustomCategory(false);
-    
+
     setAuthorType("practitioner");
     if (practitioners.length > 0) {
       setSelectedPractitioner(practitioners[0].name);
@@ -175,7 +177,7 @@ export default function AdminBlogsPage() {
       setSelectedPractitioner("");
     }
     setCustomAuthor("");
-    
+
     setContent("");
     setDate(new Date().toISOString().split("T")[0]);
     setReadTime("");
@@ -183,6 +185,7 @@ export default function AdminBlogsPage() {
     setGalleryImages([]);
     setBlogVideos([]);
     setSection("");
+    setIsShowFeaturedPage(true);
     setEditMode(false);
     setEditBlogId(null);
   };
@@ -197,7 +200,7 @@ export default function AdminBlogsPage() {
     setEditMode(true);
     setEditBlogId(blog.id);
     setTitle(blog.title);
-    
+
     const isStandardCategory = categories.some(c => c.name.toLowerCase() === blog.category.toLowerCase());
     if (isStandardCategory) {
       const matched = categories.find(c => c.name.toLowerCase() === blog.category.toLowerCase())?.name || blog.category;
@@ -226,6 +229,7 @@ export default function AdminBlogsPage() {
     setGalleryImages(blog.images || []);
     setBlogVideos(blog.videos || []);
     setSection(blog.section || "");
+    setIsShowFeaturedPage(blog.is_show_featured_page !== false);
     setIsModalOpen(true);
   };
 
@@ -243,16 +247,17 @@ export default function AdminBlogsPage() {
     }
   }, []);
 
-  // Populate editor when modal opens
+  // Populate editor when modal opens or toggles HTML mode
   useEffect(() => {
-    if (isModalOpen && editorRef.current) {
+    if (isModalOpen && !isHtmlMode && editorRef.current) {
       editorRef.current.innerHTML = content || "";
       setEditorReady(true);
     }
     if (!isModalOpen) {
       setEditorReady(false);
+      setIsHtmlMode(false);
     }
-  }, [isModalOpen]);
+  }, [isModalOpen, isHtmlMode]);
 
   // RTE exec helper
   const execCmd = (cmd: string, value?: string) => {
@@ -417,10 +422,10 @@ export default function AdminBlogsPage() {
 
   const handleSaveBlog = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const finalCategory = category === "Other" ? customCategory.trim() : category;
     const finalAuthor = authorType === "practitioner" ? selectedPractitioner : customAuthor.trim();
-    
+
     if (!title.trim() || !finalCategory || !finalAuthor || !content.trim() || !date || !readTime) {
       alert("Please fill in all required fields.");
       return;
@@ -436,7 +441,8 @@ export default function AdminBlogsPage() {
       image: image.trim(),
       images: galleryImages.filter(img => img.trim() !== ""),
       videos: blogVideos.filter(vid => vid.trim() !== ""),
-      section: section || null
+      section: section || null,
+      is_show_featured_page: isShowFeaturedPage
     };
 
     try {
@@ -485,7 +491,7 @@ export default function AdminBlogsPage() {
     }
   };
 
-  const filteredBlogs = blogs.filter(b => 
+  const filteredBlogs = blogs.filter(b =>
     b.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     b.author.toLowerCase().includes(searchQuery.toLowerCase()) ||
     b.category.toLowerCase().includes(searchQuery.toLowerCase())
@@ -697,13 +703,13 @@ export default function AdminBlogsPage() {
                           <td><strong>{cat.name}</strong></td>
                           <td className="text-right">
                             <div className="action-buttons-cell" style={{ display: "flex", gap: "4px", justifyContent: "flex-end" }}>
-                              <button 
+                              <button
                                 className="btn btn-secondary btn-sm"
                                 onClick={() => handleEditCategory(cat)}
                               >
                                 ✎ Edit
                               </button>
-                              <button 
+                              <button
                                 className="btn btn-danger btn-sm"
                                 onClick={() => handleDeleteCategory(cat.id, cat.name)}
                               >
@@ -730,10 +736,10 @@ export default function AdminBlogsPage() {
                 <form onSubmit={handleCategorySubmit} className="admin-catalog-form">
                   <div className="form-group">
                     <label>Category Name *</label>
-                    <input 
-                      type="text" 
-                      className="glass-input" 
-                      required 
+                    <input
+                      type="text"
+                      className="glass-input"
+                      required
                       placeholder="e.g. Breathwork"
                       value={categoryName}
                       onChange={(e) => setCategoryName(e.target.value)}
@@ -773,7 +779,7 @@ export default function AdminBlogsPage() {
               <h3 className="column-title column-title-spaced">
                 {editMode ? "Edit Publication Details" : "Publish New Article"}
               </h3>
-              
+
               <form onSubmit={handleSaveBlog} className="admin-catalog-form">
                 <div className="form-group">
                   <label>Article Title *</label>
@@ -918,6 +924,37 @@ export default function AdminBlogsPage() {
                   </select>
                 </div>
 
+                <div className="form-group" style={{ width: "100%" }}>
+                  <label
+                    className="toggle-row"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      width: "100%",
+                      padding: "10px 14px",
+                      background: "rgba(255, 255, 255, 0.8)",
+                      border: "1px solid rgba(0, 0, 0, 0.05)",
+                      borderRadius: "8px",
+                      cursor: "pointer",
+                      marginTop: "4px"
+                    }}
+                  >
+                    <span className="toggle-label-text" style={{ fontSize: "0.85rem", fontWeight: 600, color: "#334155", userSelect: "none" }}>
+                      Show Article Cover Image on Details/Description Page
+                    </span>
+                    <div className="toggle-switch" style={{ position: "relative", display: "inline-block", width: "40px", height: "22px", flexShrink: 0 }}>
+                      <input
+                        type="checkbox"
+                        checked={isShowFeaturedPage}
+                        onChange={(e) => setIsShowFeaturedPage(e.target.checked)}
+                        style={{ opacity: 0, width: 0, height: 0, position: "absolute" }}
+                      />
+                      <span className="toggle-slider"></span>
+                    </div>
+                  </label>
+                </div>
+
                 {/* Main Cover Image */}
                 <div className="form-group">
                   <label>Article Cover Image URL (Featured Layout)</label>
@@ -931,9 +968,9 @@ export default function AdminBlogsPage() {
                     />
                     <label className="upload-media-btn">
                       {uploadingImage ? "⌛ Uplo..." : "⬆️ Image"}
-                      <input 
-                        type="file" 
-                        accept="image/*" 
+                      <input
+                        type="file"
+                        accept="image/*"
                         onChange={handleCoverImageSelect}
                         className="hidden-file-input"
                         disabled={uploadingImage}
@@ -968,9 +1005,9 @@ export default function AdminBlogsPage() {
                           />
                           <label className="upload-media-btn">
                             {uploadingGalleryIdx === idx ? "⌛ Uplo..." : "⬆️ Image"}
-                            <input 
-                              type="file" 
-                              accept="image/*" 
+                            <input
+                              type="file"
+                              accept="image/*"
                               onChange={(e) => handleGalleryImageSelect(e, idx)}
                               className="hidden-file-input"
                               disabled={uploadingGalleryIdx !== null}
@@ -1014,9 +1051,9 @@ export default function AdminBlogsPage() {
                           />
                           <label className="upload-media-btn">
                             {uploadingVideoIdx === idx ? "⌛ Uplo..." : "⬆️ Video"}
-                            <input 
-                              type="file" 
-                              accept="video/*" 
+                            <input
+                              type="file"
+                              accept="video/*"
                               onChange={(e) => handleVideoUpload(e, idx)}
                               className="hidden-file-input"
                               disabled={uploadingVideoIdx !== null}
@@ -1049,48 +1086,82 @@ export default function AdminBlogsPage() {
                     {/* Toolbar */}
                     <div className="rte-toolbar">
                       <div className="rte-toolbar-group">
-                        <button type="button" className="rte-btn" title="Bold" onMouseDown={(e) => { e.preventDefault(); execCmd("bold"); }}><b>B</b></button>
-                        <button type="button" className="rte-btn" title="Italic" onMouseDown={(e) => { e.preventDefault(); execCmd("italic"); }}><i>I</i></button>
-                        <button type="button" className="rte-btn" title="Underline" onMouseDown={(e) => { e.preventDefault(); execCmd("underline"); }}><u>U</u></button>
-                        <button type="button" className="rte-btn" title="Strikethrough" onMouseDown={(e) => { e.preventDefault(); execCmd("strikeThrough"); }}><s>S</s></button>
+                        <button type="button" className="rte-btn" disabled={isHtmlMode} title="Bold" onMouseDown={(e) => { e.preventDefault(); if (!isHtmlMode) execCmd("bold"); }}><b>B</b></button>
+                        <button type="button" className="rte-btn" disabled={isHtmlMode} title="Italic" onMouseDown={(e) => { e.preventDefault(); if (!isHtmlMode) execCmd("italic"); }}><i>I</i></button>
+                        <button type="button" className="rte-btn" disabled={isHtmlMode} title="Underline" onMouseDown={(e) => { e.preventDefault(); if (!isHtmlMode) execCmd("underline"); }}><u>U</u></button>
+                        <button type="button" className="rte-btn" disabled={isHtmlMode} title="Strikethrough" onMouseDown={(e) => { e.preventDefault(); if (!isHtmlMode) execCmd("strikeThrough"); }}><s>S</s></button>
                       </div>
                       <div className="rte-toolbar-divider" />
                       <div className="rte-toolbar-group">
-                        <button type="button" className="rte-btn rte-btn-text" title="Heading 2" onMouseDown={(e) => { e.preventDefault(); execCmd("formatBlock", "H2"); }}>H2</button>
-                        <button type="button" className="rte-btn rte-btn-text" title="Heading 3" onMouseDown={(e) => { e.preventDefault(); execCmd("formatBlock", "H3"); }}>H3</button>
-                        <button type="button" className="rte-btn rte-btn-text" title="Paragraph" onMouseDown={(e) => { e.preventDefault(); execCmd("formatBlock", "P"); }}>¶</button>
+                        <button type="button" className="rte-btn rte-btn-text" disabled={isHtmlMode} title="Heading 2" onMouseDown={(e) => { e.preventDefault(); if (!isHtmlMode) execCmd("formatBlock", "H2"); }}>H2</button>
+                        <button type="button" className="rte-btn rte-btn-text" disabled={isHtmlMode} title="Heading 3" onMouseDown={(e) => { e.preventDefault(); if (!isHtmlMode) execCmd("formatBlock", "H3"); }}>H3</button>
+                        <button type="button" className="rte-btn rte-btn-text" disabled={isHtmlMode} title="Paragraph" onMouseDown={(e) => { e.preventDefault(); if (!isHtmlMode) execCmd("formatBlock", "P"); }}>¶</button>
                       </div>
                       <div className="rte-toolbar-divider" />
                       <div className="rte-toolbar-group">
-                        <button type="button" className="rte-btn" title="Bullet List" onMouseDown={(e) => { e.preventDefault(); execCmd("insertUnorderedList"); }}>≡</button>
-                        <button type="button" className="rte-btn" title="Numbered List" onMouseDown={(e) => { e.preventDefault(); execCmd("insertOrderedList"); }}>1.</button>
-                        <button type="button" className="rte-btn" title="Blockquote" onMouseDown={(e) => { e.preventDefault(); execCmd("formatBlock", "BLOCKQUOTE"); }}>"</button>
+                        <button type="button" className="rte-btn" disabled={isHtmlMode} title="Bullet List" onMouseDown={(e) => { e.preventDefault(); if (!isHtmlMode) execCmd("insertUnorderedList"); }}>≡</button>
+                        <button type="button" className="rte-btn" disabled={isHtmlMode} title="Numbered List" onMouseDown={(e) => { e.preventDefault(); if (!isHtmlMode) execCmd("insertOrderedList"); }}>1.</button>
+                        <button type="button" className="rte-btn" disabled={isHtmlMode} title="Blockquote" onMouseDown={(e) => { e.preventDefault(); if (!isHtmlMode) execCmd("formatBlock", "BLOCKQUOTE"); }}>"</button>
                       </div>
                       <div className="rte-toolbar-divider" />
                       <div className="rte-toolbar-group">
-                        <button type="button" className="rte-btn" title="Insert Link" onMouseDown={(e) => { e.preventDefault(); insertLink(); }}>🔗</button>
-                        <button type="button" className="rte-btn" title="Unlink" onMouseDown={(e) => { e.preventDefault(); execCmd("unlink"); }}>🚫</button>
-                        <button type="button" className="rte-btn rte-btn-danger" title="Clear Formatting" onMouseDown={(e) => { e.preventDefault(); execCmd("removeFormat"); }}>✕</button>
+                        <button type="button" className="rte-btn" disabled={isHtmlMode} title="Insert Link" onMouseDown={(e) => { e.preventDefault(); if (!isHtmlMode) insertLink(); }}>🔗</button>
+                        <button type="button" className="rte-btn" disabled={isHtmlMode} title="Unlink" onMouseDown={(e) => { e.preventDefault(); if (!isHtmlMode) execCmd("unlink"); }}>🚫</button>
+                        <button type="button" className="rte-btn rte-btn-danger" disabled={isHtmlMode} title="Clear Formatting" onMouseDown={(e) => { e.preventDefault(); if (!isHtmlMode) execCmd("removeFormat"); }}>✕</button>
+                      </div>
+                      <div className="rte-toolbar-divider" />
+                      <div className="rte-toolbar-group" style={{ marginLeft: "auto" }}>
+                        <button
+                          type="button"
+                          className={`rte-btn rte-btn-text ${isHtmlMode ? "rte-btn-active" : ""}`}
+                          style={{
+                            width: "auto",
+                            padding: "0 10px",
+                            height: "28px",
+                            background: isHtmlMode ? "rgba(124, 58, 237, 0.12)" : "transparent",
+                            border: "1px solid",
+                            borderColor: isHtmlMode ? "rgba(124, 58, 237, 0.3)" : "rgba(0, 0, 0, 0.08)",
+                            borderRadius: "6px",
+                            color: isHtmlMode ? "#7c3aed" : "#475569",
+                            fontWeight: 600,
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "4px"
+                          }}
+                          onClick={() => setIsHtmlMode(!isHtmlMode)}
+                          title="Switch between Rich Text and Raw HTML"
+                        >
+                          {isHtmlMode ? "✍️ Visual Editor" : "HTML Mode"}
+                        </button>
                       </div>
                     </div>
 
                     {/* Editable area */}
-                    <div
-                      ref={editorRef}
-                      className="rte-editable"
-                      contentEditable
-                      suppressContentEditableWarning
-                      onInput={syncEditorContent}
-                      onBlur={syncEditorContent}
-                      data-placeholder="Draft the article content here — use the toolbar above for formatting..."
-                    />
+                    {isHtmlMode ? (
+                      <textarea
+                        className="rte-editable rte-html-textarea"
+                        value={content}
+                        onChange={(e) => handleContentChange(e.target.value)}
+                        placeholder="Draft the article HTML here..."
+                      />
+                    ) : (
+                      <div
+                        ref={editorRef}
+                        className="rte-editable"
+                        contentEditable
+                        suppressContentEditableWarning
+                        onInput={syncEditorContent}
+                        onBlur={syncEditorContent}
+                        data-placeholder="Draft the article content here — use the toolbar above for formatting..."
+                      />
+                    )}
 
                     {/* Hidden input to satisfy required validation */}
                     <input
                       type="text"
                       required
                       value={content}
-                      onChange={() => {}}
+                      onChange={() => { }}
                       tabIndex={-1}
                       className="visually-hidden-input"
                     />
@@ -1555,6 +1626,74 @@ export default function AdminBlogsPage() {
           }
         }
 
+        /* ── Toggle Switch ── */
+        :global(.admin-lte-theme .form-group label.toggle-row) {
+          display: flex !important;
+          align-items: center !important;
+          justify-content: space-between !important;
+          width: 100% !important;
+          padding: 10px 14px !important;
+          background: rgba(255, 255, 255, 0.8) !important;
+          border: 1px solid var(--border-glass) !important;
+          border-radius: 8px !important;
+          cursor: pointer !important;
+          transition: var(--transition-fast) !important;
+          margin-top: 4px !important;
+        }
+        :global(.admin-lte-theme .form-group label.toggle-row:hover) {
+          background: #ffffff !important;
+          border-color: #7c3aed !important;
+          box-shadow: 0 0 8px rgba(124, 58, 237, 0.05) !important;
+        }
+        :global(.toggle-label-text) {
+          font-size: 0.85rem !important;
+          font-weight: 600 !important;
+          color: #334155 !important;
+          user-select: none !important;
+        }
+        :global(.toggle-switch) {
+          position: relative !important;
+          display: inline-block !important;
+          width: 40px !important;
+          height: 22px !important;
+          flex-shrink: 0 !important;
+        }
+        :global(.toggle-switch input) {
+          opacity: 0 !important;
+          width: 0 !important;
+          height: 0 !important;
+          position: absolute !important;
+        }
+        :global(.toggle-slider) {
+          position: absolute !important;
+          cursor: pointer !important;
+          top: 0 !important;
+          left: 0 !important;
+          right: 0 !important;
+          bottom: 0 !important;
+          background-color: #cbd5e1 !important;
+          transition: .25s ease-in-out !important;
+          border-radius: 22px !important;
+        }
+        :global(.toggle-slider:before) {
+          position: absolute !important;
+          content: "" !important;
+          height: 16px !important;
+          width: 16px !important;
+          left: 3px !important;
+          bottom: 3px !important;
+          background-color: white !important;
+          transition: .25s ease-in-out !important;
+          border-radius: 50% !important;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15) !important;
+        }
+        :global(.toggle-switch input:checked + .toggle-slider) {
+          background-color: #7c3aed !important;
+        }
+        :global(.toggle-switch input:checked + .toggle-slider:before) {
+          transform: translateX(18px) !important;
+        }
+
         /* ── Rich Text Editor ── */
         .rte-wrapper {
           border: 1.5px solid var(--border-glass);
@@ -1621,6 +1760,21 @@ export default function AdminBlogsPage() {
           background: rgba(239, 68, 68, 0.08);
           border-color: rgba(239, 68, 68, 0.2);
           color: #ef4444;
+        }
+        .rte-btn:disabled {
+          opacity: 0.4;
+          cursor: not-allowed;
+          pointer-events: none;
+        }
+        .rte-html-textarea {
+          border: none;
+          resize: vertical;
+          font-family: 'Fira Code', 'Courier New', Courier, monospace;
+          font-size: 0.85rem;
+          background: #f8fafc;
+          color: #0f172a;
+          line-height: 1.6;
+          white-space: pre-wrap;
         }
         .rte-editable {
           min-height: 260px;

@@ -103,6 +103,7 @@ export interface Blog {
   images?: string[];
   videos?: string[];
   section?: string | null;
+  is_show_featured_page?: boolean;
   createdAt?: string;
 }
 
