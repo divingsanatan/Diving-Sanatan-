@@ -28,10 +28,27 @@ const chakraKey = (name: string): string => {
   return "root";
 };
 
+function parseInlineCss(cssString?: string): React.CSSProperties {
+  if (!cssString) return {};
+  const styles: Record<string, string> = {};
+  cssString.split(";").forEach(rule => {
+    const parts = rule.split(":");
+    if (parts.length === 2) {
+      const key = parts[0].trim().replace(/-([a-z])/g, (g) => g[1].toUpperCase()); // convert to camelCase
+      const value = parts[1].trim();
+      styles[key] = value;
+    }
+  });
+  return styles as React.CSSProperties;
+}
+
 export default function AdminKeywordsPage() {
   const [keywords, setKeywords] = useState<Keyword[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Multi-select state
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
@@ -45,6 +62,9 @@ export default function AdminKeywordsPage() {
   const [keywordWord, setKeywordWord] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedChakras, setSelectedChakras] = useState<string[]>([]);
+  const [customCss, setCustomCss] = useState("");
+  const [publishDate, setPublishDate] = useState("");
+  const [autoSchedule, setAutoSchedule] = useState(true);
 
   // UI state for dropdowns
   const [catDropdownOpen, setCatDropdownOpen] = useState(false);
@@ -67,6 +87,7 @@ export default function AdminKeywordsPage() {
         setKeywords(kJson.data);
         setCategories(cJson.data);
         setCurrentPage(1);
+        setSelectedIds([]); // Clear selection on reload
       }
     } catch (err) {
       console.error(err);
@@ -97,6 +118,9 @@ export default function AdminKeywordsPage() {
     setKeywordWord("");
     setSelectedCategories([]);
     setSelectedChakras([]);
+    setCustomCss("");
+    setPublishDate("");
+    setAutoSchedule(true);
     setEditMode(false);
     setEditKeywordId(null);
   };
@@ -112,6 +136,9 @@ export default function AdminKeywordsPage() {
     setKeywordWord(kw.word);
     setSelectedCategories(kw.categoryIds || []);
     setSelectedChakras(kw.chakras || []);
+    setCustomCss(kw.customCss || "");
+    setPublishDate(kw.publishDate ? new Date(kw.publishDate).toISOString().split("T")[0] : "");
+    setAutoSchedule(false);
     setIsModalOpen(true);
   };
 
@@ -125,7 +152,9 @@ export default function AdminKeywordsPage() {
     const payload = {
       word: keywordWord.trim().toLowerCase(),
       categoryIds: selectedCategories,
-      chakras: selectedChakras
+      chakras: selectedChakras,
+      customCss: customCss.trim(),
+      publishDate: autoSchedule ? null : (publishDate ? new Date(publishDate).toISOString() : null)
     };
 
     try {
@@ -174,6 +203,24 @@ export default function AdminKeywordsPage() {
     }
   };
 
+  const handleDeleteSelected = async () => {
+    if (selectedIds.length === 0) return;
+    if (!confirm(`Are you sure you want to delete ${selectedIds.length} selected keywords?`)) return;
+    try {
+      const idsParam = selectedIds.join(",");
+      const res = await fetch(`/api/keywords?id=${encodeURIComponent(idsParam)}`, { method: "DELETE" });
+      const json = await res.json();
+      if (json.success) {
+        setSelectedIds([]);
+        loadData();
+      } else {
+        alert("Failed to delete selected keywords: " + json.error);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const toggleCategorySelection = (catId: string) => {
     if (selectedCategories.includes(catId)) {
       setSelectedCategories(selectedCategories.filter(id => id !== catId));
@@ -196,6 +243,15 @@ export default function AdminKeywordsPage() {
         pageType="keywords"
         actions={
           <div className="header-actions">
+            {selectedIds.length > 0 && (
+              <button 
+                className="btn btn-danger" 
+                onClick={handleDeleteSelected}
+                style={{ marginRight: "4px", backgroundColor: "#ef4444", borderColor: "#ef4444" }}
+              >
+                ✕ Delete Selected ({selectedIds.length})
+              </button>
+            )}
             <button className="sync-btn" onClick={loadData}>
               🔄 Refresh Keywords
             </button>
@@ -226,16 +282,34 @@ export default function AdminKeywordsPage() {
                   <table className="admin-glass-table">
                     <thead>
                       <tr>
+                        <th style={{ width: "40px" }}>
+                          <input 
+                            type="checkbox" 
+                            checked={paginatedKeywords.length > 0 && paginatedKeywords.every(k => selectedIds.includes(k.id))}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                const pageIds = paginatedKeywords.map(k => k.id);
+                                setSelectedIds(prev => Array.from(new Set([...prev, ...pageIds])));
+                              } else {
+                                const pageIds = paginatedKeywords.map(k => k.id);
+                                setSelectedIds(prev => prev.filter(id => !pageIds.includes(id)));
+                              }
+                            }}
+                            className="admin-checkbox"
+                          />
+                        </th>
                         <th>Keyword</th>
                         <th>Linked Categories</th>
                         <th>Linked Chakras</th>
+                        <th>Publish Date</th>
+                        <th>Custom CSS Preview</th>
                         <th className="text-right">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       {paginatedKeywords.length === 0 ? (
                         <tr>
-                          <td colSpan={4} className="admin-empty-cell text-center" style={{ padding: "20px" }}>
+                          <td colSpan={7} className="admin-empty-cell text-center" style={{ padding: "20px" }}>
                             No keywords aligned yet.
                           </td>
                         </tr>
@@ -243,7 +317,21 @@ export default function AdminKeywordsPage() {
                         paginatedKeywords.map(k => (
                           <tr key={k.id}>
                             <td>
-                              <span className="keyword-word" style={{ fontSize: "1rem", fontWeight: "bold" }}>“{k.word}”</span>
+                              <input 
+                                type="checkbox" 
+                                checked={selectedIds.includes(k.id)}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setSelectedIds(prev => [...prev, k.id]);
+                                  } else {
+                                    setSelectedIds(prev => prev.filter(id => id !== k.id));
+                                  }
+                                }}
+                                className="admin-checkbox"
+                              />
+                            </td>
+                            <td>
+                              <span className="keyword-word" style={{ fontSize: "1rem", ...parseInlineCss(k.customCss) }}>“{k.word}”</span>
                             </td>
                             <td>
                               <div className="categories-chips-container" style={{ display: "flex", flexWrap: "wrap", gap: "3px" }}>
@@ -280,6 +368,24 @@ export default function AdminKeywordsPage() {
                                   <span className="category-badge muted">None</span>
                                 )}
                               </div>
+                            </td>
+                            <td>
+                              {k.publishDate ? (
+                                <span className="publish-date-badge" style={{ fontSize: "0.8rem", whiteSpace: "nowrap" }}>
+                                  📅 {new Date(k.publishDate).toLocaleDateString(undefined, { dateStyle: "medium" })}
+                                </span>
+                              ) : (
+                                <span className="publish-date-badge draft" style={{ fontSize: "0.8rem", color: "hsl(var(--text-muted))", fontStyle: "italic" }}>Draft (Unscheduled)</span>
+                              )}
+                            </td>
+                            <td>
+                              {k.customCss ? (
+                                <code style={{ fontSize: "0.75rem", background: "rgba(0,0,0,0.04)", padding: "2px 6px", borderRadius: "4px", display: "inline-block", maxWidth: "150px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={k.customCss}>
+                                  {k.customCss}
+                                </code>
+                              ) : (
+                                <span className="muted" style={{ fontSize: "0.75rem", color: "hsl(var(--text-muted))" }}>None</span>
+                              )}
                             </td>
                             <td className="text-right">
                               <div className="action-buttons-cell" style={{ display: "flex", gap: "4px", justifyContent: "flex-end" }}>
@@ -456,6 +562,44 @@ export default function AdminKeywordsPage() {
                           );
                         })}
                       </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Custom CSS field */}
+                <div className="form-group">
+                  <label>Custom CSS Styles</label>
+                  <textarea
+                    className="glass-input"
+                    rows={2}
+                    placeholder="e.g. color: #7c3aed; font-weight: bold;"
+                    value={customCss}
+                    onChange={(e) => setCustomCss(e.target.value)}
+                  />
+                  <small style={{ fontSize: "0.75rem", color: "hsl(var(--text-muted))" }}>
+                    CSS styling applied when rendering this keyword inline (e.g. <code>color: purple; font-weight: bold;</code>)
+                  </small>
+                </div>
+
+                {/* Publish Date field */}
+                <div className="form-group">
+                  <label>Publish Date / Posting Schedule</label>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                    <label style={{ display: "flex", alignItems: "center", gap: "8px", textTransform: "none", fontWeight: "normal", fontSize: "0.85rem", cursor: "pointer", color: "hsl(var(--text-cream))" }}>
+                      <input
+                        type="checkbox"
+                        checked={autoSchedule}
+                        onChange={(e) => setAutoSchedule(e.target.checked)}
+                      />
+                      Auto-schedule queue (posts one per day consecutively)
+                    </label>
+                    {!autoSchedule && (
+                      <input
+                        type="date"
+                        className="glass-input"
+                        value={publishDate}
+                        onChange={(e) => setPublishDate(e.target.value)}
+                      />
                     )}
                   </div>
                 </div>
@@ -789,6 +933,26 @@ export default function AdminKeywordsPage() {
           font-weight: 700;
           color: #7c3aed;
           margin-right: 8px;
+        }
+        .publish-date-badge {
+          background: rgba(168, 85, 247, 0.06);
+          border: 1px solid rgba(168, 85, 247, 0.2);
+          color: #7c3aed;
+          font-weight: 750;
+          padding: 4px 10px;
+          border-radius: 6px;
+          display: inline-block;
+        }
+        .publish-date-badge.draft {
+          background: rgba(0, 0, 0, 0.04) !important;
+          border-color: rgba(0, 0, 0, 0.08) !important;
+          color: hsl(var(--text-muted)) !important;
+        }
+        .admin-checkbox {
+          width: 16px;
+          height: 16px;
+          cursor: pointer;
+          accent-color: #7c3aed;
         }
       `}</style>
     </div>

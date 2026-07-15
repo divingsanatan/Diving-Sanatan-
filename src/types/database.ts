@@ -58,6 +58,8 @@ export interface Keyword {
   categoryIds?: string[];
   chakras?: string[];
   createdAt?: string;
+  customCss?: string;
+  publishDate?: string;
 }
 
 export interface Booking {

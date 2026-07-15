@@ -526,9 +526,9 @@ export default function Home() {
                           if (e.target.value.trim()) setSearchError(false);
                         }}
                       />
-                      <span className="search-input-suggestion">
-                        Try: anxiety, relationship, self doubt, financial stress...
-                      </span>
+                      {/* <span className="search-input-suggestion">
+                        Try: Anxiety, Relationship, Self doubt, Financial issues
+                      </span> */}
                     </div>
                     <button type="submit" className="search-submit-btn">
                       <span>Find Guidance</span>

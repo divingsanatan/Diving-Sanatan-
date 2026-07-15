@@ -25,6 +25,13 @@ export default function AdminFAQPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+
+  const showToast = (message: string, type: "success" | "error" = "success") => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
+
   const loadFaqs = async () => {
     try {
       setLoading(true);
@@ -78,7 +85,7 @@ export default function AdminFAQPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!question.trim() || !answer.trim()) {
-      alert("Question and answer are required.");
+      showToast("Question and answer are required.", "error");
       return;
     }
 
@@ -97,15 +104,15 @@ export default function AdminFAQPage() {
       });
       const json = await res.json();
       if (json.success) {
-        alert(editMode ? "FAQ updated successfully!" : "FAQ created successfully!");
+        showToast(editMode ? "FAQ updated successfully!" : "FAQ created successfully!", "success");
         resetForm();
         loadFaqs();
       } else {
-        alert(json.error || "Operation failed.");
+        showToast(json.error || "Operation failed.", "error");
       }
     } catch (err) {
       console.error(err);
-      alert("Something went wrong. Please try again.");
+      showToast("Something went wrong. Please try again.", "error");
     }
   };
 
@@ -116,13 +123,15 @@ export default function AdminFAQPage() {
       const res = await fetch(`/api/faq?id=${encodeURIComponent(id)}`, { method: "DELETE" });
       const json = await res.json();
       if (json.success) {
+        showToast("FAQ deleted successfully!", "success");
         if (editId === id) resetForm();
         loadFaqs();
       } else {
-        alert(json.error || "Failed to delete FAQ.");
+        showToast(json.error || "Failed to delete FAQ.", "error");
       }
     } catch (err) {
       console.error(err);
+      showToast("Something went wrong while deleting.", "error");
     }
   };
 
@@ -140,6 +149,13 @@ export default function AdminFAQPage() {
 
   return (
     <div className="dashboard-content">
+      {/* Toast Notification */}
+      {toast && (
+        <div className={`toast-notify ${toast.type}`}>
+          <span>{toast.message}</span>
+        </div>
+      )}
+
       <StatsDashboard
         pageType="faq"
         actions={
@@ -317,7 +333,7 @@ export default function AdminFAQPage() {
                       onChange={(e) => setVerified(e.target.checked)}
                       style={{ width: "16px", height: "16px", accentColor: "#7c3aed" }}
                     />
-                    <label htmlFor="verified-checkbox" style={{ textTransform: "none", cursor: "pointer", fontSize: "0.85rem", margin: 0 }}>
+                    <label htmlFor="verified-checkbox" style={{ textTransform: "none", cursor: "pointer", fontSize: "0.85rem", margin: 0, fontWeight: "normal" }}>
                       Expert Verified Answer
                     </label>
                   </div>
@@ -330,7 +346,7 @@ export default function AdminFAQPage() {
                       onChange={(e) => setIsPublished(e.target.checked)}
                       style={{ width: "16px", height: "16px", accentColor: "#7c3aed" }}
                     />
-                    <label htmlFor="published-checkbox" style={{ textTransform: "none", cursor: "pointer", fontSize: "0.85rem", margin: 0 }}>
+                    <label htmlFor="published-checkbox" style={{ textTransform: "none", cursor: "pointer", fontSize: "0.85rem", margin: 0, fontWeight: "normal" }}>
                       Is Published (Visible to public)
                     </label>
                   </div>
@@ -580,6 +596,40 @@ export default function AdminFAQPage() {
         }
         .textarea-input {
           resize: vertical;
+        }
+        .toast-notify {
+          position: fixed;
+          top: 24px;
+          right: 24px;
+          padding: 16px 24px;
+          border-radius: 12px;
+          font-weight: 600;
+          font-size: 0.9rem;
+          color: #ffffff;
+          box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
+          z-index: 2000;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .toast-notify.success {
+          background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+          border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+        .toast-notify.error {
+          background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+          border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+        @keyframes slideIn {
+          from {
+            transform: translateY(-20px) scale(0.95);
+            opacity: 0;
+          }
+          to {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+          }
         }
       `}</style>
     </div>

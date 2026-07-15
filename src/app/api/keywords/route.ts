@@ -20,7 +20,9 @@ function mapKeywordRelations(k: any): Keyword {
     categories,
     categoryIds,
     chakras,
-    createdAt: k.created_at
+    createdAt: k.created_at,
+    customCss: k.custom_css || "",
+    publishDate: k.publish_date || ""
   };
 }
 
@@ -62,18 +64,49 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { word, categoryIds, chakras } = body;
+    const { word, categoryIds, chakras, customCss, publishDate } = body;
 
     if (!word || !word.trim()) {
       return NextResponse.json({ success: false, error: "Keyword string is required" }, { status: 400 });
     }
 
+    // Auto-schedule queue logic: if no publishDate is provided, schedule it 1 day after the latest scheduled keyword
+    let finalPublishDate = publishDate;
+    if (!finalPublishDate) {
+      try {
+        const { data: maxDateData } = await supabaseServer
+          .from("keywords")
+          .select("publish_date")
+          .not("publish_date", "is", null)
+          .order("publish_date", { ascending: false })
+          .limit(1);
+
+        if (maxDateData && maxDateData.length > 0 && maxDateData[0].publish_date) {
+          const latestDate = new Date(maxDateData[0].publish_date);
+          latestDate.setDate(latestDate.getDate() + 1);
+          finalPublishDate = latestDate.toISOString();
+        } else {
+          finalPublishDate = new Date().toISOString();
+        }
+      } catch (err) {
+        console.error("Auto-schedule failed:", err);
+        finalPublishDate = new Date().toISOString();
+      }
+    }
+
     const keywordId = `key-${Math.random().toString(36).substring(2, 9)}`;
+
+    const row = {
+      id: keywordId,
+      word: word.trim().toLowerCase(),
+      custom_css: customCss || null,
+      publish_date: finalPublishDate || null
+    };
 
     // 1. Insert keyword row
     const { error: keyError } = await supabaseServer
       .from("keywords")
-      .insert([{ id: keywordId, word: word.trim().toLowerCase() }]);
+      .insert([row]);
 
     if (keyError) {
       return NextResponse.json({ success: false, error: keyError.message }, { status: 500 });
@@ -119,16 +152,22 @@ export async function POST(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   try {
     const body = await req.json();
-    const { id, word, categoryIds, chakras } = body;
+    const { id, word, categoryIds, chakras, customCss, publishDate } = body;
 
     if (!id || !word || !word.trim()) {
       return NextResponse.json({ success: false, error: "ID and keyword string are required" }, { status: 400 });
     }
 
-    // 1. Update keyword row name
+    const updates = {
+      word: word.trim().toLowerCase(),
+      custom_css: customCss || null,
+      publish_date: publishDate || null
+    };
+
+    // 1. Update keyword row
     const { error: updateErr } = await supabaseServer
       .from("keywords")
-      .update({ word: word.trim().toLowerCase() })
+      .update(updates)
       .eq("id", id);
 
     if (updateErr) {
@@ -177,10 +216,12 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Keyword ID is required" }, { status: 400 });
     }
 
+    const ids = id.split(",");
+
     const { error } = await supabaseServer
       .from("keywords")
       .delete()
-      .eq("id", id);
+      .in("id", ids);
 
     if (error) {
       return NextResponse.json({ success: false, error: error.message }, { status: 500 });

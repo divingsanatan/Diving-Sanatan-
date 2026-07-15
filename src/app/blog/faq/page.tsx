@@ -229,10 +229,10 @@ export default function FAQPage() {
 
   // Handle accordion toggle
   const toggleAccordion = (id: string) => {
-    setOpenAccordions((prev) => ({
-      ...prev,
-      [id]: !prev[id],
-    }));
+    setOpenAccordions((prev) => {
+      const wasOpen = !!prev[id];
+      return wasOpen ? {} : { [id]: true };
+    });
   };
 
   // Scroll to page section
@@ -249,10 +249,9 @@ export default function FAQPage() {
     setSearchQuery("");
 
     // 2. Open this specific accordion
-    setOpenAccordions((prev) => ({
-      ...prev,
+    setOpenAccordions({
       [faqId]: true,
-    }));
+    });
 
     // 3. Scroll to the question card smoothly
     setTimeout(() => {
@@ -358,7 +357,7 @@ export default function FAQPage() {
                   <div className={`accordion-collapse-wrapper ${isOpen ? "expanded" : "collapsed"}`}>
                     <div className="accordion-content-inner">
                       <div className="accordion-content-divider" />
-                      <p className="faq-answer-paragraph">{faq.answer}</p>
+                      <p className="faq-answer-paragraph" dangerouslySetInnerHTML={{ __html: faq.answer }} />
 
                       <div className="faq-card-footer">
                         <div className="footer-tags">
@@ -874,6 +873,15 @@ export default function FAQPage() {
           line-height: 1.6;
           color: #4b5563;
           margin: 0 0 16px;
+        }
+        .faq-answer-paragraph :global(a) {
+          color: #7c3aed;
+          text-decoration: underline;
+          font-weight: 500;
+          transition: color 0.15s ease;
+        }
+        .faq-answer-paragraph :global(a:hover) {
+          color: #6d28d9;
         }
         
         .faq-card-footer {

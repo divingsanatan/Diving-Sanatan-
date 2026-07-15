@@ -135,7 +135,6 @@ export function GlossaryTermIllustration({ illustration }: GlossaryTermIllustrat
   if (illustration && (illustration.startsWith("http") || illustration.startsWith("/"))) {
     return (
       <div className="term-graphic-container">
-        <span className="graphic-label">Illustration</span>
         <div className="aura-chart-svg-wrapper">
           <img
             src={illustration}

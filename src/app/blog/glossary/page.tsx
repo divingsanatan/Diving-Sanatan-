@@ -143,7 +143,7 @@ export default function GlossaryPage() {
                     </div>
 
                     {term.category && <span className="term-category-badge">{term.category}</span>}
-                    <p className="term-definition-text">{term.definition}</p>
+                    <p className="term-definition-text" dangerouslySetInnerHTML={{ __html: term.definition }} />
                   </div>
 
                   <GlossaryTermIllustration illustration={term.illustration} />
@@ -202,15 +202,18 @@ export default function GlossaryPage() {
           padding: 8px 0 0;
         }
         .glossary-title {
-          font-size: 2.4rem;
-          color: #4c1d95;
+          font-family: var(--font-serif);
+          font-size: 2.3rem;
+          color: #1e1b4b;
+          font-weight: 750 !important;
+          line-height: 1.2 !important;
           margin-bottom: 8px;
-          font-weight: 700;
-          letter-spacing: -0.01em;
         }
         .glossary-subtitle {
-          font-size: 1rem;
-          color: hsl(var(--text-muted));
+          font-family: var(--font-sans);
+          font-size: 0.92rem;
+          color: #6b7280;
+          line-height: 1.5;
           max-width: 650px;
           margin: 0;
         }
@@ -245,14 +248,15 @@ export default function GlossaryPage() {
           max-width: 720px;
         }
         .letter-btn {
+          font-family: var(--font-sans);
+          font-size: 0.82rem;
+          font-weight: 600;
+          color: hsl(var(--text-cream));
           width: 32px;
           height: 32px;
           border-radius: 8px;
           border: 1px solid rgba(0, 0, 0, 0.04);
           background: rgba(255, 255, 255, 0.6);
-          color: hsl(var(--text-cream));
-          font-weight: 600;
-          font-size: 0.85rem;
           cursor: pointer;
           transition: var(--transition-fast);
           display: flex;
@@ -305,6 +309,7 @@ export default function GlossaryPage() {
           flex-wrap: wrap;
         }
         .term-word {
+          font-family: var(--font-serif);
           font-size: 1.8rem;
           color: #4c1d95;
           margin: 0;
@@ -335,7 +340,7 @@ export default function GlossaryPage() {
           transform: scale(1.05);
         }
         .term-category-badge {
-          align-self: flex-start;
+          font-family: var(--font-sans);
           font-size: 0.72rem;
           font-weight: 700;
           color: #0d9488;
@@ -345,11 +350,22 @@ export default function GlossaryPage() {
           border-radius: 6px;
           text-transform: uppercase;
           letter-spacing: 0.05em;
+          align-self: flex-start;
         }
         .term-definition-text {
-          font-size: 1.05rem;
-          line-height: 1.7;
+          font-family: var(--font-sans);
+          font-size: 0.88rem;
+          line-height: 1.6;
           color: hsl(var(--text-cream));
+        }
+        .term-definition-text :global(a) {
+          color: #7c3aed;
+          text-decoration: underline;
+          font-weight: 500;
+          transition: color 0.15s ease;
+        }
+        .term-definition-text :global(a:hover) {
+          color: #6d28d9;
         }
         .terms-empty {
           text-align: center;
@@ -367,6 +383,7 @@ export default function GlossaryPage() {
           margin-top: 12px;
         }
         .pagination-info {
+          font-family: var(--font-sans);
           font-size: 0.85rem;
           color: hsl(var(--text-muted));
         }
@@ -376,12 +393,13 @@ export default function GlossaryPage() {
           flex-wrap: wrap;
         }
         .page-btn {
+          font-family: var(--font-sans);
+          font-size: 0.8rem;
+          font-weight: 600;
           background: transparent;
           border: 1px solid rgba(0, 0, 0, 0.08);
           padding: 6px 12px;
           border-radius: 6px;
-          font-size: 0.8rem;
-          font-weight: 600;
           color: hsl(var(--text-muted));
           cursor: pointer;
           transition: var(--transition-fast);
@@ -413,7 +431,7 @@ export default function GlossaryPage() {
             font-size: 1.4rem;
           }
           .term-definition-text {
-            font-size: 0.95rem;
+            font-size: 0.88rem;
             line-height: 1.6;
           }
         }

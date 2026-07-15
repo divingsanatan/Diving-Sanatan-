@@ -440,7 +440,7 @@ export default function AboutClient() {
               <h2>Our Story</h2>
               <h1>Healing Ancient Wisdom for Modern Lives</h1>
               <p>
-                Diving Sanatan was founded in 2000 with a simple yet powerful vision – to make holistic healing accessible, authentic, and transformative for all. We bridge time-tested ancient energy patterns with state-of-the-art cognitive wellness structures, guiding seekers back to somatic quietude.
+                Diving Sanatan was Founded in 2015 by Nikhil Deshpande, Diving Sanatan is a holistic wellness platform dedicated to helping individuals navigate life's most important challenges with clarity and confidence. Whether you're seeking guidance for your health...
               </p>
               <button className="learn-btn" onClick={() => setShowStoryModal(true)}>
                 Learn Our Journey
@@ -827,33 +827,11 @@ export default function AboutClient() {
             <button className="modal-close-btn" onClick={() => setShowStoryModal(false)}>
               &times;
             </button>
-            <h3>Our Journey Since 2000</h3>
+            <h3>Our Journey Since 2015</h3>
             <div className="modal-body-scroll">
               <p>
-                Founded at the turn of the millennium, Diving Sanatan set out to restore balance to lives overwhelmed by modern acceleration. What began as a small sanctuary with just two master practitioners has grown into a globally trusted network of expert healers, life coaches, and sound therapists.
+                Founded in 2015 by Nikhil Deshpande, Diving Sanatan is a holistic wellness platform dedicated to helping individuals navigate life's most important challenges with clarity and confidence. Whether you're seeking guidance for your health, relationships, finances, career, emotional well-being, or personal growth, our personalized counselling and energy-based healing practices are designed to uncover the root cause and restore balance. By integrating the timeless wisdom of Sanatan with modern holistic approaches, we empower individuals to overcome obstacles, make informed life decisions, and experience lasting transformation from within.
               </p>
-              <div className="timeline">
-                <div className="timeline-item">
-                  <span className="year">2000</span>
-                  <p>Inception of Diving Sanatan in Mumbai as a local energetic sanctuary.</p>
-                </div>
-                <div className="timeline-item">
-                  <span className="year">2006</span>
-                  <p>Accredited by the International Alliance of Reiki Practitioners.</p>
-                </div>
-                <div className="timeline-item">
-                  <span className="year">2012</span>
-                  <p>Incorporated sound healing methodologies and built our physical acoustic dome.</p>
-                </div>
-                <div className="timeline-item">
-                  <span className="year">2018</span>
-                  <p>Launched the 1:1 online coaching division, helping over 10,000 seekers globally.</p>
-                </div>
-                <div className="timeline-item">
-                  <span className="year">2023</span>
-                  <p>Completed 25,000 successful sessions across 40 countries.</p>
-                </div>
-              </div>
             </div>
           </div>
         </div>
