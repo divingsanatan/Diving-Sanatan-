@@ -609,34 +609,7 @@ export default function BlogDetailsPage() {
               blog.category.toLowerCase() === "video blog"
             );
 
-            // Dynamic TOC helper
-            const extractTOC = (html: string) => {
-              const headings: string[] = [];
-              const hRegex = /<h[23][^>]*>(.*?)<\/h[23]>/g;
-              let match;
-              while ((match = hRegex.exec(html)) !== null) {
-                const clean = match[1].replace(/<[^>]+>/g, "").trim();
-                if (clean) headings.push(clean);
-              }
 
-              if (headings.length === 0) {
-                // Fallback to lines starting with numbers
-                const lines = html.split(/<br\s*\/?>|<\/p>|<p>|\n/);
-                for (const line of lines) {
-                  const clean = line.replace(/<[^>]+>/g, "").trim();
-                  if (/^\d+\.\s+[A-Za-z]/.test(clean)) {
-                    headings.push(clean);
-                  }
-                }
-              }
-
-              if (headings.length === 0) {
-                return ["Introduction", "Core Practice", "Benefits", "How to practice", "Conclusion"];
-              }
-              return headings;
-            };
-
-            const tocHeadings = extractTOC(blog.content);
 
             if (isVideoBlog) {
               const mainVideoUrl = blog.videos?.[0] || "";
@@ -1016,25 +989,7 @@ export default function BlogDetailsPage() {
                     </div>
                   )}
 
-                  {/* In This Article Card (Outline) */}
-                  <div className="in-this-article-card">
-                    <div className="ita-title-row">
-                      <svg viewBox="0 0 100 100" className="ita-lotus-icon">
-                        <path d="M50 25 C45 45 35 60 50 80 C65 60 55 45 50 25 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
-                        <path d="M50 80 C35 75 25 60 20 40 C35 50 45 60 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
-                        <path d="M50 80 C65 75 75 60 80 40 C65 50 55 60 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
-                      </svg>
-                      <h4 className="ita-heading">In This Article</h4>
-                    </div>
-                    <div className="ita-grid">
-                      {tocHeadings.map((heading, idx) => (
-                        <div key={idx} className="ita-item">
-                          <span className="ita-number">{idx + 1}.</span>
-                          <span className="ita-text">{heading}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+
 
                   {/* Body Content */}
                   <div className="article-body-content-wrapper">
@@ -1348,11 +1303,11 @@ export default function BlogDetailsPage() {
         .article-header {
           text-align: center;
           align-items: center;
-          margin-bottom: 32px;
+          margin-bottom: 20px;
           display: flex;
           flex-direction: column;
           gap: 16px;
-          padding: 80px 40px;
+          padding: 44px 40px;
           background: linear-gradient(135deg, #FAF7FF 0%, #FFFFFF 100%);
           border-radius: 20px;
           border: 1px solid rgba(124, 58, 237, 0.05);
@@ -2337,7 +2292,7 @@ export default function BlogDetailsPage() {
           height: 380px;
           border-radius: 20px;
           overflow: hidden;
-          margin: 16px 0 28px;
+          margin: 8px 0 24px;
           border: 1px solid var(--gold-border);
           box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
           background: #fafafa;
@@ -2348,54 +2303,7 @@ export default function BlogDetailsPage() {
           object-fit: cover;
         }
 
-        /* In This Article outline box */
-        .in-this-article-card {
-          background: #fbfbfe;
-          border: 1.5px solid rgba(168, 85, 247, 0.1);
-          border-radius: 20px;
-          padding: 24px;
-          margin-bottom: 28px;
-          box-shadow: inset 0 0 20px rgba(168, 85, 247, 0.02);
-        }
-        .ita-title-row {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          margin-bottom: 16px;
-        }
-        .ita-lotus-icon {
-          width: 22px;
-          height: 22px;
-          flex-shrink: 0;
-        }
-        .ita-heading {
-          font-family: var(--font-sans);
-          font-size: 1.1rem;
-          font-weight: 750;
-          color: #1e1b4b;
-          margin: 0;
-        }
-        .ita-grid {
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 12px;
-        }
-        .ita-item {
-          display: flex;
-          align-items: flex-start;
-          gap: 6px;
-        }
-        .ita-number {
-          font-weight: 700;
-          color: #7c3aed;
-          font-size: 0.88rem;
-        }
-        .ita-text {
-          font-size: 0.88rem;
-          color: #4b5563;
-          font-weight: 500;
-          line-height: 1.4;
-        }
+
 
         /* Global constraints for Rich HTML images embedded in body content */
         .article-rich-content img {
@@ -2433,7 +2341,7 @@ export default function BlogDetailsPage() {
           .article-split-row.reversed .split-media-col {
             order: 2 !important;
           }
-          .takeaways-row-grid, .ita-grid {
+          .takeaways-row-grid {
             grid-template-columns: 1fr;
           }
           .resource-download-row {
