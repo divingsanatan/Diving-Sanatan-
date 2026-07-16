@@ -142,7 +142,9 @@ export default function GlossaryPage() {
                       </button>
                     </div>
 
-                    {term.category && <span className="term-category-badge">{term.category}</span>}
+                    {term.category && term.category.toLowerCase() !== "chakras" && term.category.toLowerCase() !== "chakra" && (
+                      <span className="term-category-badge">{term.category}</span>
+                    )}
                     <p className="term-definition-text" dangerouslySetInnerHTML={{ __html: term.definition }} />
                   </div>
 

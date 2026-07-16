@@ -106,6 +106,7 @@ export interface Blog {
   videos?: string[];
   section?: string | null;
   is_show_featured_page?: boolean;
+  views?: number;
   createdAt?: string;
 }
 

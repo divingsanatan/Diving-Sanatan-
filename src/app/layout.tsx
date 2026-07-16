@@ -70,6 +70,21 @@ export default function RootLayout({
         />
       </head>
       <body>
+        {/* Google Analytics (gtag.js) */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-ECVGN8V7JC"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+
+            gtag('config', 'G-ECVGN8V7JC');
+          `}
+        </Script>
+
         {/* Meta Pixel Code */}
         <Script id="fb-pixel" strategy="afterInteractive">
           {`

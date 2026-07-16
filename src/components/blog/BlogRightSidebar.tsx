@@ -87,27 +87,18 @@ export const BlogRightSidebar: React.FC = () => {
     activeBlog.category.toLowerCase() === "video blog"
   );
 
-  // Static fallback data for standard sidebar
-  const mostViewedFallback = [
-    {
-      id: "aura-cleanse",
-      title: "How to Cleanse Your Aura Daily",
-      views: "12.5K views",
-      image: "/images/insight_blog.png"
-    },
-    {
-      id: "seven-chakras",
-      title: "Understanding the 7 Chakras & Their Meanings",
-      views: "9.8K views",
-      image: "/images/insight_space.png"
-    },
-    {
-      id: "full-moon-rituals",
-      title: "Full Moon Rituals for Release & Renewal",
-      views: "8.3K views",
-      image: "/images/insight_video.png"
+  // Sort blogs by views descending and take top 3
+  const mostViewedBlogs = [...allBlogs]
+    .sort((a, b) => (b.views || 0) - (a.views || 0))
+    .slice(0, 3);
+
+  const formatViews = (viewsNum: number | undefined) => {
+    const v = viewsNum || 0;
+    if (v >= 1000) {
+      return `${(v / 1000).toFixed(1)}K views`;
     }
-  ];
+    return `${v} views`;
+  };
 
   // Dynamic filter for Video Blog Layout
   const otherVideoBlogs = allBlogs
@@ -560,15 +551,15 @@ export const BlogRightSidebar: React.FC = () => {
           </div>
           
           <div className="most-viewed-list">
-            {mostViewedFallback.map((blog, idx) => (
+            {mostViewedBlogs.map((blog, idx) => (
               <Link key={blog.id} href={`/blog/${blog.id}`} className="most-viewed-item">
                 <div className="mv-number-badge">{idx + 1}</div>
                 <div className="mv-thumbnail-wrapper">
-                  <img src={blog.image} alt={blog.title} className="mv-thumbnail" />
+                  <img src={getBlogImage(blog.image)} alt={blog.title} className="mv-thumbnail" />
                 </div>
                 <div className="mv-info">
                   <h5>{blog.title}</h5>
-                  <span>{blog.views}</span>
+                  <span>{formatViews(blog.views)}</span>
                 </div>
               </Link>
             ))}

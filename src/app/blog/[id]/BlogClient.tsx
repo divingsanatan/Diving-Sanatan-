@@ -293,6 +293,11 @@ export default function BlogDetailsPage() {
         if (json.success) {
           setBlog(json.data);
           setActiveMediaIndex(0);
+          
+          // Increment view count in backend
+          fetch(`/api/blogs/views?id=${id}`, { method: "POST" }).catch((err) =>
+            console.error("Failed to increment views:", err)
+          );
         } else {
           setError(json.error || "Article not found");
         }
