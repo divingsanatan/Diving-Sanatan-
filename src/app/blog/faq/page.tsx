@@ -185,6 +185,174 @@ const CTALanternSVG = () => (
   </svg>
 );
 
+// Structured Data FAQ Schema for SEO
+const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What is Tantra and is it only about sex?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Tantra is a holistic spiritual path that integrates body, mind, and energy; sexuality is only one small aspect, with most practices focused on meditation, breathwork, and energy work."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I practice Tantra alone, or do I need a partner?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes – solo practices such as tantric meditation, breathwork, and yoga are core to the path; partner work is optional and not required."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How can Tantra help heal sexual trauma?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Tantra provides a safe, trauma‑informed space to reconnect with the body, release stored emotional charge, and reclaim pleasure through breath, conscious touch, and energy work."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What are the main benefits of practicing Tantra?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Increased self‑awareness, emotional healing, stress reduction, deeper intimacy, greater pleasure, and a stronger sense of connection to self and others."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is Tantra safe for people with trauma or emotional wounds?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "When practiced with clear boundaries, consent, and preferably a trauma‑informed facilitator, Tantra can be a powerful, safe healing modality."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is Pranic Healing and how does it work?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Pranic Healing is a no‑touch energy‑medicine system that cleanses congested/diseased energy and replenishes it with fresh prana to accelerate the body’s natural self‑healing. To know more visit here: https://www.youtube.com/watch?v=yn-VDccANa0&list=PLxeqS1bf_TGzOx-AlRYjIbH5_klFG1OUI"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can Pranic Healing be done remotely or online?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes – because it works on the energy body, distant healing sessions are as effective as in‑person treatments."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Do I need to believe in Pranic Healing for it to work?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No – the technique is based on energy principles, not belief; receptivity (an open mind) is sufficient."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is the basic Feng Shui tip for a better night’s sleep?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Place your bed in the “command position” – you can see the door without being directly in line with it, and have a solid wall behind the headboard."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How does clutter affect Feng Shui energy (Qi)?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Clutter creates stagnant Qi, blocking the smooth flow of energy; clearing clutter restores movement and reduces mental fatigue."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is the “wealth corner” in Feng Shui and how do I activate it?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The wealth corner is the far‑left diagonal from the front door (Bagua SE); activate it with healthy plants, water symbols, or objects that evoke abundance for you."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is Taoism (Daoism) in simple terms?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Taoism is a Chinese philosophy/religion that teaches living in harmony with the Tao – the natural, ever‑changing flow of the universe – through simplicity, spontaneity, and Wu Wei (effortless action)."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What does Wu Wei mean, and how can I practice it?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Wu Wei = “effortless action”: acting in tune with the natural flow of a situation without force or ego‑driven intent; practice by pausing, observing, then acting only when it feels spontaneous."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How does Taoist Wu Qing help with emotions?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Wu Qing means feeling emotions in accordance with the natural course – observe feelings without labeling them “good” or “bad,” allowing them to arise and pass without resistance."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is a basic Shamanic journey and what is it used for?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "A shamanic journey is a guided, rhythmic‑drummed trance that lets you travel to non‑ordinary realities to meet spirit guides, retrieve power, or gain healing insights."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is Shamanic healing safe for beginners?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes, when led by an experienced practitioner who sets clear intentions, provides grounding, and offers integration support; solo journeying should be approached only after proper training."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is Sanātana Dharma and how does it differ from “Hinduism”?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Sanātana Dharma (“eternal order”) is the indigenous term for the diverse spiritual traditions of India; “Hinduism” is a later exonym that encompasses the same traditions but is often seen as a religious label."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What are the Four Noble Truths in Buddhism?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "1) Life entails suffering (dukkha); 2) Suffering arises from craving; 3) Suffering ceases when craving ends; 4) The Eightfold Path leads to the cessation of suffering."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How can Buddhist mindfulness help with anxiety?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Mindfulness trains you to observe thoughts and feelings without judgment, breaking the cycle of worry and grounding attention in the present moment, which reduces anxiety."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is a simple daily Taoist practice for emotional balance?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Spend 5 minutes each morning observing your breath (qi) and gently noting any arising emotion without trying to change it – this cultivates Wu Qing and steadies the mind."
+      }
+    }
+  ]
+};
+
 export default function FAQPage() {
   const router = useRouter();
   const { searchQuery, setSearchQuery } = useBlog();
@@ -277,7 +445,12 @@ export default function FAQPage() {
   );
 
   return (
-    <div className="faq-columns-layout" id="faq-root">
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      />
+      <div className="faq-columns-layout" id="faq-root">
 
       {/* 1. MIDDLE COLUMN: Main Content */}
       <div className="faq-main-column">
@@ -1509,5 +1682,6 @@ export default function FAQPage() {
       `}</style>
 
     </div>
+    </>
   );
 }
