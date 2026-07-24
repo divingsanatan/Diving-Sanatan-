@@ -1306,6 +1306,7 @@ export default function ServicesPage() {
           -webkit-line-clamp: 2;
           -webkit-box-orient: vertical;
           overflow: hidden;
+          min-height: calc(1.45em * 2);
         }
         .learn-more-link {
           background: transparent;
@@ -1423,6 +1424,11 @@ export default function ServicesPage() {
           line-height: 1.4;
           color: #6b7280;
           flex: 1;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+          min-height: calc(1.4em * 2);
         }
         .program-details-row {
           display: flex;

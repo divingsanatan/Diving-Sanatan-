@@ -1312,7 +1312,7 @@ export default function BlogDetailsPage() {
           display: flex;
           flex-direction: column;
           gap: 16px;
-          padding: 44px 40px;
+          padding: 0;
           background: linear-gradient(135deg, #FAF7FF 0%, #FFFFFF 100%);
           border-radius: 20px;
           border: 1px solid rgba(124, 58, 237, 0.05);

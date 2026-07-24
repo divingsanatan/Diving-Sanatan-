@@ -334,7 +334,7 @@ export default function AdminFAQPage() {
                       style={{ width: "16px", height: "16px", accentColor: "#7c3aed" }}
                     />
                     <label htmlFor="verified-checkbox" style={{ textTransform: "none", cursor: "pointer", fontSize: "0.85rem", margin: 0, fontWeight: "normal" }}>
-                      Expert Verified Answer
+                      Show "Verified by Dr. Meera Sharma" Badge
                     </label>
                   </div>
 

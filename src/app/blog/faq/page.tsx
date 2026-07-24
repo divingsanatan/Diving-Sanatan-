@@ -543,7 +543,7 @@ export default function FAQPage() {
                         {faq.verified && (
                           <div className="expert-verified-badge">
                             <Check size={12} className="check-check" />
-                            <span>Expert Verified Answer</span>
+                            <span>Verified by Dr. Meera Sharma</span>
                           </div>
                         )}
                       </div>

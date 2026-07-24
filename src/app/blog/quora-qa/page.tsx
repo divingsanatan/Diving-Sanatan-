@@ -1047,62 +1047,6 @@ function QuoraQAInner() {
                 </p>
               </div>
 
-              {/* Ask a Question Card */}
-              <div className="ask-question-container glass-panel">
-                {user ? (
-                  <form onSubmit={handlePostQuestion} className="ask-q-form">
-                    <div className="form-header-row">
-                      <PlusCircle size={20} className="purple-icon" />
-                      <h3 className="form-title">Ask the community and healers</h3>
-                    </div>
-
-                    <div className="input-group">
-                      <label htmlFor="ask-title-input">Question title</label>
-                      <input
-                        id="ask-title-input"
-                        type="text"
-                        placeholder="e.g. What is the best crystal for Sacral Chakra balancing?"
-                        value={newQTitle}
-                        onChange={(e) => setNewQTitle(e.target.value)}
-                        className="glass-input ask-input"
-                        required
-                      />
-                    </div>
-
-                    <div className="input-group">
-                      <label htmlFor="ask-desc-input">Additional context or description</label>
-                      <textarea
-                        id="ask-desc-input"
-                        rows={2}
-                        placeholder="Provide details about what you are experiencing..."
-                        value={newQDesc}
-                        onChange={(e) => setNewQDesc(e.target.value)}
-                        className="glass-input ask-textarea"
-                      />
-                    </div>
-
-                    <div className="form-footer-row">
-                      <div className="select-wrapper">
-                        <label htmlFor="ask-category-select">Category</label>
-                        <select
-                          id="ask-category-select"
-                          value={newQCategory}
-                          onChange={(e) => setNewQCategory(e.target.value)}
-                          className="category-dropdown"
-                        >
-                          {categories.map(cat => (
-                            <option key={cat} value={cat}>{cat}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <button type="submit" className="submit-q-btn">
-                        Post Question
-                      </button>
-                    </div>
-                  </form>
-                ) : ""}
-              </div>
 
               {/* Active Discussions List */}
               <div className="listings-section">
