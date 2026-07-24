@@ -33,6 +33,7 @@ export default function AdminLayout({
   const [checking, setChecking] = useState(true);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [userRole, setUserRole] = useState("");
 
   useEffect(() => {
     const stored = window.localStorage.getItem("admin_sidebar_collapsed");
@@ -53,8 +54,15 @@ export default function AdminLayout({
 
   useEffect(() => {
     const isAuth = window.sessionStorage.getItem("divingsanatan_admin_auth");
+    const userStr = window.sessionStorage.getItem("divingsanatan_admin_user");
     if (isAuth === "true") {
       setAuthenticated(true);
+      if (userStr) {
+        try {
+          const userObj = JSON.parse(userStr);
+          setUserRole(userObj.role || "");
+        } catch (e) {}
+      }
       setChecking(false);
     } else {
       setAuthenticated(false);
@@ -181,15 +189,17 @@ export default function AdminLayout({
         <nav className="sidebar-nav">
           {/* Section: MONITOR */}
           <div className="sidebar-nav-header">Dashboard Monitor</div>
-          <Link
-            href="/admin/users"
-            title="User Management"
-            className={`sidebar-link ${pathname === "/admin/users" ? "active" : ""}`}
-            onClick={() => setSidebarOpen(false)}
-          >
-            <Users size={16} />
-            <span>User Management</span>
-          </Link>
+          {userRole === "super_admin" && (
+            <Link
+              href="/admin/users"
+              title="User Management"
+              className={`sidebar-link ${pathname === "/admin/users" ? "active" : ""}`}
+              onClick={() => setSidebarOpen(false)}
+            >
+              <Users size={16} />
+              <span>User Management</span>
+            </Link>
+          )}
           <Link
             href="/admin"
             title="Overview"

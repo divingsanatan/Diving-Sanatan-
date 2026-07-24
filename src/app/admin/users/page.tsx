@@ -9,6 +9,7 @@ export default function AdminUsersPage() {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [userRole, setUserRole] = useState("checking");
 
   // Form states
   const [newName, setNewName] = useState("");
@@ -41,8 +42,32 @@ export default function AdminUsersPage() {
   };
 
   useEffect(() => {
+    const userStr = window.sessionStorage.getItem("divingsanatan_admin_user");
+    if (userStr) {
+      try {
+        const userObj = JSON.parse(userStr);
+        if (userObj.role !== "super_admin") {
+          setUserRole(userObj.role || "user");
+          setLoading(false);
+          return;
+        } else {
+          setUserRole("super_admin");
+        }
+      } catch (e) {}
+    } else {
+      setUserRole("unknown");
+    }
     loadUsers();
   }, []);
+
+  if (userRole !== "checking" && userRole !== "super_admin") {
+    return (
+      <div style={{ padding: "60px", textAlign: "center" }}>
+        <h2 style={{ color: "#dc3545" }}>Unauthorized Access</h2>
+        <p style={{ fontSize: "1.1rem", color: "#6c757d" }}>You must be a Super Admin to view User Management.</p>
+      </div>
+    );
+  }
 
   const handleAddUser = async (e: React.FormEvent) => {
     e.preventDefault();
