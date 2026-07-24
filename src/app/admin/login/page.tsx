@@ -7,6 +7,7 @@ import { Globe } from "lucide-react";
 
 export default function AdminLoginPage() {
   const router = useRouter();
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
@@ -18,14 +19,30 @@ export default function AdminLoginPage() {
     }
   }, [router]);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === "admin123") {
-      window.sessionStorage.setItem("divingsanatan_admin_auth", "true");
-      setError("");
-      router.push("/admin");
-    } else {
-      setError("Unauthorized access passcode. Resonance mismatch.");
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
+      });
+      const json = await res.json();
+      
+      if (json.success) {
+        if (json.data.role === "admin" || json.data.role === "super_admin") {
+          window.sessionStorage.setItem("divingsanatan_admin_auth", "true");
+          window.sessionStorage.setItem("divingsanatan_admin_user", JSON.stringify(json.data));
+          setError("");
+          router.push("/admin");
+        } else {
+          setError("Unauthorized access. You do not have admin privileges.");
+        }
+      } else {
+        setError(json.error || "Login failed.");
+      }
+    } catch (err) {
+      setError("Server connection failed. Please try again.");
     }
   };
 
@@ -44,7 +61,18 @@ export default function AdminLoginPage() {
 
             <form onSubmit={handleLogin}>
               <div className="form-group mb-3">
-                <label style={{ fontWeight: "600", fontSize: "0.85rem" }}>Passcode</label>
+                <label style={{ fontWeight: "600", fontSize: "0.85rem" }}>Email</label>
+                <input
+                  type="email"
+                  className="form-control"
+                  required
+                  placeholder="Admin Email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+              <div className="form-group mb-3">
+                <label style={{ fontWeight: "600", fontSize: "0.85rem" }}>Password</label>
                 <input
                   type="password"
                   className="form-control"

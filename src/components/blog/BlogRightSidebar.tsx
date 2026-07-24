@@ -119,7 +119,7 @@ export const BlogRightSidebar: React.FC = () => {
     : [];
 
   const categories = [
-    "Healer Interviews",
+    "Guru Interviews",
     "Guided Meditations",
     "Spiritual Techniques",
     "Wellness Tips",
@@ -530,7 +530,7 @@ export const BlogRightSidebar: React.FC = () => {
             <span className="author-specialty-badge">{authorSpecialty}</span>
             <p className="author-bio-desc">{authorBio}</p>
             {matchedAuthor && (
-              <Link href={`/team`} className="author-view-profile-btn">
+              <Link href={`/gurus`} className="author-view-profile-btn">
                 View Profile
               </Link>
             )}

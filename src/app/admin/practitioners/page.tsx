@@ -12,6 +12,15 @@ export default function AdminPractitionersPage() {
   const [practitioners, setPractitioners] = useState<Practitioner[]>([]);
   const [expertiseOptions, setExpertiseOptions] = useState<Expertise[]>([]);
   const [loading, setLoading] = useState(true);
+  const [userRole, setUserRole] = useState("admin");
+
+  useEffect(() => {
+    const userStr = window.sessionStorage.getItem("divingsanatan_admin_user");
+    if (userStr) {
+      const user = JSON.parse(userStr);
+      setUserRole(user.role || "admin");
+    }
+  }, []);
 
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -50,7 +59,7 @@ export default function AdminPractitionersPage() {
   const loadPractitioners = async () => {
     try {
       setLoading(true);
-      const res = await fetch("/api/practitioners");
+      const res = await fetch("/api/practitioners?admin_view=true");
       const json = await res.json();
       if (json.success) {
         setPractitioners(json.data);
@@ -124,6 +133,9 @@ export default function AdminPractitionersPage() {
       return;
     }
 
+    const userStr = window.sessionStorage.getItem("divingsanatan_admin_user");
+    const user = userStr ? JSON.parse(userStr) : {};
+
     const payload = {
       name: pracName,
       specialty: pracSpecialty,
@@ -138,6 +150,7 @@ export default function AdminPractitionersPage() {
         linkedin: socialLinkedin,
         youtube: socialYoutube,
       },
+      role: user.role,
     };
 
     try {
@@ -191,6 +204,29 @@ export default function AdminPractitionersPage() {
       }
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const handleApprovePractitioner = async (id: string, status: "published" | "rejected") => {
+    try {
+      const res = await fetch("/api/practitioners", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id,
+          approval_status: status,
+          role: "super_admin",
+        }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        loadData();
+      } else {
+        alert("Operation failed: " + json.error);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("An error occurred during approval.");
     }
   };
 
@@ -306,11 +342,13 @@ export default function AdminPractitionersPage() {
     }
   };
 
+  // Pagination Logic
+  const loadData = loadPractitioners;
+
   const getFileName = (url: string) => {
     return url.split("/").pop() || "File";
   };
 
-  // Pagination Logic
   const totalPages = Math.ceil(practitioners.length / itemsPerPage);
   const paginatedPractitioners = practitioners.slice(
     (currentPage - 1) * itemsPerPage,
@@ -354,6 +392,7 @@ export default function AdminPractitionersPage() {
                       <th>Ratings</th>
                       <th>Expertise</th>
                       <th>Media / Attachments</th>
+                      <th>Status</th>
                       <th className="text-right">Actions</th>
                     </tr>
                   </thead>
@@ -397,8 +436,19 @@ export default function AdminPractitionersPage() {
                               {p.social_links && Object.values(p.social_links).some(link => !!link) && <span style={{ color: "#6c757d" }}>🌐 Socials Linked</span>}
                             </div>
                           </td>
+                          <td>
+                            {p.approval_status === "published" && <span className="badge" style={{ background: "#28a745", color: "white", padding: "2px 6px", borderRadius: "4px", fontSize: "0.75rem" }}>Published</span>}
+                            {p.approval_status === "pending_approval" && <span className="badge" style={{ background: "#ffc107", color: "black", padding: "2px 6px", borderRadius: "4px", fontSize: "0.75rem" }}>Pending</span>}
+                            {p.approval_status === "rejected" && <span className="badge" style={{ background: "#dc3545", color: "white", padding: "2px 6px", borderRadius: "4px", fontSize: "0.75rem" }}>Rejected</span>}
+                          </td>
                           <td className="text-right">
                             <div style={{ display: "flex", gap: "4px", justifyContent: "flex-end" }}>
+                              {userRole === "super_admin" && p.approval_status === "pending_approval" && (
+                                <>
+                                  <button className="btn btn-success btn-sm" onClick={() => handleApprovePractitioner(p.id, "published")}>✓</button>
+                                  <button className="btn btn-danger btn-sm" onClick={() => handleApprovePractitioner(p.id, "rejected")}>✕</button>
+                                </>
+                              )}
                               <button className="btn btn-secondary btn-sm" onClick={() => handleEditClick(p)}>
                                 <Edit size={12} />
                               </button>

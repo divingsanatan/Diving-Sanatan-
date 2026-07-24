@@ -12,6 +12,15 @@ export default function AdminServicesPage() {
   const [practitioners, setPractitioners] = useState<Practitioner[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const [userRole, setUserRole] = useState("admin");
+
+  useEffect(() => {
+    const userStr = window.sessionStorage.getItem("divingsanatan_admin_user");
+    if (userStr) {
+      const user = JSON.parse(userStr);
+      setUserRole(user.role || "admin");
+    }
+  }, []);
   
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
@@ -60,9 +69,9 @@ export default function AdminServicesPage() {
     try {
       setLoading(true);
       const [sRes, pRes, cRes] = await Promise.all([
-        fetch("/api/services"),
-        fetch("/api/practitioners"),
-        fetch("/api/categories")
+        fetch("/api/services?admin_view=true"),
+        fetch("/api/practitioners?admin_view=true"),
+        fetch("/api/categories?admin_view=true")
       ]);
 
       const sJson = await sRes.json();
@@ -203,6 +212,9 @@ export default function AdminServicesPage() {
       return;
     }
 
+    const userStr = window.sessionStorage.getItem("divingsanatan_admin_user");
+    const user = userStr ? JSON.parse(userStr) : {};
+
     const payload = {
       name: serviceName,
       price: Number(servicePrice),
@@ -213,7 +225,8 @@ export default function AdminServicesPage() {
       image: serviceImage || "aura_balancing",
       video_url: serviceVideoUrl,
       benefits: benefits.filter(b => b.trim() !== ""),
-      process: processSteps.filter(p => p.trim() !== "")
+      process: processSteps.filter(p => p.trim() !== ""),
+      role: user.role,
     };
 
     try {
@@ -262,6 +275,29 @@ export default function AdminServicesPage() {
       }
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const handleApproveService = async (id: string, status: "published" | "rejected") => {
+    try {
+      const res = await fetch("/api/services", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id,
+          approval_status: status,
+          role: "super_admin",
+        }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        loadData();
+      } else {
+        alert("Operation failed: " + json.error);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("An error occurred during approval.");
     }
   };
 
@@ -340,6 +376,7 @@ export default function AdminServicesPage() {
                         <th>Duration</th>
                         <th>Price</th>
                         <th>Practitioner</th>
+                        <th>Status</th>
                         <th className="text-right">Actions</th>
                       </tr>
                     </thead>
@@ -383,8 +420,19 @@ export default function AdminServicesPage() {
                             <td>
                               <span className="practitioner-text">{s.practitioner}</span>
                             </td>
+                            <td>
+                              {s.approval_status === "published" && <span className="badge" style={{ background: "#28a745", color: "white", padding: "2px 6px", borderRadius: "4px", fontSize: "0.75rem" }}>Published</span>}
+                              {s.approval_status === "pending_approval" && <span className="badge" style={{ background: "#ffc107", color: "black", padding: "2px 6px", borderRadius: "4px", fontSize: "0.75rem" }}>Pending</span>}
+                              {s.approval_status === "rejected" && <span className="badge" style={{ background: "#dc3545", color: "white", padding: "2px 6px", borderRadius: "4px", fontSize: "0.75rem" }}>Rejected</span>}
+                            </td>
                             <td className="text-right">
                               <div className="action-buttons-cell" style={{ display: "flex", gap: "4px", justifyContent: "flex-end" }}>
+                                {userRole === "super_admin" && s.approval_status === "pending_approval" && (
+                                  <>
+                                    <button className="btn btn-success btn-sm" onClick={() => handleApproveService(s.id, "published")}>✓</button>
+                                    <button className="btn btn-danger btn-sm" onClick={() => handleApproveService(s.id, "rejected")}>✕</button>
+                                  </>
+                                )}
                                 <button className="btn btn-secondary btn-sm" onClick={() => handleOpenEditModal(s)}>
                                   ✎ Edit
                                 </button>

@@ -24,6 +24,7 @@ export interface Practitioner {
   certifications?: string[];
   expertise?: string[];
   social_links?: SocialLinks;
+  approval_status?: "pending_approval" | "published" | "rejected";
 }
 
 
@@ -49,6 +50,7 @@ export interface Service {
   video_url?: string;
   benefits?: string[];
   process?: string[];
+  approval_status?: "pending_approval" | "published" | "rejected";
 }
 
 export interface Keyword {
@@ -108,6 +110,7 @@ export interface Blog {
   is_show_featured_page?: boolean;
   views?: number;
   createdAt?: string;
+  approval_status?: "pending_approval" | "published" | "rejected";
 }
 
 export type GlossaryIllustration = string | null;
@@ -132,6 +135,7 @@ export interface BlogCategory {
   id: string;
   name: string;
   createdAt?: string;
+  approval_status?: "pending_approval" | "published" | "rejected";
 }
 
 

@@ -135,7 +135,7 @@ export default function AboutClient() {
 
   const menuItems = [
     { id: "story", label: "Our Story", icon: <BookOpen size={16} strokeWidth={1.5} /> },
-    { id: "healers", label: "Our Healers", icon: <Users size={16} strokeWidth={1.5} /> },
+    { id: "healers", label: "Our Gurus", icon: <Users size={16} strokeWidth={1.5} /> },
     { id: "team", label: "Our Team", icon: <User size={16} strokeWidth={1.5} /> },
     { id: "services", label: "Our Services", icon: <Wrench size={16} strokeWidth={1.5} /> },
   ];
@@ -453,7 +453,7 @@ export default function AboutClient() {
           {/* Our Healers */}
           <section id="healers" className="section">
             <div className="section-header">
-              <span className="lotus">❀</span> Our Healers
+              <span className="lotus">❀</span> Our Gurus
             </div>
             <div className="carousel-wrap">
               <button
@@ -499,7 +499,7 @@ export default function AboutClient() {
                       <div className="exp">
                         {prac.reviewsCount > 50 ? "12+ Years Exp." : "8+ Years Exp."}
                       </div>
-                      <Link href={`/team/${prac.id}`} className="healer-card-link">
+                      <Link href={`/gurus/${prac.id}`} className="healer-card-link">
                         View Inner Bio & Details →
                       </Link>
                     </div>
@@ -783,7 +783,7 @@ export default function AboutClient() {
               </div>
               <div className="impact-box">
                 <div className="impact-num">50+</div>
-                <div className="impact-label">Expert Healers</div>
+                <div className="impact-label">Expert Gurus</div>
               </div>
               <div className="impact-box">
                 <div className="impact-num">100+</div>

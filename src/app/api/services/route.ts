@@ -53,10 +53,12 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     
+    const adminView = searchParams.get("admin_view");
+    
     // Support fetching a single service by ID
     const singleId = searchParams.get("id");
     if (singleId) {
-      const { data: service, error } = await supabaseServer
+      let query = supabaseServer
         .from("services")
         .select(`
           *,
@@ -67,8 +69,13 @@ export async function GET(req: NextRequest) {
             )
           )
         `)
-        .eq("id", singleId)
-        .single();
+        .eq("id", singleId);
+
+      if (adminView !== "true") {
+        query = query.eq("approval_status", "published");
+      }
+
+      const { data: service, error } = await query.single();
         
       if (error) {
         return NextResponse.json({ success: false, error: error.message }, { status: 500 });
@@ -91,6 +98,10 @@ export async function GET(req: NextRequest) {
           )
         )
       `);
+      
+    if (adminView !== "true") {
+      supabaseQuery = supabaseQuery.eq("approval_status", "published");
+    }
       
     // Apply basic SQL-level filters
     const maxPrice = searchParams.get("maxPrice");
@@ -143,7 +154,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { name, price, duration, practitioner, description, categoryIds, image, video_url, benefits, process } = body;
+    const { name, price, duration, practitioner, description, categoryIds, image, video_url, benefits, process, role, approval_status } = body;
     
     if (!name || !price || !duration || !practitioner || !description) {
       return NextResponse.json({ success: false, error: "Missing required service details" }, { status: 400 });
@@ -162,7 +173,8 @@ export async function POST(req: NextRequest) {
       category: "", // Temporary fallback for backward compatibility
       video_url: video_url || "",
       benefits: benefits || [],
-      process: process || []
+      process: process || [],
+      approval_status: role === "super_admin" ? (approval_status || "published") : "pending_approval",
     };
     
     // 1. Insert service
@@ -221,7 +233,7 @@ export async function POST(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   try {
     const body = await req.json();
-    const { id, name, price, duration, practitioner, description, categoryIds, image, video_url, benefits, process } = body;
+    const { id, name, price, duration, practitioner, description, categoryIds, image, video_url, benefits, process, role, approval_status } = body;
     
     if (!id) {
       return NextResponse.json({ success: false, error: "Service ID is required for updating" }, { status: 400 });
@@ -241,6 +253,12 @@ export async function PUT(req: NextRequest) {
     if (video_url !== undefined) updates.video_url = video_url;
     if (benefits !== undefined) updates.benefits = benefits;
     if (process !== undefined) updates.process = process;
+    
+    if (role === "super_admin" && approval_status) {
+      updates.approval_status = approval_status;
+    } else if (role !== "super_admin") {
+      updates.approval_status = "pending_approval";
+    }
     
     // 1. Update basic fields
     const { error: serviceError } = await runSupabaseQuery(async () =>

@@ -7,7 +7,7 @@ import { Footer } from "@/components/layout/Footer";
 import { Card } from "@/components/ui/Card";
 import { Practitioner } from "@/types/database";
 
-export default function TeamPage() {
+export default function GurusPage() {
   const [practitioners, setPractitioners] = useState<Practitioner[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -35,8 +35,8 @@ export default function TeamPage() {
       <main className="team-container">
         {/* Header Section */}
         <section className="team-header animate-fade-in">
-          <span className="section-label">Divine Sanctuary Team</span>
-          <h1 className="team-title gold-text-gradient">Our Certified Healers & Guides</h1>
+          <span className="section-label">Divine Sanctuary Gurus</span>
+          <h1 className="team-title gold-text-gradient">Our Certified Gurus & Guides</h1>
           <p className="team-subtitle">
             Meet our master practitioners committed to your cosmic balance, energetic alignment, and mental tranquility.
           </p>
@@ -46,7 +46,7 @@ export default function TeamPage() {
         {loading ? (
           <div className="loading-state">
             <div className="spinner"></div>
-            <p>Aligning healer registers and frequencies...</p>
+            <p>Aligning guru registers and frequencies...</p>
           </div>
         ) : (
           <section className="team-grid-section">
@@ -71,7 +71,7 @@ export default function TeamPage() {
                   </div>
 
                   <div className="card-info">
-                    <h3 className="prac-name">{prac.name}</h3>
+                    <h3 className="prac-name">Guru {prac.name}</h3>
                     <span className="prac-specialty">{prac.specialty}</span>
                     
                     {/* Rating display */}
@@ -99,7 +99,7 @@ export default function TeamPage() {
                     </p>
 
                     <div className="card-actions">
-                      <Link href={`/team/${prac.id}`} className="view-profile-btn">
+                      <Link href={`/gurus/${prac.id}`} className="view-profile-btn">
                         View Inner Bio & Details <span>→</span>
                       </Link>
                     </div>

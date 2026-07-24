@@ -9,12 +9,20 @@ function mapBlogCategory(row: Record<string, unknown>) {
   };
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const { data, error } = await supabaseServer
+    const { searchParams } = new URL(req.url);
+    const adminView = searchParams.get("admin_view");
+
+    let query = supabaseServer
       .from("blog_categories")
-      .select("*")
-      .order("name", { ascending: true });
+      .select("*");
+      
+    if (adminView !== "true") {
+      query = query.eq("approval_status", "published");
+    }
+
+    const { data, error } = await query.order("name", { ascending: true });
 
     if (error) {
       return NextResponse.json({ success: false, error: error.message }, { status: 500 });
@@ -32,7 +40,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { name } = body;
+    const { name, role, approval_status } = body;
 
     if (!name?.trim()) {
       return NextResponse.json({ success: false, error: "Category name is required" }, { status: 400 });
@@ -42,6 +50,7 @@ export async function POST(req: NextRequest) {
     const row = {
       id,
       name: name.trim(),
+      approval_status: role === "super_admin" ? (approval_status || "published") : "pending_approval",
     };
 
     const { data, error } = await supabaseServer
@@ -63,7 +72,7 @@ export async function POST(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   try {
     const body = await req.json();
-    const { id, name } = body;
+    const { id, name, role, approval_status } = body;
 
     if (!id || !name?.trim()) {
       return NextResponse.json({ success: false, error: "Category ID and name are required" }, { status: 400 });
@@ -83,10 +92,17 @@ export async function PUT(req: NextRequest) {
     const oldName = oldCategory.name;
     const newName = name.trim();
 
+    const updates: any = { name: newName };
+    if (role === "super_admin" && approval_status) {
+      updates.approval_status = approval_status;
+    } else if (role !== "super_admin") {
+      updates.approval_status = "pending_approval";
+    }
+
     // 2. Update category in database
     const { data, error } = await supabaseServer
       .from("blog_categories")
-      .update({ name: newName })
+      .update(updates)
       .eq("id", id)
       .select()
       .single();

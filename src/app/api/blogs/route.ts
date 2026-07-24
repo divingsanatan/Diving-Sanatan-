@@ -11,11 +11,12 @@ export async function GET(req: NextRequest) {
     const category = searchParams.get("category");
     
     if (id) {
-      const { data: blog, error } = await supabaseServer
-        .from("blogs")
-        .select("*")
-        .eq("id", id)
-        .single();
+      let query = supabaseServer.from("blogs").select("*").eq("id", id);
+      const adminView = searchParams.get("admin_view");
+      if (adminView !== "true") {
+        query = query.eq("approval_status", "published");
+      }
+      const { data: blog, error } = await query.single();
         
       if (error || !blog) {
         return NextResponse.json({ success: false, error: "Blog post not found" }, { status: 404 });
@@ -33,6 +34,11 @@ export async function GET(req: NextRequest) {
     
     let query = supabaseServer.from("blogs").select("*");
     
+    const adminView = searchParams.get("admin_view");
+    if (adminView !== "true") {
+      query = query.eq("approval_status", "published");
+    }
+
     if (category && category !== "all") {
       query = query.ilike("category", category);
     }
@@ -62,7 +68,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { title, category, author, content, date, readTime, image, images, videos, section, is_show_featured_page } = body;
+    const { title, category, author, content, date, readTime, image, images, videos, section, is_show_featured_page, role, approval_status } = body;
     
     if (!title || !category || !author || !content || !date || !readTime) {
       return NextResponse.json({ success: false, error: "Missing required blog fields" }, { status: 400 });
@@ -81,6 +87,7 @@ export async function POST(req: NextRequest) {
       videos: Array.isArray(videos) ? videos : [],
       section: section || null,
       is_show_featured_page: is_show_featured_page !== undefined ? is_show_featured_page : true,
+      approval_status: role === "super_admin" ? (approval_status || "published") : "pending_approval",
     };
     
     const { data, error } = await supabaseServer
@@ -110,7 +117,7 @@ export async function POST(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   try {
     const body = await req.json();
-    const { id, title, category, author, content, date, readTime, image, images, videos, section, is_show_featured_page } = body;
+    const { id, title, category, author, content, date, readTime, image, images, videos, section, is_show_featured_page, role, approval_status } = body;
     
     if (!id) {
       return NextResponse.json({ success: false, error: "Blog ID is required" }, { status: 400 });
@@ -128,6 +135,12 @@ export async function PUT(req: NextRequest) {
     if (videos !== undefined) updates.videos = Array.isArray(videos) ? videos : [];
     if (section !== undefined) updates.section = section;
     if (is_show_featured_page !== undefined) updates.is_show_featured_page = is_show_featured_page;
+    
+    if (role === "super_admin" && approval_status) {
+      updates.approval_status = approval_status;
+    } else if (role !== "super_admin") {
+      updates.approval_status = "pending_approval";
+    }
     
     const { data, error } = await supabaseServer
       .from("blogs")

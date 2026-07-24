@@ -39,7 +39,7 @@ interface Review {
   date: string;
 }
 
-export default function HealerDetailPage() {
+export default function GuruDetailPage() {
   const params = useParams();
   const router = useRouter();
   const healerId = params?.id as string;
@@ -324,7 +324,7 @@ export default function HealerDetailPage() {
             </div>
 
             <div className="anara-info">
-              <h2 className="anara-name">{healer.name}</h2>
+              <h2 className="anara-name">Guru {healer.name}</h2>
               <p className="anara-title">{healer.specialty}</p>
 
               <div className="anara-meta">
@@ -387,10 +387,10 @@ export default function HealerDetailPage() {
                 TAKE SOUL QUIZ
               </Link>
               <Link
-                href="/team"
+                href="/gurus"
                 className="btn-back-list"
               >
-                Back to healer list
+                Back to guru list
               </Link>
             </div>
           </div>
@@ -437,7 +437,7 @@ export default function HealerDetailPage() {
                       width="100%"
                       height="100%"
                       src={embedUrl.replace("?autoplay=1", "")}
-                      title="Meet Healer - Video Introduction"
+                      title="Meet Guru - Video Introduction"
                       frameBorder="0"
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                       allowFullScreen
@@ -607,7 +607,7 @@ export default function HealerDetailPage() {
                     width="100%"
                     height="100%"
                     src={embedUrl}
-                    title="Meet Healer - Video Introduction"
+                    title="Meet Guru - Video Introduction"
                     frameBorder="0"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen

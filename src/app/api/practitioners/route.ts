@@ -24,14 +24,20 @@ function mapPractitionerToCamelCase(p: any): Practitioner {
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
+    const adminView = searchParams.get("admin_view");
     const id = searchParams.get("id");
 
     if (id) {
-      const { data: p, error } = await supabaseServer
+      let query = supabaseServer
         .from("practitioners")
         .select("*")
-        .eq("id", id)
-        .single();
+        .eq("id", id);
+        
+      if (adminView !== "true") {
+        query = query.eq("approval_status", "published");
+      }
+      
+      const { data: p, error } = await query.single();
         
       if (error) {
         return NextResponse.json({ success: false, error: error.message }, { status: 404 });
@@ -40,10 +46,15 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: true, data: mapPractitionerToCamelCase(p) });
     }
 
-    const { data: practitioners, error } = await supabaseServer
+    let query = supabaseServer
       .from("practitioners")
-      .select("*")
-      .order("name", { ascending: true });
+      .select("*");
+      
+    if (adminView !== "true") {
+      query = query.eq("approval_status", "published");
+    }
+    
+    const { data: practitioners, error } = await query.order("name", { ascending: true });
       
     if (error) {
       return NextResponse.json({ success: false, error: error.message }, { status: 500 });
@@ -62,7 +73,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { name, specialty, bio, image, video_url, certifications, expertise, social_links } = body;
+    const { name, specialty, bio, image, video_url, certifications, expertise, social_links, role, approval_status } = body;
     
     if (!name || !specialty || !bio) {
       return NextResponse.json({ success: false, error: "Missing required practitioner fields" }, { status: 400 });
@@ -80,6 +91,7 @@ export async function POST(req: NextRequest) {
       certifications: certifications || [],
       expertise: expertise || [],
       social_links: social_links || {},
+      approval_status: role === "super_admin" ? (approval_status || "published") : "pending_approval",
     };
     
     const { data, error } = await supabaseServer
@@ -104,7 +116,7 @@ export async function POST(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   try {
     const body = await req.json();
-    const { id, name, specialty, bio, image, video_url, certifications, expertise, social_links } = body;
+    const { id, name, specialty, bio, image, video_url, certifications, expertise, social_links, role, approval_status } = body;
     
     if (!id) {
       return NextResponse.json({ success: false, error: "Practitioner ID is required" }, { status: 400 });
@@ -119,6 +131,12 @@ export async function PUT(req: NextRequest) {
     if (certifications !== undefined) updates.certifications = certifications;
     if (expertise !== undefined) updates.expertise = expertise;
     if (social_links !== undefined) updates.social_links = social_links;
+    
+    if (role === "super_admin" && approval_status) {
+      updates.approval_status = approval_status;
+    } else if (role !== "super_admin") {
+      updates.approval_status = "pending_approval";
+    }
     
     const { data, error } = await supabaseServer
       .from("practitioners")

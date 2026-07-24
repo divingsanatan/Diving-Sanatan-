@@ -12,6 +12,15 @@ export default function AdminBlogsPage() {
   const [practitioners, setPractitioners] = useState<Practitioner[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [userRole, setUserRole] = useState("admin");
+
+  useEffect(() => {
+    const userStr = window.sessionStorage.getItem("divingsanatan_admin_user");
+    if (userStr) {
+      const user = JSON.parse(userStr);
+      setUserRole(user.role || "admin");
+    }
+  }, []);
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
@@ -69,9 +78,9 @@ export default function AdminBlogsPage() {
     try {
       setLoading(true);
       const [bRes, pRes, cRes] = await Promise.all([
-        fetch("/api/blogs"),
-        fetch("/api/practitioners"),
-        fetch("/api/blogs/categories")
+        fetch("/api/blogs?admin_view=true"),
+        fetch("/api/practitioners?admin_view=true"),
+        fetch("/api/blogs/categories?admin_view=true")
       ]);
 
       const bJson = await bRes.json();
@@ -120,8 +129,12 @@ export default function AdminBlogsPage() {
       return;
     }
 
+    const userStr = window.sessionStorage.getItem("divingsanatan_admin_user");
+    const user = userStr ? JSON.parse(userStr) : {};
+
     const payload = {
       name: categoryName.trim(),
+      role: user.role,
     };
 
     try {
@@ -161,6 +174,29 @@ export default function AdminBlogsPage() {
       }
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const handleApproveCategory = async (id: string, status: "published" | "rejected") => {
+    try {
+      const res = await fetch("/api/blogs/categories", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id,
+          approval_status: status,
+          role: "super_admin",
+        }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        loadData();
+      } else {
+        alert("Operation failed: " + json.error);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("An error occurred during approval.");
     }
   };
 
@@ -431,6 +467,9 @@ export default function AdminBlogsPage() {
       return;
     }
 
+    const userStr = window.sessionStorage.getItem("divingsanatan_admin_user");
+    const user = userStr ? JSON.parse(userStr) : {};
+
     const payload = {
       title: title.trim(),
       category: finalCategory,
@@ -442,7 +481,8 @@ export default function AdminBlogsPage() {
       images: galleryImages.filter(img => img.trim() !== ""),
       videos: blogVideos.filter(vid => vid.trim() !== ""),
       section: section || null,
-      is_show_featured_page: isShowFeaturedPage
+      is_show_featured_page: isShowFeaturedPage,
+      role: user.role,
     };
 
     try {
@@ -488,6 +528,29 @@ export default function AdminBlogsPage() {
       }
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const handleApproveBlog = async (id: string, status: "published" | "rejected") => {
+    try {
+      const res = await fetch("/api/blogs", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id,
+          approval_status: status,
+          role: "super_admin",
+        }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        loadData();
+      } else {
+        alert("Operation failed: " + json.error);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("An error occurred during approval.");
     }
   };
 
@@ -581,6 +644,7 @@ export default function AdminBlogsPage() {
                             <th>Author</th>
                             <th>Read Estimate</th>
                             <th>Date</th>
+                            <th>Status</th>
                             <th className="text-right">Actions</th>
                           </tr>
                         </thead>
@@ -621,8 +685,19 @@ export default function AdminBlogsPage() {
                                 <td style={{ whiteSpace: "nowrap" }}>
                                   <span>{b.date}</span>
                                 </td>
+                                <td>
+                                  {b.approval_status === "published" && <span className="badge" style={{ background: "#28a745", color: "white", padding: "2px 6px", borderRadius: "4px", fontSize: "0.75rem" }}>Published</span>}
+                                  {b.approval_status === "pending_approval" && <span className="badge" style={{ background: "#ffc107", color: "black", padding: "2px 6px", borderRadius: "4px", fontSize: "0.75rem" }}>Pending</span>}
+                                  {b.approval_status === "rejected" && <span className="badge" style={{ background: "#dc3545", color: "white", padding: "2px 6px", borderRadius: "4px", fontSize: "0.75rem" }}>Rejected</span>}
+                                </td>
                                 <td className="text-right">
                                   <div className="action-buttons-cell" style={{ display: "flex", gap: "4px", justifyContent: "flex-end" }}>
+                                    {userRole === "super_admin" && b.approval_status === "pending_approval" && (
+                                      <>
+                                        <button className="btn btn-success btn-sm" onClick={() => handleApproveBlog(b.id, "published")}>✓</button>
+                                        <button className="btn btn-danger btn-sm" onClick={() => handleApproveBlog(b.id, "rejected")}>✕</button>
+                                      </>
+                                    )}
                                     <button className="btn btn-primary btn-sm" onClick={() => window.open(`/blog/${b.id}`, '_blank')}>
                                       👁 View
                                     </button>
@@ -688,6 +763,7 @@ export default function AdminBlogsPage() {
                     <tr>
                       <th>ID</th>
                       <th>Category Name</th>
+                      <th>Status</th>
                       <th className="text-right">Actions</th>
                     </tr>
                   </thead>
@@ -701,8 +777,19 @@ export default function AdminBlogsPage() {
                         <tr key={cat.id}>
                           <td style={{ fontFamily: "monospace", fontSize: "0.85rem" }}>{cat.id}</td>
                           <td><strong>{cat.name}</strong></td>
+                          <td>
+                            {cat.approval_status === "published" && <span className="badge" style={{ background: "#28a745", color: "white", padding: "2px 6px", borderRadius: "4px", fontSize: "0.75rem" }}>Published</span>}
+                            {cat.approval_status === "pending_approval" && <span className="badge" style={{ background: "#ffc107", color: "black", padding: "2px 6px", borderRadius: "4px", fontSize: "0.75rem" }}>Pending</span>}
+                            {cat.approval_status === "rejected" && <span className="badge" style={{ background: "#dc3545", color: "white", padding: "2px 6px", borderRadius: "4px", fontSize: "0.75rem" }}>Rejected</span>}
+                          </td>
                           <td className="text-right">
                             <div className="action-buttons-cell" style={{ display: "flex", gap: "4px", justifyContent: "flex-end" }}>
+                              {userRole === "super_admin" && cat.approval_status === "pending_approval" && (
+                                <>
+                                  <button className="btn btn-success btn-sm" onClick={() => handleApproveCategory(cat.id, "published")}>✓</button>
+                                  <button className="btn btn-danger btn-sm" onClick={() => handleApproveCategory(cat.id, "rejected")}>✕</button>
+                                </>
+                              )}
                               <button
                                 className="btn btn-secondary btn-sm"
                                 onClick={() => handleEditCategory(cat)}
