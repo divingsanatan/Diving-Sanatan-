@@ -39,6 +39,7 @@ export async function GET(req: NextRequest) {
     const { data: profiles, error: profileError } = await supabaseServer
       .from("user_profiles")
       .select(PROFILE_SELECT)
+      .neq("role", "super_admin")
       .order("created_at", { ascending: false });
 
     if (profileError) {

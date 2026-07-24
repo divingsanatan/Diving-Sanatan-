@@ -37,7 +37,8 @@ export type AdminPageType =
   | "glossary"
   | "faq"
   | "comparisons"
-  | "leads";
+  | "leads"
+  | "users";
 
 interface StatsDashboardProps {
   pageType: AdminPageType;
@@ -208,6 +209,16 @@ export default function StatsDashboard({ pageType, actions }: StatsDashboardProp
         { label: "Contacted", trend: "In progress discussions", trendType: "up", icon: Activity },
         { label: "Converted", trend: "Became active clients", trendType: "up", icon: CheckCircle2 }
       ]
+    },
+    users: {
+      title: "User Management",
+      subtitle: "Manage all users, admins, and practitioners across the platform.",
+      cards: [
+        { label: "Total Users", trend: "All registered accounts", trendType: "neutral", icon: Users },
+        { label: "System Admins", trend: "Administrative access", trendType: "attention", icon: Key },
+        { label: "Platform Gurus", trend: "Expert practitioners", trendType: "up", icon: Star },
+        { label: "Standard Users", trend: "Regular accounts", trendType: "neutral", icon: CheckCircle2 }
+      ]
     }
   };
 
@@ -247,7 +258,8 @@ export default function StatsDashboard({ pageType, actions }: StatsDashboardProp
           glossary: ["/api/glossary"],
           faq: ["/api/faq"],
           comparisons: ["/api/comparisons"],
-          leads: ["/api/leads"]
+          leads: ["/api/leads"],
+          users: ["/api/users"]
         };
 
         const urls = endpoints[pageType] || [];
@@ -277,6 +289,7 @@ export default function StatsDashboard({ pageType, actions }: StatsDashboardProp
         const faq = getDataset("faq");
         const comparisons = getDataset("comparisons");
         const leads = getDataset("leads");
+        const users = getDataset("users");
 
         let val1 = 0, val2 = 0, val3 = 0, val4: any = 0;
 
@@ -378,6 +391,13 @@ export default function StatsDashboard({ pageType, actions }: StatsDashboardProp
             val2 = leads.filter((l: any) => l.status === "new" || l.status === "pending").length;
             val3 = leads.filter((l: any) => l.status === "contacted" || l.status === "in_progress").length;
             val4 = leads.filter((l: any) => l.status === "converted" || l.status === "completed").length;
+            break;
+
+          case "users":
+            val1 = users.length;
+            val2 = users.filter((u: any) => u.role === "admin" || u.role === "super_admin").length;
+            val3 = users.filter((u: any) => u.role === "guru").length;
+            val4 = users.filter((u: any) => u.role === "user").length;
             break;
         }
 

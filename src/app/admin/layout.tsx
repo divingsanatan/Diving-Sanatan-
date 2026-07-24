@@ -100,6 +100,8 @@ export default function AdminLayout({
         return "Comparisons Board";
       case "/admin/leads":
         return "Customer Leads Profiles";
+      case "/admin/users":
+        return "User Management";
       default:
         return "Admin Portal";
     }
@@ -133,6 +135,8 @@ export default function AdminLayout({
         return "Comparisons";
       case "/admin/leads":
         return "Leads";
+      case "/admin/users":
+        return "Users";
       default:
         return null;
     }
@@ -177,6 +181,15 @@ export default function AdminLayout({
         <nav className="sidebar-nav">
           {/* Section: MONITOR */}
           <div className="sidebar-nav-header">Dashboard Monitor</div>
+          <Link
+            href="/admin/users"
+            title="User Management"
+            className={`sidebar-link ${pathname === "/admin/users" ? "active" : ""}`}
+            onClick={() => setSidebarOpen(false)}
+          >
+            <Users size={16} />
+            <span>User Management</span>
+          </Link>
           <Link
             href="/admin"
             title="Overview"
