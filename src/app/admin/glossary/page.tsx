@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { GlossaryTerm, GlossaryIllustration, GlossaryCategory } from "@/types/database";
@@ -44,6 +44,29 @@ export default function AdminGlossaryPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
+
+  const definitionRef = useRef<HTMLTextAreaElement>(null);
+
+  const insertLink = () => {
+    const url = prompt("Enter link URL:");
+    if (!url) return;
+    const textarea = definitionRef.current;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = definition.substring(start, end) || "link text";
+    const linkHTML = `<a href="${url}" target="_blank" rel="noopener noreferrer">${selectedText}</a>`;
+
+    const newDef = definition.substring(0, start) + linkHTML + definition.substring(end);
+    setDefinition(newDef);
+
+    setTimeout(() => {
+      textarea.focus();
+      const newPos = start + linkHTML.length;
+      textarea.setSelectionRange(newPos, newPos);
+    }, 0);
+  };
 
   const loadTerms = async () => {
     try {
@@ -621,12 +644,34 @@ export default function AdminGlossaryPage() {
                   </div>
 
                   <div className="form-group">
-                    <label>Definition *</label>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <label style={{ margin: 0 }}>Definition *</label>
+                      <button 
+                        type="button"
+                        onClick={insertLink}
+                        style={{
+                          fontSize: '0.8rem',
+                          padding: '4px 8px',
+                          background: 'rgba(168, 85, 247, 0.1)',
+                          border: '1px solid #7c3aed',
+                          borderRadius: '4px',
+                          color: '#7c3aed',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px'
+                        }}
+                      >
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                        Insert Link
+                      </button>
+                    </div>
                     <textarea
+                      ref={definitionRef}
                       className="glass-input textarea-input"
                       required
                       rows={5}
-                      placeholder="Full definition text..."
+                      placeholder="Full definition text... You can use the Insert Link button above."
                       value={definition}
                       onChange={(e) => setDefinition(e.target.value)}
                     />

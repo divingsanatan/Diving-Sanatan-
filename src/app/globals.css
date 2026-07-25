@@ -146,6 +146,7 @@
 
 html,
 body {
+  zoom: 90%;
   background:
     radial-gradient(circle at 10% 20%, rgba(168, 85, 247, 0.05) 0%, transparent 40%),
     radial-gradient(circle at 90% 10%, rgba(219, 39, 119, 0.04) 0%, transparent 40%),

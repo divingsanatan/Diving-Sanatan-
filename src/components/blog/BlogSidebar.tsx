@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { 
   Grid, Flower, Sparkles, Compass, Heart, Volume2, 
   Flame, Leaf, Shield, BookOpen, Quote,
-  HelpCircle, MessageSquare, Video, GitFork, ChevronDown, ChevronUp
+  HelpCircle, MessageSquare, Video, ChevronDown, ChevronUp
 } from "lucide-react";
 
 interface CategoryItem {
@@ -37,12 +37,6 @@ export const BlogSidebar: React.FC = () => {
   const [categoriesExpanded, setCategoriesExpanded] = React.useState(false);
   const [categoryItems, setCategoryItems] = React.useState<CategoryItem[]>([]);
   const [loading, setLoading] = React.useState(true);
-
-  const isVideoBlog = activeBlog && (
-    (activeBlog.videos && activeBlog.videos.length > 0) ||
-    activeBlog.category.toLowerCase() === "video transcripts" ||
-    activeBlog.category.toLowerCase() === "video blog"
-  );
 
   React.useEffect(() => {
     async function fetchCategories() {
@@ -77,35 +71,31 @@ export const BlogSidebar: React.FC = () => {
 
   const isCategoryActive = pathname === "/blog" && categoryIds.includes(activeCategory.toLowerCase());
 
+  const isVideoBlog = activeBlog && (
+    (activeBlog.videos && activeBlog.videos.length > 0) ||
+    activeBlog.category.toLowerCase() === "video transcripts" ||
+    activeBlog.category.toLowerCase() === "video blog"
+  );
+
   return (
     <div className="blog-sidebar">
       <div className="sidebar-menu">
-        {/* All Blogs */}
-        <button 
-          onClick={() => {
-            setActiveCategory("all");
-            if (pathname !== "/blog") {
-              router.push("/blog");
-            }
-          }} 
-          className={`sidebar-item ${pathname === "/blog" && activeCategory === "all" ? "active" : ""}`}
-        >
-          <Grid size={16} strokeWidth={1.5} />
-          <div className="item-text-container">
-            <span className="item-name">All Blogs</span>
-          </div>
-        </button>
-
-        {/* Categories (Collapsible) */}
+        {/* All Blogs with Categories Dropdown */}
         <div>
           <button 
-            onClick={() => setCategoriesExpanded(!categoriesExpanded)} 
-            className={`sidebar-item ${isCategoryActive ? "active-parent" : ""}`}
+            onClick={() => {
+              setActiveCategory("all");
+              if (pathname !== "/blog") {
+                router.push("/blog");
+              }
+              setCategoriesExpanded(!categoriesExpanded);
+            }} 
+            className={`sidebar-item ${(pathname === "/blog" && activeCategory === "all") || isCategoryActive ? "active-parent" : ""}`}
             aria-expanded={categoriesExpanded}
           >
-            <GitFork size={16} strokeWidth={1.5} />
+            <Grid size={16} strokeWidth={1.5} />
             <div className="item-text-container" style={{ flex: 1 }}>
-              <span className="item-name">Categories</span>
+              <span className="item-name">All Blogs</span>
             </div>
             {categoriesExpanded ? (
               <ChevronUp size={14} strokeWidth={1.5} style={{ opacity: 0.5 }} />
@@ -132,6 +122,7 @@ export const BlogSidebar: React.FC = () => {
             </div>
           )}
         </div>
+
 
         {/* Glossary */}
         <button 
@@ -387,6 +378,7 @@ export const BlogSidebar: React.FC = () => {
           color: #581c87;
           font-weight: 600;
         }
+
         .item-text-container {
           display: flex;
           flex-direction: column;
