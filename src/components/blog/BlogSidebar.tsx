@@ -198,10 +198,10 @@ export const BlogSidebar: React.FC = () => {
           <button 
             className="q-promo-btn"
             onClick={() => {
-              const askInput = document.querySelector("#add-comment-input") as HTMLTextAreaElement;
-              if (askInput) {
-                askInput.focus();
-                askInput.scrollIntoView({ behavior: "smooth", block: "center" });
+              if (pathname === "/blog/quora-qa") {
+                window.dispatchEvent(new Event('open-ask-form'));
+              } else {
+                router.push("/blog/quora-qa?focusAsk=true");
               }
             }}
           >

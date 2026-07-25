@@ -389,6 +389,9 @@ export default function AdminKeywordsPage() {
                             </td>
                             <td className="text-right">
                               <div className="action-buttons-cell" style={{ display: "flex", gap: "4px", justifyContent: "flex-end" }}>
+                                <button className="btn btn-primary btn-sm" onClick={() => window.open(`/blog/glossary?q=${k.word}`, '_blank')}>
+                                  👁 View Site
+                                </button>
                                 <button className="btn btn-secondary btn-sm" onClick={() => handleOpenEditModal(k)}>
                                   ✎ Edit
                                 </button>

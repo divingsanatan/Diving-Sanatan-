@@ -43,6 +43,7 @@ export default function AdminGlossaryPage() {
   // Modal and pagination state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const loadTerms = async () => {
     try {
@@ -79,6 +80,10 @@ export default function AdminGlossaryPage() {
     loadTerms();
     loadCategories();
   }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
 
   const resetCategoryForm = () => {
     setCategoryName("");
@@ -278,10 +283,16 @@ export default function AdminGlossaryPage() {
     }
   };
 
-  // Pagination calculation
-  const totalPages = Math.ceil(terms.length / PAGE_SIZE) || 1;
+  // Filter and Pagination calculation
+  const filteredTerms = terms.filter(t => 
+    t.word.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    t.definition.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (t.category && t.category.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
+
+  const totalPages = Math.ceil(filteredTerms.length / PAGE_SIZE) || 1;
   const safePage = Math.min(currentPage, totalPages);
-  const paginatedTerms = terms.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+  const paginatedTerms = filteredTerms.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
   return (
     <div className="dashboard-content">
@@ -331,14 +342,24 @@ export default function AdminGlossaryPage() {
         ) : (
           <div className="admin-full-layout">
             <Card variant="glass" className="admin-table-card">
-              <div className="table-header-bar">
-                <h3 className="column-title">Terms Index ({terms.length})</h3>
+              <div className="table-header-bar" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px" }}>
+                <h3 className="column-title">Terms Index ({filteredTerms.length})</h3>
+                <div className="search-bar" style={{ flex: "1", maxWidth: "300px" }}>
+                  <input
+                    type="text"
+                    placeholder="Search terms, definitions..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="glass-input"
+                    style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1px solid rgba(168, 85, 247, 0.2)", background: "rgba(255, 255, 255, 0.6)" }}
+                  />
+                </div>
               </div>
               
               <div className="table-wrapper">
-                {terms.length === 0 ? (
+                {filteredTerms.length === 0 ? (
                   <div className="empty-state-padding">
-                    <p className="empty-list-msg">No glossary terms found. Click &quot;+ New Term&quot; to create one.</p>
+                    <p className="empty-list-msg">No glossary terms found matching your search.</p>
                   </div>
                 ) : (
                   <table className="admin-table">
@@ -424,10 +445,10 @@ export default function AdminGlossaryPage() {
                 )}
               </div>
 
-              {terms.length > 0 && (
+              {filteredTerms.length > 0 && (
                 <div className="admin-pagination-wrapper">
                   <span className="pagination-info">
-                    Showing {(safePage - 1) * PAGE_SIZE + 1} to {Math.min(safePage * PAGE_SIZE, terms.length)} of {terms.length} entries
+                    Showing {(safePage - 1) * PAGE_SIZE + 1} to {Math.min(safePage * PAGE_SIZE, filteredTerms.length)} of {filteredTerms.length} entries
                   </span>
                   <ul className="admin-pagination">
                     <li className={`page-item ${safePage === 1 ? 'disabled' : ''}`}>

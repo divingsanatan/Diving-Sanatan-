@@ -699,7 +699,7 @@ export default function AdminBlogsPage() {
                                       </>
                                     )}
                                     <button className="btn btn-primary btn-sm" onClick={() => window.open(`/blog/${b.id}`, '_blank')}>
-                                      👁 View
+                                      👁 View Site
                                     </button>
                                     <button className="btn btn-secondary btn-sm" onClick={() => handleOpenEditModal(b)}>
                                       ✎ Edit
@@ -790,6 +790,9 @@ export default function AdminBlogsPage() {
                                   <button className="btn btn-danger btn-sm" onClick={() => handleApproveCategory(cat.id, "rejected")}>✕</button>
                                 </>
                               )}
+                              <button className="btn btn-primary btn-sm" onClick={() => window.open(`/blog?category=${cat.name}`, '_blank')}>
+                                👁 View Site
+                              </button>
                               <button
                                 className="btn btn-secondary btn-sm"
                                 onClick={() => handleEditCategory(cat)}

@@ -258,6 +258,7 @@ export default function AdminComparisonsPage() {
                       <td>{page.rows.length}</td>
                       <td className="text-right">
                         <div className="action-btns" style={{ display: "flex", gap: "4px", justifyContent: "flex-end" }}>
+                          <button type="button" className="btn btn-primary btn-sm" onClick={() => window.open(`/blog/comparison/${page.slug}`, '_blank')}>View Site</button>
                           <button type="button" className="btn btn-secondary btn-sm" onClick={() => handleOpenEdit(page)}>Edit</button>
                           <button type="button" className="btn btn-danger btn-sm" onClick={() => handleDelete(page.id)}>Remove</button>
                         </div>

@@ -114,6 +114,7 @@ function QuoraQAInner() {
   const [showLeaderboard, setShowLeaderboard] = useState(false);
 
   // New Question Form States
+  const [showAskForm, setShowAskForm] = useState(false);
   const [newQTitle, setNewQTitle] = useState("");
   const [newQDesc, setNewQDesc] = useState("");
   const [newQCategory, setNewQCategory] = useState("Mind & Emotions");
@@ -537,12 +538,31 @@ function QuoraQAInner() {
 
   // Handle URL parameters for ask-question focus
   useEffect(() => {
+    const handleOpenAskForm = () => {
+      setShowAskForm(true);
+      setTimeout(() => {
+        const askTitleInput = document.getElementById("ask-title-input");
+        if (askTitleInput) {
+          askTitleInput.focus();
+          askTitleInput.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }, 50);
+    };
+
+    window.addEventListener('open-ask-form', handleOpenAskForm);
+    return () => window.removeEventListener('open-ask-form', handleOpenAskForm);
+  }, []);
+
+  useEffect(() => {
     if (focusAsk && !threadId) {
-      const askTitleInput = document.getElementById("ask-title-input");
-      if (askTitleInput) {
-        askTitleInput.focus();
-        askTitleInput.scrollIntoView({ behavior: "smooth", block: "center" });
-      }
+      setShowAskForm(true);
+      setTimeout(() => {
+        const askTitleInput = document.getElementById("ask-title-input");
+        if (askTitleInput) {
+          askTitleInput.focus();
+          askTitleInput.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }, 50);
     }
   }, [focusAsk, threadId]);
 
@@ -628,6 +648,7 @@ function QuoraQAInner() {
     setQuestions([newQuestion, ...questions]);
     setNewQTitle("");
     setNewQDesc("");
+    setShowAskForm(false);
     triggerToast("Your question has been posted to the board!");
     navigateToDetail(newQuestion.id);
   };
@@ -1047,6 +1068,82 @@ function QuoraQAInner() {
                 </p>
               </div>
 
+              {/* Ask Question Form */}
+              {showAskForm && (
+                <div className="ask-question-container glass-panel">
+                  <form onSubmit={handlePostQuestion} className="ask-q-form">
+                    <div className="form-header-row">
+                      <MessageSquare className="purple-icon" size={20} />
+                      <h2 className="form-title">Ask a New Question</h2>
+                    </div>
+                    
+                    <div className="input-group">
+                      <label htmlFor="ask-title-input">Question Title <span style={{ color: '#ef4444' }}>*</span></label>
+                      <input
+                        id="ask-title-input"
+                        className="ask-input glass-input"
+                        placeholder="What is on your mind?"
+                        value={newQTitle}
+                        onChange={(e) => setNewQTitle(e.target.value)}
+                        onClick={() => {
+                          if (!user) {
+                            setLoginPurpose("ask");
+                            setShowLoginModal(true);
+                          }
+                        }}
+                        required
+                      />
+                    </div>
+
+                    <div className="input-group">
+                      <label htmlFor="ask-desc-input">Description (Optional)</label>
+                      <textarea
+                        id="ask-desc-input"
+                        className="ask-textarea glass-input"
+                        placeholder="Add more context to help healers understand..."
+                        rows={2}
+                        value={newQDesc}
+                        onChange={(e) => setNewQDesc(e.target.value)}
+                        onClick={() => {
+                          if (!user) {
+                            setLoginPurpose("ask");
+                            setShowLoginModal(true);
+                          }
+                        }}
+                      />
+                    </div>
+
+                    <div className="form-footer-row">
+                      <div className="select-wrapper">
+                        <label htmlFor="ask-category-select" style={{ fontSize: '0.76rem', fontWeight: 700, color: '#5b21b6', textTransform: 'uppercase', letterSpacing: '0.02em', marginBottom: '2px' }}>Category</label>
+                        <select 
+                          id="ask-category-select"
+                          className="category-dropdown"
+                          value={newQCategory}
+                          onChange={(e) => setNewQCategory(e.target.value)}
+                        >
+                          {categories.map((cat) => (
+                            <option key={cat} value={cat}>{cat}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div style={{ display: 'flex', gap: '12px' }}>
+                        <button 
+                          type="button" 
+                          className="btn-cancel-admin" 
+                          onClick={() => setShowAskForm(false)}
+                          style={{ padding: '10px 16px', background: 'transparent', border: '1px solid rgba(168, 85, 247, 0.3)', color: '#7c3aed', borderRadius: '12px', cursor: 'pointer', fontWeight: 700, fontSize: '0.82rem', transition: 'background 0.2s ease' }}
+                        >
+                          Cancel
+                        </button>
+                        <button type="submit" className="submit-q-btn">
+                          Post Question
+                        </button>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+              )}
 
               {/* Active Discussions List */}
               <div className="listings-section">

@@ -433,6 +433,9 @@ export default function AdminServicesPage() {
                                     <button className="btn btn-danger btn-sm" onClick={() => handleApproveService(s.id, "rejected")}>✕</button>
                                   </>
                                 )}
+                                <button className="btn btn-primary btn-sm" onClick={() => window.open(`/services/${s.id}`, '_blank')}>
+                                  👁 View Site
+                                </button>
                                 <button className="btn btn-secondary btn-sm" onClick={() => handleOpenEditModal(s)}>
                                   ✎ Edit
                                 </button>
