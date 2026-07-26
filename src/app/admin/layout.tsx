@@ -53,16 +53,38 @@ export default function AdminLayout({
   };
 
   useEffect(() => {
-    const isAuth = window.sessionStorage.getItem("divingsanatan_admin_auth");
-    const userStr = window.sessionStorage.getItem("divingsanatan_admin_user");
-    if (isAuth === "true") {
-      setAuthenticated(true);
-      if (userStr) {
+    const checkAuth = () => {
+      // 1. Check admin specific session
+      const isAdminAuth = window.sessionStorage.getItem("divingsanatan_admin_auth");
+      const adminUserStr = window.sessionStorage.getItem("divingsanatan_admin_user");
+      
+      if (isAdminAuth === "true" && adminUserStr) {
         try {
-          const userObj = JSON.parse(userStr);
+          const userObj = JSON.parse(adminUserStr);
           setUserRole(userObj.role || "");
+          return true;
         } catch (e) {}
       }
+
+      // 2. Check general user session from frontend (if they logged in there and have correct role)
+      const userSessionStr = window.localStorage.getItem("divingsanatan_user_session");
+      if (userSessionStr) {
+        try {
+          const userObj = JSON.parse(userSessionStr);
+          if (["admin", "super_admin", "guru"].includes(userObj.role)) {
+            setUserRole(userObj.role);
+            return true;
+          }
+        } catch (e) {}
+      }
+
+      return false;
+    };
+
+    const isAuthenticated = checkAuth();
+
+    if (isAuthenticated) {
+      setAuthenticated(true);
       setChecking(false);
     } else {
       setAuthenticated(false);

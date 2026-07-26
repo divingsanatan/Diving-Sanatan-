@@ -103,6 +103,15 @@ export default function UserProfilePage() {
       if (json.success) {
         setProfileData(json.data);
 
+        // Update local session with latest DB user profile data (role, name, etc.)
+        setSessionUser((prev: any) => {
+          const updated = { ...prev, ...json.data };
+          if (typeof window !== "undefined") {
+            window.localStorage.setItem("divingsanatan_user_session", JSON.stringify(updated));
+          }
+          return updated;
+        });
+
         // Populate edit form states
         setEditName(json.data.name || "");
         setEditPhone(json.data.phone || "");
@@ -864,6 +873,14 @@ export default function UserProfilePage() {
                   >
                     <span>⚙️</span> Manage Profile
                   </button>
+                  {['admin', 'super_admin', 'guru'].includes(profileData?.role || sessionUser?.role) && (
+                    <button
+                      className="dash-nav-btn"
+                      onClick={() => router.push('/admin')}
+                    >
+                      <span>🛡️</span> Admin Dashboard
+                    </button>
+                  )}
                 </div>
 
                 <div className="sidebar-divider"></div>

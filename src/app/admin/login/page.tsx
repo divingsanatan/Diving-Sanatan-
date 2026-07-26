@@ -13,8 +13,22 @@ export default function AdminLoginPage() {
 
   // Redirect if already authenticated
   useEffect(() => {
-    const isAuth = window.sessionStorage.getItem("divingsanatan_admin_auth");
-    if (isAuth === "true") {
+    // 1. Check admin specific session
+    const isAdminAuth = window.sessionStorage.getItem("divingsanatan_admin_auth");
+    
+    // 2. Check general user session from frontend
+    let isUserAuth = false;
+    const userSessionStr = window.localStorage.getItem("divingsanatan_user_session");
+    if (userSessionStr) {
+      try {
+        const userObj = JSON.parse(userSessionStr);
+        if (["admin", "super_admin", "guru"].includes(userObj.role)) {
+          isUserAuth = true;
+        }
+      } catch (e) {}
+    }
+
+    if (isAdminAuth === "true" || isUserAuth) {
       router.push("/admin");
     }
   }, [router]);
@@ -30,7 +44,7 @@ export default function AdminLoginPage() {
       const json = await res.json();
       
       if (json.success) {
-        if (json.data.role === "admin" || json.data.role === "super_admin") {
+        if (["admin", "super_admin", "guru"].includes(json.data.role)) {
           window.sessionStorage.setItem("divingsanatan_admin_auth", "true");
           window.sessionStorage.setItem("divingsanatan_admin_user", JSON.stringify(json.data));
           setError("");

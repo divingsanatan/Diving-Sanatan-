@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
@@ -42,7 +42,9 @@ interface Review {
 export default function GuruDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const healerId = params?.id as string;
+  const isPreview = searchParams.get("preview") === "true";
 
 
 
@@ -101,7 +103,7 @@ export default function GuruDetailPage() {
       try {
         setLoading(true);
         // 1. Fetch healer details by ID
-        const hRes = await fetch(`/api/practitioners?id=${healerId}`);
+        const hRes = await fetch(`/api/practitioners?id=${healerId}${isPreview ? "&admin_view=true" : ""}`);
         const hJson = await hRes.json();
 
         if (!hJson.success) {

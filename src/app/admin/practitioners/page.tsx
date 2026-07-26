@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Practitioner, Expertise } from "@/types/database";
 import { ImageCropperModal } from "@/components/ui/ImageCropperModal";
-import { RefreshCw, Edit, Trash2 } from "lucide-react";
+import { RefreshCw, Edit, Trash2, Eye } from "lucide-react";
 import StatsDashboard from "@/components/admin/StatsDashboard";
 
 export default function AdminPractitionersPage() {
@@ -449,6 +449,9 @@ export default function AdminPractitionersPage() {
                                   <button className="btn btn-danger btn-sm" onClick={() => handleApprovePractitioner(p.id, "rejected")}>✕</button>
                                 </>
                               )}
+                              <button className="btn btn-info btn-sm" style={{ background: '#17a2b8', color: 'white', border: 'none' }} onClick={() => window.open(`/gurus/${p.id}?preview=true`, '_blank')} title="View Profile">
+                                <Eye size={12} />
+                              </button>
                               <button className="btn btn-secondary btn-sm" onClick={() => handleEditClick(p)}>
                                 <Edit size={12} />
                               </button>

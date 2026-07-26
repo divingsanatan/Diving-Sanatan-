@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/utils/supabaseServer";
 import crypto from "crypto";
 
+export const dynamic = "force-dynamic";
+
 function hashPassword(password: string) {
   return crypto.createHash("sha256").update(password).digest("hex");
 }

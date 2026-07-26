@@ -10,6 +10,7 @@ export default function AdminUsersPage() {
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
   const [userRole, setUserRole] = useState("checking");
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Form states
   const [newName, setNewName] = useState("");
@@ -144,7 +145,20 @@ export default function AdminUsersPage() {
       });
       const json = await res.json();
       if (json.success) {
-        loadUsers();
+        // Sync active session if the updated user is currently logged in
+        if (typeof window !== "undefined") {
+          const sessionStr = window.localStorage.getItem("divingsanatan_user_session");
+          if (sessionStr) {
+            try {
+              const sessionUserObj = JSON.parse(sessionStr);
+              if (sessionUserObj.id === id) {
+                sessionUserObj.role = newRole;
+                window.localStorage.setItem("divingsanatan_user_session", JSON.stringify(sessionUserObj));
+              }
+            } catch (e) {}
+          }
+        }
+        await loadUsers();
       } else {
         alert(json.error || "Failed to update role.");
       }
@@ -154,7 +168,18 @@ export default function AdminUsersPage() {
   };
 
   // Pagination Logic
-  const filteredUsers = users.filter(user => user.role !== 'super_admin');
+  const filteredUsers = users.filter(user => {
+    if (user.role === 'super_admin') return false;
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      return (
+        user.name?.toLowerCase().includes(q) ||
+        user.email?.toLowerCase().includes(q) ||
+        user.role?.toLowerCase().includes(q)
+      );
+    }
+    return true;
+  });
   const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
   const paginatedUsers = filteredUsers.slice(
     (currentPage - 1) * itemsPerPage,
@@ -182,9 +207,22 @@ export default function AdminUsersPage() {
             <Card variant="glass" className="card-primary" style={{ padding: "0 !important" }}>
               <div style={{ borderBottom: "1px solid #dee2e6", padding: "12px 20px", background: "#f8f9fa", fontWeight: "700", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <span>Users List ({filteredUsers.length})</span>
-                <button className="btn btn-primary btn-sm" onClick={() => setShowAddForm(!showAddForm)}>
-                  {showAddForm ? 'Close Form' : '+ Add New User'}
-                </button>
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                  <input
+                    type="text"
+                    placeholder="Search users..."
+                    className="form-control form-control-sm"
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    style={{ width: '200px' }}
+                  />
+                  <button className="btn btn-primary btn-sm" onClick={() => setShowAddForm(!showAddForm)}>
+                    {showAddForm ? 'Close Form' : '+ Add New User'}
+                  </button>
+                </div>
               </div>
               <div className="table-responsive">
                 <table className="admin-table">

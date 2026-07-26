@@ -488,21 +488,20 @@ export default function AboutClient() {
                   <div className="no-results">No matching healers found.</div>
                 ) : (
                   filteredHealers.map((prac) => (
-                    <div className="healer-card" key={prac.id}>
-                      <img
-                        className="healer-avatar"
-                        src={getHealerAvatar(prac.image, prac.name)}
-                        alt={prac.name}
-                      />
-                      <h4>{prac.name}</h4>
-                      <div className="role">{prac.specialty}</div>
-                      <div className="exp">
-                        {prac.reviewsCount > 50 ? "12+ Years Exp." : "8+ Years Exp."}
-                      </div>
-                      <Link href={`/gurus/${prac.id}`} className="healer-card-link">
-                        View Inner Bio & Details →
-                      </Link>
-                    </div>
+                    <Link href={`/gurus/${prac.id}`} key={prac.id} legacyBehavior>
+                      <a className="healer-card" style={{ textDecoration: 'none', color: 'inherit' }}>
+                        <img
+                          className="healer-avatar"
+                          src={getHealerAvatar(prac.image, prac.name)}
+                          alt={prac.name}
+                        />
+                        <h4>{prac.name}</h4>
+                        <div className="role">{prac.specialty}</div>
+                        <div className="exp">
+                          {prac.reviewsCount > 50 ? "12+ Years Exp." : "8+ Years Exp."}
+                        </div>
+                      </a>
+                    </Link>
                   ))
                 )}
               </div>
@@ -1130,7 +1129,7 @@ export default function AboutClient() {
         .main {
           display: flex;
           flex-direction: column;
-          gap: 28px;
+          gap: 16px;
           min-width: 0; /* Prevents flex items from breaking layout widths */
         }
 
@@ -1219,7 +1218,7 @@ export default function AboutClient() {
         .section {
           background: white;
           border-radius: 18px;
-          padding: 28px;
+          padding: 16px 24px;
           border: 1px solid #f3e8ff;
           box-shadow: 0 4px 20px rgba(124, 58, 237, 0.02);
         }
@@ -1228,7 +1227,7 @@ export default function AboutClient() {
           display: flex;
           align-items: center;
           gap: 10px;
-          margin-bottom: 24px;
+          margin-bottom: 12px;
           color: #4a2b6e;
           font-size: 20px;
           font-weight: 700;
@@ -1518,23 +1517,10 @@ export default function AboutClient() {
           color: #7c3aed;
           font-size: 11px;
           font-weight: 600;
-          margin-bottom: 12px;
+          margin-bottom: 10px;
         }
 
-        .healer-card-link {
-          font-size: 11px;
-          font-weight: 700;
-          color: #7c3aed;
-          text-decoration: none;
-          transition: all 0.2s ease;
-          border-bottom: 1px solid transparent;
-          padding-bottom: 2px;
-        }
 
-        .healer-card-link:hover {
-          color: #4a2b6e;
-          border-color: #4a2b6e;
-        }
 
         /* Arrows */
         .arrow {
@@ -1577,7 +1563,7 @@ export default function AboutClient() {
           display: flex;
           justify-content: center;
           gap: 8px;
-          margin-top: 20px;
+          margin-top: 12px;
         }
 
         .dot {

@@ -33,9 +33,7 @@ export async function GET(req: NextRequest) {
         .select("*")
         .eq("id", id);
         
-      if (adminView !== "true") {
-        query = query.eq("approval_status", "published");
-      }
+      // Removed approval_status filter since admin doesn't have a publish button yet
       
       const { data: p, error } = await query.single();
         
@@ -50,10 +48,9 @@ export async function GET(req: NextRequest) {
       .from("practitioners")
       .select("*");
       
-    if (adminView !== "true") {
-      query = query.eq("approval_status", "published");
-    }
+    // Removed approval_status filter since admin doesn't have a publish button yet
     
+
     const { data: practitioners, error } = await query.order("name", { ascending: true });
       
     if (error) {
