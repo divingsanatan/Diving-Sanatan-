@@ -163,15 +163,37 @@ export default function SeoCommandCenter() {
   /* ─ trigger an agent ─ */
   const triggerAgent = async (key: string, endpoint: string) => {
     setAgentStates(prev => ({ ...prev, [key]: { loading: true, result: null, error: null, lastRun: null } }));
+    const nowIso = new Date().toISOString();
     try {
       const res = await fetch(endpoint, { method: "POST" });
       const json = await res.json();
       if (json.success) {
-        setAgentStates(prev => ({ ...prev, [key]: { loading: false, result: json.data, error: null, lastRun: new Date().toISOString() } }));
+        setAgentStates(prev => ({ ...prev, [key]: { loading: false, result: json.data, error: null, lastRun: nowIso } }));
+        
+        // Optimistically record run in UI state so it shows instantly in Recent Agent Runs
+        const agentNameMap: Record<string, string> = {
+          "scan": "change_detection_scan",
+          "monitoring": "monitoring_reporting",
+          "ai-visibility": "ai_geo_visibility",
+          "off-page": "off_page_backlink",
+          "gmb": "local_gmb_agent"
+        };
+        setRecentRuns(prev => [
+          {
+            id: json.data?.runId || `run-${Date.now()}`,
+            agent_name: agentNameMap[key] || key.replace(/-/g, "_"),
+            status: "completed",
+            started_at: nowIso,
+            completed_at: nowIso,
+            items_processed: json.data?.itemsProcessed ?? json.data?.totalUrlsChecked ?? json.data?.checksPerformed ?? 1,
+            run_summary: json.data
+          },
+          ...prev.filter(r => r.id !== json.data?.runId)
+        ]);
       } else {
         setAgentStates(prev => ({ ...prev, [key]: { loading: false, result: null, error: json.error || "Unknown error", lastRun: null } }));
       }
-      // refresh pending changes and runs
+      // refresh pending changes and runs from server
       loadDashboard();
     } catch (err: any) {
       setAgentStates(prev => ({ ...prev, [key]: { loading: false, result: null, error: err.message, lastRun: null } }));
@@ -181,6 +203,7 @@ export default function SeoCommandCenter() {
   /* ─ approve / reject ─ */
   const handleApproval = async (changeId: string, action: "approve" | "reject") => {
     setApprovalActions(prev => ({ ...prev, [changeId]: action === "approve" ? "approving" : "rejecting" }));
+    const nowIso = new Date().toISOString();
     try {
       const res = await fetch("/api/seo/approval", {
         method: "POST",
@@ -191,6 +214,20 @@ export default function SeoCommandCenter() {
       if (json.success) {
         setPendingChanges(prev => prev.filter(c => c.id !== changeId));
         setApprovalActions(prev => ({ ...prev, [changeId]: "done" }));
+        
+        // Optimistically record distribution in UI state so it shows instantly in Distribution Log
+        if (action === "approve") {
+          setDistLog(prev => [
+            {
+              id: `dist-${Date.now()}`,
+              target: "IndexNow & Dynamic Sitemap",
+              status: "success",
+              pushed_at: nowIso,
+              response_summary: json.data?.distributionResult || { ok: true }
+            },
+            ...prev
+          ]);
+        }
         loadDashboard();
       } else {
         setApprovalActions(prev => ({ ...prev, [changeId]: "error" }));
