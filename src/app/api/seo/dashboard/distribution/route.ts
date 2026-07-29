@@ -11,11 +11,11 @@ export async function GET() {
       .limit(20);
 
     if (error) {
-      return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+      return NextResponse.json({ success: true, data: [] });
     }
 
-    return NextResponse.json({ success: true, data });
-  } catch (err: any) {
-    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+    return NextResponse.json({ success: true, data: data || [] });
+  } catch {
+    return NextResponse.json({ success: true, data: [] });
   }
 }
