@@ -112,7 +112,20 @@ export interface Blog {
   views?: number;
   createdAt?: string;
   approval_status?: "pending_approval" | "published" | "rejected";
+  content_type?: ContentType;
+  content_format?: ContentFormat;
 }
+
+export type ContentType =
+  | "normal"
+  | "faq"
+  | "comparison"
+  | "case_study"
+  | "glossary"
+  | "video"
+  | "qa_style";
+
+export type ContentFormat = "plain_text" | "html" | "markdown";
 
 export type GlossaryIllustration = string | null;
 
