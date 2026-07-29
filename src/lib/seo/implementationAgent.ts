@@ -56,7 +56,46 @@ export async function applyApprovedChange(changeId: string, approvedBy = "admin"
       if (proposed_data.content_type) updatePayload.content_type = proposed_data.content_type;
       if (proposed_data.content_format) updatePayload.content_format = proposed_data.content_format;
 
+      // Mark as published so it is immediately visible on the website
+      updatePayload.approval_status = "published";
+
       await supabaseServer.from("blogs").update(updatePayload).eq("id", target_id);
+    } else if (target_entity === "services" && target_id) {
+      const updatePayload: Record<string, any> = {};
+      if (proposed_data.name) updatePayload.name = proposed_data.name;
+      if (proposed_data.description) updatePayload.description = proposed_data.description;
+      if (proposed_data.meta_title) updatePayload.meta_title = proposed_data.meta_title;
+      if (proposed_data.meta_description) updatePayload.meta_description = proposed_data.meta_description;
+
+      updatePayload.approval_status = "published";
+
+      await supabaseServer.from("services").update(updatePayload).eq("id", target_id);
+    } else if (target_entity === "faq") {
+      await supabaseServer.from("faq").upsert({
+        id: target_id || `faq-${Math.random().toString(36).substring(2, 9)}`,
+        question: proposed_data.question,
+        answer: proposed_data.answer,
+        category: proposed_data.category || "General",
+        is_published: true
+      });
+    } else if (target_entity === "glossary") {
+      await supabaseServer.from("glossary").upsert({
+        id: target_id || `glo-${Math.random().toString(36).substring(2, 9)}`,
+        term: proposed_data.term,
+        definition: proposed_data.definition,
+        sanskrit_translation: proposed_data.sanskrit_translation || "",
+        is_published: true
+      });
+    } else if (target_entity === "comparison_pages") {
+      await supabaseServer.from("comparison_pages").upsert({
+        id: target_id || `cmp-${Math.random().toString(36).substring(2, 9)}`,
+        slug: proposed_data.slug,
+        title: proposed_data.title,
+        subtitle: proposed_data.subtitle || "",
+        modality_a_name: proposed_data.modality_a_name || "",
+        modality_b_name: proposed_data.modality_b_name || "",
+        rows: proposed_data.rows || []
+      });
     } else if (target_entity === "redirects") {
       await supabaseServer.from("redirects").upsert({
         source_path: proposed_data.source_path,
