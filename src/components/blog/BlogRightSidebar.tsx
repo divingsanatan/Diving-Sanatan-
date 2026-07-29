@@ -182,7 +182,7 @@ export const BlogRightSidebar: React.FC = () => {
 
             <div className="video-blogs-list">
               {otherVideoBlogs.map((video) => (
-                <Link key={video.id} href={`/blog/${video.id}`} className="video-blog-item">
+                <Link key={video.id} href={`/blog/${video.slug || video.id}`} className="video-blog-item">
                   <div className="video-thumbnail-wrapper">
                     <img src={getBlogImage(video.image)} alt={video.title} className="video-thumbnail" />
                     <div className="play-button-overlay">
@@ -552,7 +552,7 @@ export const BlogRightSidebar: React.FC = () => {
           
           <div className="most-viewed-list">
             {mostViewedBlogs.map((blog, idx) => (
-              <Link key={blog.id} href={`/blog/${blog.id}`} className="most-viewed-item">
+              <Link key={blog.id} href={`/blog/${blog.slug || blog.id}`} className="most-viewed-item">
                 <div className="mv-number-badge">{idx + 1}</div>
                 <div className="mv-thumbnail-wrapper">
                   <img src={getBlogImage(blog.image)} alt={blog.title} className="mv-thumbnail" />
@@ -581,7 +581,7 @@ export const BlogRightSidebar: React.FC = () => {
 
           <div className="related-blogs-list">
             {relatedBlogs.map((b) => (
-              <Link key={b.id} href={`/blog/${b.id}`} className="related-blog-row">
+              <Link key={b.id} href={`/blog/${b.slug || b.id}`} className="related-blog-row">
                 <div className="related-thumb">
                   <img src={getBlogImage(b.image)} alt={b.title} />
                 </div>

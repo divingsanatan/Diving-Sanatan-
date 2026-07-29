@@ -1,64 +1,137 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/utils/supabaseServer";
+import { slugify, getDb, saveDb } from "@/utils/db";
 
 /**
- * GET Handler - Retrieves blog posts from Supabase
+ * GET Handler - Retrieves blog posts from Supabase / db.json
  */
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
     const category = searchParams.get("category");
+    const headers = {
+      "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
+    };
     
     if (id) {
-      let query = supabaseServer.from("blogs").select("*").eq("id", id);
+      let blog: any = null;
+
+      try {
+        const adminView = searchParams.get("admin_view");
+
+        // 1. First try querying by exact ID or slug
+        let query = supabaseServer.from("blogs").select("*");
+        if (adminView !== "true") {
+          query = query.eq("approval_status", "published");
+        }
+        
+        // Try exact match on ID or slug first
+        const { data: exactMatch } = await query.or(`id.eq.${id},slug.eq.${id}`);
+        if (exactMatch && exactMatch.length > 0) {
+          blog = exactMatch[0];
+        } else {
+          // 2. Query all blogs from Supabase only if exact match failed
+          let listQuery = supabaseServer.from("blogs").select("*");
+          if (adminView !== "true") {
+            listQuery = listQuery.eq("approval_status", "published");
+          }
+          const listRes = await listQuery;
+          if (listRes.data && listRes.data.length > 0) {
+            blog = listRes.data.find((b: any) =>
+              b.id === id ||
+              b.slug === id ||
+              slugify(b.slug || b.title || "") === id
+            );
+          }
+        }
+      } catch (err) {
+        console.warn("Supabase blog GET error:", err);
+      }
+
+      // 3. Fallback: check local db.json if Supabase has no record
+      if (!blog) {
+        try {
+          const localDb = getDb();
+          const found = localDb.blogs?.find((b: any) =>
+            b.id === id ||
+            b.slug === id ||
+            slugify(b.slug || b.title || "") === id
+          );
+          if (found) {
+            blog = {
+              ...found,
+              slug: found.slug || slugify(found.title) || found.id,
+              read_time: found.readTime || (found as any).read_time,
+              approval_status: "published",
+            };
+          }
+        } catch (err) {
+          console.error("Local DB fetch error:", err);
+        }
+      }
+
+      if (!blog) {
+        return NextResponse.json({ success: false, error: "Blog post not found" }, { status: 404 });
+      }
+
+      const mappedBlog = {
+        ...blog,
+        slug: blog.slug || slugify(blog.title) || blog.id,
+        readTime: blog.read_time || blog.readTime,
+        images: Array.isArray(blog.images) ? blog.images : [],
+        videos: Array.isArray(blog.videos) ? blog.videos : [],
+      };
+
+      return NextResponse.json({ success: true, data: mappedBlog }, { headers });
+    }
+    
+    let blogs: any[] = [];
+    try {
+      let query = supabaseServer.from("blogs").select("*");
+      
       const adminView = searchParams.get("admin_view");
       if (adminView !== "true") {
         query = query.eq("approval_status", "published");
       }
-      const { data: blog, error } = await query.single();
-        
-      if (error || !blog) {
-        return NextResponse.json({ success: false, error: "Blog post not found" }, { status: 404 });
+
+      if (category && category !== "all") {
+        query = query.ilike("category", category);
       }
       
-      const mappedBlog = {
-        ...blog,
-        readTime: blog.read_time,
-        images: Array.isArray(blog.images) ? blog.images : [],
-        videos: Array.isArray(blog.videos) ? blog.videos : [],
-      };
-      
-      return NextResponse.json({ success: true, data: mappedBlog });
-    }
-    
-    let query = supabaseServer.from("blogs").select("*");
-    
-    const adminView = searchParams.get("admin_view");
-    if (adminView !== "true") {
-      query = query.eq("approval_status", "published");
+      const res = await query.order("date", { ascending: false });
+      if (res.data && res.data.length > 0) {
+        blogs = res.data;
+      }
+    } catch (err) {
+      console.warn("Supabase GET blogs list error:", err);
     }
 
-    if (category && category !== "all") {
-      query = query.ilike("category", category);
-    }
-    
-    const { data: blogs, error } = await query.order("date", { ascending: false });
-    
-    if (error) {
-      return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    // Fallback to local db.json if Supabase returned no blogs
+    if (!blogs || blogs.length === 0) {
+      try {
+        const localDb = getDb();
+        blogs = localDb.blogs || [];
+        if (category && category !== "all") {
+          blogs = blogs.filter((b: any) => b.category?.toLowerCase() === category.toLowerCase());
+        }
+      } catch (err) {
+        console.error("Local DB fetch error:", err);
+      }
     }
     
     const mappedBlogs = (blogs || []).map((blog: any) => ({
       ...blog,
-      readTime: blog.read_time,
+      slug: blog.slug || slugify(blog.title) || blog.id,
+      readTime: blog.read_time || blog.readTime,
       images: Array.isArray(blog.images) ? blog.images : [],
       videos: Array.isArray(blog.videos) ? blog.videos : [],
     }));
     
-    return NextResponse.json({ success: true, data: mappedBlogs });
-  } catch (error) {
-    return NextResponse.json({ success: false, error: "Failed to read blogs data" }, { status: 500 });
+    return NextResponse.json({ success: true, data: mappedBlogs }, { headers });
+  } catch (error: any) {
+    console.error("GET BLOG ERROR:", error);
+    return NextResponse.json({ success: false, error: String(error?.stack || error?.message || error) }, { status: 500 });
   }
 }
 
@@ -68,14 +141,17 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { title, category, author, content, date, readTime, image, images, videos, section, is_show_featured_page, role, approval_status } = body;
+    const { title, slug, category, author, content, date, readTime, image, images, videos, section, is_show_featured_page, role, approval_status } = body;
     
     if (!title || !category || !author || !content || !date || !readTime) {
       return NextResponse.json({ success: false, error: "Missing required blog fields" }, { status: 400 });
     }
+
+    const finalSlug = slug ? slugify(slug) : slugify(title);
     
     const newBlogDb = {
       id: `bl-${Math.random().toString(36).substring(2, 9)}`,
+      slug: finalSlug,
       title,
       category,
       author,
@@ -90,19 +166,56 @@ export async function POST(req: NextRequest) {
       approval_status: role === "super_admin" ? (approval_status || "published") : "pending_approval",
     };
     
+    let insertedData = null;
     const { data, error } = await supabaseServer
       .from("blogs")
       .insert([newBlogDb])
       .select()
       .single();
-      
+
     if (error) {
-      return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+      // Try inserting without slug column if Supabase table lacks slug column
+      const { slug: _, ...dbWithoutSlug } = newBlogDb;
+      const { data: retryData, error: retryErr } = await supabaseServer
+        .from("blogs")
+        .insert([dbWithoutSlug])
+        .select()
+        .single();
+      
+      if (retryErr) {
+        console.warn("Supabase insert failed, persisting to local db.json:", retryErr.message);
+      } else {
+        insertedData = retryData;
+      }
+    } else {
+      insertedData = data;
+    }
+
+    // Also update local db.json
+    try {
+      const db = getDb();
+      db.blogs = db.blogs || [];
+      db.blogs.unshift({
+        id: newBlogDb.id,
+        slug: newBlogDb.slug,
+        title: newBlogDb.title,
+        category: newBlogDb.category,
+        author: newBlogDb.author,
+        content: newBlogDb.content,
+        date: newBlogDb.date,
+        readTime: newBlogDb.read_time,
+        image: newBlogDb.image,
+      });
+      saveDb(db);
+    } catch (dbErr) {
+      console.error("Failed to sync db.json:", dbErr);
     }
     
+    const resultObj = insertedData || newBlogDb;
     const mapped = {
-      ...data,
-      readTime: data.read_time,
+      ...resultObj,
+      slug: finalSlug,
+      readTime: (resultObj as any).read_time || readTime,
     };
     
     return NextResponse.json({ success: true, data: mapped }, { status: 201 });
@@ -117,13 +230,14 @@ export async function POST(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   try {
     const body = await req.json();
-    const { id, title, category, author, content, date, readTime, image, images, videos, section, is_show_featured_page, role, approval_status } = body;
+    const { id, slug, title, category, author, content, date, readTime, image, images, videos, section, is_show_featured_page, role, approval_status } = body;
     
     if (!id) {
       return NextResponse.json({ success: false, error: "Blog ID is required" }, { status: 400 });
     }
     
     const updates: any = {};
+    if (slug !== undefined) updates.slug = slugify(slug);
     if (title !== undefined) updates.title = title;
     if (category !== undefined) updates.category = category;
     if (author !== undefined) updates.author = author;
@@ -142,20 +256,56 @@ export async function PUT(req: NextRequest) {
       updates.approval_status = "pending_approval";
     }
     
+    let updatedData = null;
     const { data, error } = await supabaseServer
       .from("blogs")
       .update(updates)
       .eq("id", id)
       .select()
       .single();
-      
-    if (error) {
-      return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+
+    if (error && updates.slug) {
+      // Try update without slug column if Supabase table lacks slug column
+      const { slug: _, ...updatesWithoutSlug } = updates;
+      const { data: retryData } = await supabaseServer
+        .from("blogs")
+        .update(updatesWithoutSlug)
+        .eq("id", id)
+        .select()
+        .single();
+      updatedData = retryData;
+    } else {
+      updatedData = data;
+    }
+
+    // Sync to local db.json
+    try {
+      const db = getDb();
+      if (db.blogs) {
+        const idx = db.blogs.findIndex((b: any) => b.id === id);
+        if (idx !== -1) {
+          db.blogs[idx] = {
+            ...db.blogs[idx],
+            ...(slug !== undefined ? { slug: slugify(slug) } : {}),
+            ...(title !== undefined ? { title } : {}),
+            ...(category !== undefined ? { category } : {}),
+            ...(author !== undefined ? { author } : {}),
+            ...(content !== undefined ? { content } : {}),
+            ...(date !== undefined ? { date } : {}),
+            ...(readTime !== undefined ? { readTime } : {}),
+            ...(image !== undefined ? { image } : {}),
+          };
+          saveDb(db);
+        }
+      }
+    } catch (dbErr) {
+      console.error("Failed to sync db.json:", dbErr);
     }
     
     const mapped = {
-      ...data,
-      readTime: data.read_time,
+      ...(updatedData || updates),
+      slug: updates.slug || (updatedData as any)?.slug,
+      readTime: (updatedData as any)?.read_time || readTime,
     };
     
     return NextResponse.json({ success: true, data: mapped });

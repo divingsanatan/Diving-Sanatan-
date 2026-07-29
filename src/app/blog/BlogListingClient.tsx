@@ -13,6 +13,7 @@ import {
 
 interface Blog {
   id: string;
+  slug?: string;
   title: string;
   category: string;
   author: string;
@@ -38,12 +39,13 @@ export default function BlogListingPage() {
   const itemsPerPage = 8;
 
   const servicesScrollRef = useRef<HTMLDivElement>(null);
+  const blogsCacheRef = useRef<Record<string, Blog[]>>({});
 
   // Load services once on mount
   useEffect(() => {
     async function loadServices() {
       try {
-        const res = await fetch(`/api/services?t=${Date.now()}`);
+        const res = await fetch("/api/services");
         const json = await res.json();
         if (json.success) {
           setServices(json.data);
@@ -55,17 +57,27 @@ export default function BlogListingPage() {
     loadServices();
   }, []);
 
-  // Load blogs whenever activeCategory changes
+  // Load blogs whenever activeCategory changes with client-side cache
   useEffect(() => {
     async function loadBlogs() {
-      try {
+      const cacheKey = activeCategory || "all";
+      
+      // If we have cached data for this category, display it immediately
+      if (blogsCacheRef.current[cacheKey]) {
+        setBlogs(blogsCacheRef.current[cacheKey]);
+        setLoading(false);
+      } else {
         setLoading(true);
+      }
+
+      try {
         const url = activeCategory && activeCategory !== "all"
-          ? `/api/blogs?category=${encodeURIComponent(activeCategory)}&t=${Date.now()}`
-          : `/api/blogs?t=${Date.now()}`;
+          ? `/api/blogs?category=${encodeURIComponent(activeCategory)}`
+          : `/api/blogs`;
         const res = await fetch(url);
         const json = await res.json();
         if (json.success) {
+          blogsCacheRef.current[cacheKey] = json.data;
           setBlogs(json.data);
         }
       } catch (err) {
@@ -133,13 +145,15 @@ export default function BlogListingPage() {
 
   const renderBlogCard = (post: Blog) => (
     <div key={post.id} style={{ display: 'block', width: '100%', minWidth: 0, boxSizing: 'border-box' }}>
-      <Link href={`/blog/${post.id}`} style={{ display: 'block', textDecoration: 'none', color: 'inherit', width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
+      <Link href={`/blog/${post.slug || post.id}`} style={{ display: 'block', textDecoration: 'none', color: 'inherit', width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
         <div className="blog-item-card">
           <div className="blog-card-media-wrapper">
             <img
               src={post.image || "/images/insight_blog.png"}
               alt={post.title}
               className="blog-media-img"
+              loading="lazy"
+              decoding="async"
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
                 target.src = "/images/insight_blog.png";
@@ -163,7 +177,7 @@ export default function BlogListingPage() {
                   <span className="blog-date">{post.date}</span>
                 </div>
               </div>
-              <span className="blog-view-action">Read Article →</span>
+
             </div>
           </div>
         </div>
@@ -417,12 +431,12 @@ export default function BlogListingPage() {
           border-radius: 24px;
           background: linear-gradient(135deg, #FAF7FF 0%, #FFFFFF 100%);
           border: 1px solid rgba(168, 85, 247, 0.08);
-          padding: 90px 40px;
+          padding: 36px 40px;
           display: flex;
           align-items: center;
           justify-content: space-between;
           position: relative;
-          min-height: 300px;
+          min-height: 180px;
           overflow: hidden;
           box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
         }

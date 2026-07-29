@@ -1,6 +1,8 @@
 import BlogDetailsPage from "./BlogClient";
 import { Metadata } from "next";
 import { supabaseServer } from "@/utils/supabaseServer";
+import { getDb } from "@/utils/db";
+import { slugify } from "@/utils/slugify";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -10,13 +12,43 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { id } = await params;
   
   try {
-    const { data: blog, error } = await supabaseServer
+    let blog: any = null;
+    
+    // 1. Try exact ID or slug query first
+    const { data: match } = await supabaseServer
       .from("blogs")
-      .select("title, category, content, author")
-      .eq("id", id)
-      .single();
+      .select("id, title, category, content, author, slug")
+      .eq("approval_status", "published")
+      .or(`id.eq.${id},slug.eq.${id}`);
 
-    if (error || !blog) {
+    if (match && match.length > 0) {
+      blog = match[0];
+    } else {
+      // 2. Fetch published blogs only if targeted match failed
+      const { data: allBlogs } = await supabaseServer
+        .from("blogs")
+        .select("id, title, category, content, author, slug")
+        .eq("approval_status", "published");
+
+      if (allBlogs && allBlogs.length > 0) {
+        blog = allBlogs.find((b: any) =>
+          b.id === id ||
+          b.slug === id ||
+          slugify(b.slug || b.title || "") === id
+        );
+      }
+    }
+
+    if (!blog) {
+      const localDb = getDb();
+      blog = localDb.blogs?.find((b: any) =>
+        b.id === id ||
+        b.slug === id ||
+        slugify(b.slug || b.title || "") === id
+      );
+    }
+
+    if (!blog) {
       return {
         title: "Article Not Found | Diving Sanatan",
         description: "The requested spiritual wellness article could not be resolved from our database."
@@ -24,7 +56,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     }
 
     // Strip HTML tags and summarize description
-    const plainText = blog.content.replace(/<[^>]*>/g, "").trim();
+    const plainText = (blog.content || "").replace(/<[^>]*>/g, "").trim();
     const shortDesc = plainText.length > 155 ? plainText.substring(0, 155) + "..." : plainText;
 
     return {
@@ -47,7 +79,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         title: blog.title,
         description: shortDesc,
         type: "article",
-        url: `https://divingsanatan.com/blog/${id}`,
+        url: `https://divingsanatan.com/blog/${blog.slug || id}`,
         authors: [blog.author || "Diving Sanatan Team"]
       }
     };

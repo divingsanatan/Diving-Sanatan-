@@ -52,6 +52,9 @@ function mapServiceCategories(s: any): Service {
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
+    const headers = {
+      "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
+    };
     
     const adminView = searchParams.get("admin_view");
     
@@ -83,7 +86,7 @@ export async function GET(req: NextRequest) {
       if (!service) {
         return NextResponse.json({ success: false, error: "Service not found" }, { status: 404 });
       }
-      return NextResponse.json({ success: true, data: mapServiceCategories(service) });
+      return NextResponse.json({ success: true, data: mapServiceCategories(service) }, { headers });
     }
     
     // Select all fields along with joined categories
@@ -142,7 +145,7 @@ export async function GET(req: NextRequest) {
       );
     }
     
-    return NextResponse.json({ success: true, data: mappedServices });
+    return NextResponse.json({ success: true, data: mappedServices }, { headers });
   } catch (error) {
     return NextResponse.json({ success: false, error: "Failed to read services catalog" }, { status: 500 });
   }

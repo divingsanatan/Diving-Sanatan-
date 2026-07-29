@@ -1,9 +1,11 @@
 import fs from "fs";
 import path from "path";
 
-// File Path resolved relative to project root
-const DB_DIR = path.join(process.cwd(), "src", "data");
-const DB_FILE = path.join(DB_DIR, "db.json");
+function getDbPaths() {
+  const DB_DIR = path.join(process.cwd(), "src", "data");
+  const DB_FILE = path.join(DB_DIR, "db.json");
+  return { DB_DIR, DB_FILE };
+}
 
 export interface Service {
   id: string;
@@ -58,6 +60,7 @@ export interface Review {
 
 export interface Blog {
   id: string;
+  slug?: string;
   title: string;
   category: string;
   author: string;
@@ -66,6 +69,10 @@ export interface Blog {
   readTime: string;
   image: string;
 }
+
+import { slugify } from "./slugify";
+export { slugify };
+
 
 export interface DatabaseSchema {
   services: Service[];
@@ -266,6 +273,7 @@ const initialData: DatabaseSchema = {
  */
 export function getDb(): DatabaseSchema {
   try {
+    const { DB_DIR, DB_FILE } = getDbPaths();
     if (!fs.existsSync(DB_DIR)) {
       fs.mkdirSync(DB_DIR, { recursive: true });
     }
@@ -288,6 +296,7 @@ export function getDb(): DatabaseSchema {
  */
 export function saveDb(data: DatabaseSchema): boolean {
   try {
+    const { DB_DIR, DB_FILE } = getDbPaths();
     if (!fs.existsSync(DB_DIR)) {
       fs.mkdirSync(DB_DIR, { recursive: true });
     }

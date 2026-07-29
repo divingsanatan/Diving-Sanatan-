@@ -42,12 +42,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // Dynamic blog articles fetched directly from Supabase
     const { data: blogs } = await supabaseServer
       .from("blogs")
-      .select("id, date")
+      .select("id, slug, date")
       .order("date", { ascending: false });
 
     if (blogs && blogs.length > 0) {
       const dynamicBlogRoutes: MetadataRoute.Sitemap = blogs.map((blog) => ({
-        url: `${baseUrl}/blog/${blog.id}`,
+        url: `${baseUrl}/blog/${blog.slug || blog.id}`,
         lastModified: blog.date ? new Date(blog.date) : new Date(),
         changeFrequency: "monthly",
         priority: 0.6,

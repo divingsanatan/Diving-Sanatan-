@@ -632,9 +632,8 @@ export default function BlogDetailsPage() {
                     <span className="breadcrumb-current">{blog.title}</span>
                   </nav>
 
-                  <Card variant="glass" className="article-unified-card video-layout-card">
+                  <Card variant="glass" hoverable={false} className="article-unified-card video-layout-card">
                     <div className="article-header video-header">
-                      <span className="article-category video-badge">Video Blog</span>
                       <h1 className="article-title">{blog.title}</h1>
                       <p className="article-subtitle">{intro}</p>
                       <div className="article-meta">
@@ -691,7 +690,7 @@ export default function BlogDetailsPage() {
                         <div className="gallery-images-row">
                           {blog.images.map((imgUrl, idx) => (
                             <div key={idx} className="gallery-image-thumbnail-card" onClick={() => window.open(getBlogImage(imgUrl), "_blank")}>
-                              <img src={getBlogImage(imgUrl)} alt={`Gallery index ${idx}`} className="gallery-img-thumb" />
+                              <img src={getBlogImage(imgUrl)} alt={`Gallery index ${idx}`} className="gallery-img-thumb" loading="lazy" decoding="async" />
                             </div>
                           ))}
                         </div>
@@ -910,9 +909,8 @@ export default function BlogDetailsPage() {
                   <span className="breadcrumb-current">{blog.category}</span>
                 </nav>
 
-                <Card variant="glass" className="article-unified-card normal-layout-card">
+                <Card variant="glass" hoverable={false} className="article-unified-card normal-layout-card">
                   <div className="article-header normal-header">
-                    <span className="article-category">{blog.category}</span>
                     <h1 className="article-title">{blog.title}</h1>
                     <div className="article-meta">
                       <span>By: <strong>{blog.author}</strong></span>
@@ -936,6 +934,8 @@ export default function BlogDetailsPage() {
                         src={coverImage}
                         alt={blog.title}
                         className="normal-featured-cover-img"
+                        loading="lazy"
+                        decoding="async"
                       />
                     </div>
                   )}
@@ -987,7 +987,7 @@ export default function BlogDetailsPage() {
                       <div className="gallery-images-row">
                         {blog.images.map((imgUrl, idx) => (
                           <div key={idx} className="gallery-image-thumbnail-card" onClick={() => window.open(getBlogImage(imgUrl), "_blank")}>
-                            <img src={getBlogImage(imgUrl)} alt={`Gallery index ${idx}`} className="gallery-img-thumb" />
+                            <img src={getBlogImage(imgUrl)} alt={`Gallery index ${idx}`} className="gallery-img-thumb" loading="lazy" decoding="async" />
                           </div>
                         ))}
                       </div>
@@ -1304,6 +1304,13 @@ export default function BlogDetailsPage() {
           border-radius: 24px !important;
           border: 1px solid transparent !important;
           box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06) !important;
+          transform: none !important;
+          transition: none !important;
+        }
+        .article-unified-card:hover {
+          transform: none !important;
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06) !important;
+          border-color: transparent !important;
         }
         .article-header {
           text-align: center;

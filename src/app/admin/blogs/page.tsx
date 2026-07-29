@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { Blog, Practitioner, BlogCategory } from "@/types/database";
 import { ImageCropperModal } from "@/components/ui/ImageCropperModal";
 import StatsDashboard from "@/components/admin/StatsDashboard";
+import { slugify } from "@/utils/slugify";
 
 export default function AdminBlogsPage() {
   const [blogs, setBlogs] = useState<Blog[]>([]);
@@ -36,6 +37,8 @@ export default function AdminBlogsPage() {
 
   // Form states
   const [title, setTitle] = useState("");
+  const [slug, setSlug] = useState("");
+  const [isSlugUserEdited, setIsSlugUserEdited] = useState(false);
   const [category, setCategory] = useState("Crystals");
   const [customCategory, setCustomCategory] = useState("");
   const [showCustomCategory, setShowCustomCategory] = useState(false);
@@ -202,6 +205,8 @@ export default function AdminBlogsPage() {
 
   const resetForm = () => {
     setTitle("");
+    setSlug("");
+    setIsSlugUserEdited(false);
     setCategory(categories[0]?.name || "Other");
     setCustomCategory("");
     setShowCustomCategory(false);
@@ -226,6 +231,18 @@ export default function AdminBlogsPage() {
     setEditBlogId(null);
   };
 
+  const handleTitleChange = (val: string) => {
+    setTitle(val);
+    if (!isSlugUserEdited) {
+      setSlug(slugify(val));
+    }
+  };
+
+  const handleSlugChange = (val: string) => {
+    setIsSlugUserEdited(true);
+    setSlug(val.toLowerCase().replace(/\s+/g, "-").replace(/[^\w\-]+/g, ""));
+  };
+
   const handleOpenCreateModal = () => {
     resetForm();
     setIsModalOpen(true);
@@ -236,6 +253,8 @@ export default function AdminBlogsPage() {
     setEditMode(true);
     setEditBlogId(blog.id);
     setTitle(blog.title);
+    setSlug(blog.slug || slugify(blog.title) || blog.id);
+    setIsSlugUserEdited(true);
 
     const isStandardCategory = categories.some(c => c.name.toLowerCase() === blog.category.toLowerCase());
     if (isStandardCategory) {
@@ -470,8 +489,11 @@ export default function AdminBlogsPage() {
     const userStr = window.sessionStorage.getItem("divingsanatan_admin_user");
     const user = userStr ? JSON.parse(userStr) : {};
 
+    const finalSlug = slug ? slugify(slug) : slugify(title);
+
     const payload = {
       title: title.trim(),
+      slug: finalSlug,
       category: finalCategory,
       author: finalAuthor,
       content: content.trim(),
@@ -698,7 +720,7 @@ export default function AdminBlogsPage() {
                                         <button className="btn btn-danger btn-sm" onClick={() => handleApproveBlog(b.id, "rejected")}>✕</button>
                                       </>
                                     )}
-                                    <button className="btn btn-primary btn-sm" onClick={() => window.open(`/blog/${b.id}`, '_blank')}>
+                                    <button className="btn btn-primary btn-sm" onClick={() => window.open(`/blog/${b.slug || b.id}`, '_blank')}>
                                       👁 View Site
                                     </button>
                                     <button className="btn btn-secondary btn-sm" onClick={() => handleOpenEditModal(b)}>
@@ -879,8 +901,28 @@ export default function AdminBlogsPage() {
                     required
                     placeholder="e.g. Cleansing the Mind: Somatic Breath Patterns"
                     value={title}
-                    onChange={(e) => setTitle(e.target.value)}
+                    onChange={(e) => handleTitleChange(e.target.value)}
                   />
+                </div>
+
+                <div className="form-group">
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+                    <label style={{ margin: 0 }}>URL Slug (SEO) *</label>
+                    <span style={{ fontSize: "0.78rem", color: "#6b7280", fontFamily: "monospace" }}>
+                      /blog/{slug || "custom-slug"}
+                    </span>
+                  </div>
+                  <input
+                    type="text"
+                    className="glass-input"
+                    required
+                    placeholder="e.g. cleansing-the-mind-somatic-breath-patterns"
+                    value={slug}
+                    onChange={(e) => handleSlugChange(e.target.value)}
+                  />
+                  <small style={{ color: "#7c3aed", fontSize: "0.75rem", marginTop: "4px", display: "block" }}>
+                    💡 SEO friendly URL slug. Auto-generated from title, but can be customized freely.
+                  </small>
                 </div>
 
                 <div className="form-row">
