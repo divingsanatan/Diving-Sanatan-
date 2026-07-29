@@ -1,5 +1,6 @@
 import crypto from "crypto";
 import { supabaseServer } from "@/utils/supabaseServer";
+import { getDb } from "@/utils/db";
 import { runDiscoveryAgent } from "./discoveryAgent";
 import { runTechnicalSeoAgent } from "./technicalSeoAgent";
 import { runOnPageAgent } from "./onPageAgent";
@@ -46,16 +47,28 @@ export async function runSiteScanPipeline(): Promise<ScanResult> {
   }
 
   try {
-    // 1. Gather all sitemap URLs directly from Supabase DB
+    // 1. Gather all sitemap URLs from Supabase DB and local db.json fallback
     const { data: blogs } = await supabaseServer.from("blogs").select("id, title, content, updated_at");
     const { data: services } = await supabaseServer.from("services").select("id, name, description");
     const { data: glossary } = await supabaseServer.from("glossary_terms").select("id, word, definition");
     const { data: faqs } = await supabaseServer.from("faq_items").select("id, question, answer");
 
-    const blogList = blogs || [];
-    const serviceList = services || [];
-    const glossaryList = glossary || [];
-    const faqList = faqs || [];
+    let blogList: any[] = blogs || [];
+    let serviceList: any[] = services || [];
+    let glossaryList: any[] = glossary || [];
+    let faqList: any[] = faqs || [];
+
+    try {
+      const localDb = getDb();
+      if (blogList.length === 0 && localDb.blogs) {
+        blogList = localDb.blogs;
+      }
+      if (serviceList.length === 0 && localDb.services) {
+        serviceList = localDb.services;
+      }
+    } catch (e) {
+      console.warn("Local DB fallback warning:", e);
+    }
 
     const urlsToScan: { url: string; content: string; entityType: string; id?: string }[] = [
       { url: "https://divingsanatan.online/", content: "Diving Sanatan Sanctuary Home Page Energy Alignment", entityType: "page" },

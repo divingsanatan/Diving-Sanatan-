@@ -1,5 +1,6 @@
 import { supabaseServer } from "@/utils/supabaseServer";
 import { runPostApprovalDistribution } from "./distributionEngine";
+import { getDb, saveDb } from "@/utils/db";
 
 export interface ApplyResult {
   success: boolean;
@@ -56,7 +57,25 @@ export async function applyApprovedChange(changeId: string, approvedBy = "admin"
       if (proposed_data.content_type) updatePayload.content_type = proposed_data.content_type;
       if (proposed_data.content_format) updatePayload.content_format = proposed_data.content_format;
 
-      await supabaseServer.from("blogs").update(updatePayload).eq("id", target_id);
+      try {
+        await supabaseServer.from("blogs").update(updatePayload).eq("id", target_id);
+      } catch (err) {
+        console.warn("Supabase blog update warning:", err);
+      }
+
+      try {
+        const db = getDb();
+        if (db.blogs) {
+          const idx = db.blogs.findIndex((b: any) => b.id === target_id);
+          if (idx !== -1) {
+            if (proposed_data.title) db.blogs[idx].title = proposed_data.title;
+            if (proposed_data.content) db.blogs[idx].content = proposed_data.content;
+            saveDb(db);
+          }
+        }
+      } catch (dbErr) {
+        console.warn("Failed to sync db.json on approved change:", dbErr);
+      }
     } else if (target_entity === "redirects") {
       await supabaseServer.from("redirects").upsert({
         source_path: proposed_data.source_path,
