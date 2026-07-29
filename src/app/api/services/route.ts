@@ -75,7 +75,7 @@ export async function GET(req: NextRequest) {
         .eq("id", singleId);
 
       if (adminView !== "true") {
-        query = query.eq("approval_status", "published");
+        query = query.or("approval_status.eq.published,approval_status.is.null");
       }
 
       const { data: service, error } = await query.single();
@@ -103,7 +103,7 @@ export async function GET(req: NextRequest) {
       `);
       
     if (adminView !== "true") {
-      supabaseQuery = supabaseQuery.eq("approval_status", "published");
+      supabaseQuery = supabaseQuery.or("approval_status.eq.published,approval_status.is.null");
     }
       
     // Apply basic SQL-level filters

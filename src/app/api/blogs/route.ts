@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
         // 1. First try querying by exact ID or slug
         let query = supabaseServer.from("blogs").select("*");
         if (adminView !== "true") {
-          query = query.eq("approval_status", "published");
+          query = query.or("approval_status.eq.published,approval_status.is.null");
         }
         
         // Try exact match on ID or slug first
@@ -92,7 +92,7 @@ export async function GET(req: NextRequest) {
       
       const adminView = searchParams.get("admin_view");
       if (adminView !== "true") {
-        query = query.eq("approval_status", "published");
+        query = query.or("approval_status.eq.published,approval_status.is.null");
       }
 
       if (category && category !== "all") {
