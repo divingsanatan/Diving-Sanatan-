@@ -6,22 +6,12 @@ import { Button } from "@/components/ui/Button";
 import { Blog, Practitioner, BlogCategory } from "@/types/database";
 import { ImageCropperModal } from "@/components/ui/ImageCropperModal";
 import StatsDashboard from "@/components/admin/StatsDashboard";
-import { slugify } from "@/utils/slugify";
 
 export default function AdminBlogsPage() {
   const [blogs, setBlogs] = useState<Blog[]>([]);
   const [practitioners, setPractitioners] = useState<Practitioner[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [userRole, setUserRole] = useState("admin");
-
-  useEffect(() => {
-    const userStr = window.sessionStorage.getItem("divingsanatan_admin_user");
-    if (userStr) {
-      const user = JSON.parse(userStr);
-      setUserRole(user.role || "admin");
-    }
-  }, []);
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
@@ -37,8 +27,6 @@ export default function AdminBlogsPage() {
 
   // Form states
   const [title, setTitle] = useState("");
-  const [slug, setSlug] = useState("");
-  const [isSlugUserEdited, setIsSlugUserEdited] = useState(false);
   const [category, setCategory] = useState("Crystals");
   const [customCategory, setCustomCategory] = useState("");
   const [showCustomCategory, setShowCustomCategory] = useState(false);
@@ -81,9 +69,9 @@ export default function AdminBlogsPage() {
     try {
       setLoading(true);
       const [bRes, pRes, cRes] = await Promise.all([
-        fetch("/api/blogs?admin_view=true"),
-        fetch("/api/practitioners?admin_view=true"),
-        fetch("/api/blogs/categories?admin_view=true")
+        fetch("/api/blogs"),
+        fetch("/api/practitioners"),
+        fetch("/api/blogs/categories")
       ]);
 
       const bJson = await bRes.json();
@@ -132,12 +120,8 @@ export default function AdminBlogsPage() {
       return;
     }
 
-    const userStr = window.sessionStorage.getItem("divingsanatan_admin_user");
-    const user = userStr ? JSON.parse(userStr) : {};
-
     const payload = {
       name: categoryName.trim(),
-      role: user.role,
     };
 
     try {
@@ -180,33 +164,8 @@ export default function AdminBlogsPage() {
     }
   };
 
-  const handleApproveCategory = async (id: string, status: "published" | "rejected") => {
-    try {
-      const res = await fetch("/api/blogs/categories", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id,
-          approval_status: status,
-          role: "super_admin",
-        }),
-      });
-      const json = await res.json();
-      if (json.success) {
-        loadData();
-      } else {
-        alert("Operation failed: " + json.error);
-      }
-    } catch (err) {
-      console.error(err);
-      alert("An error occurred during approval.");
-    }
-  };
-
   const resetForm = () => {
     setTitle("");
-    setSlug("");
-    setIsSlugUserEdited(false);
     setCategory(categories[0]?.name || "Other");
     setCustomCategory("");
     setShowCustomCategory(false);
@@ -231,16 +190,27 @@ export default function AdminBlogsPage() {
     setEditBlogId(null);
   };
 
-  const handleTitleChange = (val: string) => {
-    setTitle(val);
-    if (!isSlugUserEdited) {
-      setSlug(slugify(val));
-    }
-  };
+  const [rewritingBlogId, setRewritingBlogId] = useState<string | null>(null);
 
-  const handleSlugChange = (val: string) => {
-    setIsSlugUserEdited(true);
-    setSlug(val.toLowerCase().replace(/\s+/g, "-").replace(/[^\w\-]+/g, ""));
+  const handleSuggestRewrite = async (blogId: string) => {
+    setRewritingBlogId(blogId);
+    try {
+      const res = await fetch("/api/seo/rewrite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ blogId })
+      });
+      const json = await res.json();
+      if (json.success) {
+        alert("✨ Rewrite suggestion generated! View and approve it in the SEO Command Center (/admin/seo-command).");
+      } else {
+        alert(json.error || "Failed to generate rewrite suggestion.");
+      }
+    } catch (err: any) {
+      alert(err.message || "Failed to call rewrite API.");
+    } finally {
+      setRewritingBlogId(null);
+    }
   };
 
   const handleOpenCreateModal = () => {
@@ -253,8 +223,6 @@ export default function AdminBlogsPage() {
     setEditMode(true);
     setEditBlogId(blog.id);
     setTitle(blog.title);
-    setSlug(blog.slug || slugify(blog.title) || blog.id);
-    setIsSlugUserEdited(true);
 
     const isStandardCategory = categories.some(c => c.name.toLowerCase() === blog.category.toLowerCase());
     if (isStandardCategory) {
@@ -486,14 +454,8 @@ export default function AdminBlogsPage() {
       return;
     }
 
-    const userStr = window.sessionStorage.getItem("divingsanatan_admin_user");
-    const user = userStr ? JSON.parse(userStr) : {};
-
-    const finalSlug = slug ? slugify(slug) : slugify(title);
-
     const payload = {
       title: title.trim(),
-      slug: finalSlug,
       category: finalCategory,
       author: finalAuthor,
       content: content.trim(),
@@ -503,8 +465,7 @@ export default function AdminBlogsPage() {
       images: galleryImages.filter(img => img.trim() !== ""),
       videos: blogVideos.filter(vid => vid.trim() !== ""),
       section: section || null,
-      is_show_featured_page: isShowFeaturedPage,
-      role: user.role,
+      is_show_featured_page: isShowFeaturedPage
     };
 
     try {
@@ -550,29 +511,6 @@ export default function AdminBlogsPage() {
       }
     } catch (err) {
       console.error(err);
-    }
-  };
-
-  const handleApproveBlog = async (id: string, status: "published" | "rejected") => {
-    try {
-      const res = await fetch("/api/blogs", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id,
-          approval_status: status,
-          role: "super_admin",
-        }),
-      });
-      const json = await res.json();
-      if (json.success) {
-        loadData();
-      } else {
-        alert("Operation failed: " + json.error);
-      }
-    } catch (err) {
-      console.error(err);
-      alert("An error occurred during approval.");
     }
   };
 
@@ -666,7 +604,6 @@ export default function AdminBlogsPage() {
                             <th>Author</th>
                             <th>Read Estimate</th>
                             <th>Date</th>
-                            <th>Status</th>
                             <th className="text-right">Actions</th>
                           </tr>
                         </thead>
@@ -707,21 +644,19 @@ export default function AdminBlogsPage() {
                                 <td style={{ whiteSpace: "nowrap" }}>
                                   <span>{b.date}</span>
                                 </td>
-                                <td>
-                                  {b.approval_status === "published" && <span className="badge" style={{ background: "#28a745", color: "white", padding: "2px 6px", borderRadius: "4px", fontSize: "0.75rem" }}>Published</span>}
-                                  {b.approval_status === "pending_approval" && <span className="badge" style={{ background: "#ffc107", color: "black", padding: "2px 6px", borderRadius: "4px", fontSize: "0.75rem" }}>Pending</span>}
-                                  {b.approval_status === "rejected" && <span className="badge" style={{ background: "#dc3545", color: "white", padding: "2px 6px", borderRadius: "4px", fontSize: "0.75rem" }}>Rejected</span>}
-                                </td>
                                 <td className="text-right">
                                   <div className="action-buttons-cell" style={{ display: "flex", gap: "4px", justifyContent: "flex-end" }}>
-                                    {userRole === "super_admin" && b.approval_status === "pending_approval" && (
-                                      <>
-                                        <button className="btn btn-success btn-sm" onClick={() => handleApproveBlog(b.id, "published")}>✓</button>
-                                        <button className="btn btn-danger btn-sm" onClick={() => handleApproveBlog(b.id, "rejected")}>✕</button>
-                                      </>
-                                    )}
-                                    <button className="btn btn-primary btn-sm" onClick={() => window.open(`/blog/${b.slug || b.id}`, '_blank')}>
-                                      👁 View Site
+                                    <button className="btn btn-primary btn-sm" onClick={() => window.open(`/blog/${b.id}`, '_blank')}>
+                                      👁 View
+                                    </button>
+                                    <button
+                                      className="btn btn-sm"
+                                      style={{ background: "#6366f1", color: "#fff", border: "none" }}
+                                      disabled={rewritingBlogId === b.id}
+                                      onClick={() => handleSuggestRewrite(b.id)}
+                                      title="Ask native AI agent to analyze and suggest an E-E-A-T optimized rewrite"
+                                    >
+                                      {rewritingBlogId === b.id ? "…" : "✨ Rewrite"}
                                     </button>
                                     <button className="btn btn-secondary btn-sm" onClick={() => handleOpenEditModal(b)}>
                                       ✎ Edit
@@ -785,7 +720,6 @@ export default function AdminBlogsPage() {
                     <tr>
                       <th>ID</th>
                       <th>Category Name</th>
-                      <th>Status</th>
                       <th className="text-right">Actions</th>
                     </tr>
                   </thead>
@@ -799,22 +733,8 @@ export default function AdminBlogsPage() {
                         <tr key={cat.id}>
                           <td style={{ fontFamily: "monospace", fontSize: "0.85rem" }}>{cat.id}</td>
                           <td><strong>{cat.name}</strong></td>
-                          <td>
-                            {cat.approval_status === "published" && <span className="badge" style={{ background: "#28a745", color: "white", padding: "2px 6px", borderRadius: "4px", fontSize: "0.75rem" }}>Published</span>}
-                            {cat.approval_status === "pending_approval" && <span className="badge" style={{ background: "#ffc107", color: "black", padding: "2px 6px", borderRadius: "4px", fontSize: "0.75rem" }}>Pending</span>}
-                            {cat.approval_status === "rejected" && <span className="badge" style={{ background: "#dc3545", color: "white", padding: "2px 6px", borderRadius: "4px", fontSize: "0.75rem" }}>Rejected</span>}
-                          </td>
                           <td className="text-right">
                             <div className="action-buttons-cell" style={{ display: "flex", gap: "4px", justifyContent: "flex-end" }}>
-                              {userRole === "super_admin" && cat.approval_status === "pending_approval" && (
-                                <>
-                                  <button className="btn btn-success btn-sm" onClick={() => handleApproveCategory(cat.id, "published")}>✓</button>
-                                  <button className="btn btn-danger btn-sm" onClick={() => handleApproveCategory(cat.id, "rejected")}>✕</button>
-                                </>
-                              )}
-                              <button className="btn btn-primary btn-sm" onClick={() => window.open(`/blog?category=${cat.name}`, '_blank')}>
-                                👁 View Site
-                              </button>
                               <button
                                 className="btn btn-secondary btn-sm"
                                 onClick={() => handleEditCategory(cat)}
@@ -901,28 +821,8 @@ export default function AdminBlogsPage() {
                     required
                     placeholder="e.g. Cleansing the Mind: Somatic Breath Patterns"
                     value={title}
-                    onChange={(e) => handleTitleChange(e.target.value)}
+                    onChange={(e) => setTitle(e.target.value)}
                   />
-                </div>
-
-                <div className="form-group">
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
-                    <label style={{ margin: 0 }}>URL Slug (SEO) *</label>
-                    <span style={{ fontSize: "0.78rem", color: "#6b7280", fontFamily: "monospace" }}>
-                      /blog/{slug || "custom-slug"}
-                    </span>
-                  </div>
-                  <input
-                    type="text"
-                    className="glass-input"
-                    required
-                    placeholder="e.g. cleansing-the-mind-somatic-breath-patterns"
-                    value={slug}
-                    onChange={(e) => handleSlugChange(e.target.value)}
-                  />
-                  <small style={{ color: "#7c3aed", fontSize: "0.75rem", marginTop: "4px", display: "block" }}>
-                    💡 SEO friendly URL slug. Auto-generated from title, but can be customized freely.
-                  </small>
                 </div>
 
                 <div className="form-row">
