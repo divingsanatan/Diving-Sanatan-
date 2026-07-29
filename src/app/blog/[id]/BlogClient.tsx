@@ -1414,6 +1414,16 @@ export default function BlogDetailsPage() {
           font-size: 1.05rem;
           line-height: 1.85;
           color: hsl(var(--text-cream));
+          font-family: var(--font-sans);
+        }
+        .pillar-blog-container h1,
+        .pillar-blog-container h2,
+        .pillar-blog-container h3,
+        .pillar-blog-container h4,
+        .article-rich-content h2,
+        .article-rich-content h3,
+        .article-rich-content h4 {
+          font-family: var(--font-serif) !important;
         }
         .article-rich-content p {
           margin: 0 0 16px;
@@ -1430,6 +1440,7 @@ export default function BlogDetailsPage() {
           line-height: 1.3;
         }
         .article-rich-content h3 {
+          font-family: var(--font-serif);
           font-size: 1.2rem;
           font-weight: 700;
           color: #5b21b6;
