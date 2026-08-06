@@ -554,5 +554,16 @@
       "location": "US",
       "checked_at": "2026-08-06T14:33:45.686Z"
     }
+  ],
+  "user_profiles": [
+    {
+      "id": "admin-divingsanatan",
+      "email": "divingsanatan@gmail.com",
+      "password": "375ff6d6533836073e53b8f43c2f31d51ac3b79c0971bae5d5d0e0a0a9f1d1d1",
+      "role": "super_admin",
+      "name": "Diving Sanatan Admin",
+      "phone": "+91 9876543210",
+      "created_at": "2026-08-06T16:49:37.531Z"
+    }
   ]
 }

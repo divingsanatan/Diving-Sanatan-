@@ -120,12 +120,26 @@ export interface KeywordRankingItem {
   checked_at: string;
 }
 
+export interface UserProfileItem {
+  id: string;
+  email: string;
+  password?: string;
+  name: string;
+  role: "super_admin" | "admin" | "guru" | "user";
+  phone?: string;
+  gender?: string;
+  dob?: string;
+  category?: string;
+  created_at?: string;
+}
+
 export interface DatabaseSchema {
   services: Service[];
   practitioners: Practitioner[];
   bookings: Booking[];
   reviews: Review[];
   blogs: Blog[];
+  user_profiles?: UserProfileItem[];
   pending_changes?: PendingChangeItem[];
   agent_runs?: AgentRunItem[];
   distribution_log?: DistributionLogItem[];
@@ -437,6 +451,17 @@ const initialData: DatabaseSchema = {
       location: "US",
       checked_at: new Date(Date.now() - 1000 * 60 * 120).toISOString()
     }
+  ],
+  user_profiles: [
+    {
+      id: "admin-divingsanatan",
+      email: "divingsanatan@gmail.com",
+      password: "375ff6d6533836073e53b8f43c2f31d51ac3b79c0971bae5d5d0e0a0a9f1d1d1",
+      role: "super_admin",
+      name: "Diving Sanatan Admin",
+      phone: "+91 9876543210",
+      created_at: new Date().toISOString()
+    }
   ]
 };
 
@@ -473,6 +498,10 @@ export function getDb(): DatabaseSchema {
     }
     if (!parsed.keyword_rankings || parsed.keyword_rankings.length === 0) {
       parsed.keyword_rankings = initialData.keyword_rankings;
+      modified = true;
+    }
+    if (!parsed.user_profiles || parsed.user_profiles.length === 0) {
+      parsed.user_profiles = initialData.user_profiles;
       modified = true;
     }
 
