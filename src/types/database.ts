@@ -114,6 +114,25 @@ export interface Blog {
   approval_status?: "pending_approval" | "published" | "rejected";
   content_type?: ContentType;
   content_format?: ContentFormat;
+  meta_title?: string;
+  meta_description?: string;
+  focus_keyword?: string;
+  canonical_url?: string;
+  robots_directive?: string;
+  author_bio?: string;
+  reviewed_by?: string;
+  updated_at?: string;
+  schema_type?: "Article" | "BlogPosting" | "FAQPage" | "HowTo";
+  faq_pairs?: { question: string; answer: string }[];
+  tldr?: string;
+  featured_image_alt?: string;
+  og_image_override?: string;
+  video_embed_url?: string;
+  video_transcript?: string;
+  tags?: string[];
+  pillar_cluster?: string;
+  pinned_related_articles?: string[];
+  status?: "draft" | "scheduled" | "published";
 }
 
 export type ContentType =

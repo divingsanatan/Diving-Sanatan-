@@ -25,27 +25,42 @@ Return a JSON object with:
   let proposedChangeCreated = false;
 
   if (suggestions.length > 0 && blogId) {
-    // Insert proposed changes to approval gate (pending_changes)
-    const { error } = await supabaseServer.from("pending_changes").insert([
-      {
-        agent_name: "on_page_content_quality",
-        change_type: "content_edit",
-        target_entity: "blogs",
-        target_id: blogId,
-        proposed_data: aiAudit.proposedData || {
-          meta_title: "Enhanced Title | Diving Sanatan Sanctuary",
-          meta_description: "Expert energy healing guide realigning chakras and inner peace.",
-          author_bio: "Authored by Certified Master Practitioner in Somatic Alignment.",
-          reviewed_by: "Dr. Elara Vance, Senior Holistics Specialist",
-          tldr: "Key insights on energy centering and spiritual alignment practices."
-        },
-        current_data: { blogId, url },
-        reason: `On-page Agent E-E-A-T audit score ${eeatScore}/100. Recommendations: ${suggestions.join("; ")}`,
-        status: "pending"
-      }
-    ]);
+    const changeObj = {
+      id: `pc-${Math.random().toString(36).substring(2, 9)}`,
+      agent_name: "on_page_content_quality",
+      change_type: "content_edit",
+      target_entity: "blogs",
+      target_id: blogId,
+      proposed_data: aiAudit.proposedData || {
+        meta_title: "Enhanced Title | Diving Sanatan Sanctuary",
+        meta_description: "Expert energy healing guide realigning chakras and inner peace.",
+        author_bio: "Authored by Certified Master Practitioner in Somatic Alignment.",
+        reviewed_by: "Dr. Elara Vance, Senior Holistics Specialist",
+        tldr: "Key insights on energy centering and spiritual alignment practices."
+      },
+      current_data: { blogId, url },
+      reason: `On-page Agent E-E-A-T audit score ${eeatScore}/100. Recommendations: ${suggestions.join("; ")}`,
+      status: "pending" as const,
+      created_at: new Date().toISOString()
+    };
 
-    if (!error) proposedChangeCreated = true;
+    try {
+      await supabaseServer.from("pending_changes").insert([changeObj]);
+      proposedChangeCreated = true;
+    } catch (err) {
+      console.warn("Supabase pending_changes insert failed in onPageAgent:", err);
+    }
+
+    try {
+      const { getDb, saveDb } = require("@/utils/db");
+      const db = getDb();
+      db.pending_changes = db.pending_changes || [];
+      db.pending_changes.unshift(changeObj);
+      saveDb(db);
+      proposedChangeCreated = true;
+    } catch (dbErr) {
+      console.error("Local db update error in onPageAgent:", dbErr);
+    }
   }
 
   return {

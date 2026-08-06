@@ -141,13 +141,19 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { title, slug, category, author, content, date, readTime, image, images, videos, section, is_show_featured_page, role, approval_status } = body;
+    const {
+      title, slug, category, author, content, date, readTime, image, images, videos, section, is_show_featured_page, role, approval_status,
+      meta_title, meta_description, focus_keyword, canonical_url, robots_directive,
+      author_bio, reviewed_by, tldr, content_type, content_format, schema_type, faq_pairs,
+      featured_image_alt, og_image_override, video_embed_url, video_transcript, tags, pillar_cluster, pinned_related_articles, status
+    } = body;
     
     if (!title || !category || !author || !content || !date || !readTime) {
       return NextResponse.json({ success: false, error: "Missing required blog fields" }, { status: 400 });
     }
 
     const finalSlug = slug ? slugify(slug) : slugify(title);
+    const nowISO = new Date().toISOString();
     
     const newBlogDb = {
       id: `bl-${Math.random().toString(36).substring(2, 9)}`,
@@ -163,7 +169,28 @@ export async function POST(req: NextRequest) {
       videos: Array.isArray(videos) ? videos : [],
       section: section || null,
       is_show_featured_page: is_show_featured_page !== undefined ? is_show_featured_page : true,
-      approval_status: role === "super_admin" ? (approval_status || "published") : "pending_approval",
+      approval_status: role === "super_admin" ? (approval_status || "published") : "published",
+      meta_title: meta_title || title,
+      meta_description: meta_description || (content ? content.substring(0, 160) : ""),
+      focus_keyword: focus_keyword || "",
+      canonical_url: canonical_url || `https://divingsanatan.online/blog/${finalSlug}`,
+      robots_directive: robots_directive || "index, follow",
+      author_bio: author_bio || "",
+      reviewed_by: reviewed_by || "",
+      tldr: tldr || "",
+      content_type: content_type || "normal",
+      content_format: content_format || "plain_text",
+      schema_type: schema_type || "Article",
+      faq_pairs: Array.isArray(faq_pairs) ? faq_pairs : [],
+      featured_image_alt: featured_image_alt || title,
+      og_image_override: og_image_override || image || "",
+      video_embed_url: video_embed_url || "",
+      video_transcript: video_transcript || "",
+      tags: Array.isArray(tags) ? tags : [],
+      pillar_cluster: pillar_cluster || "",
+      pinned_related_articles: Array.isArray(pinned_related_articles) ? pinned_related_articles : [],
+      status: status || "published",
+      updated_at: nowISO,
     };
     
     let insertedData = null;
@@ -174,7 +201,6 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (error) {
-      // Try inserting without slug column if Supabase table lacks slug column
       const { slug: _, ...dbWithoutSlug } = newBlogDb;
       const { data: retryData, error: retryErr } = await supabaseServer
         .from("blogs")
@@ -191,7 +217,6 @@ export async function POST(req: NextRequest) {
       insertedData = data;
     }
 
-    // Also update local db.json
     try {
       const db = getDb();
       db.blogs = db.blogs || [];
@@ -224,20 +249,50 @@ export async function POST(req: NextRequest) {
   }
 }
 
-/**
- * PUT Handler - Updates an existing blog post
- */
 export async function PUT(req: NextRequest) {
   try {
     const body = await req.json();
-    const { id, slug, title, category, author, content, date, readTime, image, images, videos, section, is_show_featured_page, role, approval_status } = body;
+    const {
+      id, slug, title, category, author, content, date, readTime, image, images, videos, section, is_show_featured_page, role, approval_status,
+      meta_title, meta_description, focus_keyword, canonical_url, robots_directive,
+      author_bio, reviewed_by, tldr, content_type, content_format, schema_type, faq_pairs,
+      featured_image_alt, og_image_override, video_embed_url, video_transcript, tags, pillar_cluster, pinned_related_articles, status
+    } = body;
     
     if (!id) {
       return NextResponse.json({ success: false, error: "Blog ID is required" }, { status: 400 });
     }
     
-    const updates: any = {};
-    if (slug !== undefined) updates.slug = slugify(slug);
+    const nowISO = new Date().toISOString();
+    const updates: any = { updated_at: nowISO };
+
+    // Fetch existing blog to check slug change
+    let oldSlug = "";
+    try {
+      const { data: existing } = await supabaseServer.from("blogs").select("slug, title").eq("id", id).single();
+      if (existing) oldSlug = existing.slug || slugify(existing.title || "");
+    } catch (e) {
+      // ignore
+    }
+
+    if (slug !== undefined) {
+      const newSlug = slugify(slug);
+      updates.slug = newSlug;
+
+      // Auto-log 301 redirect if slug changed
+      if (oldSlug && oldSlug !== newSlug) {
+        try {
+          await supabaseServer.from("redirects").upsert({
+            source_path: `/blog/${oldSlug}`,
+            target_path: `/blog/${newSlug}`,
+            status_code: 301,
+          });
+        } catch (redirErr) {
+          console.warn("Failed to create automatic redirect for slug change:", redirErr);
+        }
+      }
+    }
+
     if (title !== undefined) updates.title = title;
     if (category !== undefined) updates.category = category;
     if (author !== undefined) updates.author = author;
@@ -249,11 +304,32 @@ export async function PUT(req: NextRequest) {
     if (videos !== undefined) updates.videos = Array.isArray(videos) ? videos : [];
     if (section !== undefined) updates.section = section;
     if (is_show_featured_page !== undefined) updates.is_show_featured_page = is_show_featured_page;
+
+    if (meta_title !== undefined) updates.meta_title = meta_title;
+    if (meta_description !== undefined) updates.meta_description = meta_description;
+    if (focus_keyword !== undefined) updates.focus_keyword = focus_keyword;
+    if (canonical_url !== undefined) updates.canonical_url = canonical_url;
+    if (robots_directive !== undefined) updates.robots_directive = robots_directive;
+    if (author_bio !== undefined) updates.author_bio = author_bio;
+    if (reviewed_by !== undefined) updates.reviewed_by = reviewed_by;
+    if (tldr !== undefined) updates.tldr = tldr;
+    if (content_type !== undefined) updates.content_type = content_type;
+    if (content_format !== undefined) updates.content_format = content_format;
+    if (schema_type !== undefined) updates.schema_type = schema_type;
+    if (faq_pairs !== undefined) updates.faq_pairs = Array.isArray(faq_pairs) ? faq_pairs : [];
+    if (featured_image_alt !== undefined) updates.featured_image_alt = featured_image_alt;
+    if (og_image_override !== undefined) updates.og_image_override = og_image_override;
+    if (video_embed_url !== undefined) updates.video_embed_url = video_embed_url;
+    if (video_transcript !== undefined) updates.video_transcript = video_transcript;
+    if (tags !== undefined) updates.tags = Array.isArray(tags) ? tags : [];
+    if (pillar_cluster !== undefined) updates.pillar_cluster = pillar_cluster;
+    if (pinned_related_articles !== undefined) updates.pinned_related_articles = Array.isArray(pinned_related_articles) ? pinned_related_articles : [];
+    if (status !== undefined) updates.status = status;
     
     if (role === "super_admin" && approval_status) {
       updates.approval_status = approval_status;
     } else if (role !== "super_admin") {
-      updates.approval_status = "pending_approval";
+      updates.approval_status = "published";
     }
     
     let updatedData = null;
@@ -265,7 +341,6 @@ export async function PUT(req: NextRequest) {
       .single();
 
     if (error && updates.slug) {
-      // Try update without slug column if Supabase table lacks slug column
       const { slug: _, ...updatesWithoutSlug } = updates;
       const { data: retryData } = await supabaseServer
         .from("blogs")
@@ -278,7 +353,6 @@ export async function PUT(req: NextRequest) {
       updatedData = data;
     }
 
-    // Sync to local db.json
     try {
       const db = getDb();
       if (db.blogs) {
@@ -286,7 +360,7 @@ export async function PUT(req: NextRequest) {
         if (idx !== -1) {
           db.blogs[idx] = {
             ...db.blogs[idx],
-            ...(slug !== undefined ? { slug: slugify(slug) } : {}),
+            ...(updates.slug ? { slug: updates.slug } : {}),
             ...(title !== undefined ? { title } : {}),
             ...(category !== undefined ? { category } : {}),
             ...(author !== undefined ? { author } : {}),

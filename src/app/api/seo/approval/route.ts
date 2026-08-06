@@ -1,20 +1,36 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/utils/supabaseServer";
 import { applyApprovedChange } from "@/lib/seo/implementationAgent";
+import { getDb, saveDb } from "@/utils/db";
 
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const statusFilter = searchParams.get("status") || "pending";
 
-    const { data: changes, error } = await supabaseServer
-      .from("pending_changes")
-      .select("*")
-      .eq("status", statusFilter)
-      .order("created_at", { ascending: false });
+    let changes: any[] = [];
 
-    if (error) {
-      return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    try {
+      const { data, error } = await supabaseServer
+        .from("pending_changes")
+        .select("*")
+        .eq("status", statusFilter)
+        .order("created_at", { ascending: false });
+
+      if (!error && data) {
+        changes = data;
+      }
+    } catch (err) {
+      console.warn("Supabase pending_changes GET failed, using db.json fallback:", err);
+    }
+
+    if (!changes || changes.length === 0) {
+      try {
+        const db = getDb();
+        changes = (db.pending_changes || []).filter((c: any) => c.status === statusFilter);
+      } catch (dbErr) {
+        console.error("Local db fetch error for pending_changes:", dbErr);
+      }
     }
 
     return NextResponse.json({ success: true, data: changes || [] });
@@ -39,17 +55,30 @@ export async function POST(req: NextRequest) {
       }
       return NextResponse.json({ success: true, data: result });
     } else if (action === "reject") {
-      const { error } = await supabaseServer
-        .from("pending_changes")
-        .update({
-          status: "rejected",
-          rejection_reason: rejectionReason || "Rejected by administrator",
-          approved_by: approvedBy
-        })
-        .eq("id", changeId);
+      try {
+        await supabaseServer
+          .from("pending_changes")
+          .update({
+            status: "rejected",
+            rejection_reason: rejectionReason || "Rejected by administrator",
+            approved_by: approvedBy
+          })
+          .eq("id", changeId);
+      } catch (err) {
+        console.warn("Supabase reject update failed:", err);
+      }
 
-      if (error) {
-        return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+      try {
+        const db = getDb();
+        if (db.pending_changes) {
+          const idx = db.pending_changes.findIndex((c: any) => c.id === changeId);
+          if (idx !== -1) {
+            db.pending_changes[idx].status = "rejected";
+            saveDb(db);
+          }
+        }
+      } catch (dbErr) {
+        console.error("Failed to update db.json on reject:", dbErr);
       }
 
       return NextResponse.json({ success: true, message: `Change ${changeId} rejected.` });

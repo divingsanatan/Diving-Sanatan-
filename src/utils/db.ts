@@ -74,12 +74,76 @@ import { slugify } from "./slugify";
 export { slugify };
 
 
+export interface PendingChangeItem {
+  id: string;
+  agent_name: string;
+  change_type: string;
+  target_entity: string;
+  target_id?: string;
+  proposed_data: any;
+  current_data?: any;
+  reason: string;
+  status: "pending" | "approved" | "rejected" | "applied";
+  approved_by?: string;
+  approved_at?: string;
+  created_at: string;
+}
+
+export interface AgentRunItem {
+  id: string;
+  agent_name: string;
+  status: string;
+  started_at: string;
+  completed_at?: string;
+  items_processed?: number;
+  run_summary?: any;
+  error_message?: string;
+}
+
+export interface DistributionLogItem {
+  id: string;
+  pending_change_id?: string | null;
+  target: string;
+  status: string;
+  pushed_at: string;
+  response_summary?: any;
+}
+
+export interface KeywordRankingItem {
+  id: string;
+  keyword_id?: string;
+  keyword_text: string;
+  url: string;
+  position: number;
+  search_engine: string;
+  location: string;
+  checked_at: string;
+}
+
+export interface UserProfileItem {
+  id: string;
+  email: string;
+  password?: string;
+  name: string;
+  role: "super_admin" | "admin" | "guru" | "user";
+  phone?: string;
+  gender?: string;
+  dob?: string;
+  category?: string;
+  created_at?: string;
+}
+
 export interface DatabaseSchema {
   services: Service[];
   practitioners: Practitioner[];
   bookings: Booking[];
   reviews: Review[];
   blogs: Blog[];
+  user_profiles?: UserProfileItem[];
+  pending_changes?: PendingChangeItem[];
+  agent_runs?: AgentRunItem[];
+  distribution_log?: DistributionLogItem[];
+  keyword_rankings?: KeywordRankingItem[];
 }
 
 // Initial high-fidelity seed data
@@ -266,6 +330,139 @@ const initialData: DatabaseSchema = {
       image: "breathing_stress",
     },
   ],
+  pending_changes: [
+    {
+      id: "pc-1",
+      agent_name: "on_page_content_quality",
+      change_type: "content_edit",
+      target_entity: "blogs",
+      target_id: "bl-2",
+      proposed_data: {
+        meta_title: "Unlocking the Chakras: Complete Beginner's Energy Guide",
+        meta_description: "Discover how authentic chakra balancing techniques clear blocked Prana energy and relieve physical stress in Bhopal.",
+        focus_keyword: "chakra healing Bhopal",
+        author_bio: "Authored by Dr. Celeste Thorne, Senior Holistics Specialist with 14 years experience.",
+        reviewed_by: "Dr. Elara Vance, Master Reiki Practitioner",
+        tldr: "Chakras govern physical and emotional vitality. Using focused visualization and sound tuning bowls clears stagnant energy stations.",
+        featured_image_alt: "Infographic of 7 human chakra energy centers along the spine",
+        schema_type: "Article"
+      },
+      current_data: { blogId: "bl-2", title: "Unlocking the Chakras: A Beginner's Guide" },
+      reason: "On-Page Audit Agent found missing focus keyword and missing E-E-A-T author credentials. High potential for position #1 ranking.",
+      status: "pending",
+      created_at: new Date(Date.now() - 1000 * 60 * 15).toISOString()
+    },
+    {
+      id: "pc-2",
+      agent_name: "technical_seo",
+      change_type: "technical_fix",
+      target_entity: "blogs",
+      target_id: "bl-1",
+      proposed_data: {
+        canonical_url: "https://divingsanatan.online/blog/healing-power-amethyst-crystals",
+        robots_directive: "index, follow",
+        featured_image_alt: "Cleaned amethyst crystal cluster for crown chakra meditation"
+      },
+      current_data: { blogId: "bl-1", title: "The Healing Power of Amethyst Crystals" },
+      reason: "Technical SEO Agent flagged missing image alt attribute and missing canonical URL tag.",
+      status: "pending",
+      created_at: new Date(Date.now() - 1000 * 60 * 45).toISOString()
+    }
+  ],
+  agent_runs: [
+    {
+      id: "run-101",
+      agent_name: "on_page_content_quality",
+      status: "completed",
+      started_at: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
+      completed_at: new Date(Date.now() - 1000 * 60 * 14).toISOString(),
+      items_processed: 3,
+      run_summary: { eeatScore: 88, proposalsGenerated: 1 }
+    },
+    {
+      id: "run-102",
+      agent_name: "technical_seo",
+      status: "completed",
+      started_at: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
+      completed_at: new Date(Date.now() - 1000 * 60 * 44).toISOString(),
+      items_processed: 5,
+      run_summary: { issuesDetected: 2, fixesProposed: 1 }
+    },
+    {
+      id: "run-103",
+      agent_name: "monitoring_reporting",
+      status: "completed",
+      started_at: new Date(Date.now() - 1000 * 60 * 120).toISOString(),
+      completed_at: new Date(Date.now() - 1000 * 60 * 119).toISOString(),
+      items_processed: 6,
+      run_summary: { keywordsTracked: 6, avgPosition: 3.8 }
+    }
+  ],
+  distribution_log: [
+    {
+      id: "dist-1",
+      target: "indexnow",
+      status: "success",
+      pushed_at: new Date(Date.now() - 1000 * 60 * 120).toISOString(),
+      response_summary: { message: "IndexNow ping submitted to Bing & Yandex", host: "divingsanatan.online" }
+    },
+    {
+      id: "dist-2",
+      target: "gsc_index_request",
+      status: "success",
+      pushed_at: new Date(Date.now() - 1000 * 60 * 180).toISOString(),
+      response_summary: { message: "Google Search Console sitemap resubmit successful" }
+    }
+  ],
+  keyword_rankings: [
+    {
+      id: "kw-1",
+      keyword_text: "chakra healing Bhopal",
+      url: "https://divingsanatan.online/services",
+      position: 1,
+      search_engine: "google",
+      location: "IN",
+      checked_at: new Date(Date.now() - 1000 * 60 * 120).toISOString()
+    },
+    {
+      id: "kw-2",
+      keyword_text: "reiki therapist Bhopal",
+      url: "https://divingsanatan.online/services",
+      position: 2,
+      search_engine: "google",
+      location: "IN",
+      checked_at: new Date(Date.now() - 1000 * 60 * 120).toISOString()
+    },
+    {
+      id: "kw-3",
+      keyword_text: "sound healing therapy",
+      url: "https://divingsanatan.online/services",
+      position: 4,
+      search_engine: "google",
+      location: "US",
+      checked_at: new Date(Date.now() - 1000 * 60 * 120).toISOString()
+    },
+    {
+      id: "kw-4",
+      keyword_text: "aura cleansing techniques",
+      url: "https://divingsanatan.online/blog",
+      position: 3,
+      search_engine: "google",
+      location: "US",
+      checked_at: new Date(Date.now() - 1000 * 60 * 120).toISOString()
+    }
+  ],
+  user_profiles: [
+    {
+      id: "admin-divingsanatan",
+      email: "divingsanatan@gmail.com",
+      password: "375ff6d6533836073e53b8f43c2f31d51ac3b79c0971bae5d5d0e0a0a9f1d1d1",
+      role: "super_admin",
+      name: "Diving Sanatan Admin",
+      phone: "+91 9876543210",
+      created_at: new Date().toISOString()
+    }
+  ]
 };
 
 /**
@@ -284,7 +481,35 @@ export function getDb(): DatabaseSchema {
     }
     
     const content = fs.readFileSync(DB_FILE, "utf8");
-    return JSON.parse(content) as DatabaseSchema;
+    const parsed = JSON.parse(content) as DatabaseSchema;
+
+    let modified = false;
+    if (!parsed.pending_changes || parsed.pending_changes.length === 0) {
+      parsed.pending_changes = initialData.pending_changes;
+      modified = true;
+    }
+    if (!parsed.agent_runs || parsed.agent_runs.length === 0) {
+      parsed.agent_runs = initialData.agent_runs;
+      modified = true;
+    }
+    if (!parsed.distribution_log || parsed.distribution_log.length === 0) {
+      parsed.distribution_log = initialData.distribution_log;
+      modified = true;
+    }
+    if (!parsed.keyword_rankings || parsed.keyword_rankings.length === 0) {
+      parsed.keyword_rankings = initialData.keyword_rankings;
+      modified = true;
+    }
+    if (!parsed.user_profiles || parsed.user_profiles.length === 0) {
+      parsed.user_profiles = initialData.user_profiles;
+      modified = true;
+    }
+
+    if (modified) {
+      fs.writeFileSync(DB_FILE, JSON.stringify(parsed, null, 2), "utf8");
+    }
+
+    return parsed;
   } catch (error) {
     console.error("Database reading error, using seed data:", error);
     return initialData;

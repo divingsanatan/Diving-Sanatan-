@@ -43,6 +43,27 @@ export default function AdminBlogsPage() {
   const [section, setSection] = useState("");
   const [isShowFeaturedPage, setIsShowFeaturedPage] = useState(true);
 
+  // Expanded SEO, E-E-A-T, Schema & Media states
+  const [metaTitle, setMetaTitle] = useState("");
+  const [metaDescription, setMetaDescription] = useState("");
+  const [focusKeyword, setFocusKeyword] = useState("");
+  const [canonicalUrl, setCanonicalUrl] = useState("");
+  const [robotsDirective, setRobotsDirective] = useState("index, follow");
+  const [slugInput, setSlugInput] = useState("");
+  const [authorBio, setAuthorBio] = useState("");
+  const [reviewedBy, setReviewedBy] = useState("");
+  const [schemaType, setSchemaType] = useState<"Article" | "BlogPosting" | "FAQPage" | "HowTo">("Article");
+  const [faqPairs, setFaqPairs] = useState<{ question: string; answer: string }[]>([]);
+  const [tldr, setTldr] = useState("");
+  const [featuredImageAlt, setFeaturedImageAlt] = useState("");
+  const [ogImageOverride, setOgImageOverride] = useState("");
+  const [videoEmbedUrl, setVideoEmbedUrl] = useState("");
+  const [videoTranscript, setVideoTranscript] = useState("");
+  const [tagsInput, setTagsInput] = useState("");
+  const [pillarCluster, setPillarCluster] = useState("");
+  const [pinnedArticlesInput, setPinnedArticlesInput] = useState("");
+  const [status, setStatus] = useState<"draft" | "scheduled" | "published">("published");
+
   // Multiple media states
   const [galleryImages, setGalleryImages] = useState<string[]>([]);
   const [blogVideos, setBlogVideos] = useState<string[]>([]);
@@ -186,6 +207,27 @@ export default function AdminBlogsPage() {
     setBlogVideos([]);
     setSection("");
     setIsShowFeaturedPage(true);
+
+    setMetaTitle("");
+    setMetaDescription("");
+    setFocusKeyword("");
+    setCanonicalUrl("");
+    setRobotsDirective("index, follow");
+    setSlugInput("");
+    setAuthorBio("");
+    setReviewedBy("");
+    setSchemaType("Article");
+    setFaqPairs([]);
+    setTldr("");
+    setFeaturedImageAlt("");
+    setOgImageOverride("");
+    setVideoEmbedUrl("");
+    setVideoTranscript("");
+    setTagsInput("");
+    setPillarCluster("");
+    setPinnedArticlesInput("");
+    setStatus("published");
+
     setEditMode(false);
     setEditBlogId(null);
   };
@@ -253,6 +295,27 @@ export default function AdminBlogsPage() {
     setBlogVideos(blog.videos || []);
     setSection(blog.section || "");
     setIsShowFeaturedPage(blog.is_show_featured_page !== false);
+
+    setMetaTitle(blog.meta_title || "");
+    setMetaDescription(blog.meta_description || "");
+    setFocusKeyword(blog.focus_keyword || "");
+    setCanonicalUrl(blog.canonical_url || "");
+    setRobotsDirective(blog.robots_directive || "index, follow");
+    setSlugInput(blog.slug || "");
+    setAuthorBio(blog.author_bio || "");
+    setReviewedBy(blog.reviewed_by || "");
+    setSchemaType(blog.schema_type || "Article");
+    setFaqPairs(Array.isArray(blog.faq_pairs) ? blog.faq_pairs : []);
+    setTldr(blog.tldr || "");
+    setFeaturedImageAlt(blog.featured_image_alt || "");
+    setOgImageOverride(blog.og_image_override || "");
+    setVideoEmbedUrl(blog.video_embed_url || "");
+    setVideoTranscript(blog.video_transcript || "");
+    setTagsInput(Array.isArray(blog.tags) ? blog.tags.join(", ") : "");
+    setPillarCluster(blog.pillar_cluster || "");
+    setPinnedArticlesInput(Array.isArray(blog.pinned_related_articles) ? blog.pinned_related_articles.join(", ") : "");
+    setStatus(blog.status || "published");
+
     setIsModalOpen(true);
   };
 
@@ -456,6 +519,7 @@ export default function AdminBlogsPage() {
 
     const payload = {
       title: title.trim(),
+      slug: slugInput.trim(),
       category: finalCategory,
       author: finalAuthor,
       content: content.trim(),
@@ -465,7 +529,25 @@ export default function AdminBlogsPage() {
       images: galleryImages.filter(img => img.trim() !== ""),
       videos: blogVideos.filter(vid => vid.trim() !== ""),
       section: section || null,
-      is_show_featured_page: isShowFeaturedPage
+      is_show_featured_page: isShowFeaturedPage,
+      meta_title: metaTitle.trim(),
+      meta_description: metaDescription.trim(),
+      focus_keyword: focusKeyword.trim(),
+      canonical_url: canonicalUrl.trim(),
+      robots_directive: robotsDirective,
+      author_bio: authorBio.trim(),
+      reviewed_by: reviewedBy.trim(),
+      schema_type: schemaType,
+      faq_pairs: faqPairs,
+      tldr: tldr.trim(),
+      featured_image_alt: featuredImageAlt.trim(),
+      og_image_override: ogImageOverride.trim(),
+      video_embed_url: videoEmbedUrl.trim(),
+      video_transcript: videoTranscript.trim(),
+      tags: tagsInput.split(",").map(t => t.trim()).filter(Boolean),
+      pillar_cluster: pillarCluster.trim(),
+      pinned_related_articles: pinnedArticlesInput.split(",").map(p => p.trim()).filter(Boolean),
+      status
     };
 
     try {
@@ -1202,6 +1284,222 @@ export default function AdminBlogsPage() {
                   <small className="form-hint">
                     Word Count: {content.replace(/<[^>]*>/g, " ").trim().split(/\s+/).filter(Boolean).length} words
                   </small>
+                </div>
+
+                {/* ════ SEO & E-E-A-T METADATA SECTION ════ */}
+                <div style={{ marginTop: 24, paddingTop: 20, borderTop: "2px dashed rgba(203, 213, 225, 0.6)" }}>
+                  <h4 style={{ margin: "0 0 16px", color: "#6366f1", fontSize: "0.98rem", fontWeight: 700, display: "flex", alignItems: "center", gap: 6 }}>
+                    🎯 SEO, E-E-A-T & Structured Data (Search Engine Optimization)
+                  </h4>
+
+                  {/* SEO Meta */}
+                  <div className="form-group">
+                    <label>Meta Title (Search Result Title)</label>
+                    <input
+                      type="text"
+                      className="glass-input"
+                      placeholder="e.g. Complete Guide to Root Chakra Balancing | Diving Sanatan"
+                      value={metaTitle}
+                      onChange={(e) => setMetaTitle(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Meta Description (Snippet Summary)</label>
+                    <textarea
+                      className="glass-input"
+                      rows={2}
+                      placeholder="e.g. Discover authentic chakra balancing techniques to release stress and align your energy centers."
+                      value={metaDescription}
+                      onChange={(e) => setMetaDescription(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="form-row">
+                    <div className="form-group form-group-flex">
+                      <label>Focus Keyword</label>
+                      <input
+                        type="text"
+                        className="glass-input"
+                        placeholder="e.g. chakra healing Bhopal"
+                        value={focusKeyword}
+                        onChange={(e) => setFocusKeyword(e.target.value)}
+                      />
+                    </div>
+                    <div className="form-group form-group-flex">
+                      <label>Robots Directive</label>
+                      <select
+                        className="glass-input"
+                        value={robotsDirective}
+                        onChange={(e) => setRobotsDirective(e.target.value)}
+                      >
+                        <option value="index, follow">index, follow (Default)</option>
+                        <option value="noindex, follow">noindex, follow</option>
+                        <option value="index, nofollow">index, nofollow</option>
+                        <option value="noindex, nofollow">noindex, nofollow</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="form-row">
+                    <div className="form-group form-group-flex">
+                      <label>URL Slug (Editable)</label>
+                      <input
+                        type="text"
+                        className="glass-input"
+                        placeholder="e.g. root-chakra-healing-guide"
+                        value={slugInput}
+                        onChange={(e) => setSlugInput(e.target.value)}
+                      />
+                      <small style={{ fontSize: "0.7rem", color: "#64748b" }}>
+                        Note: Changing slug automatically logs a 301 redirect from the old slug.
+                      </small>
+                    </div>
+                    <div className="form-group form-group-flex">
+                      <label>Canonical URL Override</label>
+                      <input
+                        type="text"
+                        className="glass-input"
+                        placeholder="https://divingsanatan.online/blog/..."
+                        value={canonicalUrl}
+                        onChange={(e) => setCanonicalUrl(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Trust & E-E-A-T */}
+                  <div className="form-row">
+                    <div className="form-group form-group-flex">
+                      <label>Author Bio & Credentials (E-E-A-T)</label>
+                      <input
+                        type="text"
+                        className="glass-input"
+                        placeholder="e.g. Somatic energy healer with 12+ years experience in Bhopal"
+                        value={authorBio}
+                        onChange={(e) => setAuthorBio(e.target.value)}
+                      />
+                    </div>
+                    <div className="form-group form-group-flex">
+                      <label>Reviewed By (Medical / Holistic Expert)</label>
+                      <input
+                        type="text"
+                        className="glass-input"
+                        placeholder="e.g. Dr. Elara Vance, Senior Holistics Specialist"
+                        value={reviewedBy}
+                        onChange={(e) => setReviewedBy(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Structured Data & TL;DR */}
+                  <div className="form-row">
+                    <div className="form-group form-group-flex">
+                      <label>Schema Type Selector</label>
+                      <select
+                        className="glass-input"
+                        value={schemaType}
+                        onChange={(e: any) => setSchemaType(e.target.value)}
+                      >
+                        <option value="Article">Article</option>
+                        <option value="BlogPosting">BlogPosting</option>
+                        <option value="FAQPage">FAQPage</option>
+                        <option value="HowTo">HowTo</option>
+                      </select>
+                    </div>
+                    <div className="form-group form-group-flex">
+                      <label>Publish Status</label>
+                      <select
+                        className="glass-input"
+                        value={status}
+                        onChange={(e: any) => setStatus(e.target.value)}
+                      >
+                        <option value="published">Published</option>
+                        <option value="scheduled">Scheduled</option>
+                        <option value="draft">Draft</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Direct Answer / TL;DR Block (Quoted by AI Models)</label>
+                    <textarea
+                      className="glass-input"
+                      rows={2}
+                      placeholder="A short 2-3 sentence key takeaway summary placed at top of article."
+                      value={tldr}
+                      onChange={(e) => setTldr(e.target.value)}
+                    />
+                  </div>
+
+                  {/* Media Alt & Video Embed */}
+                  <div className="form-row">
+                    <div className="form-group form-group-flex">
+                      <label>Featured Image Alt Text (Required for Accessibility)</label>
+                      <input
+                        type="text"
+                        className="glass-input"
+                        placeholder="Descriptive alt text for search crawlers"
+                        value={featuredImageAlt}
+                        onChange={(e) => setFeaturedImageAlt(e.target.value)}
+                      />
+                    </div>
+                    <div className="form-group form-group-flex">
+                      <label>OG Social Image Preview URL</label>
+                      <input
+                        type="text"
+                        className="glass-input"
+                        placeholder="Defaults to cover image if empty"
+                        value={ogImageOverride}
+                        onChange={(e) => setOgImageOverride(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Video Embed URL</label>
+                    <input
+                      type="text"
+                      className="glass-input"
+                      placeholder="e.g. https://www.youtube.com/embed/..."
+                      value={videoEmbedUrl}
+                      onChange={(e) => setVideoEmbedUrl(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Video Transcript (SEO Indexing)</label>
+                    <textarea
+                      className="glass-input"
+                      rows={2}
+                      placeholder="Full text transcript of embedded video for search indexing..."
+                      value={videoTranscript}
+                      onChange={(e) => setVideoTranscript(e.target.value)}
+                    />
+                  </div>
+
+                  {/* Taxonomy & Pillars */}
+                  <div className="form-row">
+                    <div className="form-group form-group-flex">
+                      <label>Tags (Comma Separated)</label>
+                      <input
+                        type="text"
+                        className="glass-input"
+                        placeholder="e.g. chakras, meditation, reiki, wellness"
+                        value={tagsInput}
+                        onChange={(e) => setTagsInput(e.target.value)}
+                      />
+                    </div>
+                    <div className="form-group form-group-flex">
+                      <label>Topic Cluster / Pillar Association</label>
+                      <input
+                        type="text"
+                        className="glass-input"
+                        placeholder="e.g. Anxiety & Overthinking Cluster"
+                        value={pillarCluster}
+                        onChange={(e) => setPillarCluster(e.target.value)}
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 <Button variant="gold" type="submit" className="btn-full-mt">

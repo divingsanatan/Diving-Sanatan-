@@ -38,24 +38,41 @@ Analyze the HTML/page content snippet and return a JSON object with:
 
   // If technical issues are found, propose a fix to pending_changes
   if (issues.length > 0) {
-    const { error } = await supabaseServer.from("pending_changes").insert([
-      {
-        agent_name: "technical_seo",
-        change_type: "technical_fix",
-        target_entity: "pages",
-        target_id: url,
-        proposed_data: {
-          url,
-          recommended_fixes: issues,
-          canonical_url: "https://divingsanatan.online/",
-          robots_directive: "index, follow"
-        },
-        current_data: { url, issues_found: issues },
-        reason: `Technical SEO Agent flagged ${issues.length} audit issue(s): ${issues.join("; ")}`,
-        status: "pending"
-      }
-    ]);
-    if (!error) proposedChangeCreated = true;
+    const changeObj = {
+      id: `pc-${Math.random().toString(36).substring(2, 9)}`,
+      agent_name: "technical_seo",
+      change_type: "technical_fix",
+      target_entity: "pages",
+      target_id: url,
+      proposed_data: {
+        url,
+        recommended_fixes: issues,
+        canonical_url: "https://divingsanatan.online/",
+        robots_directive: "index, follow"
+      },
+      current_data: { url, issues_found: issues },
+      reason: `Technical SEO Agent flagged ${issues.length} audit issue(s): ${issues.join("; ")}`,
+      status: "pending" as const,
+      created_at: new Date().toISOString()
+    };
+
+    try {
+      await supabaseServer.from("pending_changes").insert([changeObj]);
+      proposedChangeCreated = true;
+    } catch (err) {
+      console.warn("Supabase pending_changes insert failed in technicalSeoAgent:", err);
+    }
+
+    try {
+      const { getDb, saveDb } = require("@/utils/db");
+      const db = getDb();
+      db.pending_changes = db.pending_changes || [];
+      db.pending_changes.unshift(changeObj);
+      saveDb(db);
+      proposedChangeCreated = true;
+    } catch (dbErr) {
+      console.error("Local db update error in technicalSeoAgent:", dbErr);
+    }
   }
 
   return {

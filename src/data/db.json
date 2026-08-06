@@ -260,5 +260,310 @@
       "is_show_featured_page": false,
       "views": 3447
     }
+  ],
+  "pending_changes": [
+    {
+      "id": "pc-vix8ehh",
+      "agent_name": "technical_seo",
+      "change_type": "technical_fix",
+      "target_entity": "pages",
+      "target_id": "https://divingsanatan.online/",
+      "proposed_data": {
+        "url": "https://divingsanatan.online/",
+        "recommended_fixes": [
+          "Missing explicit canonical URL tag."
+        ],
+        "canonical_url": "https://divingsanatan.online/",
+        "robots_directive": "index, follow"
+      },
+      "current_data": {
+        "url": "https://divingsanatan.online/",
+        "issues_found": [
+          "Missing explicit canonical URL tag."
+        ]
+      },
+      "reason": "Technical SEO Agent flagged 1 audit issue(s): Missing explicit canonical URL tag.",
+      "status": "applied",
+      "created_at": "2026-08-06T16:42:16.226Z",
+      "approved_by": "admin",
+      "approved_at": "2026-08-06T16:42:25.665Z"
+    },
+    {
+      "id": "pc-1",
+      "agent_name": "on_page_content_quality",
+      "change_type": "content_edit",
+      "target_entity": "blogs",
+      "target_id": "bl-2",
+      "proposed_data": {
+        "meta_title": "Unlocking the Chakras: Complete Beginner's Energy Guide",
+        "meta_description": "Discover how authentic chakra balancing techniques clear blocked Prana energy and relieve physical stress in Bhopal.",
+        "focus_keyword": "chakra healing Bhopal",
+        "author_bio": "Authored by Dr. Celeste Thorne, Senior Holistics Specialist with 14 years experience.",
+        "reviewed_by": "Dr. Elara Vance, Master Reiki Practitioner",
+        "tldr": "Chakras govern physical and emotional vitality. Using focused visualization and sound tuning bowls clears stagnant energy stations.",
+        "featured_image_alt": "Infographic of 7 human chakra energy centers along the spine",
+        "schema_type": "Article"
+      },
+      "current_data": {
+        "blogId": "bl-2",
+        "title": "Unlocking the Chakras: A Beginner's Guide"
+      },
+      "reason": "On-Page Audit Agent found missing focus keyword and missing E-E-A-T author credentials. High potential for position #1 ranking.",
+      "status": "applied",
+      "created_at": "2026-08-06T16:18:45.686Z",
+      "approved_by": "admin",
+      "approved_at": "2026-08-06T16:40:22.698Z"
+    },
+    {
+      "id": "pc-2",
+      "agent_name": "technical_seo",
+      "change_type": "technical_fix",
+      "target_entity": "blogs",
+      "target_id": "bl-1",
+      "proposed_data": {
+        "canonical_url": "https://divingsanatan.online/blog/healing-power-amethyst-crystals",
+        "robots_directive": "index, follow",
+        "featured_image_alt": "Cleaned amethyst crystal cluster for crown chakra meditation"
+      },
+      "current_data": {
+        "blogId": "bl-1",
+        "title": "The Healing Power of Amethyst Crystals"
+      },
+      "reason": "Technical SEO Agent flagged missing image alt attribute and missing canonical URL tag.",
+      "status": "applied",
+      "created_at": "2026-08-06T15:48:45.686Z",
+      "approved_by": "admin",
+      "approved_at": "2026-08-06T16:41:36.849Z"
+    }
+  ],
+  "agent_runs": [
+    {
+      "id": "run-101",
+      "agent_name": "on_page_content_quality",
+      "status": "completed",
+      "started_at": "2026-08-06T16:18:45.686Z",
+      "completed_at": "2026-08-06T16:19:45.686Z",
+      "items_processed": 3,
+      "run_summary": {
+        "eeatScore": 88,
+        "proposalsGenerated": 1
+      }
+    },
+    {
+      "id": "run-102",
+      "agent_name": "technical_seo",
+      "status": "completed",
+      "started_at": "2026-08-06T15:48:45.686Z",
+      "completed_at": "2026-08-06T15:49:45.686Z",
+      "items_processed": 5,
+      "run_summary": {
+        "issuesDetected": 2,
+        "fixesProposed": 1
+      }
+    },
+    {
+      "id": "run-103",
+      "agent_name": "monitoring_reporting",
+      "status": "completed",
+      "started_at": "2026-08-06T14:33:45.686Z",
+      "completed_at": "2026-08-06T14:34:45.686Z",
+      "items_processed": 6,
+      "run_summary": {
+        "keywordsTracked": 6,
+        "avgPosition": 3.8
+      }
+    }
+  ],
+  "distribution_log": [
+    {
+      "id": "dist-hpt4t4r",
+      "pending_change_id": "pc-vix8ehh",
+      "target": "bing_sitemap_resubmit",
+      "status": "success",
+      "pushed_at": "2026-08-06T16:42:25.670Z",
+      "response_summary": {
+        "message": "Bing Webmaster Tools sitemap resubmitted",
+        "sitemapUrl": "https://divingsanatan.online/sitemap.xml"
+      }
+    },
+    {
+      "id": "dist-qzq27u2",
+      "pending_change_id": "pc-vix8ehh",
+      "target": "indexnow",
+      "status": "success",
+      "pushed_at": "2026-08-06T16:42:25.669Z",
+      "response_summary": {
+        "message": "IndexNow ping sent for https://divingsanatan.online/blog/https://divingsanatan.online/",
+        "host": "divingsanatan.online",
+        "key": "divingsanatan_indexnow_key"
+      }
+    },
+    {
+      "id": "dist-9o5ioy4",
+      "pending_change_id": "pc-vix8ehh",
+      "target": "gsc_index_request",
+      "status": "success",
+      "pushed_at": "2026-08-06T16:42:25.667Z",
+      "response_summary": {
+        "message": "GSC indexing request submitted for https://divingsanatan.online/blog/https://divingsanatan.online/",
+        "timestamp": "2026-08-06T16:42:25.667Z"
+      }
+    },
+    {
+      "id": "dist-ajw4yf0",
+      "pending_change_id": "pc-2",
+      "target": "gbp_post",
+      "status": "success",
+      "pushed_at": "2026-08-06T16:41:36.856Z",
+      "response_summary": {
+        "message": "Proposed GBP post update created in pending_changes."
+      }
+    },
+    {
+      "id": "dist-wrbr7l1",
+      "pending_change_id": "pc-2",
+      "target": "bing_sitemap_resubmit",
+      "status": "success",
+      "pushed_at": "2026-08-06T16:41:36.855Z",
+      "response_summary": {
+        "message": "Bing Webmaster Tools sitemap resubmitted",
+        "sitemapUrl": "https://divingsanatan.online/sitemap.xml"
+      }
+    },
+    {
+      "id": "dist-w3huf6f",
+      "pending_change_id": "pc-2",
+      "target": "indexnow",
+      "status": "success",
+      "pushed_at": "2026-08-06T16:41:36.853Z",
+      "response_summary": {
+        "message": "IndexNow ping sent for https://divingsanatan.online/blog/bl-1",
+        "host": "divingsanatan.online",
+        "key": "divingsanatan_indexnow_key"
+      }
+    },
+    {
+      "id": "dist-sof9z11",
+      "pending_change_id": "pc-2",
+      "target": "gsc_index_request",
+      "status": "success",
+      "pushed_at": "2026-08-06T16:41:36.851Z",
+      "response_summary": {
+        "message": "GSC indexing request submitted for https://divingsanatan.online/blog/bl-1",
+        "timestamp": "2026-08-06T16:41:36.851Z"
+      }
+    },
+    {
+      "id": "dist-6mruyi9",
+      "pending_change_id": "pc-1",
+      "target": "gbp_post",
+      "status": "success",
+      "pushed_at": "2026-08-06T16:40:22.701Z",
+      "response_summary": {
+        "message": "Proposed GBP post update created in pending_changes."
+      }
+    },
+    {
+      "id": "dist-uq1bd09",
+      "pending_change_id": "pc-1",
+      "target": "bing_sitemap_resubmit",
+      "status": "success",
+      "pushed_at": "2026-08-06T16:40:22.700Z",
+      "response_summary": {
+        "message": "Bing Webmaster Tools sitemap resubmitted",
+        "sitemapUrl": "https://divingsanatan.online/sitemap.xml"
+      }
+    },
+    {
+      "id": "dist-cuclgob",
+      "pending_change_id": "pc-1",
+      "target": "indexnow",
+      "status": "success",
+      "pushed_at": "2026-08-06T16:40:22.700Z",
+      "response_summary": {
+        "message": "IndexNow ping sent for https://divingsanatan.online/blog/bl-2",
+        "host": "divingsanatan.online",
+        "key": "divingsanatan_indexnow_key"
+      }
+    },
+    {
+      "id": "dist-onri280",
+      "pending_change_id": "pc-1",
+      "target": "gsc_index_request",
+      "status": "success",
+      "pushed_at": "2026-08-06T16:40:22.699Z",
+      "response_summary": {
+        "message": "GSC indexing request submitted for https://divingsanatan.online/blog/bl-2",
+        "timestamp": "2026-08-06T16:40:22.699Z"
+      }
+    },
+    {
+      "id": "dist-1",
+      "target": "indexnow",
+      "status": "success",
+      "pushed_at": "2026-08-06T14:33:45.686Z",
+      "response_summary": {
+        "message": "IndexNow ping submitted to Bing & Yandex",
+        "host": "divingsanatan.online"
+      }
+    },
+    {
+      "id": "dist-2",
+      "target": "gsc_index_request",
+      "status": "success",
+      "pushed_at": "2026-08-06T13:33:45.686Z",
+      "response_summary": {
+        "message": "Google Search Console sitemap resubmit successful"
+      }
+    }
+  ],
+  "keyword_rankings": [
+    {
+      "id": "kw-1",
+      "keyword_text": "chakra healing Bhopal",
+      "url": "https://divingsanatan.online/services",
+      "position": 1,
+      "search_engine": "google",
+      "location": "IN",
+      "checked_at": "2026-08-06T14:33:45.686Z"
+    },
+    {
+      "id": "kw-2",
+      "keyword_text": "reiki therapist Bhopal",
+      "url": "https://divingsanatan.online/services",
+      "position": 2,
+      "search_engine": "google",
+      "location": "IN",
+      "checked_at": "2026-08-06T14:33:45.686Z"
+    },
+    {
+      "id": "kw-3",
+      "keyword_text": "sound healing therapy",
+      "url": "https://divingsanatan.online/services",
+      "position": 4,
+      "search_engine": "google",
+      "location": "US",
+      "checked_at": "2026-08-06T14:33:45.686Z"
+    },
+    {
+      "id": "kw-4",
+      "keyword_text": "aura cleansing techniques",
+      "url": "https://divingsanatan.online/blog",
+      "position": 3,
+      "search_engine": "google",
+      "location": "US",
+      "checked_at": "2026-08-06T14:33:45.686Z"
+    }
+  ],
+  "user_profiles": [
+    {
+      "id": "admin-divingsanatan",
+      "email": "divingsanatan@gmail.com",
+      "password": "375ff6d6533836073e53b8f43c2f31d51ac3b79c0971bae5d5d0e0a0a9f1d1d1",
+      "role": "super_admin",
+      "name": "Diving Sanatan Admin",
+      "phone": "+91 9876543210",
+      "created_at": "2026-08-06T16:49:37.531Z"
+    }
   ]
 }
