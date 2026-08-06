@@ -147,11 +147,35 @@ export async function runSiteScanPipeline(): Promise<ScanResult> {
 
     const durationMs = Date.now() - startTime;
 
-    // 5. Update agent_runs status
-    await supabaseServer
-      .from("agent_runs")
-      .update({
+    try {
+      await supabaseServer
+        .from("agent_runs")
+        .update({
+          status: "completed",
+          completed_at: new Date().toISOString(),
+          items_processed: urlsToScan.length,
+          run_summary: {
+            totalUrls: urlsToScan.length,
+            changedUrlsCount: changedCount,
+            skippedUrlsCount: skippedCount,
+            pendingChangesGenerated,
+            durationMs
+          }
+        })
+        .eq("id", runId);
+    } catch (e) {
+      console.warn("Supabase agent_runs update warning:", e);
+    }
+
+    try {
+      const { saveDb, getDb } = require("@/utils/db");
+      const db = getDb();
+      db.agent_runs = db.agent_runs || [];
+      db.agent_runs.unshift({
+        id: runId,
+        agent_name: "change_detection_scan",
         status: "completed",
+        started_at: new Date(startTime).toISOString(),
         completed_at: new Date().toISOString(),
         items_processed: urlsToScan.length,
         run_summary: {
@@ -161,8 +185,11 @@ export async function runSiteScanPipeline(): Promise<ScanResult> {
           pendingChangesGenerated,
           durationMs
         }
-      })
-      .eq("id", runId);
+      });
+      saveDb(db);
+    } catch (dbErr) {
+      console.error("Local db update error for agent_runs:", dbErr);
+    }
 
     return {
       success: true,

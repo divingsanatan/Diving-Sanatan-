@@ -53,9 +53,25 @@ const AGENTS = [
     prominent: true,
   },
   {
+    key: "on-page",
+    label: "On-Page & E-E-A-T Audit",
+    description: "Scan pages for SEO meta, alt text, author bios, TL;DR direct answers & schema quality.",
+    icon: <FileText size={20} />,
+    endpoint: "/api/seo/agents/on-page",
+    color: "#ec4899",
+  },
+  {
+    key: "technical",
+    label: "Technical SEO Agent",
+    description: "Scan HTML structure, canonical tags, 404s, headings, and robots directives.",
+    icon: <Shield size={20} />,
+    endpoint: "/api/seo/agents/technical",
+    color: "#14b8a6",
+  },
+  {
     key: "monitoring",
-    label: "Monitoring & Reporting",
-    description: "Aggregate keyword rankings, page metrics, and API usage stats.",
+    label: "Website Rank & Metrics Tracker",
+    description: "Aggregate keyword rankings, SERP positions, page metrics, and API usage stats.",
     icon: <TrendingUp size={20} />,
     endpoint: "/api/seo/agents/monitoring",
     color: "#0ea5e9",
@@ -127,12 +143,27 @@ const statusBadge = (s: string) => {
   }
 };
 
+interface KeywordRanking {
+  id: string;
+  keyword_text: string;
+  url: string;
+  position: number;
+  search_engine: string;
+  location: string;
+  checked_at: string;
+  keywords?: { word: string };
+}
+
 /* ─── Main Component ─── */
 export default function SeoCommandCenter() {
   const [agentStates, setAgentStates] = useState<Record<string, { loading: boolean; result: any; error: string | null; lastRun: string | null }>>({});
   const [pendingChanges, setPendingChanges] = useState<PendingChange[]>([]);
   const [recentRuns, setRecentRuns] = useState<AgentRun[]>([]);
   const [distLog, setDistLog] = useState<DistEntry[]>([]);
+  const [rankings, setRankings] = useState<KeywordRanking[]>([]);
+  const [newKeywordInput, setNewKeywordInput] = useState("");
+  const [newUrlInput, setNewUrlInput] = useState("");
+  const [addingKw, setAddingKw] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
   const [approvalActions, setApprovalActions] = useState<Record<string, string>>({});
   const [expandedChange, setExpandedChange] = useState<string | null>(null);
@@ -141,17 +172,20 @@ export default function SeoCommandCenter() {
   const loadDashboard = useCallback(async () => {
     setLoadingData(true);
     try {
-      const [pcRes, runsRes, distRes] = await Promise.all([
+      const [pcRes, runsRes, distRes, rankRes] = await Promise.all([
         fetch("/api/seo/approval?status=pending"),
         fetch("/api/seo/dashboard/runs"),
         fetch("/api/seo/dashboard/distribution"),
+        fetch("/api/seo/rankings"),
       ]);
       const pcJson = await pcRes.json();
       const runsJson = await runsRes.json();
       const distJson = await distRes.json();
+      const rankJson = await rankRes.json();
       if (pcJson.success) setPendingChanges(pcJson.data || []);
       if (runsJson.success) setRecentRuns(runsJson.data || []);
       if (distJson.success) setDistLog(distJson.data || []);
+      if (rankJson.success) setRankings(rankJson.data || []);
     } catch (e) {
       console.warn("Dashboard load partial failure:", e);
     }
@@ -159,6 +193,35 @@ export default function SeoCommandCenter() {
   }, []);
 
   useEffect(() => { loadDashboard(); }, [loadDashboard]);
+
+  /* ─ add keyword handler ─ */
+  const handleAddKeyword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newKeywordInput.trim()) return;
+    setAddingKw(true);
+    try {
+      const res = await fetch("/api/seo/rankings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          keyword: newKeywordInput.trim(),
+          url: newUrlInput.trim() || "https://divingsanatan.online/services"
+        })
+      });
+      const json = await res.json();
+      if (json.success) {
+        setNewKeywordInput("");
+        setNewUrlInput("");
+        loadDashboard();
+      } else {
+        alert(json.error || "Failed to add keyword to rank tracker.");
+      }
+    } catch (err: any) {
+      alert("Error adding keyword: " + err.message);
+    } finally {
+      setAddingKw(false);
+    }
+  };
 
   /* ─ trigger an agent ─ */
   const triggerAgent = async (key: string, endpoint: string) => {
@@ -299,6 +362,97 @@ export default function SeoCommandCenter() {
             </div>
           );
         })}
+      </div>
+
+      {/* ════ WEBSITE RANK TRACKER SECTION ════ */}
+      <div style={{ border: "1px solid #e2e8f0", borderRadius: 14, padding: 20, background: "#fff", marginBottom: 28, boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, flexWrap: "wrap", gap: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: "#0ea5e918", display: "flex", alignItems: "center", justifyContent: "center", color: "#0ea5e9" }}>
+              <TrendingUp size={20} />
+            </div>
+            <div>
+              <h3 style={{ margin: 0, fontSize: "1.05rem", fontWeight: 700, color: "#1e293b" }}>Website Ranking Tracker</h3>
+              <p style={{ margin: 0, fontSize: "0.78rem", color: "#64748b" }}>
+                Track SERP keyword rankings & position movements on Google.
+              </p>
+            </div>
+          </div>
+
+          <form onSubmit={handleAddKeyword} style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <input
+              type="text"
+              placeholder="Target Keyword..."
+              value={newKeywordInput}
+              onChange={(e) => setNewKeywordInput(e.target.value)}
+              style={{ border: "1px solid #cbd5e1", borderRadius: 8, padding: "6px 12px", fontSize: "0.8rem", width: 180 }}
+            />
+            <input
+              type="text"
+              placeholder="Target URL (optional)"
+              value={newUrlInput}
+              onChange={(e) => setNewUrlInput(e.target.value)}
+              style={{ border: "1px solid #cbd5e1", borderRadius: 8, padding: "6px 12px", fontSize: "0.8rem", width: 200 }}
+            />
+            <button
+              type="submit"
+              disabled={addingKw}
+              style={{ background: "#0ea5e9", color: "#fff", border: "none", borderRadius: 8, padding: "6px 14px", fontSize: "0.8rem", fontWeight: 600, cursor: addingKw ? "not-allowed" : "pointer" }}
+            >
+              {addingKw ? "Adding..." : "+ Track Keyword"}
+            </button>
+          </form>
+        </div>
+
+        {rankings.length === 0 ? (
+          <div style={{ textAlign: "center", padding: 30, color: "#94a3b8", fontSize: "0.85rem" }}>
+            No keyword rankings tracked yet. Click <strong>Run Now</strong> on the <i>Website Rank & Metrics Tracker</i> agent card or enter a keyword above to begin tracking positions.
+          </div>
+        ) : (
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.82rem", textAlign: "left" }}>
+              <thead>
+                <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0", color: "#64748b", fontWeight: 600 }}>
+                  <th style={{ padding: "10px 12px" }}>Keyword</th>
+                  <th style={{ padding: "10px 12px" }}>Target Page URL</th>
+                  <th style={{ padding: "10px 12px" }}>SERP Position</th>
+                  <th style={{ padding: "10px 12px" }}>Search Engine</th>
+                  <th style={{ padding: "10px 12px" }}>Region</th>
+                  <th style={{ padding: "10px 12px" }}>Last Checked</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rankings.map(r => (
+                  <tr key={r.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                    <td style={{ padding: "10px 12px", fontWeight: 600, color: "#1e293b" }}>
+                      {r.keyword_text || r.keywords?.word || "Keyword"}
+                    </td>
+                    <td style={{ padding: "10px 12px", color: "#6366f1" }}>
+                      <a href={r.url} target="_blank" rel="noreferrer" style={{ textDecoration: "none", color: "inherit", display: "inline-flex", alignItems: "center", gap: 4 }}>
+                        {r.url.replace("https://divingsanatan.online", "")} <ExternalLink size={11} />
+                      </a>
+                    </td>
+                    <td style={{ padding: "10px 12px" }}>
+                      <span style={{
+                        background: r.position <= 3 ? "#d1fae5" : r.position <= 10 ? "#e0e7ff" : "#fef3c7",
+                        color: r.position <= 3 ? "#065f46" : r.position <= 10 ? "#3730a3" : "#92400e",
+                        fontWeight: 700,
+                        padding: "2px 8px",
+                        borderRadius: 6,
+                        fontSize: "0.75rem"
+                      }}>
+                        #{r.position}
+                      </span>
+                    </td>
+                    <td style={{ padding: "10px 12px", color: "#475569" }}>{r.search_engine || "google"}</td>
+                    <td style={{ padding: "10px 12px", color: "#475569" }}>{r.location || "US"}</td>
+                    <td style={{ padding: "10px 12px", color: "#94a3b8" }}>{relTime(r.checked_at)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* ════ TWO COLUMN LOWER SECTION ════ */}
