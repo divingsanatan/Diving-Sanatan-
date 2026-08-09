@@ -144,6 +144,7 @@ export interface DatabaseSchema {
   agent_runs?: AgentRunItem[];
   distribution_log?: DistributionLogItem[];
   keyword_rankings?: KeywordRankingItem[];
+  pillarGuides?: any[];
 }
 
 // Initial high-fidelity seed data

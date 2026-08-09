@@ -86,6 +86,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: true, data: mappedBlog }, { headers });
     }
     
+    const section = searchParams.get("section");
     let blogs: any[] = [];
     try {
       let query = supabaseServer.from("blogs").select("*");
@@ -98,6 +99,10 @@ export async function GET(req: NextRequest) {
       if (category && category !== "all") {
         query = query.ilike("category", category);
       }
+
+      if (section) {
+        query = query.ilike("section", section);
+      }
       
       const res = await query.order("date", { ascending: false });
       if (res.data && res.data.length > 0) {
@@ -107,17 +112,29 @@ export async function GET(req: NextRequest) {
       console.warn("Supabase GET blogs list error:", err);
     }
 
-    // Fallback to local db.json if Supabase returned no blogs
-    if (!blogs || blogs.length === 0) {
-      try {
-        const localDb = getDb();
-        blogs = localDb.blogs || [];
-        if (category && category !== "all") {
-          blogs = blogs.filter((b: any) => b.category?.toLowerCase() === category.toLowerCase());
-        }
-      } catch (err) {
-        console.error("Local DB fetch error:", err);
+    // Merge Supabase blogs with local db.json blogs to ensure local updates are available
+    try {
+      const localDb = getDb();
+      let localBlogs = localDb.blogs || [];
+      if (category && category !== "all") {
+        localBlogs = localBlogs.filter((b: any) => b.category?.toLowerCase() === category.toLowerCase());
       }
+      if (section) {
+        localBlogs = localBlogs.filter((b: any) => b.section?.toLowerCase() === section.toLowerCase());
+      }
+      
+      localBlogs.forEach((localBlog: any) => {
+        if (!blogs.some((b: any) => b.id === localBlog.id)) {
+          blogs.push({
+            ...localBlog,
+            slug: localBlog.slug || slugify(localBlog.title) || localBlog.id,
+            read_time: localBlog.readTime || (localBlog as any).read_time,
+            approval_status: "published"
+          });
+        }
+      });
+    } catch (err) {
+      console.error("Local DB fetch/merge error:", err);
     }
     
     const mappedBlogs = (blogs || []).map((blog: any) => ({

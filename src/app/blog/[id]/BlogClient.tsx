@@ -5,9 +5,11 @@ import { useParams, useRouter } from "next/navigation";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { useBlog } from "@/app/blog/BlogContext";
+import Link from "next/link";
 
 interface Blog {
   id: string;
+  slug?: string;
   title: string;
   category: string;
   author: string;
@@ -18,6 +20,7 @@ interface Blog {
   images?: string[];
   videos?: string[];
   is_show_featured_page?: boolean;
+  section?: string | null;
 }
 
 const getBlogImage = (img: string) => {
@@ -206,6 +209,155 @@ export default function BlogDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [activeMediaIndex, setActiveMediaIndex] = useState(0);
+
+  // Pillar Guides state
+  const [parsedPillar, setParsedPillar] = useState<{
+    summary: string;
+    chapters: Array<{
+      title: string;
+      summaryText: string;
+      links: Array<{ text: string; href: string }>;
+      fullHtml: string;
+    }>;
+  } | null>(null);
+  const [expandedChapters, setExpandedChapters] = useState<Record<number, boolean>>({});
+
+  const [allBlogs, setAllBlogs] = useState<Blog[]>([]);
+
+  useEffect(() => {
+    async function fetchAllBlogs() {
+      try {
+        const res = await fetch("/api/blogs");
+        const json = await res.json();
+        if (json.success) {
+          setAllBlogs(json.data);
+        }
+      } catch (err) {
+        console.error("Failed to load all blogs for lookup:", err);
+      }
+    }
+    fetchAllBlogs();
+  }, []);
+
+  const getSlugOrIdFromHref = (href: string) => {
+    const parts = href.split("/blog/");
+    return parts[1] || "";
+  };
+
+  const renderSubBlogCard = (post: Blog) => {
+    const postImage = getBlogImage(post.image);
+    const teaser = post.content.replace(/<[^>]*>/g, "").substring(0, 140) + "...";
+    
+    return (
+      <Link href={`/blog/${post.slug || post.id}`} key={post.id} className="sub-blog-card-link">
+        <div className="sub-blog-item-card">
+          <div className="sub-blog-media-wrapper">
+            <img
+              src={postImage}
+              alt={post.title}
+              className="sub-blog-media-img"
+              loading="lazy"
+            />
+            <span className="sub-blog-badge-floating-left">{post.category}</span>
+            <span className="sub-blog-badge-floating-right">{post.readTime || (post as any).read_time || '5 min read'}</span>
+          </div>
+          <div className="sub-blog-card-body">
+            <div className="sub-blog-card-text">
+              <h4 className="sub-blog-card-title">{post.title}</h4>
+              <p className="sub-blog-card-desc">{teaser}</p>
+            </div>
+            <div className="sub-blog-author-row">
+              <div className="sub-blog-author-info">
+                <div className="sub-blog-author-avatar">{post.author.charAt(0)}</div>
+                <div className="sub-blog-author-details">
+                  <span className="sub-blog-author-name">{post.author}</span>
+                  <span className="sub-blog-author-separator">•</span>
+                  <span className="sub-blog-date">{post.date}</span>
+                </div>
+              </div>
+              <span className="sub-blog-view-action">
+                Read Article &rarr;
+              </span>
+            </div>
+          </div>
+        </div>
+      </Link>
+    );
+  };
+
+  useEffect(() => {
+    if (blog && blog.section === "Pillar Guides" && typeof window !== "undefined") {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(blog.content, "text/html");
+
+      // Extract overall summary
+      let summary = "";
+      const firstDiv = doc.querySelector(".pillar-blog-container > div") || doc.querySelector("div");
+      if (firstDiv) {
+        summary = firstDiv.innerHTML;
+        firstDiv.remove();
+      }
+
+      // Extract chapters (by h2 headings)
+      const chapters: Array<{
+        title: string;
+        summaryText: string;
+        links: Array<{ text: string; href: string }>;
+        fullHtml: string;
+      }> = [];
+
+      const h2Elements = Array.from(doc.querySelectorAll("h2"));
+      h2Elements.forEach((h2) => {
+        const title = h2.textContent || "";
+        
+        // Gather all siblings until the next h2
+        const siblingNodes: Node[] = [];
+        let next = h2.nextSibling;
+        while (next && next.nodeName.toLowerCase() !== "h2") {
+          siblingNodes.push(next);
+          next = next.nextSibling;
+        }
+
+        const container = document.createElement("div");
+        siblingNodes.forEach((node) => container.appendChild(node.cloneNode(true)));
+
+        // Extract sub-blog links
+        const links: Array<{ text: string; href: string }> = [];
+        const anchorElements = container.querySelectorAll("a");
+        anchorElements.forEach((a) => {
+          const href = a.getAttribute("href") || "";
+          if (href.startsWith("/blog/")) {
+            links.push({
+              text: a.textContent || "Related Article",
+              href: href,
+            });
+          }
+        });
+
+        // Get plain text summary for teaser
+        const paragraphs = Array.from(container.querySelectorAll("p, li"));
+        const textLines = paragraphs.map((p) => p.textContent || "").filter((t) => t.trim().length > 0);
+        const summaryText = textLines[0] || container.textContent?.substring(0, 200) || "";
+
+        chapters.push({
+          title,
+          summaryText,
+          links,
+          fullHtml: container.innerHTML,
+        });
+      });
+
+      setParsedPillar({ summary, chapters });
+    }
+  }, [blog]);
+
+  const toggleChapter = (index: number) => {
+    setExpandedChapters((prev) => ({
+      ...prev,
+      [index]: !prev[index],
+    }));
+  };
+
 
   useEffect(() => {
     if (blog) {
@@ -898,6 +1050,255 @@ export default function BlogDetailsPage() {
               );
             }
 
+            const isPillarBlog = blog && blog.section === "Pillar Guides";
+            if (isPillarBlog) {
+              return (
+                <>
+                  <nav className="article-breadcrumb" aria-label="Breadcrumb">
+                    <button type="button" className="breadcrumb-link" onClick={() => router.push("/blog")}>
+                      ← Back to Blog
+                    </button>
+                    <span className="breadcrumb-sep">/</span>
+                    <span className="breadcrumb-current">Pillar Guides</span>
+                  </nav>
+
+                  <Card variant="glass" hoverable={false} className="article-unified-card pillar-layout-card">
+                    <div className="article-header pillar-header">
+                      <span className="pillar-badge">Pillar Guide</span>
+                      <h1 className="article-title">{blog.title}</h1>
+                      <div className="article-meta">
+                        <span>By: <strong>{blog.author}</strong></span>
+                        <span>•</span>
+                        <span>Released: <strong>{blog.date}</strong></span>
+                        <span>•</span>
+                        <span>Reading estimate: <strong>{blog.readTime}</strong></span>
+                      </div>
+                    </div>
+
+                    {/* Cover image */}
+                    {blog.is_show_featured_page !== false && (
+                      <div className="pillar-featured-cover-container">
+                        <img
+                          src={coverImage}
+                          alt={blog.title}
+                          className="pillar-featured-cover-img"
+                          loading="lazy"
+                          decoding="async"
+                        />
+                      </div>
+                    )}
+
+                    {/* Summary Section */}
+                    {parsedPillar?.summary && (
+                      <div 
+                        className="pillar-summary-block"
+                        dangerouslySetInnerHTML={{ __html: parsedPillar.summary }}
+                      />
+                    )}
+
+                    {/* Book Index (Chapters) */}
+                    <div className="pillar-chapters-section">
+                      <h2 className="chapters-section-title">
+                        <span className="title-decor">🧘</span> Table of Contents & Indexing
+                      </h2>
+                      <p className="chapters-section-subtitle">
+                        Select a topic below to read its summary. Click to read the full detailed companion guide on our blog.
+                      </p>
+
+                      <div className="pillar-chapters-grid">
+                        {parsedPillar?.chapters.map((chapter, index) => {
+                          const hasLinks = chapter.links.length > 0;
+                          const isExpanded = !!expandedChapters[index];
+                          
+                          return (
+                            <div key={index} className={`pillar-chapter-card ${isExpanded ? "expanded" : ""}`}>
+                              <div className="chapter-card-header" onClick={() => toggleChapter(index)}>
+                                <div className="chapter-number">
+                                  {String(index + 1).padStart(2, "0")}
+                                </div>
+                                <div className="chapter-title-area">
+                                  <h3 className="chapter-title">{chapter.title}</h3>
+                                  <p className="chapter-teaser">{chapter.summaryText}</p>
+                                </div>
+                                <button type="button" className="chapter-toggle-btn">
+                                  {isExpanded ? (
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                                  ) : (
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                  )}
+                                </button>
+                              </div>
+
+                              {/* Chapter Expandable Content */}
+                              {isExpanded && (
+                                <div className="chapter-expanded-body">
+                                  <div 
+                                    className="chapter-full-html"
+                                    dangerouslySetInnerHTML={{ __html: chapter.fullHtml }}
+                                  />
+                                  
+                                  {hasLinks && (
+                                    <div className="chapter-actions-area">
+                                      <h4 className="actions-section-label">📚 Detailed Sub-Guides:</h4>
+                                      <div className="chapter-redirect-buttons">
+                                        {chapter.links.map((link, linkIdx) => {
+                                          const slugOrId = getSlugOrIdFromHref(link.href);
+                                          const matchedBlog = allBlogs.find(b => b.id === slugOrId || b.slug === slugOrId);
+                                          
+                                          if (matchedBlog) {
+                                            return renderSubBlogCard(matchedBlog);
+                                          }
+                                          
+                                          return (
+                                            <button
+                                              key={linkIdx}
+                                              type="button"
+                                              className="pillar-redirect-btn"
+                                              onClick={() => router.push(link.href)}
+                                            >
+                                              <span className="btn-icon">⚡</span>
+                                              <span className="btn-text">{link.text}</span>
+                                              <span className="btn-arrow">&rarr;</span>
+                                            </button>
+                                          );
+                                        })}
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Standard Interactions & Comments */}
+                    <div className="article-interactions-section">
+                      <div className="interactions-bar">
+                        <div className="interactions-left">
+                          <button
+                            type="button"
+                            className={`like-action-btn ${isLiked ? "liked" : ""}`}
+                            onClick={handleLikeToggle}
+                            disabled={loadingLikes}
+                            aria-label={isLiked ? "Unlike article" : "Like article"}
+                          >
+                            <IconHeart filled={isLiked} />
+                            <span className="likes-count-text">
+                              {loadingLikes ? "..." : likesCount}
+                            </span>
+                          </button>
+
+                          <button
+                            type="button"
+                            className={`comment-count-btn ${showCommentsPanel ? "active" : ""}`}
+                            onClick={() => setShowCommentsPanel((prev) => !prev)}
+                            aria-expanded={showCommentsPanel}
+                            aria-label="Toggle comments"
+                          >
+                            <IconComment />
+                            <span>{comments.length}</span>
+                          </button>
+
+                          <div className="share-interactive-trigger">
+                            <button
+                              type="button"
+                              className="share-action-btn"
+                              onClick={() => setShowSharePopup(!showSharePopup)}
+                              aria-label="Share article"
+                            >
+                              <IconShare />
+                              <span>Share</span>
+                            </button>
+                            {showSharePopup && (
+                              <div className="share-glass-popup glass-panel">
+                                <button type="button" className="share-popup-item" onClick={copyPageLink}>
+                                  <IconCopy /> {copiedLink ? "Link Copied!" : "Copy Link"}
+                                </button>
+                                <a href={`https://api.whatsapp.com/send?text=${encodeURIComponent("Read this beautiful wellness article on Diving Sanatan: " + window.location.href)}`} target="_blank" rel="noopener noreferrer" className="share-popup-item">
+                                  <IconComment /> WhatsApp
+                                </a>
+                                <a href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(blog.title)}`} target="_blank" rel="noopener noreferrer" className="share-popup-item">
+                                  <svg className="action-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
+                                  X / Twitter
+                                </a>
+                                <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`} target="_blank" rel="noopener noreferrer" className="share-popup-item">
+                                  <svg className="action-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" /></svg>
+                                  Facebook
+                                </a>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {showCommentsPanel && (
+                        <div id="comments-section" className="comments-interactive-section">
+                          <h4 className="media-section-title comments-heading">
+                            <IconComment />
+                            Reflections &amp; Conversation ({comments.length})
+                          </h4>
+
+                          <div className="comment-post-box">
+                            {user ? (
+                              <form onSubmit={handleCommentSubmit} className="comment-form">
+                                <textarea
+                                  rows={3}
+                                  placeholder="Share your somatic insights or thoughts on this article..."
+                                  value={commentText}
+                                  onChange={(e) => setCommentText(e.target.value)}
+                                  className="comment-textarea"
+                                  required
+                                />
+                                <Button variant="gold" type="submit" disabled={postingComment}>
+                                  {postingComment ? "Posting reflection..." : "Publish Reflection"}
+                                </Button>
+                              </form>
+                            ) : (
+                              <div className="comment-login-promo">
+                                <p>Somatic reflections are shared within our directory. Log in or sign up to leave a comment.</p>
+                                <Button variant="gold-outline" onClick={() => setShowAuthModal(true)} className="btn-fit-center">
+                                  Log In / Sign Up to Comment
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+
+                          {loadingComments ? (
+                            <p className="text-slate-italic-center">Unrolling reflections...</p>
+                          ) : comments.length > 0 ? (
+                            <div className="comments-list-container">
+                              {comments.map((comm) => (
+                                <div key={comm.id} className="single-comment-card">
+                                  <div className="comment-card-meta">
+                                    <strong className="comment-author-name">{comm.userName}</strong>
+                                    <span className="comment-timestamp">{formatCommentDate(comm.createdAt)}</span>
+                                  </div>
+                                  <p className="comment-text-content">{comm.commentText}</p>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="no-comments-fallback">No reflections yet. Be the first to share your thoughts!</p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="article-footer-actions">
+                      <Button variant="gold-outline" onClick={() => router.push("/blog")}>
+                        ← Back to Listings
+                      </Button>
+                      <Button variant="gold" onClick={() => router.push(`/search?query=${encodeURIComponent(blog.category)}`)}>
+                        Book Related Sessions
+                      </Button>
+                    </div>
+                  </Card>
+                </>
+              );
+            }
+
             // Otherwise, render Normal Blog Layout
             return (
               <>
@@ -1272,6 +1673,462 @@ export default function BlogDetailsPage() {
       )}
 
       <style jsx>{`
+        /* Sub Blog Cards inside Chapters */
+        .sub-blog-card-link {
+          display: block;
+          text-decoration: none;
+          color: inherit;
+          margin-bottom: 14px;
+          width: 100%;
+        }
+        .sub-blog-card-link:last-child {
+          margin-bottom: 0;
+        }
+        .sub-blog-item-card {
+          background: #ffffff;
+          border: 1px solid rgba(168, 85, 247, 0.08);
+          border-radius: 16px;
+          overflow: hidden;
+          display: flex;
+          flex-direction: row;
+          width: 100%;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+          transition: all 0.25s ease;
+        }
+        .sub-blog-card-link:hover .sub-blog-item-card {
+          border-color: rgba(168, 85, 247, 0.25);
+          box-shadow: 0 8px 20px rgba(124, 58, 237, 0.06);
+          transform: translateY(-2px);
+        }
+        .sub-blog-media-wrapper {
+          width: 220px;
+          height: 140px;
+          overflow: hidden;
+          background: #faf5ff;
+          position: relative;
+          flex-shrink: 0;
+        }
+        .sub-blog-badge-floating-left {
+          position: absolute;
+          bottom: 10px;
+          left: 10px;
+          background: rgba(255, 255, 255, 0.92);
+          backdrop-filter: blur(4px);
+          color: #581c87;
+          font-size: 0.6rem;
+          font-weight: 700;
+          padding: 3px 8px;
+          border-radius: 4px;
+          text-transform: uppercase;
+          border: 1px solid rgba(168, 85, 247, 0.08);
+          z-index: 2;
+        }
+        .sub-blog-badge-floating-right {
+          position: absolute;
+          bottom: 10px;
+          right: 10px;
+          background: rgba(255, 255, 255, 0.92);
+          backdrop-filter: blur(4px);
+          color: #4b5563;
+          font-size: 0.6rem;
+          font-weight: 600;
+          padding: 3px 8px;
+          border-radius: 4px;
+          border: 1px solid rgba(0, 0, 0, 0.05);
+          z-index: 2;
+        }
+        .sub-blog-media-img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+          transition: transform 0.4s ease;
+        }
+        .sub-blog-card-link:hover .sub-blog-media-img {
+          transform: scale(1.04);
+        }
+        .sub-blog-card-body {
+          padding: 16px 20px;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          flex: 1;
+          min-width: 0;
+          justify-content: space-between;
+        }
+        .sub-blog-card-text {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+        .sub-blog-card-title {
+          font-family: var(--font-sans);
+          font-size: 0.98rem;
+          color: #111827;
+          font-weight: 700 !important;
+          margin: 0;
+          line-height: 1.35;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+          transition: color 0.2s ease;
+        }
+        .sub-blog-card-link:hover .sub-blog-card-title {
+          color: #7c3aed;
+        }
+        .sub-blog-card-desc {
+          font-size: 0.78rem;
+          color: #6b7280;
+          line-height: 1.45;
+          margin: 0;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+        .sub-blog-author-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          border-top: 1px solid rgba(0, 0, 0, 0.04);
+          padding-top: 8px;
+          width: 100%;
+        }
+        .sub-blog-author-info {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+        .sub-blog-author-avatar {
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          background: #f3e8ff;
+          color: #6b21a8;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 0.65rem;
+          font-weight: 700;
+        }
+        .sub-blog-author-details {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          color: #6b7280;
+          font-size: 0.68rem;
+        }
+        .sub-blog-author-name {
+          color: #4b5563;
+          font-weight: 600;
+        }
+        .sub-blog-author-separator {
+          color: #d1d5db;
+        }
+        .sub-blog-date {
+          color: #9ca3af;
+        }
+        .sub-blog-view-action {
+          font-size: 0.7rem;
+          font-weight: 700;
+          color: #7c3aed;
+          transition: transform 0.2s ease;
+        }
+        .sub-blog-card-link:hover .sub-blog-view-action {
+          transform: translateX(2px);
+          color: #4c1d95;
+        }
+
+        @media (max-width: 640px) {
+          .sub-blog-item-card {
+            flex-direction: column;
+          }
+          .sub-blog-media-wrapper {
+            width: 100%;
+            height: 150px;
+          }
+          .sub-blog-card-body {
+            padding: 14px;
+          }
+        }
+
+        /* Pillar Guides Styles */
+        .pillar-layout-card {
+          padding: 36px 40px !important;
+          border-radius: 24px !important;
+          border: 1px solid rgba(124, 58, 237, 0.08) !important;
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04) !important;
+        }
+        .pillar-header {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
+          margin-bottom: 28px;
+          gap: 12px;
+          padding: 24px !important;
+          border-radius: 20px;
+          background: linear-gradient(135deg, #FAF7FF 0%, #FFFFFF 100%);
+          border: 1px solid rgba(168, 85, 247, 0.08);
+          box-shadow: 0 4px 20px rgba(124, 58, 237, 0.02);
+        }
+        .pillar-badge {
+          background: rgba(124, 58, 237, 0.08);
+          border: 1px solid rgba(124, 58, 237, 0.2);
+          color: #7c3aed;
+          font-size: 0.72rem;
+          font-weight: 800;
+          padding: 4px 12px;
+          border-radius: 999px;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+        .pillar-featured-cover-container {
+          width: 100%;
+          border-radius: 20px;
+          overflow: hidden;
+          margin-bottom: 32px;
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+          border: 1px solid rgba(0, 0, 0, 0.04);
+          max-height: 380px;
+        }
+        .pillar-featured-cover-img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          object-position: center;
+          display: block;
+        }
+        .pillar-summary-block {
+          background: linear-gradient(135deg, #FAF7FF 0%, #F5F0FF 100%);
+          border-radius: 16px;
+          padding: 24px;
+          margin-bottom: 32px;
+          border: 1px solid rgba(168, 85, 247, 0.12);
+          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
+        }
+        .pillar-summary-block :global(h3) {
+          font-family: var(--font-serif);
+          margin-top: 0;
+          color: #4c1d95;
+          font-size: 1.25rem;
+          font-weight: 700;
+          margin-bottom: 12px;
+        }
+        .pillar-summary-block :global(p) {
+          margin-bottom: 0;
+          font-size: 1.05rem;
+          line-height: 1.8;
+          color: #475569;
+        }
+        .pillar-chapters-section {
+          margin-top: 24px;
+          margin-bottom: 40px;
+        }
+        .chapters-section-title {
+          font-family: var(--font-serif);
+          font-size: 1.5rem;
+          color: #4c1d95;
+          font-weight: 700;
+          margin-bottom: 8px;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .chapters-section-subtitle {
+          font-size: 0.9rem;
+          color: #64748b;
+          margin-bottom: 24px;
+          line-height: 1.5;
+        }
+        .pillar-chapters-grid {
+          display: flex;
+          flex-direction: column;
+          gap: 18px;
+        }
+        .pillar-chapter-card {
+          background: #ffffff;
+          border: 1px solid rgba(168, 85, 247, 0.1);
+          border-radius: 18px;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          overflow: hidden;
+        }
+        .pillar-chapter-card:hover {
+          border-color: rgba(168, 85, 247, 0.3);
+          box-shadow: 0 8px 24px rgba(124, 58, 237, 0.06);
+          transform: translateY(-2px);
+        }
+        .pillar-chapter-card.expanded {
+          border-color: rgba(168, 85, 247, 0.4);
+          box-shadow: 0 8px 28px rgba(124, 58, 237, 0.08);
+          transform: none;
+        }
+        .chapter-card-header {
+          padding: 20px 24px;
+          display: flex;
+          align-items: flex-start;
+          gap: 16px;
+          cursor: pointer;
+          user-select: none;
+        }
+        .chapter-number {
+          background: #f5f3ff;
+          color: #7c3aed;
+          font-family: var(--font-serif);
+          font-weight: 700;
+          font-size: 1.1rem;
+          width: 36px;
+          height: 36px;
+          border-radius: 10px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+          border: 1px solid rgba(124, 58, 237, 0.08);
+        }
+        .chapter-title-area {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          min-width: 0;
+        }
+        .chapter-title {
+          font-family: var(--font-serif);
+          font-size: 1.15rem;
+          color: #1e1b4b;
+          font-weight: 700 !important;
+          margin: 0;
+          line-height: 1.3;
+        }
+        .pillar-chapter-card:hover .chapter-title {
+          color: #7c3aed;
+        }
+        .chapter-teaser {
+          font-size: 0.86rem;
+          color: #64748b;
+          margin: 0;
+          line-height: 1.5;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+        .chapter-toggle-btn {
+          background: transparent;
+          border: none;
+          color: #94a3b8;
+          cursor: pointer;
+          padding: 4px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.2s ease;
+          align-self: center;
+        }
+        .chapter-card-header:hover .chapter-toggle-btn {
+          color: #7c3aed;
+          background: #faf5ff;
+        }
+        .chapter-expanded-body {
+          border-top: 1px solid rgba(168, 85, 247, 0.08);
+          padding: 24px;
+          background: #fafafa;
+          animation: slideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes slideDown {
+          from { opacity: 0; transform: translateY(-8px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .chapter-full-html {
+          font-size: 0.98rem;
+          line-height: 1.75;
+          color: #334155;
+        }
+        .chapter-full-html :global(h3) {
+          font-family: var(--font-serif);
+          font-size: 1.15rem;
+          color: #5b21b6;
+          margin: 18px 0 8px;
+        }
+        .chapter-full-html :global(p) {
+          margin-bottom: 12px;
+        }
+        .chapter-full-html :global(blockquote) {
+          border-left: 3px solid #ec4899;
+          background: rgba(236, 72, 153, 0.04);
+          padding: 12px 18px;
+          border-radius: 0 12px 12px 0;
+          margin: 16px 0;
+          font-style: italic;
+          color: #831843;
+          font-family: var(--font-serif);
+        }
+        .chapter-full-html :global(ul), .chapter-full-html :global(ol) {
+          padding-left: 24px;
+          margin-bottom: 16px;
+        }
+        .chapter-full-html :global(li) {
+          margin-bottom: 6px;
+        }
+        .chapter-actions-area {
+          margin-top: 24px;
+          padding-top: 18px;
+          border-top: 1px dashed rgba(168, 85, 247, 0.15);
+        }
+        .actions-section-label {
+          font-size: 0.8rem;
+          font-weight: 700;
+          color: #4c1d95;
+          text-transform: uppercase;
+          margin: 0 0 12px;
+          letter-spacing: 0.05em;
+        }
+        .chapter-redirect-buttons {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+        .pillar-redirect-btn {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          padding: 12px 16px;
+          border-radius: 12px;
+          background: #ffffff;
+          border: 1px solid rgba(124, 58, 237, 0.15);
+          cursor: pointer;
+          transition: all 0.2s ease;
+          text-align: left;
+        }
+        .pillar-redirect-btn:hover {
+          background: #faf5ff;
+          border-color: #7c3aed;
+          transform: translateX(4px);
+          box-shadow: 0 4px 12px rgba(124, 58, 237, 0.05);
+        }
+        .pillar-redirect-btn .btn-icon {
+          font-size: 1.1rem;
+          margin-right: 12px;
+        }
+        .pillar-redirect-btn .btn-text {
+          flex: 1;
+          font-size: 0.88rem;
+          font-weight: 600;
+          color: #1e1b4b;
+        }
+        .pillar-redirect-btn .btn-arrow {
+          font-size: 1rem;
+          color: #7c3aed;
+          transition: transform 0.2s ease;
+        }
+        .pillar-redirect-btn:hover .btn-arrow {
+          transform: translateX(4px);
+        }
+
         .blog-detail-page {
           width: 100%;
           max-width: 920px;

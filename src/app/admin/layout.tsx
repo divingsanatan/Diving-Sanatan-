@@ -19,7 +19,8 @@ import {
   Globe,
   LogOut,
   Menu,
-  Radar
+  Radar,
+  Compass
 } from "lucide-react";
 import "./admin-lte.css";
 
@@ -84,6 +85,8 @@ export default function AdminLayout({
         return "Public Q&A Board";
       case "/admin/blogs":
         return "Publication & Blogs";
+      case "/admin/pillar":
+        return "Pillar Guides Manager";
       case "/admin/glossary":
         return "Sanskrit Glossary";
       case "/admin/faq":
@@ -119,6 +122,8 @@ export default function AdminLayout({
         return "Q&A Board";
       case "/admin/blogs":
         return "Blogs";
+      case "/admin/pillar":
+        return "Pillar Guides";
       case "/admin/glossary":
         return "Glossary";
       case "/admin/faq":
@@ -250,6 +255,15 @@ export default function AdminLayout({
           >
             <FileText size={16} />
             <span>Blogs</span>
+          </Link>
+          <Link
+            href="/admin/pillar"
+            title="Pillar Guides"
+            className={`sidebar-link ${pathname === "/admin/pillar" ? "active" : ""}`}
+            onClick={() => setSidebarOpen(false)}
+          >
+            <Compass size={16} />
+            <span>Pillar Guides</span>
           </Link>
           <Link
             href="/admin/quora-qa"

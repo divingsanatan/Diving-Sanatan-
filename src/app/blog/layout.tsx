@@ -26,6 +26,7 @@ function BlogLayoutInner({ children }: { children: React.ReactNode }) {
     "/blog/quora-qa": { title: "Search Answers", placeholder: "Type your question..." },
     "/blog/case-studies": { title: "Search Case Studies", placeholder: "Type keywords..." },
     "/blog/video-transcripts": { title: "Search Transcripts", placeholder: "Type keywords..." },
+    "/blog/pillar": { title: "Search Pillar Blogs", placeholder: "Search pillar guides..." },
   };
 
   const config = searchConfig[pathname] ?? { title: "Search", placeholder: "Type keywords..." };
@@ -48,6 +49,7 @@ function BlogLayoutInner({ children }: { children: React.ReactNode }) {
     if (pathname === "/blog/glossary") return "Glossary";
     if (pathname === "/blog/quora-qa") return "Q&A Community";
     if (pathname === "/blog/video-transcripts") return "Video Transcripts";
+    if (pathname === "/blog/pillar") return "Pillar Blog";
     if (pathname.includes("/blog/") && activeBlog) return `Article: ${activeBlog.title}`;
     return "Blog Menu";
   };
@@ -158,7 +160,7 @@ function BlogLayoutInner({ children }: { children: React.ReactNode }) {
         .blog-layout-container {
           max-width: 1400px;
           margin: 0 auto;
-          padding: 40px 24px 24px;
+          padding: 24px 24px 24px;
           display: flex;
           gap: 32px;
           width: 100%;

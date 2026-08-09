@@ -160,7 +160,7 @@ export default function BlogListingPage() {
                 target.onerror = null;
               }}
             />
-            <span className="blog-badge-floating-left">{post.category}</span>
+            <span className="blog-badge-floating-left">{post.section === "Pillar Guides" ? "Pillar Guide" : post.category}</span>
             <span className="blog-badge-floating-right">{post.readTime || (post as any).read_time || '5 min read'}</span>
           </div>
           <div className="blog-card-body">

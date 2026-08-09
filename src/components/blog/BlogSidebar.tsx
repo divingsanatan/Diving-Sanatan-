@@ -122,7 +122,16 @@ export const BlogSidebar: React.FC = () => {
             </div>
           )}
         </div>
-
+        {/* Pillar Blog Accordions Listing */}
+        <button 
+          onClick={() => router.push("/blog/pillar")} 
+          className={`sidebar-item ${pathname === "/blog/pillar" || pathname.startsWith("/blog/pillar") ? "active" : ""}`}
+        >
+          <Compass size={16} strokeWidth={1.5} />
+          <div className="item-text-container">
+            <span className="item-name">Pillar Blog</span>
+          </div>
+        </button>
 
         {/* Glossary */}
         <button 
@@ -236,6 +245,27 @@ export const BlogSidebar: React.FC = () => {
           >
             Explore All Videos
           </button>
+        </div>
+      ) : pathname === "/blog/pillar" ? (
+        <div className="inspiration-card pillar-about-card">
+          <div className="quote-header">
+            <svg viewBox="0 0 100 100" className="sidebar-lotus-icon" style={{ width: 16, height: 16, marginTop: 0 }}>
+              <path d="M50 25 C45 45 35 60 50 80 C65 60 55 45 50 25 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
+            </svg>
+            <span className="inspiration-label" style={{ color: "#7c3aed" }}>About Our Blogs</span>
+          </div>
+          <p className="inspiration-quote" style={{ fontFamily: "var(--font-sans)", fontSize: "0.8rem", color: "#475569", fontStyle: "normal", fontWeight: 400, marginTop: 4 }}>
+            Our pillar blogs are comprehensive guides that cover essential aspects of holistic healing. Each pillar covers essential topics with in-depth sub-articles.
+          </p>
+          <div className="inspiration-lotus-wrapper" style={{ marginTop: 12 }}>
+            <svg viewBox="0 0 100 100" className="inspiration-lotus-icon" style={{ width: 68, height: 60, opacity: 0.25 }}>
+              <path d="M50 25 C45 45 35 60 50 80 C65 60 55 45 50 25 Z" fill="none" stroke="#7c3aed" strokeWidth="2.5" />
+              <path d="M50 80 C35 75 25 60 20 40 C35 50 45 60 50 80 Z" fill="none" stroke="#7c3aed" strokeWidth="2.5" />
+              <path d="M50 80 C65 75 75 60 80 40 C65 50 55 60 50 80 Z" fill="none" stroke="#7c3aed" strokeWidth="2.5" />
+              <path d="M50 80 C30 80 10 70 5 55 C20 65 35 70 50 80 Z" fill="none" stroke="#7c3aed" strokeWidth="2.5" />
+              <path d="M50 80 C70 80 90 70 95 55 C80 65 65 70 50 80 Z" fill="none" stroke="#7c3aed" strokeWidth="2.5" />
+            </svg>
+          </div>
         </div>
       ) : (
         <div className="inspiration-card">

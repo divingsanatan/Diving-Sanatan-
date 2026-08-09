@@ -2,7 +2,11 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { Play, Plus, BookOpen, User, Calendar, ExternalLink } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { 
+  Play, Plus, BookOpen, User, Calendar, ExternalLink, 
+  Compass, Users, Sparkles, Heart, HelpCircle 
+} from "lucide-react";
 import { useBlog } from "@/app/blog/BlogContext";
 import { Blog, Practitioner } from "@/types/database";
 
@@ -10,6 +14,8 @@ export const BlogRightSidebar: React.FC = () => {
   const { activeBlog } = useBlog();
   const [practitioners, setPractitioners] = useState<Practitioner[]>([]);
   const [allBlogs, setAllBlogs] = useState<Blog[]>([]);
+  const pathname = usePathname();
+  const router = useRouter();
 
   useEffect(() => {
     async function loadData() {
@@ -28,6 +34,308 @@ export const BlogRightSidebar: React.FC = () => {
     }
     loadData();
   }, []);
+
+  if (pathname === "/blog/pillar") {
+    return (
+      <div className="blog-right-sidebar">
+        {/* Featured Pillar Widget */}
+        <div className="right-sidebar-card featured-pillar-card">
+          <div className="sidebar-title-row">
+            <Sparkles size={16} style={{ color: "#7c3aed" }} />
+            <h4 className="sidebar-heading">Featured Pillar</h4>
+          </div>
+          <div className="featured-pillar-image-wrapper">
+            <img 
+              src="https://zsfipvflmoppruxrieed.supabase.co/storage/v1/object/public/uploads/1785336238738-83y5dvc.jpg" 
+              alt="Sunset Meditation" 
+              className="featured-pillar-img" 
+            />
+          </div>
+          <div className="featured-pillar-info">
+            <h5 className="featured-title">Understanding Holistic Healing</h5>
+            <p className="featured-desc">
+              Start your journey with the fundamentals of holistic healing and transform your life.
+            </p>
+            <button 
+              className="explore-pillar-btn"
+              onClick={() => {
+                // Smooth scroll to the first accordion and open it
+                const card = document.getElementById("pillar-accordion-0");
+                if (card) {
+                  card.scrollIntoView({ behavior: "smooth", block: "center" });
+                  const trigger = card.querySelector("button");
+                  if (trigger && trigger.getAttribute("aria-expanded") === "false") {
+                    (trigger as HTMLElement).click();
+                  }
+                }
+              }}
+            >
+              Explore This Pillar
+            </button>
+          </div>
+        </div>
+
+        {/* Blog Stats Widget */}
+        <div className="right-sidebar-card stats-card">
+          <div className="sidebar-title-row">
+            <BookOpen size={16} style={{ color: "#7c3aed" }} />
+            <h4 className="sidebar-heading">Blog Stats</h4>
+          </div>
+          <div className="stats-grid">
+            <div className="stat-box-item">
+              <div className="stat-icon-wrapper purple">
+                <BookOpen size={16} />
+              </div>
+              <div className="stat-content">
+                <span className="stat-num-val">24</span>
+                <span className="stat-label-text">Pillar Blogs</span>
+              </div>
+            </div>
+            <div className="stat-box-item">
+              <div className="stat-icon-wrapper pink">
+                <Compass size={16} />
+              </div>
+              <div className="stat-content">
+                <span className="stat-num-val">96</span>
+                <span className="stat-label-text">Total Articles</span>
+              </div>
+            </div>
+            <div className="stat-box-item">
+              <div className="stat-icon-wrapper teal">
+                <Users size={16} />
+              </div>
+              <div className="stat-content">
+                <span className="stat-num-val">12K+</span>
+                <span className="stat-label-text">Readers</span>
+              </div>
+            </div>
+            <div className="stat-box-item">
+              <div className="stat-icon-wrapper gold">
+                <Sparkles size={16} />
+              </div>
+              <div className="stat-content">
+                <span className="stat-num-val">Weekly</span>
+                <span className="stat-label-text">New Articles</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Can't find what you're looking for? Widget */}
+        <div className="right-sidebar-card consultation-cta-purple">
+          <h4 className="consultation-title">Can't find what you're looking for?</h4>
+          <p className="consultation-desc">
+            Our experts are here to help you on your healing journey.
+          </p>
+          <button onClick={() => router.push("/booking")} className="consultation-btn">
+            Book a Consultation
+          </button>
+          <div className="lotus-background-watermark">
+            <svg viewBox="0 0 100 100" className="lotus-svg">
+              <path d="M50 25 C45 45 35 60 50 80 C65 60 55 45 50 25 Z" fill="none" stroke="rgba(255, 255, 255, 0.08)" strokeWidth="2" />
+              <path d="M50 80 C35 75 25 60 20 40 C35 50 45 60 50 80 Z" fill="none" stroke="rgba(255, 255, 255, 0.08)" strokeWidth="2" />
+              <path d="M50 80 C65 75 75 60 80 40 C65 50 55 60 50 80 Z" fill="none" stroke="rgba(255, 255, 255, 0.08)" strokeWidth="2" />
+            </svg>
+          </div>
+        </div>
+
+        <style jsx>{`
+          .featured-pillar-card {
+            padding: 0 !important;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 0 !important;
+          }
+          .featured-pillar-card .sidebar-title-row {
+            padding: 20px 20px 14px;
+          }
+          .featured-pillar-image-wrapper {
+            width: 100%;
+            height: 140px;
+            overflow: hidden;
+            position: relative;
+          }
+          .featured-pillar-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+          }
+          .featured-pillar-card:hover .featured-pillar-img {
+            transform: scale(1.05);
+          }
+          .featured-pillar-info {
+            padding: 16px 20px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+          }
+          .featured-title {
+            font-family: var(--font-sans);
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #1e1b4b;
+            margin: 0;
+          }
+          .featured-desc {
+            font-size: 0.76rem;
+            color: #4b5563;
+            line-height: 1.45;
+            margin: 0;
+          }
+          .explore-pillar-btn {
+            width: 100%;
+            background: transparent;
+            color: #7c3aed;
+            border: 1px solid rgba(124, 58, 237, 0.2);
+            padding: 10px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 6px;
+            text-align: center;
+          }
+          .explore-pillar-btn:hover {
+            background: #7c3aed;
+            color: #ffffff;
+            border-color: #7c3aed;
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.15);
+          }
+
+          .stats-card {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+          }
+          .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+          }
+          .stat-box-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 10px;
+            background: #fdf4ff;
+            border-radius: 14px;
+            border: 1px solid rgba(168, 85, 247, 0.04);
+          }
+          .stat-icon-wrapper {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+          }
+          .stat-icon-wrapper.purple {
+            background: #faf5ff;
+            color: #7c3aed;
+          }
+          .stat-icon-wrapper.pink {
+            background: #fdf2f8;
+            color: #db2777;
+          }
+          .stat-icon-wrapper.teal {
+            background: #f0fdfa;
+            color: #0d9488;
+          }
+          .stat-icon-wrapper.gold {
+            background: #fffbeb;
+            color: #d97706;
+          }
+          .stat-content {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+          }
+          .stat-num-val {
+            font-family: var(--font-sans);
+            font-size: 0.95rem;
+            font-weight: 750;
+            color: #1e1b4b;
+            line-height: 1.1;
+          }
+          .stat-label-text {
+            font-size: 0.65rem;
+            color: #6b7280;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
+
+          .consultation-cta-purple {
+            background: linear-gradient(135deg, #7c3aed 0%, #6b21a8 100%) !important;
+            border: none !important;
+            color: #ffffff;
+            text-align: center;
+            padding: 28px 24px !important;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 20px rgba(124, 58, 237, 0.2) !important;
+          }
+          .consultation-title {
+            font-family: var(--font-serif);
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin: 0;
+            line-height: 1.35;
+            position: relative;
+            z-index: 2;
+          }
+          .consultation-desc {
+            font-size: 0.78rem;
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.5;
+            margin: 0;
+            position: relative;
+            z-index: 2;
+          }
+          .consultation-btn {
+            background: #ffffff;
+            color: #7c3aed;
+            border: none;
+            padding: 12px;
+            border-radius: 12px;
+            font-weight: 750;
+            font-size: 0.82rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            z-index: 2;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+          }
+          .consultation-btn:hover {
+            background: #f5f3ff;
+            transform: translateY(-1px);
+          }
+          .lotus-background-watermark {
+            position: absolute;
+            right: -20px;
+            bottom: -20px;
+            width: 110px;
+            height: 100px;
+            opacity: 0.7;
+            pointer-events: none;
+            z-index: 1;
+          }
+          .lotus-svg {
+            width: 100%;
+            height: 100%;
+          }
+        `}</style>
+      </div>
+    );
+  }
 
   const getPractitionerImage = (img: string) => {
     if (!img) return "/images/insight_blog.png";
