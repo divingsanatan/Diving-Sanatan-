@@ -452,293 +452,293 @@ export default function FAQPage() {
       />
       <div className="faq-columns-layout" id="faq-root">
 
-      {/* 1. MIDDLE COLUMN: Main Content */}
-      <div className="faq-main-column">
+        {/* 1. MIDDLE COLUMN: Main Content */}
+        <div className="faq-main-column">
 
-        {/* Breadcrumbs */}
-        <div className="faq-breadcrumbs">
-          <span className="crumb-link" onClick={() => router.push("/blog")}>Blog</span>
-          <span className="crumb-separator">›</span>
-          <span className="crumb-active">FAQ & Help</span>
-        </div>
-
-        {/* Header Block with Crystal Ball illustration */}
-        <div className="faq-hero-block" id="faq-header-section">
-          <div className="hero-left">
-            <span className="faq-badge">FAQ Blog</span>
-            <h1 className="hero-title">Answers. Guidance.<br />Peace of Mind.</h1>
-            <p className="hero-desc">
-              Find clear, reliable answers to your questions about holistic healing, spiritual practices, and personal well-being.
-            </p>
+          {/* Breadcrumbs */}
+          <div className="faq-breadcrumbs">
+            <span className="crumb-link" onClick={() => router.push("/blog")}>Blog</span>
+            <span className="crumb-separator">›</span>
+            <span className="crumb-active">FAQ & Help</span>
           </div>
-          <div className="hero-right">
-            <CrystalBallSVG />
+
+          {/* Header Block with Crystal Ball illustration */}
+          <div className="faq-hero-block" id="faq-header-section">
+            <div className="hero-left">
+              <span className="faq-badge">FAQ Blog</span>
+              <h1 className="hero-title">Answers. Guidance.<br />Peace of Mind.</h1>
+              <p className="hero-desc">
+                Find clear, reliable answers to your questions about holistic healing, spiritual practices, and personal well-being.
+              </p>
+            </div>
+            <div className="hero-right">
+              <CrystalBallSVG />
+            </div>
           </div>
-        </div>
 
-        {/* Popular Questions Section */}
-        <div className="faq-section-header" id="popular-questions">
-          <Settings className="settings-gear-icon" size={20} strokeWidth={2} />
-          <h2 className="section-title">Popular Questions</h2>
-        </div>
+          {/* Popular Questions Section */}
+          <div className="faq-section-header" id="popular-questions">
+            <Settings className="settings-gear-icon" size={20} strokeWidth={2} />
+            <h2 className="section-title">Popular Questions</h2>
+          </div>
 
-        {/* Accordions List */}
-        <div className="faq-accordions-list">
-          {loading ? (
-            <div className="faq-empty-card">
-              <p className="empty-title">Loading FAQs...</p>
-              <p className="empty-desc">Please wait while we fetch the latest questions.</p>
-            </div>
-          ) : filteredFAQs.length === 0 ? (
-            <div className="faq-empty-card">
-              <HelpCircle className="empty-icon" size={40} />
-              <p className="empty-title">No questions found</p>
-              <p className="empty-desc">We couldn't find any results matching "{searchQuery}". Try editing your keyword search.</p>
-              <Button variant="gold-outline" size="sm" onClick={() => setSearchQuery("")}>
-                Reset Filters
-              </Button>
-            </div>
-          ) : (
-            paginatedFAQs.map((faq) => {
-              const isOpen = !!openAccordions[faq.id];
-              return (
-                <div
-                  key={faq.id}
-                  id={`faq-card-${faq.id}`}
-                  className={`faq-accordion-card ${isOpen ? "open" : ""}`}
-                >
-                  <button
-                    className="accordion-trigger"
-                    onClick={() => toggleAccordion(faq.id)}
-                    aria-expanded={isOpen}
+          {/* Accordions List */}
+          <div className="faq-accordions-list">
+            {loading ? (
+              <div className="faq-empty-card">
+                <p className="empty-title">Loading FAQs...</p>
+                <p className="empty-desc">Please wait while we fetch the latest questions.</p>
+              </div>
+            ) : filteredFAQs.length === 0 ? (
+              <div className="faq-empty-card">
+                <HelpCircle className="empty-icon" size={40} />
+                <p className="empty-title">No questions found</p>
+                <p className="empty-desc">We couldn't find any results matching "{searchQuery}". Try editing your keyword search.</p>
+                <Button variant="gold-outline" size="sm" onClick={() => setSearchQuery("")}>
+                  Reset Filters
+                </Button>
+              </div>
+            ) : (
+              paginatedFAQs.map((faq) => {
+                const isOpen = !!openAccordions[faq.id];
+                return (
+                  <div
+                    key={faq.id}
+                    id={`faq-card-${faq.id}`}
+                    className={`faq-accordion-card ${isOpen ? "open" : ""}`}
                   >
-                    <div className="trigger-left-content">
-                      <div className="category-icon-circle">
-                        <HelpCircle size={16} className="lucide-general" />
-                      </div>
-                      <span className="question-title-text">{faq.question}</span>
-                    </div>
-                    <div className="trigger-right-toggle">
-                      {isOpen ? (
-                        <Minus size={18} strokeWidth={2.5} />
-                      ) : (
-                        <Plus size={18} strokeWidth={2.5} />
-                      )}
-                    </div>
-                  </button>
-
-                  <div className={`accordion-collapse-wrapper ${isOpen ? "expanded" : "collapsed"}`}>
-                    <div className="accordion-content-inner">
-                      <div className="accordion-content-divider" />
-                      <p className="faq-answer-paragraph" dangerouslySetInnerHTML={{ __html: faq.answer }} />
-
-                      <div className="faq-card-footer">
-                        <div className="footer-tags">
-                          <span className="footer-tag">
-                            <MessageSquare size={12} />
-                            <span className="tag-name">FAQ</span>
-                          </span>
+                    <button
+                      className="accordion-trigger"
+                      onClick={() => toggleAccordion(faq.id)}
+                      aria-expanded={isOpen}
+                    >
+                      <div className="trigger-left-content">
+                        <div className="category-icon-circle">
+                          <HelpCircle size={16} className="lucide-general" />
                         </div>
-
-                        {faq.verified && (
-                          <div className="expert-verified-badge">
-                            <Check size={12} className="check-check" />
-                            <span>Verified by Dr. Meera Sharma</span>
-                          </div>
+                        <span className="question-title-text">{faq.question}</span>
+                      </div>
+                      <div className="trigger-right-toggle">
+                        {isOpen ? (
+                          <Minus size={18} strokeWidth={2.5} />
+                        ) : (
+                          <Plus size={18} strokeWidth={2.5} />
                         )}
+                      </div>
+                    </button>
+
+                    <div className={`accordion-collapse-wrapper ${isOpen ? "expanded" : "collapsed"}`}>
+                      <div className="accordion-content-inner">
+                        <div className="accordion-content-divider" />
+                        <p className="faq-answer-paragraph" dangerouslySetInnerHTML={{ __html: faq.answer }} />
+
+                        <div className="faq-card-footer">
+                          <div className="footer-tags">
+                            <span className="footer-tag">
+                              <MessageSquare size={12} />
+                              <span className="tag-name">FAQ</span>
+                            </span>
+                          </div>
+
+                          {faq.verified && (
+                            <div className="expert-verified-badge">
+                              <Check size={12} className="check-check" />
+                              <span>Verified by Dr. Meera Sharma</span>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              );
-            })
+                );
+              })
+            )}
+          </div>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="faq-pagination-controls">
+              <button
+                className="pagination-btn arrow-btn"
+                onClick={() => { setCurrentPage(prev => Math.max(prev - 1, 1)); scrollToSection("popular-questions"); }}
+                disabled={currentPage === 1}
+              >
+                ‹ Prev
+              </button>
+
+              <div className="pagination-numbers">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(num => (
+                  <button
+                    key={num}
+                    className={`pagination-btn number-btn ${currentPage === num ? "active" : ""}`}
+                    onClick={() => { setCurrentPage(num); scrollToSection("popular-questions"); }}
+                  >
+                    {num}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                className="pagination-btn arrow-btn"
+                onClick={() => { setCurrentPage(prev => Math.min(prev + 1, totalPages)); scrollToSection("popular-questions"); }}
+                disabled={currentPage === totalPages}
+              >
+                Next ›
+              </button>
+            </div>
           )}
-        </div>
 
-        {/* Pagination Controls */}
-        {totalPages > 1 && (
-          <div className="faq-pagination-controls">
-            <button
-              className="pagination-btn arrow-btn"
-              onClick={() => { setCurrentPage(prev => Math.max(prev - 1, 1)); scrollToSection("popular-questions"); }}
-              disabled={currentPage === 1}
-            >
-              ‹ Prev
-            </button>
-
-            <div className="pagination-numbers">
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(num => (
-                <button
-                  key={num}
-                  className={`pagination-btn number-btn ${currentPage === num ? "active" : ""}`}
-                  onClick={() => { setCurrentPage(num); scrollToSection("popular-questions"); }}
-                >
-                  {num}
+          {/* bottom CTA Banner */}
+          <div className="bottom-cta-banner" id="cta-section">
+            <div className="cta-left">
+              <h2 className="cta-title">Still can't find your answer?</h2>
+              <p className="cta-desc">Our support team is here to help you on your healing journey.</p>
+              <div className="cta-button-row">
+                <button className="cta-btn-primary" onClick={() => router.push("/blog/quora-qa?focusAsk=true")}>
+                  <MessageSquare size={14} className="cta-btn-icon" />
+                  <span>Ask a Question</span>
                 </button>
-              ))}
+                <button className="cta-btn-secondary" onClick={() => router.push("/contact")}>
+                  Contact Support
+                </button>
+              </div>
+            </div>
+            <div className="cta-right">
+              <CTALanternSVG />
+            </div>
+          </div>
+
+        </div>
+
+        {/* 2. RIGHT COLUMN: Page-specific Sidebar */}
+        <div className="faq-right-column" id="consultation-section">
+
+          {/* On This Page navigation */}
+          <div className="sidebar-widget nav-widget">
+            <h4 className="widget-title">
+              <Compass size={16} strokeWidth={2.2} className="widget-icon" />
+              <span>On This Page</span>
+            </h4>
+            <ul className="widget-nav-list">
+              <li onClick={() => scrollToSection("popular-questions")}>
+                <span className="bullet-dot" />
+                <span>Popular Questions</span>
+              </li>
+              <li onClick={() => scrollToSection("cta-section")}>
+                <span className="bullet-dot" />
+                <span>Can't Find Your Answer?</span>
+              </li>
+              <li onClick={() => scrollToSection("consultation-section")}>
+                <span className="bullet-dot" />
+                <span>Still Need Help?</span>
+              </li>
+            </ul>
+          </div>
+
+          {/* Wisdom Quote card */}
+          <div className="sidebar-widget quote-widget">
+            <Quote size={28} className="quote-icon-top" />
+            <p className="quote-text">
+              The question is not the problem. The answer is the beginning.
+            </p>
+            <span className="quote-author">— Ancient Wisdom</span>
+
+            {/* Watermark Lotus icon absolute backdrop */}
+            <div className="watermark-lotus">
+              <svg viewBox="0 0 100 100" width="80" height="70">
+                <path d="M50 25 C45 45 35 60 50 80 C65 60 55 45 50 25 Z" fill="none" stroke="#7c3aed" strokeWidth="2.5" strokeOpacity="0.08" />
+                <path d="M50 80 C35 75 25 60 20 40 C35 50 45 60 50 80 Z" fill="none" stroke="#7c3aed" strokeWidth="2.5" strokeOpacity="0.08" />
+                <path d="M50 80 C65 75 75 60 80 40 C65 50 55 60 50 80 Z" fill="none" stroke="#7c3aed" strokeWidth="2.5" strokeOpacity="0.08" />
+              </svg>
+            </div>
+          </div>
+
+          {/* Trending Questions Widget */}
+          <div className="sidebar-widget trending-widget">
+            <h4 className="widget-title">
+              <Sparkles size={16} strokeWidth={2.2} className="widget-icon-pink" />
+              <span>Trending Questions</span>
+            </h4>
+
+            <div className="trending-list">
+              {/* Item 1 */}
+              <div className="trending-item" onClick={() => handleTrendingClick("heal-1")}>
+                <div className="trending-number">1</div>
+                <div className="trending-info">
+                  <span className="trending-question">What is holistic healing?</span>
+                </div>
+              </div>
+
+              {/* Item 2 */}
+              <div className="trending-item" onClick={() => handleTrendingClick("heal-2")}>
+                <div className="trending-number">2</div>
+                <div className="trending-info">
+                  <span className="trending-question">What can I expect in a healing session?</span>
+                </div>
+              </div>
+
+              {/* Item 3 */}
+              <div className="trending-item" onClick={() => handleTrendingClick("book-1")}>
+                <div className="trending-number">3</div>
+                <div className="trending-info">
+                  <span className="trending-question">How do I book a consultation?</span>
+                </div>
+              </div>
+
+              {/* Item 4 */}
+              <div className="trending-item" onClick={() => handleTrendingClick("prac-2")}>
+                <div className="trending-number">4</div>
+                <div className="trending-info">
+                  <span className="trending-question">Are your practices safe for beginners?</span>
+                </div>
+              </div>
+
+              {/* Item 5 */}
+              <div className="trending-item" onClick={() => handleTrendingClick("gen-1")}>
+                <div className="trending-number">5</div>
+                <div className="trending-info">
+                  <span className="trending-question">How can I contact customer support?</span>
+                </div>
+              </div>
             </div>
 
-            <button
-              className="pagination-btn arrow-btn"
-              onClick={() => { setCurrentPage(prev => Math.min(prev + 1, totalPages)); scrollToSection("popular-questions"); }}
-              disabled={currentPage === totalPages}
-            >
-              Next ›
+            <button className="trending-view-all-btn" onClick={() => setSearchQuery("")}>
+              View All Trending
             </button>
           </div>
-        )}
+          {/* Need Personalized Help / Booking consultation widget */}
+          <div className="sidebar-widget help-widget">
+            <h4 className="widget-title">Need personalized help?</h4>
 
-        {/* bottom CTA Banner */}
-        <div className="bottom-cta-banner" id="cta-section">
-          <div className="cta-left">
-            <h2 className="cta-title">Still can't find your answer?</h2>
-            <p className="cta-desc">Our support team is here to help you on your healing journey.</p>
-            <div className="cta-button-row">
-              <button className="cta-btn-primary" onClick={() => router.push("/blog/quora-qa?focusAsk=true")}>
-                <MessageSquare size={14} className="cta-btn-icon" />
-                <span>Ask a Question</span>
-              </button>
-              <button className="cta-btn-secondary" onClick={() => router.push("/contact")}>
-                Contact Support
-              </button>
+            {/* Avatar stack */}
+            <div className="avatar-group">
+              <img src="/images/anara.png" alt="Expert Healer" className="stacked-avatar shadow-sm" />
+              <div className="stacked-avatar avatar-text-one">👩‍⚕️</div>
+              <div className="stacked-avatar avatar-text-two">🧘‍♀️</div>
+            </div>
+
+            <p className="help-desc">
+              Book a 1:1 session with our experts to get guidance tailored to your needs.
+            </p>
+
+            <button className="help-booking-btn" onClick={() => router.push("/booking")}>
+              <Calendar size={14} className="booking-btn-icon" />
+              <span>Book a Consultation</span>
+            </button>
+
+            {/* Watermark Lotus icon absolute backdrop */}
+            <div className="watermark-lotus-bottom">
+              <svg viewBox="0 0 100 100" width="70" height="60">
+                <path d="M50 25 C45 45 35 60 50 80 C65 60 55 45 50 25 Z" fill="none" stroke="#7c3aed" strokeWidth="2.5" strokeOpacity="0.06" />
+                <path d="M50 80 C35 75 25 60 20 40 C35 50 45 60 50 80 Z" fill="none" stroke="#7c3aed" strokeWidth="2.5" strokeOpacity="0.06" />
+                <path d="M50 80 C65 75 75 60 80 40 C65 50 55 60 50 80 Z" fill="none" stroke="#7c3aed" strokeWidth="2.5" strokeOpacity="0.06" />
+              </svg>
             </div>
           </div>
-          <div className="cta-right">
-            <CTALanternSVG />
-          </div>
+
         </div>
 
-      </div>
-
-      {/* 2. RIGHT COLUMN: Page-specific Sidebar */}
-      <div className="faq-right-column" id="consultation-section">
-
-        {/* On This Page navigation */}
-        <div className="sidebar-widget nav-widget">
-          <h4 className="widget-title">
-            <Compass size={16} strokeWidth={2.2} className="widget-icon" />
-            <span>On This Page</span>
-          </h4>
-          <ul className="widget-nav-list">
-            <li onClick={() => scrollToSection("popular-questions")}>
-              <span className="bullet-dot" />
-              <span>Popular Questions</span>
-            </li>
-            <li onClick={() => scrollToSection("cta-section")}>
-              <span className="bullet-dot" />
-              <span>Can't Find Your Answer?</span>
-            </li>
-            <li onClick={() => scrollToSection("consultation-section")}>
-              <span className="bullet-dot" />
-              <span>Still Need Help?</span>
-            </li>
-          </ul>
-        </div>
-
-        {/* Wisdom Quote card */}
-        <div className="sidebar-widget quote-widget">
-          <Quote size={28} className="quote-icon-top" />
-          <p className="quote-text">
-            The question is not the problem. The answer is the beginning.
-          </p>
-          <span className="quote-author">— Ancient Wisdom</span>
-
-          {/* Watermark Lotus icon absolute backdrop */}
-          <div className="watermark-lotus">
-            <svg viewBox="0 0 100 100" width="80" height="70">
-              <path d="M50 25 C45 45 35 60 50 80 C65 60 55 45 50 25 Z" fill="none" stroke="#7c3aed" strokeWidth="2.5" strokeOpacity="0.08" />
-              <path d="M50 80 C35 75 25 60 20 40 C35 50 45 60 50 80 Z" fill="none" stroke="#7c3aed" strokeWidth="2.5" strokeOpacity="0.08" />
-              <path d="M50 80 C65 75 75 60 80 40 C65 50 55 60 50 80 Z" fill="none" stroke="#7c3aed" strokeWidth="2.5" strokeOpacity="0.08" />
-            </svg>
-          </div>
-        </div>
-
-        {/* Trending Questions Widget */}
-        <div className="sidebar-widget trending-widget">
-          <h4 className="widget-title">
-            <Sparkles size={16} strokeWidth={2.2} className="widget-icon-pink" />
-            <span>Trending Questions</span>
-          </h4>
-
-          <div className="trending-list">
-            {/* Item 1 */}
-            <div className="trending-item" onClick={() => handleTrendingClick("heal-1")}>
-              <div className="trending-number">1</div>
-              <div className="trending-info">
-                <span className="trending-question">What is holistic healing?</span>
-              </div>
-            </div>
-
-            {/* Item 2 */}
-            <div className="trending-item" onClick={() => handleTrendingClick("heal-2")}>
-              <div className="trending-number">2</div>
-              <div className="trending-info">
-                <span className="trending-question">What can I expect in a healing session?</span>
-              </div>
-            </div>
-
-            {/* Item 3 */}
-            <div className="trending-item" onClick={() => handleTrendingClick("book-1")}>
-              <div className="trending-number">3</div>
-              <div className="trending-info">
-                <span className="trending-question">How do I book a consultation?</span>
-              </div>
-            </div>
-
-            {/* Item 4 */}
-            <div className="trending-item" onClick={() => handleTrendingClick("prac-2")}>
-              <div className="trending-number">4</div>
-              <div className="trending-info">
-                <span className="trending-question">Are your practices safe for beginners?</span>
-              </div>
-            </div>
-
-            {/* Item 5 */}
-            <div className="trending-item" onClick={() => handleTrendingClick("gen-1")}>
-              <div className="trending-number">5</div>
-              <div className="trending-info">
-                <span className="trending-question">How can I contact customer support?</span>
-              </div>
-            </div>
-          </div>
-
-          <button className="trending-view-all-btn" onClick={() => setSearchQuery("")}>
-            View All Trending
-          </button>
-        </div>
-        {/* Need Personalized Help / Booking consultation widget */}
-        <div className="sidebar-widget help-widget">
-          <h4 className="widget-title">Need personalized help?</h4>
-
-          {/* Avatar stack */}
-          <div className="avatar-group">
-            <img src="/images/anara.png" alt="Expert Healer" className="stacked-avatar shadow-sm" />
-            <div className="stacked-avatar avatar-text-one">👩‍⚕️</div>
-            <div className="stacked-avatar avatar-text-two">🧘‍♀️</div>
-          </div>
-
-          <p className="help-desc">
-            Book a 1:1 session with our experts to get guidance tailored to your needs.
-          </p>
-
-          <button className="help-booking-btn" onClick={() => router.push("/booking")}>
-            <Calendar size={14} className="booking-btn-icon" />
-            <span>Book a Consultation</span>
-          </button>
-
-          {/* Watermark Lotus icon absolute backdrop */}
-          <div className="watermark-lotus-bottom">
-            <svg viewBox="0 0 100 100" width="70" height="60">
-              <path d="M50 25 C45 45 35 60 50 80 C65 60 55 45 50 25 Z" fill="none" stroke="#7c3aed" strokeWidth="2.5" strokeOpacity="0.06" />
-              <path d="M50 80 C35 75 25 60 20 40 C35 50 45 60 50 80 Z" fill="none" stroke="#7c3aed" strokeWidth="2.5" strokeOpacity="0.06" />
-              <path d="M50 80 C65 75 75 60 80 40 C65 50 55 60 50 80 Z" fill="none" stroke="#7c3aed" strokeWidth="2.5" strokeOpacity="0.06" />
-            </svg>
-          </div>
-        </div>
-
-      </div>
-
-      <style jsx>{`
+        <style jsx>{`
         /* Core Two-Column Layout */
         .faq-columns-layout {
           display: grid;
@@ -960,6 +960,9 @@ export default function FAQPage() {
           border-color: rgba(168, 85, 247, 0.3);
           box-shadow: 0 8px 24px rgba(124, 58, 237, 0.04);
         }
+        .faq-accordion-card.open .accordion-trigger {
+          padding-bottom: 0px;
+        }
         .accordion-trigger {
           display: flex;
           width: 100%;
@@ -1038,7 +1041,7 @@ export default function FAQPage() {
         .accordion-content-divider {
           height: 1px;
           background: rgba(168, 85, 247, 0.06);
-          margin-bottom: 12px;
+          margin-bottom: 4px;
         }
         .faq-answer-paragraph {
           font-family: var(--font-sans);
@@ -1681,7 +1684,7 @@ export default function FAQPage() {
         }
       `}</style>
 
-    </div>
+      </div>
     </>
   );
 }

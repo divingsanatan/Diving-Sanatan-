@@ -1243,18 +1243,6 @@ function QuoraQAInner() {
                       <span className="meta-text">• Asked {activeQuestion.date} • in <span className="highlight-category">{activeQuestion.category}</span></span>
                     </div>
                   </div>
-
-                  <div className="author-actions">
-                    <button
-                      className={`follow-author-btn ${activeQuestion.followedByUser ? "active" : ""}`}
-                      onClick={() => handleFollowQuestionToggle(activeQuestion.id)}
-                    >
-                      {activeQuestion.followedByUser ? "Following" : "Follow"}
-                    </button>
-                    <button className="icon-action-btn" aria-label="More options">
-                      <MoreHorizontal size={18} />
-                    </button>
-                  </div>
                 </div>
 
                 {/* Action Bar */}
@@ -2159,6 +2147,12 @@ function QuoraQAInner() {
           gap: 24px;
         }
 
+        .qa-detail-view {
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+        }
+
         .qa-header-card-mini {
           padding: 24px !important;
           border-radius: 20px;
@@ -2541,15 +2535,15 @@ function QuoraQAInner() {
         }
 
         .question-main-title {
-          font-size: 2rem;
-          font-weight: 700 !important;
-          color: #2e0854;
-          line-height: 1.25 !important;
+          font-size: 1.2rem;
+          font-weight: 750 !important;
+          color: #111827;
+          line-height: 1.4 !important;
           margin-bottom: 10px;
-          font-family: var(--font-serif);
+          font-family: var(--font-sans);
         }
         .question-desc-text {
-          font-size: 1.05rem;
+          font-size: 0.88rem;
           color: #4b5563;
           line-height: 1.5;
         }
@@ -2578,7 +2572,9 @@ function QuoraQAInner() {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          padding: 16px 0;
+          padding: 8px 0;
+          margin-top: -8px;
+          margin-bottom: -8px;
           border-top: 1px solid rgba(0,0,0,0.04);
           border-bottom: 1px solid rgba(0,0,0,0.04);
         }
@@ -2607,7 +2603,7 @@ function QuoraQAInner() {
         }
         .author-name {
           font-weight: 700;
-          color: #1f2937;
+          color: #1e1b4b;
         }
         .highlight-category {
           color: #7c3aed;
@@ -2787,10 +2783,10 @@ function QuoraQAInner() {
           gap: 8px;
         }
         .healer-name {
-          font-family: var(--font-serif);
-          font-size: 1.15rem;
-          font-weight: 700;
-          color: #3b0764;
+          font-family: var(--font-sans);
+          font-size: 0.88rem;
+          font-weight: 750 !important;
+          color: #111827;
         }
         .healer-tag-pill {
           background: #faf5ff;
@@ -2813,9 +2809,9 @@ function QuoraQAInner() {
         }
 
         .best-answer-body {
-          font-size: 1.02rem;
-          color: #374151;
-          line-height: 1.65;
+          font-size: 0.88rem;
+          color: #4b5563;
+          line-height: 1.5;
           display: flex;
           flex-direction: column;
           gap: 14px;
@@ -2831,7 +2827,7 @@ function QuoraQAInner() {
         }
         .bullet-topic {
           font-weight: 700;
-          color: #2e0854;
+          color: #111827;
           margin-right: 4px;
         }
 
@@ -2919,9 +2915,10 @@ function QuoraQAInner() {
           padding-bottom: 12px;
         }
         .comments-count-title {
-          font-size: 1.25rem;
+          font-family: var(--font-serif);
+          font-size: 1.4rem;
+          color: #4c1d95;
           font-weight: 700 !important;
-          color: #2e0854;
         }
 
         .sort-dropdown-container {
@@ -3129,9 +3126,9 @@ function QuoraQAInner() {
         }
 
         .comment-content-text {
-          font-size: 0.9rem;
-          color: #4b5563;
-          line-height: 1.5;
+          font-size: 0.92rem;
+          color: #334155;
+          line-height: 1.6;
         }
 
         .comment-actions-row {
@@ -3914,7 +3911,10 @@ function QuoraQAInner() {
             padding: 20px !important;
           }
           .question-main-title {
-            font-size: 1.5rem;
+            font-size: 1.15rem !important;
+          }
+          .question-desc-text {
+            font-size: 0.85rem !important;
           }
           .q-title-section {
             flex-direction: column-reverse;
