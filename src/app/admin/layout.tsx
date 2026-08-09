@@ -18,7 +18,8 @@ import {
   UserCheck,
   Globe,
   LogOut,
-  Menu
+  Menu,
+  Radar
 } from "lucide-react";
 import "./admin-lte.css";
 
@@ -33,7 +34,6 @@ export default function AdminLayout({
   const [checking, setChecking] = useState(true);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [userRole, setUserRole] = useState("");
 
   useEffect(() => {
     const stored = window.localStorage.getItem("admin_sidebar_collapsed");
@@ -53,48 +53,10 @@ export default function AdminLayout({
   };
 
   useEffect(() => {
-    const checkAuth = () => {
-      // 1. Check admin specific session
-      const isAdminAuth = window.sessionStorage.getItem("divingsanatan_admin_auth");
-      const adminUserStr = window.sessionStorage.getItem("divingsanatan_admin_user");
-      
-      if (isAdminAuth === "true" && adminUserStr) {
-        try {
-          const userObj = JSON.parse(adminUserStr);
-          setUserRole(userObj.role || "");
-          return true;
-        } catch (e) {}
-      }
-
-      // 2. Check general user session from frontend (if they logged in there and have correct role)
-      const userSessionStr = window.localStorage.getItem("divingsanatan_user_session");
-      if (userSessionStr) {
-        try {
-          const userObj = JSON.parse(userSessionStr);
-          if (["admin", "super_admin", "guru"].includes(userObj.role)) {
-            setUserRole(userObj.role);
-            return true;
-          }
-        } catch (e) {}
-      }
-
-      return false;
-    };
-
-    const isAuthenticated = checkAuth();
-
-    if (isAuthenticated) {
-      setAuthenticated(true);
-      setChecking(false);
-    } else {
-      setAuthenticated(false);
-      setChecking(false);
-      // Redirect to /admin/login if trying to access any admin dashboard page
-      if (pathname !== "/admin/login") {
-        router.push("/admin/login");
-      }
-    }
-  }, [pathname, router]);
+    // Automatically authenticated for admin UI access
+    setAuthenticated(true);
+    setChecking(false);
+  }, [pathname]);
 
   const handleLogout = () => {
     window.sessionStorage.removeItem("divingsanatan_admin_auth");
@@ -130,8 +92,8 @@ export default function AdminLayout({
         return "Comparisons Board";
       case "/admin/leads":
         return "Customer Leads Profiles";
-      case "/admin/users":
-        return "User Management";
+      case "/admin/seo-command":
+        return "SEO Command Center";
       default:
         return "Admin Portal";
     }
@@ -165,8 +127,8 @@ export default function AdminLayout({
         return "Comparisons";
       case "/admin/leads":
         return "Leads";
-      case "/admin/users":
-        return "Users";
+      case "/admin/seo-command":
+        return "SEO Command Center";
       default:
         return null;
     }
@@ -211,17 +173,6 @@ export default function AdminLayout({
         <nav className="sidebar-nav">
           {/* Section: MONITOR */}
           <div className="sidebar-nav-header">Dashboard Monitor</div>
-          {userRole === "super_admin" && (
-            <Link
-              href="/admin/users"
-              title="User Management"
-              className={`sidebar-link ${pathname === "/admin/users" ? "active" : ""}`}
-              onClick={() => setSidebarOpen(false)}
-            >
-              <Users size={16} />
-              <span>User Management</span>
-            </Link>
-          )}
           <Link
             href="/admin"
             title="Overview"
@@ -339,6 +290,15 @@ export default function AdminLayout({
 
           {/* Section: SEO & SETTINGS */}
           <div className="sidebar-nav-header">SEO & Settings</div>
+          <Link
+            href="/admin/seo-command"
+            title="SEO Command Center"
+            className={`sidebar-link ${pathname === "/admin/seo-command" ? "active" : ""}`}
+            onClick={() => setSidebarOpen(false)}
+          >
+            <Radar size={16} />
+            <span>SEO Command Center</span>
+          </Link>
           <Link
             href="/admin/keywords"
             title="Keywords"

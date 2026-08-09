@@ -18,18 +18,29 @@ export async function POST(req: NextRequest) {
     const emailLower = email.toLowerCase().trim();
     const hashedPassword = hashPassword(password);
 
-    // Fetch user profile by email
-    const { data: profile, error: fetchError } = await supabaseServer
-      .from("user_profiles")
-      .select("*")
-      .eq("email", emailLower)
-      .maybeSingle();
+    let profile: any = null;
 
-    if (fetchError) {
-      return NextResponse.json(
-        { success: false, error: "Database error during login check: " + fetchError.message },
-        { status: 500 }
-      );
+    try {
+      const { getDb } = require("@/utils/db");
+      const db = getDb();
+      if (db.user_profiles) {
+        profile = db.user_profiles.find((u: any) => u.email.toLowerCase() === emailLower);
+      }
+    } catch (dbErr) {
+      console.error("Local db fetch error during login:", dbErr);
+    }
+
+    if (!profile) {
+      try {
+        const { data } = await supabaseServer
+          .from("user_profiles")
+          .select("*")
+          .eq("email", emailLower)
+          .maybeSingle();
+        if (data) profile = data;
+      } catch (e) {
+        console.warn("Supabase user_profiles login fetch warning:", e);
+      }
     }
 
     if (!profile) {

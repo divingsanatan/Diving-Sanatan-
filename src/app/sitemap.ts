@@ -2,7 +2,7 @@ import { MetadataRoute } from "next";
 import { supabaseServer } from "@/utils/supabaseServer";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = "https://divingsanatan.com";
+  const baseUrl = "https://divingsanatan.online";
 
   // Static site pages
   const staticRoutes: MetadataRoute.Sitemap = [
@@ -13,13 +13,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 1.0,
     },
     {
-      url: `${baseUrl}/about`,
+      url: `${baseUrl}/services`,
       lastModified: new Date(),
       changeFrequency: "weekly",
-      priority: 0.8,
+      priority: 0.9,
     },
     {
-      url: `${baseUrl}/services`,
+      url: `${baseUrl}/booking`,
       lastModified: new Date(),
       changeFrequency: "weekly",
       priority: 0.9,
@@ -28,7 +28,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: `${baseUrl}/blog`,
       lastModified: new Date(),
       changeFrequency: "daily",
-      priority: 0.9,
+      priority: 0.85,
+    },
+    {
+      url: `${baseUrl}/about`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/reviews`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.75,
     },
     {
       url: `${baseUrl}/contact`,
@@ -36,25 +48,44 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "monthly",
       priority: 0.7,
     },
+    {
+      url: `${baseUrl}/privacy`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.4,
+    },
   ];
 
   try {
-    // Dynamic blog articles fetched directly from Supabase
-    const { data: blogs } = await supabaseServer
-      .from("blogs")
-      .select("id, slug, date")
-      .order("date", { ascending: false });
+    // Dynamic blog articles, services, and comparison pages from Supabase
+    const [blogsRes, servRes, compRes] = await Promise.all([
+      supabaseServer.from("blogs").select("id, date").order("date", { ascending: false }),
+      supabaseServer.from("services").select("id, name"),
+      supabaseServer.from("comparison_pages").select("slug")
+    ]);
 
-    if (blogs && blogs.length > 0) {
-      const dynamicBlogRoutes: MetadataRoute.Sitemap = blogs.map((blog) => ({
-        url: `${baseUrl}/blog/${blog.slug || blog.id}`,
-        lastModified: blog.date ? new Date(blog.date) : new Date(),
-        changeFrequency: "monthly",
-        priority: 0.6,
-      }));
+    const blogRoutes: MetadataRoute.Sitemap = (blogsRes.data || []).map((blog) => ({
+      url: `${baseUrl}/blog/${blog.id}`,
+      lastModified: blog.date ? new Date(blog.date) : new Date(),
+      changeFrequency: "weekly",
+      priority: 0.7,
+    }));
 
-      return [...staticRoutes, ...dynamicBlogRoutes];
-    }
+    const serviceRoutes: MetadataRoute.Sitemap = (servRes.data || []).map((serv) => ({
+      url: `${baseUrl}/services/${serv.id}`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.8,
+    }));
+
+    const compRoutes: MetadataRoute.Sitemap = (compRes.data || []).map((comp) => ({
+      url: `${baseUrl}/blog/comparison/${comp.slug}`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.65,
+    }));
+
+    return [...staticRoutes, ...blogRoutes, ...serviceRoutes, ...compRoutes];
   } catch (error) {
     console.error("Error generating dynamic sitemap routes:", error);
   }

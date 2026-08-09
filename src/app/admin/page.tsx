@@ -77,6 +77,7 @@ export default function AdminDashboardPage() {
               Quick Navigation Links
             </div>
             <div className="card-body" style={{ padding: "20px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "15px" }}>
+              <button className="btn btn-primary" onClick={() => router.push("/admin/seo-command")} style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)", border: "none" }}>⚡ SEO Command Center</button>
               <button className="btn btn-primary" onClick={() => router.push("/admin/bookings")}>Manage Bookings</button>
               <button className="btn btn-primary" onClick={() => router.push("/admin/services")}>Manage Services</button>
               <button className="btn btn-primary" onClick={() => router.push("/admin/practitioners")}>Manage Healers</button>

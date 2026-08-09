@@ -6,22 +6,12 @@ import { Button } from "@/components/ui/Button";
 import { Blog, Practitioner, BlogCategory } from "@/types/database";
 import { ImageCropperModal } from "@/components/ui/ImageCropperModal";
 import StatsDashboard from "@/components/admin/StatsDashboard";
-import { slugify } from "@/utils/slugify";
 
 export default function AdminBlogsPage() {
   const [blogs, setBlogs] = useState<Blog[]>([]);
   const [practitioners, setPractitioners] = useState<Practitioner[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [userRole, setUserRole] = useState("admin");
-
-  useEffect(() => {
-    const userStr = window.sessionStorage.getItem("divingsanatan_admin_user");
-    if (userStr) {
-      const user = JSON.parse(userStr);
-      setUserRole(user.role || "admin");
-    }
-  }, []);
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
@@ -37,8 +27,6 @@ export default function AdminBlogsPage() {
 
   // Form states
   const [title, setTitle] = useState("");
-  const [slug, setSlug] = useState("");
-  const [isSlugUserEdited, setIsSlugUserEdited] = useState(false);
   const [category, setCategory] = useState("Crystals");
   const [customCategory, setCustomCategory] = useState("");
   const [showCustomCategory, setShowCustomCategory] = useState(false);
@@ -54,6 +42,27 @@ export default function AdminBlogsPage() {
   const [uploadingImage, setUploadingImage] = useState(false);
   const [section, setSection] = useState("");
   const [isShowFeaturedPage, setIsShowFeaturedPage] = useState(true);
+
+  // Expanded SEO, E-E-A-T, Schema & Media states
+  const [metaTitle, setMetaTitle] = useState("");
+  const [metaDescription, setMetaDescription] = useState("");
+  const [focusKeyword, setFocusKeyword] = useState("");
+  const [canonicalUrl, setCanonicalUrl] = useState("");
+  const [robotsDirective, setRobotsDirective] = useState("index, follow");
+  const [slugInput, setSlugInput] = useState("");
+  const [authorBio, setAuthorBio] = useState("");
+  const [reviewedBy, setReviewedBy] = useState("");
+  const [schemaType, setSchemaType] = useState<"Article" | "BlogPosting" | "FAQPage" | "HowTo">("Article");
+  const [faqPairs, setFaqPairs] = useState<{ question: string; answer: string }[]>([]);
+  const [tldr, setTldr] = useState("");
+  const [featuredImageAlt, setFeaturedImageAlt] = useState("");
+  const [ogImageOverride, setOgImageOverride] = useState("");
+  const [videoEmbedUrl, setVideoEmbedUrl] = useState("");
+  const [videoTranscript, setVideoTranscript] = useState("");
+  const [tagsInput, setTagsInput] = useState("");
+  const [pillarCluster, setPillarCluster] = useState("");
+  const [pinnedArticlesInput, setPinnedArticlesInput] = useState("");
+  const [status, setStatus] = useState<"draft" | "scheduled" | "published">("published");
 
   // Multiple media states
   const [galleryImages, setGalleryImages] = useState<string[]>([]);
@@ -81,9 +90,9 @@ export default function AdminBlogsPage() {
     try {
       setLoading(true);
       const [bRes, pRes, cRes] = await Promise.all([
-        fetch("/api/blogs?admin_view=true"),
-        fetch("/api/practitioners?admin_view=true"),
-        fetch("/api/blogs/categories?admin_view=true")
+        fetch("/api/blogs"),
+        fetch("/api/practitioners"),
+        fetch("/api/blogs/categories")
       ]);
 
       const bJson = await bRes.json();
@@ -132,12 +141,8 @@ export default function AdminBlogsPage() {
       return;
     }
 
-    const userStr = window.sessionStorage.getItem("divingsanatan_admin_user");
-    const user = userStr ? JSON.parse(userStr) : {};
-
     const payload = {
       name: categoryName.trim(),
-      role: user.role,
     };
 
     try {
@@ -180,33 +185,8 @@ export default function AdminBlogsPage() {
     }
   };
 
-  const handleApproveCategory = async (id: string, status: "published" | "rejected") => {
-    try {
-      const res = await fetch("/api/blogs/categories", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id,
-          approval_status: status,
-          role: "super_admin",
-        }),
-      });
-      const json = await res.json();
-      if (json.success) {
-        loadData();
-      } else {
-        alert("Operation failed: " + json.error);
-      }
-    } catch (err) {
-      console.error(err);
-      alert("An error occurred during approval.");
-    }
-  };
-
   const resetForm = () => {
     setTitle("");
-    setSlug("");
-    setIsSlugUserEdited(false);
     setCategory(categories[0]?.name || "Other");
     setCustomCategory("");
     setShowCustomCategory(false);
@@ -227,20 +207,52 @@ export default function AdminBlogsPage() {
     setBlogVideos([]);
     setSection("");
     setIsShowFeaturedPage(true);
+
+    setMetaTitle("");
+    setMetaDescription("");
+    setFocusKeyword("");
+    setCanonicalUrl("");
+    setRobotsDirective("index, follow");
+    setSlugInput("");
+    setAuthorBio("");
+    setReviewedBy("");
+    setSchemaType("Article");
+    setFaqPairs([]);
+    setTldr("");
+    setFeaturedImageAlt("");
+    setOgImageOverride("");
+    setVideoEmbedUrl("");
+    setVideoTranscript("");
+    setTagsInput("");
+    setPillarCluster("");
+    setPinnedArticlesInput("");
+    setStatus("published");
+
     setEditMode(false);
     setEditBlogId(null);
   };
 
-  const handleTitleChange = (val: string) => {
-    setTitle(val);
-    if (!isSlugUserEdited) {
-      setSlug(slugify(val));
-    }
-  };
+  const [rewritingBlogId, setRewritingBlogId] = useState<string | null>(null);
 
-  const handleSlugChange = (val: string) => {
-    setIsSlugUserEdited(true);
-    setSlug(val.toLowerCase().replace(/\s+/g, "-").replace(/[^\w\-]+/g, ""));
+  const handleSuggestRewrite = async (blogId: string) => {
+    setRewritingBlogId(blogId);
+    try {
+      const res = await fetch("/api/seo/rewrite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ blogId })
+      });
+      const json = await res.json();
+      if (json.success) {
+        alert("✨ Rewrite suggestion generated! View and approve it in the SEO Command Center (/admin/seo-command).");
+      } else {
+        alert(json.error || "Failed to generate rewrite suggestion.");
+      }
+    } catch (err: any) {
+      alert(err.message || "Failed to call rewrite API.");
+    } finally {
+      setRewritingBlogId(null);
+    }
   };
 
   const handleOpenCreateModal = () => {
@@ -253,8 +265,6 @@ export default function AdminBlogsPage() {
     setEditMode(true);
     setEditBlogId(blog.id);
     setTitle(blog.title);
-    setSlug(blog.slug || slugify(blog.title) || blog.id);
-    setIsSlugUserEdited(true);
 
     const isStandardCategory = categories.some(c => c.name.toLowerCase() === blog.category.toLowerCase());
     if (isStandardCategory) {
@@ -285,6 +295,27 @@ export default function AdminBlogsPage() {
     setBlogVideos(blog.videos || []);
     setSection(blog.section || "");
     setIsShowFeaturedPage(blog.is_show_featured_page !== false);
+
+    setMetaTitle(blog.meta_title || "");
+    setMetaDescription(blog.meta_description || "");
+    setFocusKeyword(blog.focus_keyword || "");
+    setCanonicalUrl(blog.canonical_url || "");
+    setRobotsDirective(blog.robots_directive || "index, follow");
+    setSlugInput(blog.slug || "");
+    setAuthorBio(blog.author_bio || "");
+    setReviewedBy(blog.reviewed_by || "");
+    setSchemaType(blog.schema_type || "Article");
+    setFaqPairs(Array.isArray(blog.faq_pairs) ? blog.faq_pairs : []);
+    setTldr(blog.tldr || "");
+    setFeaturedImageAlt(blog.featured_image_alt || "");
+    setOgImageOverride(blog.og_image_override || "");
+    setVideoEmbedUrl(blog.video_embed_url || "");
+    setVideoTranscript(blog.video_transcript || "");
+    setTagsInput(Array.isArray(blog.tags) ? blog.tags.join(", ") : "");
+    setPillarCluster(blog.pillar_cluster || "");
+    setPinnedArticlesInput(Array.isArray(blog.pinned_related_articles) ? blog.pinned_related_articles.join(", ") : "");
+    setStatus(blog.status || "published");
+
     setIsModalOpen(true);
   };
 
@@ -486,14 +517,9 @@ export default function AdminBlogsPage() {
       return;
     }
 
-    const userStr = window.sessionStorage.getItem("divingsanatan_admin_user");
-    const user = userStr ? JSON.parse(userStr) : {};
-
-    const finalSlug = slug ? slugify(slug) : slugify(title);
-
     const payload = {
       title: title.trim(),
-      slug: finalSlug,
+      slug: slugInput.trim(),
       category: finalCategory,
       author: finalAuthor,
       content: content.trim(),
@@ -504,7 +530,24 @@ export default function AdminBlogsPage() {
       videos: blogVideos.filter(vid => vid.trim() !== ""),
       section: section || null,
       is_show_featured_page: isShowFeaturedPage,
-      role: user.role,
+      meta_title: metaTitle.trim(),
+      meta_description: metaDescription.trim(),
+      focus_keyword: focusKeyword.trim(),
+      canonical_url: canonicalUrl.trim(),
+      robots_directive: robotsDirective,
+      author_bio: authorBio.trim(),
+      reviewed_by: reviewedBy.trim(),
+      schema_type: schemaType,
+      faq_pairs: faqPairs,
+      tldr: tldr.trim(),
+      featured_image_alt: featuredImageAlt.trim(),
+      og_image_override: ogImageOverride.trim(),
+      video_embed_url: videoEmbedUrl.trim(),
+      video_transcript: videoTranscript.trim(),
+      tags: tagsInput.split(",").map(t => t.trim()).filter(Boolean),
+      pillar_cluster: pillarCluster.trim(),
+      pinned_related_articles: pinnedArticlesInput.split(",").map(p => p.trim()).filter(Boolean),
+      status
     };
 
     try {
@@ -550,29 +593,6 @@ export default function AdminBlogsPage() {
       }
     } catch (err) {
       console.error(err);
-    }
-  };
-
-  const handleApproveBlog = async (id: string, status: "published" | "rejected") => {
-    try {
-      const res = await fetch("/api/blogs", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id,
-          approval_status: status,
-          role: "super_admin",
-        }),
-      });
-      const json = await res.json();
-      if (json.success) {
-        loadData();
-      } else {
-        alert("Operation failed: " + json.error);
-      }
-    } catch (err) {
-      console.error(err);
-      alert("An error occurred during approval.");
     }
   };
 
@@ -666,7 +686,6 @@ export default function AdminBlogsPage() {
                             <th>Author</th>
                             <th>Read Estimate</th>
                             <th>Date</th>
-                            <th>Status</th>
                             <th className="text-right">Actions</th>
                           </tr>
                         </thead>
@@ -707,21 +726,19 @@ export default function AdminBlogsPage() {
                                 <td style={{ whiteSpace: "nowrap" }}>
                                   <span>{b.date}</span>
                                 </td>
-                                <td>
-                                  {b.approval_status === "published" && <span className="badge" style={{ background: "#28a745", color: "white", padding: "2px 6px", borderRadius: "4px", fontSize: "0.75rem" }}>Published</span>}
-                                  {b.approval_status === "pending_approval" && <span className="badge" style={{ background: "#ffc107", color: "black", padding: "2px 6px", borderRadius: "4px", fontSize: "0.75rem" }}>Pending</span>}
-                                  {b.approval_status === "rejected" && <span className="badge" style={{ background: "#dc3545", color: "white", padding: "2px 6px", borderRadius: "4px", fontSize: "0.75rem" }}>Rejected</span>}
-                                </td>
                                 <td className="text-right">
                                   <div className="action-buttons-cell" style={{ display: "flex", gap: "4px", justifyContent: "flex-end" }}>
-                                    {userRole === "super_admin" && b.approval_status === "pending_approval" && (
-                                      <>
-                                        <button className="btn btn-success btn-sm" onClick={() => handleApproveBlog(b.id, "published")}>✓</button>
-                                        <button className="btn btn-danger btn-sm" onClick={() => handleApproveBlog(b.id, "rejected")}>✕</button>
-                                      </>
-                                    )}
-                                    <button className="btn btn-primary btn-sm" onClick={() => window.open(`/blog/${b.slug || b.id}`, '_blank')}>
-                                      👁 View Site
+                                    <button className="btn btn-primary btn-sm" onClick={() => window.open(`/blog/${b.id}`, '_blank')}>
+                                      👁 View
+                                    </button>
+                                    <button
+                                      className="btn btn-sm"
+                                      style={{ background: "#6366f1", color: "#fff", border: "none" }}
+                                      disabled={rewritingBlogId === b.id}
+                                      onClick={() => handleSuggestRewrite(b.id)}
+                                      title="Ask native AI agent to analyze and suggest an E-E-A-T optimized rewrite"
+                                    >
+                                      {rewritingBlogId === b.id ? "…" : "✨ Rewrite"}
                                     </button>
                                     <button className="btn btn-secondary btn-sm" onClick={() => handleOpenEditModal(b)}>
                                       ✎ Edit
@@ -785,7 +802,6 @@ export default function AdminBlogsPage() {
                     <tr>
                       <th>ID</th>
                       <th>Category Name</th>
-                      <th>Status</th>
                       <th className="text-right">Actions</th>
                     </tr>
                   </thead>
@@ -799,22 +815,8 @@ export default function AdminBlogsPage() {
                         <tr key={cat.id}>
                           <td style={{ fontFamily: "monospace", fontSize: "0.85rem" }}>{cat.id}</td>
                           <td><strong>{cat.name}</strong></td>
-                          <td>
-                            {cat.approval_status === "published" && <span className="badge" style={{ background: "#28a745", color: "white", padding: "2px 6px", borderRadius: "4px", fontSize: "0.75rem" }}>Published</span>}
-                            {cat.approval_status === "pending_approval" && <span className="badge" style={{ background: "#ffc107", color: "black", padding: "2px 6px", borderRadius: "4px", fontSize: "0.75rem" }}>Pending</span>}
-                            {cat.approval_status === "rejected" && <span className="badge" style={{ background: "#dc3545", color: "white", padding: "2px 6px", borderRadius: "4px", fontSize: "0.75rem" }}>Rejected</span>}
-                          </td>
                           <td className="text-right">
                             <div className="action-buttons-cell" style={{ display: "flex", gap: "4px", justifyContent: "flex-end" }}>
-                              {userRole === "super_admin" && cat.approval_status === "pending_approval" && (
-                                <>
-                                  <button className="btn btn-success btn-sm" onClick={() => handleApproveCategory(cat.id, "published")}>✓</button>
-                                  <button className="btn btn-danger btn-sm" onClick={() => handleApproveCategory(cat.id, "rejected")}>✕</button>
-                                </>
-                              )}
-                              <button className="btn btn-primary btn-sm" onClick={() => window.open(`/blog?category=${cat.name}`, '_blank')}>
-                                👁 View Site
-                              </button>
                               <button
                                 className="btn btn-secondary btn-sm"
                                 onClick={() => handleEditCategory(cat)}
@@ -901,28 +903,8 @@ export default function AdminBlogsPage() {
                     required
                     placeholder="e.g. Cleansing the Mind: Somatic Breath Patterns"
                     value={title}
-                    onChange={(e) => handleTitleChange(e.target.value)}
+                    onChange={(e) => setTitle(e.target.value)}
                   />
-                </div>
-
-                <div className="form-group">
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
-                    <label style={{ margin: 0 }}>URL Slug (SEO) *</label>
-                    <span style={{ fontSize: "0.78rem", color: "#6b7280", fontFamily: "monospace" }}>
-                      /blog/{slug || "custom-slug"}
-                    </span>
-                  </div>
-                  <input
-                    type="text"
-                    className="glass-input"
-                    required
-                    placeholder="e.g. cleansing-the-mind-somatic-breath-patterns"
-                    value={slug}
-                    onChange={(e) => handleSlugChange(e.target.value)}
-                  />
-                  <small style={{ color: "#7c3aed", fontSize: "0.75rem", marginTop: "4px", display: "block" }}>
-                    💡 SEO friendly URL slug. Auto-generated from title, but can be customized freely.
-                  </small>
                 </div>
 
                 <div className="form-row">
@@ -1302,6 +1284,222 @@ export default function AdminBlogsPage() {
                   <small className="form-hint">
                     Word Count: {content.replace(/<[^>]*>/g, " ").trim().split(/\s+/).filter(Boolean).length} words
                   </small>
+                </div>
+
+                {/* ════ SEO & E-E-A-T METADATA SECTION ════ */}
+                <div style={{ marginTop: 24, paddingTop: 20, borderTop: "2px dashed rgba(203, 213, 225, 0.6)" }}>
+                  <h4 style={{ margin: "0 0 16px", color: "#6366f1", fontSize: "0.98rem", fontWeight: 700, display: "flex", alignItems: "center", gap: 6 }}>
+                    🎯 SEO, E-E-A-T & Structured Data (Search Engine Optimization)
+                  </h4>
+
+                  {/* SEO Meta */}
+                  <div className="form-group">
+                    <label>Meta Title (Search Result Title)</label>
+                    <input
+                      type="text"
+                      className="glass-input"
+                      placeholder="e.g. Complete Guide to Root Chakra Balancing | Diving Sanatan"
+                      value={metaTitle}
+                      onChange={(e) => setMetaTitle(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Meta Description (Snippet Summary)</label>
+                    <textarea
+                      className="glass-input"
+                      rows={2}
+                      placeholder="e.g. Discover authentic chakra balancing techniques to release stress and align your energy centers."
+                      value={metaDescription}
+                      onChange={(e) => setMetaDescription(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="form-row">
+                    <div className="form-group form-group-flex">
+                      <label>Focus Keyword</label>
+                      <input
+                        type="text"
+                        className="glass-input"
+                        placeholder="e.g. chakra healing Bhopal"
+                        value={focusKeyword}
+                        onChange={(e) => setFocusKeyword(e.target.value)}
+                      />
+                    </div>
+                    <div className="form-group form-group-flex">
+                      <label>Robots Directive</label>
+                      <select
+                        className="glass-input"
+                        value={robotsDirective}
+                        onChange={(e) => setRobotsDirective(e.target.value)}
+                      >
+                        <option value="index, follow">index, follow (Default)</option>
+                        <option value="noindex, follow">noindex, follow</option>
+                        <option value="index, nofollow">index, nofollow</option>
+                        <option value="noindex, nofollow">noindex, nofollow</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="form-row">
+                    <div className="form-group form-group-flex">
+                      <label>URL Slug (Editable)</label>
+                      <input
+                        type="text"
+                        className="glass-input"
+                        placeholder="e.g. root-chakra-healing-guide"
+                        value={slugInput}
+                        onChange={(e) => setSlugInput(e.target.value)}
+                      />
+                      <small style={{ fontSize: "0.7rem", color: "#64748b" }}>
+                        Note: Changing slug automatically logs a 301 redirect from the old slug.
+                      </small>
+                    </div>
+                    <div className="form-group form-group-flex">
+                      <label>Canonical URL Override</label>
+                      <input
+                        type="text"
+                        className="glass-input"
+                        placeholder="https://divingsanatan.online/blog/..."
+                        value={canonicalUrl}
+                        onChange={(e) => setCanonicalUrl(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Trust & E-E-A-T */}
+                  <div className="form-row">
+                    <div className="form-group form-group-flex">
+                      <label>Author Bio & Credentials (E-E-A-T)</label>
+                      <input
+                        type="text"
+                        className="glass-input"
+                        placeholder="e.g. Somatic energy healer with 12+ years experience in Bhopal"
+                        value={authorBio}
+                        onChange={(e) => setAuthorBio(e.target.value)}
+                      />
+                    </div>
+                    <div className="form-group form-group-flex">
+                      <label>Reviewed By (Medical / Holistic Expert)</label>
+                      <input
+                        type="text"
+                        className="glass-input"
+                        placeholder="e.g. Dr. Elara Vance, Senior Holistics Specialist"
+                        value={reviewedBy}
+                        onChange={(e) => setReviewedBy(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Structured Data & TL;DR */}
+                  <div className="form-row">
+                    <div className="form-group form-group-flex">
+                      <label>Schema Type Selector</label>
+                      <select
+                        className="glass-input"
+                        value={schemaType}
+                        onChange={(e: any) => setSchemaType(e.target.value)}
+                      >
+                        <option value="Article">Article</option>
+                        <option value="BlogPosting">BlogPosting</option>
+                        <option value="FAQPage">FAQPage</option>
+                        <option value="HowTo">HowTo</option>
+                      </select>
+                    </div>
+                    <div className="form-group form-group-flex">
+                      <label>Publish Status</label>
+                      <select
+                        className="glass-input"
+                        value={status}
+                        onChange={(e: any) => setStatus(e.target.value)}
+                      >
+                        <option value="published">Published</option>
+                        <option value="scheduled">Scheduled</option>
+                        <option value="draft">Draft</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Direct Answer / TL;DR Block (Quoted by AI Models)</label>
+                    <textarea
+                      className="glass-input"
+                      rows={2}
+                      placeholder="A short 2-3 sentence key takeaway summary placed at top of article."
+                      value={tldr}
+                      onChange={(e) => setTldr(e.target.value)}
+                    />
+                  </div>
+
+                  {/* Media Alt & Video Embed */}
+                  <div className="form-row">
+                    <div className="form-group form-group-flex">
+                      <label>Featured Image Alt Text (Required for Accessibility)</label>
+                      <input
+                        type="text"
+                        className="glass-input"
+                        placeholder="Descriptive alt text for search crawlers"
+                        value={featuredImageAlt}
+                        onChange={(e) => setFeaturedImageAlt(e.target.value)}
+                      />
+                    </div>
+                    <div className="form-group form-group-flex">
+                      <label>OG Social Image Preview URL</label>
+                      <input
+                        type="text"
+                        className="glass-input"
+                        placeholder="Defaults to cover image if empty"
+                        value={ogImageOverride}
+                        onChange={(e) => setOgImageOverride(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Video Embed URL</label>
+                    <input
+                      type="text"
+                      className="glass-input"
+                      placeholder="e.g. https://www.youtube.com/embed/..."
+                      value={videoEmbedUrl}
+                      onChange={(e) => setVideoEmbedUrl(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Video Transcript (SEO Indexing)</label>
+                    <textarea
+                      className="glass-input"
+                      rows={2}
+                      placeholder="Full text transcript of embedded video for search indexing..."
+                      value={videoTranscript}
+                      onChange={(e) => setVideoTranscript(e.target.value)}
+                    />
+                  </div>
+
+                  {/* Taxonomy & Pillars */}
+                  <div className="form-row">
+                    <div className="form-group form-group-flex">
+                      <label>Tags (Comma Separated)</label>
+                      <input
+                        type="text"
+                        className="glass-input"
+                        placeholder="e.g. chakras, meditation, reiki, wellness"
+                        value={tagsInput}
+                        onChange={(e) => setTagsInput(e.target.value)}
+                      />
+                    </div>
+                    <div className="form-group form-group-flex">
+                      <label>Topic Cluster / Pillar Association</label>
+                      <input
+                        type="text"
+                        className="glass-input"
+                        placeholder="e.g. Anxiety & Overthinking Cluster"
+                        value={pillarCluster}
+                        onChange={(e) => setPillarCluster(e.target.value)}
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 <Button variant="gold" type="submit" className="btn-full-mt">
