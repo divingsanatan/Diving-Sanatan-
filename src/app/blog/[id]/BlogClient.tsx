@@ -2194,7 +2194,7 @@ export default function BlogDetailsPage() {
           text-transform: uppercase;
         }
         .article-title {
-          font-size: 2.3rem;
+          font-size: 1.75rem;
           color: #4c1d95;
           line-height: 1.3;
           font-weight: 700;
@@ -2741,7 +2741,7 @@ export default function BlogDetailsPage() {
         }
         @media (max-width: 640px) {
           .article-title {
-            font-size: 1.8rem;
+            font-size: 1.45rem;
           }
           .article-meta {
             flex-direction: column;
@@ -3206,7 +3206,7 @@ export default function BlogDetailsPage() {
             margin-bottom: 20px !important;
           }
           .article-title {
-            font-size: 1.6rem !important;
+            font-size: 1.4rem !important;
           }
           .article-lead p {
             font-size: 1.05rem !important;

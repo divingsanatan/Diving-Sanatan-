@@ -1427,7 +1427,7 @@ function QuoraQAInner() {
               )}
 
               {!activeQuestion.bestAnswer && (
-                <div className="no-answer-card glass-panel" style={{ margin: '20px 0' }}>
+                <div className="no-answer-card glass-panel">
                   <div className="no-answer-content">
                     <Star size={24} className="star-icon-muted" />
                     <div className="no-answer-text">
@@ -2150,7 +2150,7 @@ function QuoraQAInner() {
         .qa-detail-view {
           display: flex;
           flex-direction: column;
-          gap: 2px;
+          gap: 24px;
         }
 
         .qa-header-card-mini {
@@ -2905,7 +2905,6 @@ function QuoraQAInner() {
           display: flex;
           flex-direction: column;
           gap: 20px;
-          margin-top: 10px;
         }
         .comments-header {
           display: flex;

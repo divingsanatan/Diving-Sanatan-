@@ -17,7 +17,7 @@ export const Card: React.FC<CardProps> = ({
   ...props
 }) => {
   const baseClass = variant === "glass" ? "glass-card" : variant === "glowing" ? "glass-card hover-glow" : "glass-panel";
-  const hoverClass = hoverable ? "hover-scale" : "";
+  const hoverClass = hoverable ? "hover-scale" : "hover-disabled";
   
   return (
     <div 

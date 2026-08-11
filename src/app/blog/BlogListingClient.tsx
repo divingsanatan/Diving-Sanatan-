@@ -61,7 +61,7 @@ export default function BlogListingPage() {
   useEffect(() => {
     async function loadBlogs() {
       const cacheKey = activeCategory || "all";
-      
+
       // If we have cached data for this category, display it immediately
       if (blogsCacheRef.current[cacheKey]) {
         setBlogs(blogsCacheRef.current[cacheKey]);
@@ -287,7 +287,7 @@ export default function BlogListingPage() {
               <span className="banner-tagline">HEAL. GROW. TRANSFORM.</span>
               <h2 className="banner-main-title">Insights for Your<br />Holistic Journey</h2>
               <button onClick={() => router.push("/services")} className="banner-explore-btn">
-                Explore All Articles
+                Experience Sanatan
               </button>
             </div>
 

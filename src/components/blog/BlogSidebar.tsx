@@ -3,8 +3,8 @@
 import React from "react";
 import { useBlog } from "@/app/blog/BlogContext";
 import { usePathname, useRouter } from "next/navigation";
-import { 
-  Grid, Flower, Sparkles, Compass, Heart, Volume2, 
+import {
+  Grid, Flower, Sparkles, Compass, Heart, Volume2,
   Flame, Leaf, Shield, BookOpen, Quote,
   HelpCircle, MessageSquare, Video, ChevronDown, ChevronUp
 } from "lucide-react";
@@ -82,20 +82,20 @@ export const BlogSidebar: React.FC = () => {
       <div className="sidebar-menu">
         {/* All Blogs with Categories Dropdown */}
         <div>
-          <button 
+          <button
             onClick={() => {
               setActiveCategory("all");
               if (pathname !== "/blog") {
                 router.push("/blog");
               }
               setCategoriesExpanded(!categoriesExpanded);
-            }} 
+            }}
             className={`sidebar-item ${(pathname === "/blog" && activeCategory === "all") || isCategoryActive ? "active-parent" : ""}`}
             aria-expanded={categoriesExpanded}
           >
             <Grid size={16} strokeWidth={1.5} />
             <div className="item-text-container" style={{ flex: 1 }}>
-              <span className="item-name">All Blogs</span>
+              <span className="item-name">Best Blogs</span>
             </div>
             {categoriesExpanded ? (
               <ChevronUp size={14} strokeWidth={1.5} style={{ opacity: 0.5 }} />
@@ -109,9 +109,9 @@ export const BlogSidebar: React.FC = () => {
               {categoryItems.map((item) => {
                 const isActive = pathname === "/blog" && activeCategory.toLowerCase() === item.id.toLowerCase();
                 return (
-                  <button 
-                    key={item.id} 
-                    onClick={() => setActiveCategory(item.id)} 
+                  <button
+                    key={item.id}
+                    onClick={() => setActiveCategory(item.id)}
                     className={`sidebar-child-item ${isActive ? "active" : ""}`}
                   >
                     {item.icon}
@@ -123,8 +123,8 @@ export const BlogSidebar: React.FC = () => {
           )}
         </div>
         {/* Pillar Blog Accordions Listing */}
-        <button 
-          onClick={() => router.push("/blog/pillar")} 
+        <button
+          onClick={() => router.push("/blog/pillar")}
           className={`sidebar-item ${pathname === "/blog/pillar" || pathname.startsWith("/blog/pillar") ? "active" : ""}`}
         >
           <Compass size={16} strokeWidth={1.5} />
@@ -134,8 +134,8 @@ export const BlogSidebar: React.FC = () => {
         </button>
 
         {/* Glossary */}
-        <button 
-          onClick={() => router.push("/blog/glossary")} 
+        <button
+          onClick={() => router.push("/blog/glossary")}
           className={`sidebar-item ${pathname === "/blog/glossary" ? "active" : ""}`}
         >
           <BookOpen size={16} strokeWidth={1.5} />
@@ -145,8 +145,8 @@ export const BlogSidebar: React.FC = () => {
         </button>
 
         {/* FAQ & Help */}
-        <button 
-          onClick={() => router.push("/blog/faq")} 
+        <button
+          onClick={() => router.push("/blog/faq")}
           className={`sidebar-item ${pathname === "/blog/faq" ? "active" : ""}`}
         >
           <HelpCircle size={16} strokeWidth={1.5} />
@@ -156,8 +156,8 @@ export const BlogSidebar: React.FC = () => {
         </button>
 
         {/* Q&A Community */}
-        <button 
-          onClick={() => router.push("/blog/quora-qa")} 
+        <button
+          onClick={() => router.push("/blog/quora-qa")}
           className={`sidebar-item ${pathname === "/blog/quora-qa" ? "active" : ""}`}
         >
           <MessageSquare size={16} strokeWidth={1.5} />
@@ -167,8 +167,8 @@ export const BlogSidebar: React.FC = () => {
         </button>
 
         {/* Video Transcripts */}
-        <button 
-          onClick={() => router.push("/blog/video-transcripts")} 
+        <button
+          onClick={() => router.push("/blog/video-transcripts")}
           className={`sidebar-item ${pathname === "/blog/video-transcripts" ? "active" : ""}`}
         >
           <Video size={16} strokeWidth={1.5} />
@@ -195,7 +195,7 @@ export const BlogSidebar: React.FC = () => {
           <p className="q-promo-desc">
             Ask, share and learn from a community that cares.
           </p>
-          <button 
+          <button
             className="q-promo-btn"
             onClick={() => {
               if (pathname === "/blog/quora-qa") {
@@ -217,7 +217,7 @@ export const BlogSidebar: React.FC = () => {
           <div className="faq-inspiration-image-wrapper">
             <img src="/images/meditation_aura.png" alt="Curiosity leads to clarity" className="faq-inspiration-image" />
           </div>
-          <button 
+          <button
             className="faq-inspiration-btn"
             onClick={() => router.push("/blog")}
           >
@@ -239,7 +239,7 @@ export const BlogSidebar: React.FC = () => {
               <path d="M50 80 C70 80 90 70 95 55 C80 65 65 70 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="2.5" strokeOpacity="0.3" />
             </svg>
           </div>
-          <button 
+          <button
             className="wisdom-btn"
             onClick={() => router.push("/blog/video-transcripts")}
           >

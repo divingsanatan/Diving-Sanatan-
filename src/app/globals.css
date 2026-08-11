@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
 :root {
   /* Premium Soothing Light Theme Palette (White Base with Pastel Accents) */
@@ -55,7 +55,7 @@
   --text-gold: 262 60% 50%;
   /* Highlight color (Violet/Lavender) */
 
-  --font-serif: 'Cormorant Garamond', 'Georgia', serif;
+  --font-serif: var(--font-sans);
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 
   --transition-smooth: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
@@ -292,13 +292,13 @@ p {
   transition: var(--transition-smooth);
 }
 
-.glass-card:hover {
+.glass-card:not(.hover-disabled):hover {
   transform: translateY(-5px);
   border-color: var(--gold-border);
   box-shadow: 0 16px 45px rgba(0, 0, 0, 0.05), 0 0 25px var(--gold-glow);
 }
 
-.glass-card:hover::before {
+.glass-card:not(.hover-disabled):hover::before {
   opacity: 0.5;
 }
 
