@@ -17,16 +17,16 @@ interface CategoryItem {
 
 const getCategoryIcon = (name: string) => {
   const n = name.toLowerCase();
-  if (n.includes("chakra")) return <Flower size={14} strokeWidth={1.5} />;
-  if (n.includes("aura") || n.includes("energy")) return <Sparkles size={14} strokeWidth={1.5} />;
-  if (n.includes("meditation") || n.includes("mindfulness")) return <Compass size={14} strokeWidth={1.5} />;
-  if (n.includes("reiki")) return <Heart size={14} strokeWidth={1.5} />;
-  if (n.includes("sound")) return <Volume2 size={14} strokeWidth={1.5} />;
-  if (n.includes("manifest")) return <Flame size={14} strokeWidth={1.5} />;
-  if (n.includes("spiritual") || n.includes("growth")) return <Leaf size={14} strokeWidth={1.5} />;
-  if (n.includes("ritual") || n.includes("sacred")) return <Flame size={14} strokeWidth={1.5} />;
-  if (n.includes("wellness") || n.includes("holistic")) return <Shield size={14} strokeWidth={1.5} />;
-  return <Leaf size={14} strokeWidth={1.5} />;
+  if (n.includes("chakra")) return <Flower size={16} strokeWidth={1.5} />;
+  if (n.includes("aura") || n.includes("energy")) return <Sparkles size={16} strokeWidth={1.5} />;
+  if (n.includes("meditation") || n.includes("mindfulness")) return <Compass size={16} strokeWidth={1.5} />;
+  if (n.includes("reiki")) return <Heart size={16} strokeWidth={1.5} />;
+  if (n.includes("sound")) return <Volume2 size={16} strokeWidth={1.5} />;
+  if (n.includes("manifest")) return <Flame size={16} strokeWidth={1.5} />;
+  if (n.includes("spiritual") || n.includes("growth")) return <Leaf size={16} strokeWidth={1.5} />;
+  if (n.includes("ritual") || n.includes("sacred")) return <Flame size={16} strokeWidth={1.5} />;
+  if (n.includes("wellness") || n.includes("holistic")) return <Shield size={16} strokeWidth={1.5} />;
+  return <Leaf size={16} strokeWidth={1.5} />;
 };
 
 export const BlogSidebar: React.FC = () => {
@@ -93,8 +93,10 @@ export const BlogSidebar: React.FC = () => {
             className={`sidebar-item ${(pathname === "/blog" && activeCategory === "all") || isCategoryActive ? "active-parent" : ""}`}
             aria-expanded={categoriesExpanded}
           >
-            <Grid size={16} strokeWidth={1.5} />
-            <div className="item-text-container" style={{ flex: 1 }}>
+            <div className="sidebar-icon-box">
+              <Grid size={16} strokeWidth={1.5} />
+            </div>
+            <div className="item-text-container">
               <span className="item-name">Best Blogs</span>
             </div>
             {categoriesExpanded ? (
@@ -114,8 +116,12 @@ export const BlogSidebar: React.FC = () => {
                     onClick={() => setActiveCategory(item.id)}
                     className={`sidebar-child-item ${isActive ? "active" : ""}`}
                   >
-                    {item.icon}
-                    <span className="child-item-name">{item.name}</span>
+                    <div className="sidebar-icon-box">
+                      {item.icon}
+                    </div>
+                    <div className="item-text-container">
+                      <span className="child-item-name">{item.name}</span>
+                    </div>
                   </button>
                 );
               })}
@@ -127,7 +133,9 @@ export const BlogSidebar: React.FC = () => {
           onClick={() => router.push("/blog/pillar")}
           className={`sidebar-item ${pathname === "/blog/pillar" || pathname.startsWith("/blog/pillar") ? "active" : ""}`}
         >
-          <Compass size={16} strokeWidth={1.5} />
+          <div className="sidebar-icon-box">
+            <Compass size={16} strokeWidth={1.5} />
+          </div>
           <div className="item-text-container">
             <span className="item-name">Pillar Blog</span>
           </div>
@@ -138,7 +146,9 @@ export const BlogSidebar: React.FC = () => {
           onClick={() => router.push("/blog/glossary")}
           className={`sidebar-item ${pathname === "/blog/glossary" ? "active" : ""}`}
         >
-          <BookOpen size={16} strokeWidth={1.5} />
+          <div className="sidebar-icon-box">
+            <BookOpen size={16} strokeWidth={1.5} />
+          </div>
           <div className="item-text-container">
             <span className="item-name">Glossary</span>
           </div>
@@ -149,7 +159,9 @@ export const BlogSidebar: React.FC = () => {
           onClick={() => router.push("/blog/faq")}
           className={`sidebar-item ${pathname === "/blog/faq" ? "active" : ""}`}
         >
-          <HelpCircle size={16} strokeWidth={1.5} />
+          <div className="sidebar-icon-box">
+            <HelpCircle size={16} strokeWidth={1.5} />
+          </div>
           <div className="item-text-container">
             <span className="item-name">FAQ & Help</span>
           </div>
@@ -160,7 +172,9 @@ export const BlogSidebar: React.FC = () => {
           onClick={() => router.push("/blog/quora-qa")}
           className={`sidebar-item ${pathname === "/blog/quora-qa" ? "active" : ""}`}
         >
-          <MessageSquare size={16} strokeWidth={1.5} />
+          <div className="sidebar-icon-box">
+            <MessageSquare size={16} strokeWidth={1.5} />
+          </div>
           <div className="item-text-container">
             <span className="item-name">Q&A Community</span>
           </div>
@@ -171,7 +185,9 @@ export const BlogSidebar: React.FC = () => {
           onClick={() => router.push("/blog/video-transcripts")}
           className={`sidebar-item ${pathname === "/blog/video-transcripts" ? "active" : ""}`}
         >
-          <Video size={16} strokeWidth={1.5} />
+          <div className="sidebar-icon-box">
+            <Video size={16} strokeWidth={1.5} />
+          </div>
           <div className="item-text-container">
             <span className="item-name">Video Transcripts</span>
           </div>
@@ -299,11 +315,13 @@ export const BlogSidebar: React.FC = () => {
           flex-direction: column;
           gap: 6px;
         }
-        .sidebar-item {
+        .sidebar-item,
+        .sidebar-child-item {
           width: 100%;
           padding: 10px 14px;
           background: transparent;
-          border: none;
+          border: 1px solid transparent;
+          border-left: 3px solid transparent;
           border-radius: 10px;
           display: flex;
           align-items: center;
@@ -312,113 +330,103 @@ export const BlogSidebar: React.FC = () => {
           font-family: var(--font-sans);
           transition: var(--transition-fast);
           text-align: left;
+          box-sizing: border-box;
+          margin: 0;
         }
-        .sidebar-item svg {
+
+        .sidebar-icon-box {
+          width: 20px;
+          height: 20px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+        .sidebar-icon-box svg {
           color: #a855f7;
           transition: var(--transition-fast);
           width: 16px;
           height: 16px;
           opacity: 0.8;
+          flex-shrink: 0;
         }
-        .sidebar-item:hover {
+
+        .sidebar-item:hover,
+        .sidebar-child-item:hover {
           color: #7c3aed;
           background: rgba(168, 85, 247, 0.04);
         }
-        .sidebar-item:hover svg {
+        .sidebar-item:hover .sidebar-icon-box svg,
+        .sidebar-child-item:hover .sidebar-icon-box svg {
           color: #7c3aed;
           opacity: 1;
         }
-        .sidebar-item.active {
+
+        .sidebar-item.active,
+        .sidebar-child-item.active {
           background: #f3e8ff;
-        }
-        .sidebar-item.active svg {
-          color: #6b21a8;
-          opacity: 1;
-        }
-        .sidebar-item.active-parent {
-          background: #faf5ff;
-          border-left: 2px solid #a855f7;
+          border-left-color: #a855f7;
           border-top-left-radius: 0;
           border-bottom-left-radius: 0;
         }
-        .sidebar-item.active-parent svg {
+        .sidebar-item.active .sidebar-icon-box svg,
+        .sidebar-child-item.active .sidebar-icon-box svg {
+          color: #6b21a8;
+          opacity: 1;
+        }
+
+        .sidebar-item.active-parent {
+          background: #faf5ff;
+          border-left-color: #a855f7;
+          border-top-left-radius: 0;
+          border-bottom-left-radius: 0;
+        }
+        .sidebar-item.active-parent .sidebar-icon-box svg {
           color: #8b5cf6;
+          opacity: 1;
         }
         .sidebar-item.active-parent .item-name {
           color: #7c3aed;
           font-weight: 600;
         }
+
         .category-children {
           display: flex;
           flex-direction: column;
           gap: 4px;
           margin-top: 4px;
           margin-bottom: 8px;
-          border-left: 1px solid rgba(168, 85, 247, 0.15);
-          margin-left: 22px;
-          padding-left: 8px;
-        }
-        .sidebar-child-item {
+          border-left: none;
+          margin-left: 0;
+          padding-left: 0;
           width: 100%;
-          padding: 8px 12px;
-          background: transparent;
-          border: none;
-          border-radius: 8px;
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          cursor: pointer;
-          font-family: var(--font-sans);
-          transition: var(--transition-fast);
-          text-align: left;
-        }
-        .sidebar-child-item svg {
-          color: #a855f7;
-          opacity: 0.65;
-          width: 14px;
-          height: 14px;
-          transition: var(--transition-fast);
-        }
-        .sidebar-child-item:hover {
-          color: #7c3aed;
-          background: rgba(168, 85, 247, 0.04);
-        }
-        .sidebar-child-item:hover svg {
-          color: #7c3aed;
-          opacity: 1;
-        }
-        .sidebar-child-item.active {
-          background: #f3e8ff;
-        }
-        .sidebar-child-item.active svg {
-          color: #6b21a8;
-          opacity: 1;
-        }
-        .child-item-name {
-          font-size: 0.8rem;
-          font-weight: 500;
-          color: #4b5563;
-          font-family: var(--font-sans);
-          transition: var(--transition-fast);
-        }
-        .sidebar-child-item:hover .child-item-name {
-          color: #7c3aed;
-        }
-        .sidebar-child-item.active .child-item-name {
-          color: #581c87;
-          font-weight: 600;
         }
 
         .item-text-container {
           display: flex;
           flex-direction: column;
+          flex: 1;
+          min-width: 0;
         }
-        .item-name {
+        .item-name,
+        .child-item-name {
           font-size: 0.85rem;
           font-weight: 500;
           color: #4b5563;
           font-family: var(--font-sans);
           transition: var(--transition-fast);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .sidebar-item:hover .item-name,
+        .sidebar-child-item:hover .child-item-name {
+          color: #7c3aed;
+        }
+        .sidebar-item.active .item-name,
+        .sidebar-child-item.active .child-item-name {
+          color: #581c87;
+          font-weight: 600;
         }
         .sidebar-item:hover .item-name {
           color: #7c3aed;
@@ -437,6 +445,8 @@ export const BlogSidebar: React.FC = () => {
           position: relative;
           display: flex;
           flex-direction: column;
+          align-items: flex-start;
+          text-align: left;
           gap: 12px;
           overflow: hidden;
         }
@@ -466,10 +476,11 @@ export const BlogSidebar: React.FC = () => {
           margin: 0;
           font-style: italic;
           font-weight: 500;
+          text-align: left;
         }
         .inspiration-lotus-wrapper {
           display: flex;
-          justify-content: center;
+          justify-content: flex-start;
           margin-top: 4px;
         }
         .inspiration-lotus-icon {
@@ -485,8 +496,8 @@ export const BlogSidebar: React.FC = () => {
           padding: 24px 20px;
           display: flex;
           flex-direction: column;
-          align-items: center;
-          text-align: center;
+          align-items: flex-start;
+          text-align: left;
           gap: 14px;
           box-shadow: 0 4px 15px rgba(124, 58, 237, 0.05);
           transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
@@ -497,7 +508,7 @@ export const BlogSidebar: React.FC = () => {
         }
         .q-promo-lotus-wrapper {
           display: flex;
-          justify-content: center;
+          justify-content: flex-start;
         }
         .q-promo-lotus-icon {
           width: 60px;
@@ -510,6 +521,7 @@ export const BlogSidebar: React.FC = () => {
           font-weight: 750 !important;
           color: #2e0854;
           margin: 0;
+          text-align: left;
         }
         .q-promo-desc {
           font-family: var(--font-sans);
@@ -517,6 +529,7 @@ export const BlogSidebar: React.FC = () => {
           color: #5b21b6;
           line-height: 1.4;
           margin: 0;
+          text-align: left;
         }
         .q-promo-btn {
           width: 100%;
@@ -531,6 +544,7 @@ export const BlogSidebar: React.FC = () => {
           cursor: pointer;
           transition: background-color 0.2s ease, transform 0.1s ease;
           box-shadow: 0 4px 12px rgba(88, 28, 135, 0.25);
+          text-align: left;
         }
         .q-promo-btn:hover {
           background: #451070;
@@ -548,8 +562,8 @@ export const BlogSidebar: React.FC = () => {
           padding: 24px 20px;
           display: flex;
           flex-direction: column;
-          align-items: center;
-          text-align: center;
+          align-items: flex-start;
+          text-align: left;
           gap: 14px;
           box-shadow: 0 4px 15px rgba(168, 85, 247, 0.03);
           transition: transform 0.3s ease;
@@ -564,6 +578,7 @@ export const BlogSidebar: React.FC = () => {
           color: #4c1d95;
           margin: 0;
           line-height: 1.2;
+          text-align: left;
         }
         .faq-inspiration-desc {
           font-family: var(--font-sans);
@@ -571,6 +586,7 @@ export const BlogSidebar: React.FC = () => {
           color: #7c3aed;
           line-height: 1.4;
           margin: 0;
+          text-align: left;
         }
         .faq-inspiration-image-wrapper {
           width: 100%;
@@ -602,6 +618,7 @@ export const BlogSidebar: React.FC = () => {
           cursor: pointer;
           transition: background-color 0.2s ease, transform 0.1s ease;
           box-shadow: 0 4px 12px rgba(76, 29, 149, 0.2);
+          text-align: left;
         }
         .faq-inspiration-btn:hover {
           background: #3b0764;
@@ -610,8 +627,8 @@ export const BlogSidebar: React.FC = () => {
         .wisdom-card {
           background: linear-gradient(180deg, #faf5ff 0%, #f3e8ff 100%) !important;
           border: 1px solid rgba(168, 85, 247, 0.15) !important;
-          align-items: center;
-          text-align: center;
+          align-items: flex-start !important;
+          text-align: left !important;
         }
         .wisdom-title {
           font-family: var(--font-sans);
@@ -619,6 +636,7 @@ export const BlogSidebar: React.FC = () => {
           font-weight: 750;
           color: #5b21b6;
           margin: 0;
+          text-align: left;
         }
         .wisdom-desc {
           font-family: var(--font-sans);
@@ -626,10 +644,11 @@ export const BlogSidebar: React.FC = () => {
           color: #6b21a8;
           line-height: 1.45;
           margin: 0;
+          text-align: left;
         }
         .wisdom-lotus-wrapper {
           display: flex;
-          justify-content: center;
+          justify-content: flex-start;
           margin: 4px 0;
         }
         .wisdom-btn {
@@ -645,6 +664,7 @@ export const BlogSidebar: React.FC = () => {
           cursor: pointer;
           transition: background-color 0.2s ease, transform 0.1s ease;
           box-shadow: 0 4px 12px rgba(107, 33, 168, 0.2);
+          text-align: left;
         }
         .wisdom-btn:hover {
           background: #581c87;

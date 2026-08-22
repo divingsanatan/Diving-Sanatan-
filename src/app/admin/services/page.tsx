@@ -512,7 +512,7 @@ export default function AdminServicesPage() {
 
                 <div className="form-row">
                   <div className="form-group form-group-flex">
-                    <label>Price ($) *</label>
+                    <label>Price (₹) *</label>
                     <input
                       type="number"
                       className="glass-input"

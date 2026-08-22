@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { formatCurrency } from "@/utils/formatters";
 import {
-  DollarSign,
+  IndianRupee,
   Calendar,
   Users,
   Star,
@@ -85,7 +85,7 @@ export default function StatsDashboard({ pageType, actions }: StatsDashboardProp
       title: "Overview Monitor",
       subtitle: "Real-time analytics monitor and administrative overview of sanctuary systems.",
       cards: [
-        { label: "Sanctuary Revenue", trend: "From paid confirmed bookings", trendType: "neutral", icon: DollarSign },
+        { label: "Sanctuary Revenue", trend: "From paid confirmed bookings", trendType: "neutral", icon: IndianRupee },
         { label: "Active Bookings", trend: "Includes pending approvals", trendType: "attention", icon: Calendar },
         { label: "Certified Healers", trend: "Active in directory", trendType: "up", icon: Users },
         { label: "Client Reviews", trend: "Testimonials recorded", trendType: "up", icon: Star }
@@ -98,7 +98,7 @@ export default function StatsDashboard({ pageType, actions }: StatsDashboardProp
         { label: "Total Bookings", trend: "All time records", trendType: "neutral", icon: Calendar },
         { label: "Pending Approvals", trend: "Needs attention", trendType: "attention", icon: Clock },
         { label: "Completed Bookings", trend: "Successfully completed", trendType: "up", icon: CheckCircle2 },
-        { label: "Total Revenue", trend: "From paid sessions", trendType: "up", icon: DollarSign }
+        { label: "Total Revenue", trend: "From paid sessions", trendType: "up", icon: IndianRupee }
       ]
     },
     services: {
@@ -107,7 +107,7 @@ export default function StatsDashboard({ pageType, actions }: StatsDashboardProp
       cards: [
         { label: "Total Services", trend: "Active offerings", trendType: "up", icon: Briefcase },
         { label: "Healing Categories", trend: "Active disciplines", trendType: "neutral", icon: Grid },
-        { label: "Avg Service Price", trend: "Across all services", trendType: "neutral", icon: DollarSign },
+        { label: "Avg Service Price", trend: "Across all services", trendType: "neutral", icon: IndianRupee },
         { label: "Featured Services", trend: "Displayed on home", trendType: "up", icon: Star }
       ]
     },

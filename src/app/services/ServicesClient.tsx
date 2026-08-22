@@ -413,8 +413,12 @@ export default function ServicesPage() {
                   className={`category-item-btn ${selectedCategory === "all" ? "active" : ""}`}
                   onClick={() => { setSelectedCategory("all"); setFeaturedIndex(0); }}
                 >
-                  <Grid size={16} strokeWidth={1.5} />
-                  <span>All Services</span>
+                  <div className="sidebar-icon-box">
+                    <Grid size={16} strokeWidth={1.5} />
+                  </div>
+                  <div className="item-text-container">
+                    <span className="item-name">All Services</span>
+                  </div>
                 </button>
                 {sortedCategories.map((cat) => (
                   <button
@@ -422,8 +426,12 @@ export default function ServicesPage() {
                     className={`category-item-btn ${selectedCategory.toLowerCase() === (cat.name || "").toLowerCase() ? "active" : ""}`}
                     onClick={() => { setSelectedCategory(cat.name || ""); setFeaturedIndex(0); }}
                   >
-                    {getCategoryIcon(cat.name || "")}
-                    <span>{cat.name}</span>
+                    <div className="sidebar-icon-box">
+                      {getCategoryIcon(cat.name || "")}
+                    </div>
+                    <div className="item-text-container">
+                      <span className="item-name">{cat.name}</span>
+                    </div>
                   </button>
                 ))}
               </div>
@@ -993,41 +1001,91 @@ export default function ServicesPage() {
 
         .category-item-btn {
           width: 100%;
-          padding: 8px 12px;
+          padding: 10px 14px;
           background: transparent;
-          border: none;
-          border-radius: 12px;
+          border: 1px solid transparent;
+          border-left: 3px solid transparent;
+          border-radius: 10px;
           display: flex;
           align-items: center;
           gap: 12px;
           cursor: pointer;
           font-family: var(--font-sans);
-          font-size: 0.82rem;
-          font-weight: 500;
-          color: #4b5563;
           transition: var(--transition-fast);
           text-align: left;
+          box-sizing: border-box;
+          margin: 0;
         }
-        .category-item-btn svg {
+
+        .category-item-btn .sidebar-icon-box {
+          width: 20px;
+          height: 20px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+
+        .category-item-btn .sidebar-icon-box svg {
           color: #a855f7;
           transition: var(--transition-fast);
+          width: 16px;
+          height: 16px;
+          opacity: 0.8;
+          flex-shrink: 0;
         }
+
         .category-item-btn:hover {
           color: #7c3aed;
+          background: rgba(168, 85, 247, 0.04);
         }
-        .category-item-btn:hover svg {
+
+        .category-item-btn:hover .sidebar-icon-box svg {
+          color: #7c3aed;
+          opacity: 1;
+        }
+
+        .category-item-btn:hover .item-name {
           color: #7c3aed;
         }
+
         .category-item-btn.active {
-          background: #eedffd;
-          color: #3b0764;
+          background: #f3e8ff;
+          border-left-color: #a855f7;
+          border-top-left-radius: 0;
+          border-bottom-left-radius: 0;
+        }
+
+        .category-item-btn.active .sidebar-icon-box svg {
+          color: #6b21a8;
+          opacity: 1;
+        }
+
+        .category-item-btn.active .item-name {
+          color: #581c87;
           font-weight: 600;
         }
-        .category-item-btn.active svg {
-          color: #581c87;
-        }
+
         .category-item-btn:focus {
           outline: none !important;
+        }
+
+        .item-text-container {
+          display: flex;
+          flex-direction: column;
+          flex: 1;
+          min-width: 0;
+        }
+
+        .item-name {
+          font-size: 0.85rem;
+          font-weight: 500;
+          color: #4b5563;
+          font-family: var(--font-sans);
+          transition: var(--transition-fast);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
 
         .services-mobile-menu-toggle {

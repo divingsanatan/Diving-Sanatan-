@@ -1,13 +1,12 @@
 /**
- * Formats a number as USD currency.
+ * Formats a number as INR (Rupee ₹) currency.
  * @param amount Number to format
  */
 export const formatCurrency = (amount: number): string => {
-  return new Intl.NumberFormat("en-US", {
+  return new Intl.NumberFormat("en-IN", {
     style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    currency: "INR",
+    maximumFractionDigits: 0,
   }).format(amount);
 };
 

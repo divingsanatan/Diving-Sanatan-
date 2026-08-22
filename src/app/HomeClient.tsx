@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { formatCurrency } from "@/utils/formatters";
 import { useRouter } from "next/navigation";
-import { Brain, Heart, DollarSign, Compass, Users, User, Sparkles, Grid, Search, ArrowRight, Shield, Flower } from "lucide-react";
+import { Brain, Heart, IndianRupee, Compass, Users, User, Sparkles, Grid, Search, ArrowRight, Shield, Flower } from "lucide-react";
 
 import { Service, Category } from "@/types/database";
 
@@ -555,7 +555,7 @@ export default function Home() {
 
                   <button type="button" className="grid-item-card" onClick={() => startQuiz("Financial Stress")}>
                     <div className="grid-item-icon">
-                      <DollarSign size={24} strokeWidth={1.5} />
+                      <IndianRupee size={24} strokeWidth={1.5} />
                     </div>
                     <span className="grid-item-text">Financial Stress</span>
                   </button>

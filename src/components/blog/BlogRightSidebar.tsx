@@ -273,10 +273,11 @@ export const BlogRightSidebar: React.FC = () => {
             background: linear-gradient(135deg, #7c3aed 0%, #6b21a8 100%) !important;
             border: none !important;
             color: #ffffff;
-            text-align: center;
+            text-align: left;
             padding: 28px 24px !important;
             display: flex;
             flex-direction: column;
+            align-items: flex-start;
             gap: 12px;
             position: relative;
             overflow: hidden;
@@ -615,7 +616,7 @@ export const BlogRightSidebar: React.FC = () => {
           .quote-box-card {
             background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
             border-color: rgba(168, 85, 247, 0.12);
-            text-align: center;
+            text-align: left;
             padding: 28px 20px 20px;
           }
           .quote-icon {
@@ -760,8 +761,11 @@ export const BlogRightSidebar: React.FC = () => {
             background: linear-gradient(135deg, #581c87 0%, #3b0764 100%);
             border: none;
             color: #ffffff;
-            text-align: center;
+            text-align: left;
             padding: 28px 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
           }
           .cta-title {
             font-family: var(--font-serif);
@@ -962,8 +966,8 @@ export const BlogRightSidebar: React.FC = () => {
         .author-summary-layout {
           display: flex;
           flex-direction: column;
-          align-items: center;
-          text-align: center;
+          align-items: flex-start;
+          text-align: left;
           gap: 8px;
         }
         .author-avatar-img {
@@ -1145,8 +1149,11 @@ export const BlogRightSidebar: React.FC = () => {
           background: linear-gradient(135deg, #581c87 0%, #3b0764 100%);
           border: none;
           color: #ffffff;
-          text-align: center;
+          text-align: left;
           padding: 28px 24px;
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
         }
         .cta-title {
           font-family: var(--font-serif);

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import {
@@ -49,6 +50,8 @@ interface Testimonial {
 }
 
 export default function AboutClient() {
+  const router = useRouter();
+
   // Dynamic Data States
   const [services, setServices] = useState<Service[]>([]);
   const [healers, setHealers] = useState<Practitioner[]>([]);
@@ -413,7 +416,9 @@ export default function AboutClient() {
                     onClick={() => scrollToSection(item.id)}
                     className={`about-sidebar-item ${activeSection === item.id ? "active" : ""}`}
                   >
-                    {item.icon}
+                    <div className="sidebar-icon-box">
+                      {item.icon}
+                    </div>
                     <div className="about-item-text-container">
                       <span className="about-item-name">{item.label}</span>
                     </div>
@@ -488,11 +493,10 @@ export default function AboutClient() {
                   <div className="no-results">No matching healers found.</div>
                 ) : (
                   filteredHealers.map((prac) => (
-                    <Link
-                      href={`/gurus/${prac.id}`}
+                    <div
                       key={prac.id}
                       className="healer-card"
-                      style={{ textDecoration: 'none', color: 'inherit' }}
+                      onClick={() => router.push(`/gurus/${prac.id}`)}
                     >
                       <img
                         className="healer-avatar"
@@ -504,7 +508,7 @@ export default function AboutClient() {
                       <div className="exp">
                         {prac.reviewsCount > 50 ? "12+ Years Exp." : "8+ Years Exp."}
                       </div>
-                    </Link>
+                    </div>
                   ))
                 )}
               </div>
@@ -1022,7 +1026,8 @@ export default function AboutClient() {
           width: 100%;
           padding: 10px 14px;
           background: transparent;
-          border: none;
+          border: 1px solid transparent;
+          border-left: 3px solid transparent;
           border-radius: 10px;
           display: flex;
           align-items: center;
@@ -1031,9 +1036,20 @@ export default function AboutClient() {
           font-family: var(--font-sans);
           transition: var(--transition-fast);
           text-align: left;
+          box-sizing: border-box;
+          margin: 0;
         }
 
-        .about-sidebar-item svg {
+        .about-sidebar-item .sidebar-icon-box {
+          width: 20px;
+          height: 20px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+
+        .about-sidebar-item .sidebar-icon-box svg {
           color: #a855f7;
           transition: var(--transition-fast);
           width: 16px;
@@ -1046,7 +1062,7 @@ export default function AboutClient() {
           background: rgba(168, 85, 247, 0.04);
         }
 
-        .about-sidebar-item:hover svg {
+        .about-sidebar-item:hover .sidebar-icon-box svg {
           color: #7c3aed;
           opacity: 1;
         }
@@ -1057,9 +1073,12 @@ export default function AboutClient() {
 
         .about-sidebar-item.active {
           background: #f3e8ff;
+          border-left-color: #a855f7;
+          border-top-left-radius: 0;
+          border-bottom-left-radius: 0;
         }
 
-        .about-sidebar-item.active svg {
+        .about-sidebar-item.active .sidebar-icon-box svg {
           color: #6b21a8;
           opacity: 1;
         }
@@ -1072,6 +1091,8 @@ export default function AboutClient() {
         .about-item-text-container {
           display: flex;
           flex-direction: column;
+          flex: 1;
+          min-width: 0;
         }
 
         .about-item-name {
@@ -1468,59 +1489,89 @@ export default function AboutClient() {
           line-height: 1.5;
         }
 
-        /* Healers */
+        /* Healers & Team Cards */
         .healer-card {
-          flex: 0 0 220px;
+          flex: 0 0 200px !important;
+          width: 200px !important;
+          min-width: 200px !important;
+          max-width: 200px !important;
+          box-sizing: border-box !important;
           text-align: center;
-          background: #fbf7ff;
-          border-radius: 12px;
-          padding: 20px 14px 16px;
-          border: 1px solid #f3e8ff;
-          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-          display: flex;
-          flex-direction: column;
-          align-items: center;
+          background: #ffffff !important;
+          border-radius: 16px !important;
+          padding: 20px 14px 16px !important;
+          border: 1px solid rgba(168, 85, 247, 0.22) !important;
+          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+          display: flex !important;
+          flex-direction: column !important;
+          align-items: center !important;
+          justify-content: flex-start !important;
+          box-shadow: 0 4px 15px rgba(124, 58, 237, 0.05) !important;
+          cursor: pointer !important;
+          text-decoration: none !important;
+          color: inherit !important;
         }
 
         .healer-card:hover {
-          transform: translateY(-6px);
-          background: white;
-          box-shadow: 0 10px 25px rgba(124, 58, 237, 0.08);
-          border-color: #ede0ff;
+          transform: translateY(-4px) !important;
+          background: #ffffff !important;
+          box-shadow: 0 10px 25px rgba(124, 58, 237, 0.12) !important;
+          border-color: rgba(168, 85, 247, 0.45) !important;
         }
 
         .healer-avatar {
-          width: 64px;
-          height: 64px;
-          border-radius: 50%;
-          margin: 0 auto 12px;
-          object-fit: cover;
-          background: #ede0ff;
-          border: 2px solid white;
-          box-shadow: 0 4px 12px rgba(124, 58, 237, 0.1);
+          width: 72px !important;
+          height: 72px !important;
+          border-radius: 50% !important;
+          margin: 0 auto 12px !important;
+          object-fit: cover !important;
+          background: #ede0ff !important;
+          border: 2px solid white !important;
+          box-shadow: 0 4px 12px rgba(124, 58, 237, 0.12) !important;
+          flex-shrink: 0 !important;
+          transition: transform 0.3s ease !important;
+        }
+
+        .healer-card:hover .healer-avatar {
+          transform: scale(1.05) !important;
         }
 
         .healer-card h4 {
-          color: #2d1b4e;
-          font-size: 14px;
-          font-weight: 700;
-          margin-bottom: 4px;
+          color: #2d1b4e !important;
+          font-size: 0.92rem !important;
+          font-weight: 700 !important;
+          margin: 0 0 4px 0 !important;
           font-family: var(--font-serif) !important;
+          width: 100% !important;
+          white-space: nowrap !important;
+          overflow: hidden !important;
+          text-overflow: ellipsis !important;
+          text-align: center !important;
         }
 
         .healer-card .role {
-          color: #5b4d7a;
-          font-size: 12px;
-          margin-bottom: 4px;
-          font-weight: 500;
-          line-height: 1.3;
+          color: #5b4d7a !important;
+          font-size: 0.78rem !important;
+          margin: 0 0 6px 0 !important;
+          font-weight: 500 !important;
+          line-height: 1.3 !important;
+          width: 100% !important;
+          white-space: nowrap !important;
+          overflow: hidden !important;
+          text-overflow: ellipsis !important;
+          text-align: center !important;
         }
 
         .healer-card .exp {
-          color: #7c3aed;
-          font-size: 11px;
-          font-weight: 600;
-          margin-bottom: 10px;
+          color: #7c3aed !important;
+          font-size: 0.72rem !important;
+          font-weight: 600 !important;
+          background: #f3e8ff !important;
+          padding: 3px 10px !important;
+          border-radius: 20px !important;
+          display: inline-block !important;
+          white-space: nowrap !important;
+          margin-top: 4px !important;
         }
 
 
