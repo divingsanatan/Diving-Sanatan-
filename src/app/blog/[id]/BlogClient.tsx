@@ -97,102 +97,7 @@ const cleanHtmlToPlainText = (html: string): string => {
     .trim();
 };
 
-const isHtmlContent = (c: string) => /<[a-z/][^>]*>/i.test(c);
 
-const getContentParagraphs = (content: string): string[] =>
-  content.split(/\r?\n\r?\n/).filter((p) => p.trim().length > 0).map((p) => p.trim());
-
-const findMatchingClosingTag = (html: string, tagName: string, startIndex: number): number => {
-  const closeTag = `</${tagName}>`;
-  let depth = 1;
-  let currentIndex = startIndex;
-  const lowerHtml = html.toLowerCase();
-  
-  const findNextOpenTag = (str: string, fromIndex: number): number => {
-    let index = fromIndex;
-    while (true) {
-      const idx = str.indexOf(`<${tagName}`, index);
-      if (idx === -1) return -1;
-      const nextChar = str[idx + tagName.length + 1];
-      if (nextChar === undefined || /\s|>|\//.test(nextChar)) {
-        return idx;
-      }
-      index = idx + 1;
-    }
-  };
-
-  while (depth > 0) {
-    const nextOpen = findNextOpenTag(lowerHtml, currentIndex);
-    const nextClose = lowerHtml.indexOf(closeTag, currentIndex);
-    
-    if (nextClose === -1) {
-      return -1;
-    }
-    
-    if (nextOpen !== -1 && nextOpen < nextClose) {
-      depth++;
-      currentIndex = nextOpen + tagName.length + 1;
-    } else {
-      depth--;
-      if (depth === 0) {
-        return nextClose;
-      }
-      currentIndex = nextClose + closeTag.length;
-    }
-  }
-  return -1;
-};
-
-const parseHtmlContent = (html: string): { intro: string; body: string } => {
-  const trimmed = html.trim();
-  const blockTagRegex = /<\/?(p|div|br|h[1-6]|ul|ol|blockquote)\b[^>]*>/i;
-  const match = trimmed.match(blockTagRegex);
-  
-  if (!match) {
-    return {
-      intro: trimmed.replace(/<[^>]+>/g, "").trim(),
-      body: ""
-    };
-  }
-  
-  const tagIndex = match.index ?? 0;
-  
-  if (tagIndex > 0) {
-    const introText = trimmed.substring(0, tagIndex).trim();
-    const cleanIntro = introText.replace(/<[^>]+>/g, "").trim();
-    const bodyText = trimmed.substring(tagIndex).trim();
-    return {
-      intro: cleanIntro,
-      body: bodyText
-    };
-  } else {
-    const tagName = match[1].toLowerCase();
-    
-    if (tagName === "br") {
-      const afterBr = trimmed.substring(match[0].length).trim();
-      return parseHtmlContent(afterBr);
-    }
-    
-    const closingTag = `</${tagName}>`;
-    const closeIndex = findMatchingClosingTag(trimmed, tagName, match[0].length);
-    
-    if (closeIndex !== -1) {
-      const introHtml = trimmed.substring(0, closeIndex + closingTag.length);
-      const cleanIntro = introHtml.replace(/<[^>]+>/g, "").trim();
-      const bodyText = trimmed.substring(closeIndex + closingTag.length).trim();
-      return {
-        intro: cleanIntro,
-        body: bodyText
-      };
-    } else {
-      const plain = trimmed.replace(/<[^>]+>/g, "").trim();
-      return {
-        intro: plain.substring(0, 200),
-        body: trimmed
-      };
-    }
-  }
-};
 
 const FALLBACK_QUOTE =
   "Energy flow balances are the foundational blueprint of physical comfort. Maintain your aura, and your mind will follow.";
@@ -712,34 +617,36 @@ export default function BlogDetailsPage() {
     }
   };
 
+  const renderArticleBody = (content: string) => {
+    if (!content) return null;
+    const isHtml = /<[a-z/][^>]*>/i.test(content);
+    if (isHtml) {
+      return (
+        <div
+          className="article-rich-content"
+          dangerouslySetInnerHTML={{ __html: content }}
+        />
+      );
+    }
+    const paragraphs = content.split(/\r?\n\r?\n/).filter((p) => p.trim().length > 0);
+    return (
+      <div className="article-paragraphs">
+        {paragraphs.map((para, index) => (
+          <p key={index}>{para}</p>
+        ))}
+      </div>
+    );
+  };
+
   const getArticleSections = (b: Blog) => {
     const coverImage = getBlogImage(b.image);
-    const htmlMode = isHtmlContent(b.content);
-
-    if (htmlMode) {
-      const cleanIntro = cleanHtmlToPlainText(b.content);
-      const intro =
-        cleanIntro.substring(0, 200) ||
-        `In this guide, ${b.author} explores ${b.title.toLowerCase()} — a foundational topic in ${b.category.toLowerCase()}.`;
-      return {
-        htmlMode: true,
-        intro,
-        bodyParagraphs: [] as string[],
-        htmlBody: b.content,
-        coverImage,
-      };
-    }
-
-    const paras = getContentParagraphs(b.content);
+    const cleanIntro = cleanHtmlToPlainText(b.content);
     const intro =
-      paras[0] ||
+      cleanIntro.substring(0, 200) ||
       `Welcome to this exploration of ${b.title}. Our practitioners share insights to help you on your healing journey.`;
 
     return {
-      htmlMode: false,
       intro,
-      bodyParagraphs: paras.slice(1),
-      htmlBody: "",
       coverImage,
     };
   };
@@ -758,7 +665,7 @@ export default function BlogDetailsPage() {
         <article className="blog-article-content">
           {(() => {
             const sections = getArticleSections(blog);
-            const { intro, bodyParagraphs, coverImage, htmlMode, htmlBody } = sections;
+            const { intro, coverImage } = sections;
 
             const isVideoBlog = blog && (
               (blog.videos && blog.videos.length > 0) ||
@@ -852,20 +759,7 @@ export default function BlogDetailsPage() {
                     {/* About This Video */}
                     <div className="about-video-block">
                       <h4 className="video-section-title">About This Video</h4>
-                      {htmlMode ? (
-                        <div
-                          className="article-rich-content"
-                          dangerouslySetInnerHTML={{
-                            __html: htmlBody,
-                          }}
-                        />
-                      ) : (
-                        <div className="article-paragraphs">
-                          {bodyParagraphs.map((para, index) => (
-                            <p key={index}>{para}</p>
-                          ))}
-                        </div>
-                      )}
+                      {renderArticleBody(blog.content)}
 
                       <div className="article-blockquote custom-blockquote">
                         <span className="quote-mark">“</span>
@@ -1322,7 +1216,7 @@ export default function BlogDetailsPage() {
                     </div>
                   </div>
 
-                  {!htmlMode && (
+                  {intro && (
                     <div className="article-lead">
                       <p className="first-paragraph-dropcap">{intro}</p>
                     </div>
@@ -1399,20 +1293,7 @@ export default function BlogDetailsPage() {
 
                   {/* Body Content */}
                   <div className="article-body-content-wrapper">
-                    {htmlMode ? (
-                      <div
-                        className="article-rich-content"
-                        dangerouslySetInnerHTML={{
-                          __html: htmlBody,
-                        }}
-                      />
-                    ) : (
-                      <div className="article-paragraphs">
-                        {bodyParagraphs.map((para, index) => (
-                          <p key={index}>{para}</p>
-                        ))}
-                      </div>
-                    )}
+                    {renderArticleBody(blog.content)}
                   </div>
 
                   {/* Standard Interactions & Comments */}

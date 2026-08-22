@@ -36,6 +36,8 @@ export default function AdminLayout({
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  const [adminUser, setAdminUser] = useState<any>(null);
+
   useEffect(() => {
     const stored = window.localStorage.getItem("admin_sidebar_collapsed");
     if (stored === "true") {
@@ -54,14 +56,59 @@ export default function AdminLayout({
   };
 
   useEffect(() => {
-    // Automatically authenticated for admin UI access
-    setAuthenticated(true);
-    setChecking(false);
-  }, [pathname]);
+    if (pathname === "/admin/login") {
+      setChecking(false);
+      return;
+    }
+
+    setChecking(true);
+    let isAuthorized = false;
+    let currentUser: any = null;
+
+    // 1. Check admin specific session in sessionStorage
+    const isAdminAuth = window.sessionStorage.getItem("divingsanatan_admin_auth");
+    const adminUserStr = window.sessionStorage.getItem("divingsanatan_admin_user");
+    if (adminUserStr) {
+      try {
+        currentUser = JSON.parse(adminUserStr);
+      } catch (e) {}
+    }
+
+    if (isAdminAuth === "true") {
+      isAuthorized = true;
+    }
+
+    // 2. Check general user session from localStorage
+    const userSessionStr = window.localStorage.getItem("divingsanatan_user_session");
+    if (userSessionStr) {
+      try {
+        const userObj = JSON.parse(userSessionStr);
+        if (["admin", "super_admin", "guru", "subadmin"].includes(userObj?.role)) {
+          isAuthorized = true;
+          if (!currentUser) {
+            currentUser = userObj;
+          }
+        }
+      } catch (e) {}
+    }
+
+    if (isAuthorized) {
+      setAdminUser(currentUser);
+      setAuthenticated(true);
+      setChecking(false);
+    } else {
+      setAdminUser(null);
+      setAuthenticated(false);
+      setChecking(false);
+      router.push("/admin/login");
+    }
+  }, [pathname, router]);
 
   const handleLogout = () => {
     window.sessionStorage.removeItem("divingsanatan_admin_auth");
+    window.sessionStorage.removeItem("divingsanatan_admin_user");
     setAuthenticated(false);
+    setAdminUser(null);
     router.push("/admin/login");
   };
 
@@ -354,7 +401,9 @@ export default function AdminLayout({
             <h4 className="navbar-section-title">{getSectionName()}</h4>
           </div>
           <div className="admin-navbar-right">
-            <span style={{ fontSize: "0.85rem", color: "#6c757d" }}>Logged in as Healer Admin</span>
+            <span style={{ fontSize: "0.85rem", color: "#6c757d" }}>
+              Logged in as {adminUser?.name || adminUser?.email || "Admin User"} {adminUser?.role ? `(${adminUser.role})` : ""}
+            </span>
           </div>
         </header>
 

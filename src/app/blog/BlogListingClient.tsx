@@ -34,9 +34,10 @@ export default function BlogListingPage() {
   const { searchQuery, activeCategory } = useBlog();
   const [loading, setLoading] = useState(true);
 
-  // Pagination State
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 8;
+  // Infinite Scroll State
+  const [visibleCount, setVisibleCount] = useState(10);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const observerRef = useRef<HTMLDivElement | null>(null);
 
   const servicesScrollRef = useRef<HTMLDivElement>(null);
   const blogsCacheRef = useRef<Record<string, Blog[]>>({});
@@ -61,6 +62,7 @@ export default function BlogListingPage() {
   useEffect(() => {
     async function loadBlogs() {
       const cacheKey = activeCategory || "all";
+      setVisibleCount(10); // Reset visible count on category change
 
       // If we have cached data for this category, display it immediately
       if (blogsCacheRef.current[cacheKey]) {
@@ -97,8 +99,36 @@ export default function BlogListingPage() {
       result = result.filter(b => b.title.toLowerCase().includes(q) || b.content.toLowerCase().includes(q));
     }
     setFilteredBlogs(result);
-    setCurrentPage(1); // Reset page on search filter
+    setVisibleCount(10); // Reset visible count on search filter
   }, [blogs, searchQuery]);
+
+  const isFilteringActive = activeCategory !== "all" || searchQuery !== "";
+  const currentTotalItems = isFilteringActive ? filteredBlogs.length : blogs.length;
+  const hasMoreItems = visibleCount < currentTotalItems;
+
+  // IntersectionObserver for Infinite Scrolling
+  useEffect(() => {
+    const node = observerRef.current;
+    if (!node || !hasMoreItems) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !isLoadingMore) {
+          setIsLoadingMore(true);
+          setTimeout(() => {
+            setVisibleCount((prev) => prev + 5);
+            setIsLoadingMore(false);
+          }, 300);
+        }
+      },
+      { threshold: 0.1, rootMargin: "250px" }
+    );
+
+    observer.observe(node);
+    return () => {
+      observer.disconnect();
+    };
+  }, [hasMoreItems, isLoadingMore, currentTotalItems]);
 
   // Utility to format category name beautifully
   const formatCategoryName = (cat: string) => {
@@ -185,55 +215,34 @@ export default function BlogListingPage() {
     </div>
   );
 
-  const renderPaginationControls = (totalPages: number) => {
-    if (totalPages <= 1) return null;
+  const renderBlogList = (postsList: Blog[]) => {
+    const displayed = postsList.slice(0, visibleCount);
+    return displayed.map(post => renderBlogCard(post));
+  };
+
+  const renderInfiniteScrollSentinel = (totalCount: number) => {
+    const hasMore = visibleCount < totalCount;
+
     return (
-      <div className="blog-pagination-wrapper">
-        <button
-          onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-          disabled={currentPage === 1}
-          className="pagination-arrow-btn"
-        >
-          <ChevronLeft size={16} />
-          <span>Prev</span>
-        </button>
-        <div className="pagination-numbers">
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNum => (
-            <button
-              key={pageNum}
-              onClick={() => setCurrentPage(pageNum)}
-              className={`pagination-number-btn ${currentPage === pageNum ? 'active' : ''}`}
-            >
-              {pageNum}
-            </button>
-          ))}
-        </div>
-        <button
-          onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-          disabled={currentPage === totalPages}
-          className="pagination-arrow-btn"
-        >
-          <span>Next</span>
-          <ChevronRight size={16} />
-        </button>
+      <div className="infinite-scroll-sentinel-wrapper">
+        {hasMore ? (
+          <div ref={observerRef} className="infinite-loader-box">
+            <svg viewBox="0 0 100 100" className="loader-lotus-spin">
+              <path d="M50 25 C45 45 35 60 50 80 C65 60 55 45 50 25 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
+              <path d="M50 80 C35 75 25 60 20 40 C35 50 45 60 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
+              <path d="M50 80 C65 75 75 60 80 40 C65 50 55 60 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
+            </svg>
+            <span className="loader-text">Loading more articles...</span>
+          </div>
+        ) : totalCount > 0 ? (
+          <div className="end-of-list-badge">
+            <Sparkles size={16} style={{ color: "#a855f7" }} />
+            <span>You've reached the end of our articles</span>
+          </div>
+        ) : null}
       </div>
     );
   };
-
-  const isFilteringActive = activeCategory !== "all" || searchQuery !== "";
-
-  // Pagination Calculations
-  const totalPagesFiltered = Math.ceil(filteredBlogs.length / itemsPerPage);
-  const paginatedFilteredBlogs = filteredBlogs.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
-  const totalPagesAll = Math.ceil(blogs.length / itemsPerPage);
-  const paginatedAllBlogs = blogs.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
 
   return (
     <div className="blog-center-dashboard">
@@ -271,9 +280,9 @@ export default function BlogListingPage() {
           ) : (
             <>
               <div className="latest-posts-grid">
-                {paginatedFilteredBlogs.map(post => renderBlogCard(post))}
+                {renderBlogList(filteredBlogs)}
               </div>
-              {renderPaginationControls(totalPagesFiltered)}
+              {renderInfiniteScrollSentinel(filteredBlogs.length)}
             </>
           )}
         </div>
@@ -328,9 +337,9 @@ export default function BlogListingPage() {
             ) : (
               <>
                 <div className="latest-posts-grid">
-                  {paginatedAllBlogs.map(post => renderBlogCard(post))}
+                  {renderBlogList(blogs)}
                 </div>
-                {renderPaginationControls(totalPagesAll)}
+                {renderInfiniteScrollSentinel(blogs.length)}
               </>
             )}
           </div>
@@ -653,69 +662,45 @@ export default function BlogListingPage() {
           font-size: 0.85rem;
         }
 
-        /* Blog Pagination Styles */
-        .blog-pagination-wrapper {
+        /* Infinite Scroll Sentinel */
+        .infinite-scroll-sentinel-wrapper {
           display: flex;
           justify-content: center;
           align-items: center;
-          gap: 16px;
-          margin-top: 32px;
-          padding-top: 16px;
-          border-top: 1px solid rgba(168, 85, 247, 0.08);
+          padding: 24px 0 12px;
           width: 100%;
         }
-        .pagination-arrow-btn {
+        .infinite-loader-box {
           display: flex;
           align-items: center;
-          gap: 6px;
-          padding: 8px 16px;
+          gap: 10px;
+          padding: 10px 20px;
           border-radius: 20px;
-          border: 1px solid rgba(168, 85, 247, 0.15);
-          background: #ffffff;
-          color: #7c3aed;
-          font-size: 0.8rem;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.2s ease;
-        }
-        .pagination-arrow-btn:hover:not(:disabled) {
           background: #faf5ff;
-          border-color: #7c3aed;
-          transform: translateY(-1px);
+          border: 1px solid rgba(168, 85, 247, 0.15);
+          color: #7c3aed;
+          font-size: 0.82rem;
+          font-weight: 600;
         }
-        .pagination-arrow-btn:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
+        .loader-lotus-spin {
+          width: 20px;
+          height: 20px;
+          animation: spinLotus 2s linear infinite;
         }
-        .pagination-numbers {
+        @keyframes spinLotus {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        .end-of-list-badge {
           display: flex;
           align-items: center;
           gap: 8px;
-        }
-        .pagination-number-btn {
-          width: 36px;
-          height: 36px;
-          border-radius: 50%;
-          border: 1px solid transparent;
-          background: transparent;
-          color: #4b5563;
-          font-size: 0.85rem;
-          font-weight: 600;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-          transition: all 0.2s ease;
-        }
-        .pagination-number-btn:hover:not(.active) {
-          background: #faf5ff;
-          color: #7c3aed;
-          border-color: rgba(168, 85, 247, 0.15);
-        }
-        .pagination-number-btn.active {
-          background: #7c3aed;
-          color: #ffffff;
-          box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
+          font-size: 0.82rem;
+          color: #6b7280;
+          padding: 8px 16px;
+          background: #ffffff;
+          border-radius: 20px;
+          border: 1px solid rgba(0, 0, 0, 0.05);
         }
 
         @media (max-width: 1024px) {

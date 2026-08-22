@@ -873,7 +873,7 @@ export default function UserProfilePage() {
                   >
                     <span>⚙️</span> Manage Profile
                   </button>
-                  {['admin', 'super_admin', 'guru'].includes(profileData?.role || sessionUser?.role) && (
+                  {['admin', 'super_admin', 'guru', 'subadmin'].includes(profileData?.role || sessionUser?.role) && (
                     <button
                       className="dash-nav-btn"
                       onClick={() => router.push('/admin')}

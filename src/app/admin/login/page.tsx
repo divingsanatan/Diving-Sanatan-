@@ -22,7 +22,7 @@ export default function AdminLoginPage() {
     if (userSessionStr) {
       try {
         const userObj = JSON.parse(userSessionStr);
-        if (["admin", "super_admin", "guru"].includes(userObj.role)) {
+        if (["admin", "super_admin", "guru", "subadmin"].includes(userObj.role)) {
           isUserAuth = true;
         }
       } catch (e) {}
@@ -44,9 +44,10 @@ export default function AdminLoginPage() {
       const json = await res.json();
       
       if (json.success) {
-        if (["admin", "super_admin", "guru"].includes(json.data.role)) {
+        if (["admin", "super_admin", "guru", "subadmin"].includes(json.data.role)) {
           window.sessionStorage.setItem("divingsanatan_admin_auth", "true");
           window.sessionStorage.setItem("divingsanatan_admin_user", JSON.stringify(json.data));
+          window.localStorage.setItem("divingsanatan_user_session", JSON.stringify(json.data));
           setError("");
           router.push("/admin");
         } else {

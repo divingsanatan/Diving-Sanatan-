@@ -78,7 +78,6 @@ export default function AdminBlogsPage() {
   // Rich text editor ref
   const editorRef = useRef<HTMLDivElement>(null);
   const [editorReady, setEditorReady] = useState(false);
-  const [isHtmlMode, setIsHtmlMode] = useState(false);
 
   // Blog Category states
   const [categories, setCategories] = useState<BlogCategory[]>([]);
@@ -333,17 +332,16 @@ export default function AdminBlogsPage() {
     }
   }, []);
 
-  // Populate editor when modal opens or toggles HTML mode
+  // Populate editor when modal opens
   useEffect(() => {
-    if (isModalOpen && !isHtmlMode && editorRef.current) {
+    if (isModalOpen && editorRef.current) {
       editorRef.current.innerHTML = content || "";
       setEditorReady(true);
     }
     if (!isModalOpen) {
       setEditorReady(false);
-      setIsHtmlMode(false);
     }
-  }, [isModalOpen, isHtmlMode]);
+  }, [isModalOpen]);
 
   // RTE exec helper
   const execCmd = (cmd: string, value?: string) => {
@@ -1200,75 +1198,41 @@ export default function AdminBlogsPage() {
                     {/* Toolbar */}
                     <div className="rte-toolbar">
                       <div className="rte-toolbar-group">
-                        <button type="button" className="rte-btn" disabled={isHtmlMode} title="Bold" onMouseDown={(e) => { e.preventDefault(); if (!isHtmlMode) execCmd("bold"); }}><b>B</b></button>
-                        <button type="button" className="rte-btn" disabled={isHtmlMode} title="Italic" onMouseDown={(e) => { e.preventDefault(); if (!isHtmlMode) execCmd("italic"); }}><i>I</i></button>
-                        <button type="button" className="rte-btn" disabled={isHtmlMode} title="Underline" onMouseDown={(e) => { e.preventDefault(); if (!isHtmlMode) execCmd("underline"); }}><u>U</u></button>
-                        <button type="button" className="rte-btn" disabled={isHtmlMode} title="Strikethrough" onMouseDown={(e) => { e.preventDefault(); if (!isHtmlMode) execCmd("strikeThrough"); }}><s>S</s></button>
+                        <button type="button" className="rte-btn" title="Bold" onMouseDown={(e) => { e.preventDefault(); execCmd("bold"); }}><b>B</b></button>
+                        <button type="button" className="rte-btn" title="Italic" onMouseDown={(e) => { e.preventDefault(); execCmd("italic"); }}><i>I</i></button>
+                        <button type="button" className="rte-btn" title="Underline" onMouseDown={(e) => { e.preventDefault(); execCmd("underline"); }}><u>U</u></button>
+                        <button type="button" className="rte-btn" title="Strikethrough" onMouseDown={(e) => { e.preventDefault(); execCmd("strikeThrough"); }}><s>S</s></button>
                       </div>
                       <div className="rte-toolbar-divider" />
                       <div className="rte-toolbar-group">
-                        <button type="button" className="rte-btn rte-btn-text" disabled={isHtmlMode} title="Heading 2" onMouseDown={(e) => { e.preventDefault(); if (!isHtmlMode) execCmd("formatBlock", "H2"); }}>H2</button>
-                        <button type="button" className="rte-btn rte-btn-text" disabled={isHtmlMode} title="Heading 3" onMouseDown={(e) => { e.preventDefault(); if (!isHtmlMode) execCmd("formatBlock", "H3"); }}>H3</button>
-                        <button type="button" className="rte-btn rte-btn-text" disabled={isHtmlMode} title="Paragraph" onMouseDown={(e) => { e.preventDefault(); if (!isHtmlMode) execCmd("formatBlock", "P"); }}>¶</button>
+                        <button type="button" className="rte-btn rte-btn-text" title="Heading 2" onMouseDown={(e) => { e.preventDefault(); execCmd("formatBlock", "H2"); }}>H2</button>
+                        <button type="button" className="rte-btn rte-btn-text" title="Heading 3" onMouseDown={(e) => { e.preventDefault(); execCmd("formatBlock", "H3"); }}>H3</button>
+                        <button type="button" className="rte-btn rte-btn-text" title="Paragraph" onMouseDown={(e) => { e.preventDefault(); execCmd("formatBlock", "P"); }}>¶</button>
                       </div>
                       <div className="rte-toolbar-divider" />
                       <div className="rte-toolbar-group">
-                        <button type="button" className="rte-btn" disabled={isHtmlMode} title="Bullet List" onMouseDown={(e) => { e.preventDefault(); if (!isHtmlMode) execCmd("insertUnorderedList"); }}>≡</button>
-                        <button type="button" className="rte-btn" disabled={isHtmlMode} title="Numbered List" onMouseDown={(e) => { e.preventDefault(); if (!isHtmlMode) execCmd("insertOrderedList"); }}>1.</button>
-                        <button type="button" className="rte-btn" disabled={isHtmlMode} title="Blockquote" onMouseDown={(e) => { e.preventDefault(); if (!isHtmlMode) execCmd("formatBlock", "BLOCKQUOTE"); }}>"</button>
+                        <button type="button" className="rte-btn" title="Bullet List" onMouseDown={(e) => { e.preventDefault(); execCmd("insertUnorderedList"); }}>≡</button>
+                        <button type="button" className="rte-btn" title="Numbered List" onMouseDown={(e) => { e.preventDefault(); execCmd("insertOrderedList"); }}>1.</button>
+                        <button type="button" className="rte-btn" title="Blockquote" onMouseDown={(e) => { e.preventDefault(); execCmd("formatBlock", "BLOCKQUOTE"); }}>"</button>
                       </div>
                       <div className="rte-toolbar-divider" />
                       <div className="rte-toolbar-group">
-                        <button type="button" className="rte-btn" disabled={isHtmlMode} title="Insert Link" onMouseDown={(e) => { e.preventDefault(); if (!isHtmlMode) insertLink(); }}>🔗</button>
-                        <button type="button" className="rte-btn" disabled={isHtmlMode} title="Unlink" onMouseDown={(e) => { e.preventDefault(); if (!isHtmlMode) execCmd("unlink"); }}>🚫</button>
-                        <button type="button" className="rte-btn rte-btn-danger" disabled={isHtmlMode} title="Clear Formatting" onMouseDown={(e) => { e.preventDefault(); if (!isHtmlMode) execCmd("removeFormat"); }}>✕</button>
-                      </div>
-                      <div className="rte-toolbar-divider" />
-                      <div className="rte-toolbar-group" style={{ marginLeft: "auto" }}>
-                        <button
-                          type="button"
-                          className={`rte-btn rte-btn-text ${isHtmlMode ? "rte-btn-active" : ""}`}
-                          style={{
-                            width: "auto",
-                            padding: "0 10px",
-                            height: "28px",
-                            background: isHtmlMode ? "rgba(124, 58, 237, 0.12)" : "transparent",
-                            border: "1px solid",
-                            borderColor: isHtmlMode ? "rgba(124, 58, 237, 0.3)" : "rgba(0, 0, 0, 0.08)",
-                            borderRadius: "6px",
-                            color: isHtmlMode ? "#7c3aed" : "#475569",
-                            fontWeight: 600,
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "4px"
-                          }}
-                          onClick={() => setIsHtmlMode(!isHtmlMode)}
-                          title="Switch between Rich Text and Raw HTML"
-                        >
-                          {isHtmlMode ? "✍️ Visual Editor" : "HTML Mode"}
-                        </button>
+                        <button type="button" className="rte-btn" title="Insert Link" onMouseDown={(e) => { e.preventDefault(); insertLink(); }}>🔗</button>
+                        <button type="button" className="rte-btn" title="Unlink" onMouseDown={(e) => { e.preventDefault(); execCmd("unlink"); }}>🚫</button>
+                        <button type="button" className="rte-btn rte-btn-danger" title="Clear Formatting" onMouseDown={(e) => { e.preventDefault(); execCmd("removeFormat"); }}>✕</button>
                       </div>
                     </div>
 
-                    {/* Editable area */}
-                    {isHtmlMode ? (
-                      <textarea
-                        className="rte-editable rte-html-textarea"
-                        value={content}
-                        onChange={(e) => handleContentChange(e.target.value)}
-                        placeholder="Draft the article HTML here..."
-                      />
-                    ) : (
-                      <div
-                        ref={editorRef}
-                        className="rte-editable"
-                        contentEditable
-                        suppressContentEditableWarning
-                        onInput={syncEditorContent}
-                        onBlur={syncEditorContent}
-                        data-placeholder="Draft the article content here — use the toolbar above for formatting..."
-                      />
-                    )}
+                    {/* Simple Visual Editable area */}
+                    <div
+                      ref={editorRef}
+                      className="rte-editable"
+                      contentEditable
+                      suppressContentEditableWarning
+                      onInput={syncEditorContent}
+                      onBlur={syncEditorContent}
+                      data-placeholder="Draft the article content here — use the toolbar above for formatting..."
+                    />
 
                     {/* Hidden input to satisfy required validation */}
                     <input
@@ -2032,6 +1996,7 @@ export default function AdminBlogsPage() {
           background: rgba(255, 255, 255, 0.85);
           box-shadow: 0 2px 12px rgba(0,0,0,0.04);
           transition: border-color 0.2s ease, box-shadow 0.2s ease;
+          position: relative;
         }
         .rte-wrapper:focus-within {
           border-color: #a855f7;
@@ -2113,10 +2078,12 @@ export default function AdminBlogsPage() {
           padding: 16px 18px;
           font-family: var(--font-sans);
           font-size: 0.92rem;
-          line-height: 1.8;
+          line-height: 1.6;
           color: #1e293b;
           outline: none;
           word-break: break-word;
+          position: relative;
+          caret-color: #7c3aed;
         }
         .rte-editable:empty:before {
           content: attr(data-placeholder);

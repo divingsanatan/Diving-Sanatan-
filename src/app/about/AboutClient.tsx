@@ -488,19 +488,22 @@ export default function AboutClient() {
                   <div className="no-results">No matching healers found.</div>
                 ) : (
                   filteredHealers.map((prac) => (
-                    <Link href={`/gurus/${prac.id}`} key={prac.id} legacyBehavior>
-                      <a className="healer-card" style={{ textDecoration: 'none', color: 'inherit' }}>
-                        <img
-                          className="healer-avatar"
-                          src={getHealerAvatar(prac.image, prac.name)}
-                          alt={prac.name}
-                        />
-                        <h4>{prac.name}</h4>
-                        <div className="role">{prac.specialty}</div>
-                        <div className="exp">
-                          {prac.reviewsCount > 50 ? "12+ Years Exp." : "8+ Years Exp."}
-                        </div>
-                      </a>
+                    <Link
+                      href={`/gurus/${prac.id}`}
+                      key={prac.id}
+                      className="healer-card"
+                      style={{ textDecoration: 'none', color: 'inherit' }}
+                    >
+                      <img
+                        className="healer-avatar"
+                        src={getHealerAvatar(prac.image, prac.name)}
+                        alt={prac.name}
+                      />
+                      <h4>{prac.name}</h4>
+                      <div className="role">{prac.specialty}</div>
+                      <div className="exp">
+                        {prac.reviewsCount > 50 ? "12+ Years Exp." : "8+ Years Exp."}
+                      </div>
                     </Link>
                   ))
                 )}

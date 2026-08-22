@@ -11,7 +11,7 @@
   
   background-color: var(--admin-bg-base) !important;
   color: #212529 !important;
-  font-family: 'Source Sans Pro', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+  font-family: 'Poppins', var(--font-family), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
 }
 
 /* Sidebar styling */
@@ -331,7 +331,7 @@
 }
 
 /* Forms styling */
-.admin-lte-theme input:not([type="checkbox"]):not([type="radio"]),
+.admin-lte-theme input:not([type="checkbox"]):not([type="radio"]):not(.visually-hidden-input):not(.hidden-file-input),
 .admin-lte-theme select,
 .admin-lte-theme textarea,
 .admin-lte-theme .glass-input,
@@ -351,6 +351,25 @@
   box-shadow: none !important;
   transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out !important;
   outline: none !important;
+}
+
+.admin-lte-theme input.visually-hidden-input {
+  opacity: 0 !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  border: none !important;
+  margin: -1px !important;
+  position: absolute !important;
+  clip: rect(0, 0, 0, 0) !important;
+  pointer-events: none !important;
+}
+
+.admin-lte-theme input.hidden-file-input {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  opacity: 0 !important;
 }
 
 .admin-lte-theme textarea,

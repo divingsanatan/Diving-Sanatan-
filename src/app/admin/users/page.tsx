@@ -254,6 +254,7 @@ export default function AdminUsersPage() {
                             >
                               <option value="user">User</option>
                               <option value="guru">Guru</option>
+                              <option value="subadmin">Sub Admin</option>
                               <option value="admin">Admin</option>
                               {user.role === 'super_admin' && <option value="super_admin">Super Admin</option>}
                             </select>
@@ -352,6 +353,7 @@ export default function AdminUsersPage() {
                     >
                       <option value="user">User</option>
                       <option value="guru">Guru</option>
+                      <option value="subadmin">Sub Admin</option>
                       <option value="admin">Admin</option>
                     </select>
                   </div>
