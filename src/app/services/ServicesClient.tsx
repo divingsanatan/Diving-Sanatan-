@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { formatCurrency } from "@/utils/formatters";
 import { Service, Category, Review } from "@/types/database";
+import { cachedFetch } from "@/utils/apiCache";
 import {
   Search,
   Grid,
@@ -131,31 +132,37 @@ export default function ServicesPage() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Load database entities
+  // Load database entities with Stale-While-Revalidate caching
   useEffect(() => {
-    async function loadData() {
-      try {
-        setLoading(true);
-        const [catRes, servRes, revRes] = await Promise.all([
-          fetch("/api/categories"),
-          fetch("/api/services"),
-          fetch("/api/reviews")
-        ]);
+    let isMounted = true;
 
-        const catJson = await catRes.json();
-        const servJson = await servRes.json();
-        const revJson = await revRes.json();
+    const fetchCategories = cachedFetch<any>("/api/categories", undefined, (catJson) => {
+      if (catJson && catJson.success && isMounted) setCategories(catJson.data);
+    }).then((catJson) => {
+      if (catJson && catJson.success && isMounted) setCategories(catJson.data);
+    });
 
-        if (catJson.success) setCategories(catJson.data);
-        if (servJson.success) setServices(servJson.data);
-        if (revJson.success) setReviews(revJson.data);
-      } catch (err) {
-        console.error("Failed to load services data:", err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadData();
+    const fetchServices = cachedFetch<any>("/api/services", undefined, (servJson) => {
+      if (servJson && servJson.success && isMounted) setServices(servJson.data);
+    }).then((servJson) => {
+      if (servJson && servJson.success && isMounted) setServices(servJson.data);
+    });
+
+    const fetchReviews = cachedFetch<any>("/api/reviews", undefined, (revJson) => {
+      if (revJson && revJson.success && isMounted) setReviews(revJson.data);
+    }).then((revJson) => {
+      if (revJson && revJson.success && isMounted) setReviews(revJson.data);
+    });
+
+    Promise.all([fetchCategories, fetchServices, fetchReviews])
+      .catch((err) => console.error("Failed to load services data:", err))
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Load cart selections from localStorage
@@ -613,18 +620,7 @@ export default function ServicesPage() {
                 </div>
               )}
 
-              {/* Slider pagination dots for slides slider controls */}
-              {maxFeaturedIndex > 0 && (
-                <div className="carousel-dots">
-                  {Array.from({ length: maxFeaturedIndex + 1 }).map((_, idx) => (
-                    <button
-                      key={idx}
-                      className={`carousel-dot ${featuredIndex === idx ? "active" : ""}`}
-                      onClick={() => setFeaturedIndex(idx)}
-                    />
-                  ))}
-                </div>
-              )}
+
             </div>
 
             {/* Healing Programs */}

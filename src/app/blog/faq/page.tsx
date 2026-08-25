@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/Button";
 import { useBlog } from "../BlogContext";
 import { useRouter } from "next/navigation";
 import { FAQItem } from "@/types/database";
+import { cachedFetch } from "@/utils/apiCache";
 import {
   Plus,
   Minus,
@@ -353,47 +354,33 @@ const faqSchema = {
   ]
 };
 
+// Pre-seeded initial FAQs from schema to guarantee instant (0ms) first-paint render
+const INITIAL_FAQS: FAQItem[] = faqSchema.mainEntity.map((item, index) => {
+  const seedIds = ["heal-1", "heal-2", "book-1", "prac-2", "gen-1"];
+  return {
+    id: seedIds[index] || `faq-seed-${index}`,
+    question: item.name,
+    answer: item.acceptedAnswer.text,
+    verified: true,
+    isPublished: true,
+  };
+});
+
 export default function FAQPage() {
   const router = useRouter();
   const { searchQuery, setSearchQuery } = useBlog();
-  const [faqs, setFaqs] = useState<FAQItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [faqs, setFaqs] = useState<FAQItem[]>(INITIAL_FAQS);
+  const [loading, setLoading] = useState(false);
 
-  // Custom accordions state
-  const [openAccordions, setOpenAccordions] = useState<Record<string, boolean>>({});
+  // Infinite Scroll State
+  const [visibleCount, setVisibleCount] = useState(6);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const observerRef = useRef<HTMLDivElement | null>(null);
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
-
-  // Load FAQs on mount
-  useEffect(() => {
-    const loadFaqs = async () => {
-      try {
-        setLoading(true);
-        const res = await fetch("/api/faq");
-        const json = await res.json();
-        if (json.success) {
-          const published = (json.data || []).filter((f: FAQItem) => f.isPublished);
-          setFaqs(published);
-          // Auto-open first item if available
-          if (published.length > 0) {
-            const firstItem = published.find((f: FAQItem) => f.id === "heal-1") || published[0];
-            setOpenAccordions({ [firstItem.id]: true });
-          }
-        }
-      } catch (err) {
-        console.error("Error loading FAQs:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadFaqs();
-  }, []);
-
-  // Reset page when search changes
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery]);
+  // Custom accordions state - auto open first item
+  const [openAccordions, setOpenAccordions] = useState<Record<string, boolean>>({
+    [INITIAL_FAQS[0]?.id || "heal-1"]: true,
+  });
 
   // Handle accordion toggle
   const toggleAccordion = (id: string) => {
@@ -413,15 +400,8 @@ export default function FAQPage() {
 
   // Click on a trending question in the right sidebar
   const handleTrendingClick = (faqId: string) => {
-    // 1. Clear search so the item is visible
     setSearchQuery("");
-
-    // 2. Open this specific accordion
-    setOpenAccordions({
-      [faqId]: true,
-    });
-
-    // 3. Scroll to the question card smoothly
+    setOpenAccordions({ [faqId]: true });
     setTimeout(() => {
       const cardEl = document.getElementById(`faq-card-${faqId}`);
       if (cardEl) {
@@ -429,6 +409,27 @@ export default function FAQPage() {
       }
     }, 150);
   };
+
+  // Load FAQs on mount with Stale-While-Revalidate caching
+  useEffect(() => {
+    let isMounted = true;
+    const processFaqsJson = (json: any) => {
+      if (json && json.success && Array.isArray(json.data) && json.data.length > 0) {
+        const published = json.data.filter((f: FAQItem) => f.isPublished);
+        if (published.length > 0 && isMounted) {
+          setFaqs(published);
+        }
+      }
+    };
+
+    cachedFetch<any>("/api/faq", undefined, processFaqsJson)
+      .then(processFaqsJson)
+      .catch((err) => console.error("Error loading FAQs:", err));
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Filter FAQs based on search query
   const filteredFAQs = faqs.filter((faq) => {
@@ -438,11 +439,37 @@ export default function FAQPage() {
     return matchesSearch;
   });
 
-  const totalPages = Math.ceil(filteredFAQs.length / itemsPerPage);
-  const paginatedFAQs = filteredFAQs.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  const paginatedFAQs = filteredFAQs.slice(0, visibleCount);
+  const hasMoreItems = visibleCount < filteredFAQs.length;
+
+  // Reset visibleCount when search changes
+  useEffect(() => {
+    setVisibleCount(6);
+  }, [searchQuery]);
+
+  // IntersectionObserver for Infinite Scrolling
+  useEffect(() => {
+    const node = observerRef.current;
+    if (!node || !hasMoreItems) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !isLoadingMore) {
+          setIsLoadingMore(true);
+          setTimeout(() => {
+            setVisibleCount((prev) => prev + 5);
+            setIsLoadingMore(false);
+          }, 250);
+        }
+      },
+      { threshold: 0.1, rootMargin: "250px" }
+    );
+
+    observer.observe(node);
+    return () => {
+      observer.disconnect();
+    };
+  }, [hasMoreItems, isLoadingMore, filteredFAQs.length]);
 
   return (
     <>
@@ -555,36 +582,24 @@ export default function FAQPage() {
             )}
           </div>
 
-          {/* Pagination Controls */}
-          {totalPages > 1 && (
-            <div className="faq-pagination-controls">
-              <button
-                className="pagination-btn arrow-btn"
-                onClick={() => { setCurrentPage(prev => Math.max(prev - 1, 1)); scrollToSection("popular-questions"); }}
-                disabled={currentPage === 1}
-              >
-                ‹ Prev
-              </button>
-
-              <div className="pagination-numbers">
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(num => (
-                  <button
-                    key={num}
-                    className={`pagination-btn number-btn ${currentPage === num ? "active" : ""}`}
-                    onClick={() => { setCurrentPage(num); scrollToSection("popular-questions"); }}
-                  >
-                    {num}
-                  </button>
-                ))}
-              </div>
-
-              <button
-                className="pagination-btn arrow-btn"
-                onClick={() => { setCurrentPage(prev => Math.min(prev + 1, totalPages)); scrollToSection("popular-questions"); }}
-                disabled={currentPage === totalPages}
-              >
-                Next ›
-              </button>
+          {/* Infinite Scroll Sentinel / Loader */}
+          {filteredFAQs.length > 0 && (
+            <div className="faq-infinite-scroll-container">
+              {hasMoreItems ? (
+                <div ref={observerRef} className="faq-infinite-loader-box">
+                  <svg viewBox="0 0 100 100" className="faq-loader-spin">
+                    <path d="M50 25 C45 45 35 60 50 80 C65 60 55 45 50 25 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
+                    <path d="M50 80 C35 75 25 60 20 40 C35 50 45 60 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
+                    <path d="M50 80 C65 75 75 60 80 40 C65 50 55 60 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
+                  </svg>
+                  <span>Loading more questions...</span>
+                </div>
+              ) : (
+                <div className="faq-end-list-badge">
+                  <Sparkles size={16} style={{ color: "#7c3aed" }} />
+                  <span>You've reached the end of the questions</span>
+                </div>
+              )}
             </div>
           )}
 
@@ -739,6 +754,49 @@ export default function FAQPage() {
         </div>
 
         <style jsx>{`
+        /* Infinite Scroll Styles */
+        .faq-infinite-scroll-container {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          padding: 24px 0 12px;
+          margin-top: 16px;
+          margin-bottom: 24px;
+          width: 100%;
+        }
+        .faq-infinite-loader-box {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 10px 20px;
+          border-radius: 20px;
+          background: #faf5ff;
+          border: 1px solid rgba(168, 85, 247, 0.15);
+          color: #7c3aed;
+          font-size: 0.82rem;
+          font-weight: 600;
+        }
+        .faq-loader-spin {
+          width: 20px;
+          height: 20px;
+          animation: spinLotus 2s linear infinite;
+        }
+        @keyframes spinLotus {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        .faq-end-list-badge {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 0.82rem;
+          color: #6b7280;
+          padding: 8px 18px;
+          background: #ffffff;
+          border-radius: 20px;
+          border: 1px solid rgba(168, 85, 247, 0.1);
+        }
+
         /* Core Two-Column Layout */
         .faq-columns-layout {
           display: grid;

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useBlog } from "./BlogContext";
 import { Service } from "@/types/database";
+import { cachedFetch } from "@/utils/apiCache";
 import {
   Flower, Sparkles, Heart, Volume2, User,
   Search, Monitor, Play, Compass, RefreshCw,

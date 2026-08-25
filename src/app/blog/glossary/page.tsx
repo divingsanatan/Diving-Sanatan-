@@ -1,18 +1,25 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useBlog } from "../BlogContext";
 import { GlossaryTerm } from "@/types/database";
 import { GlossaryTermIllustration } from "@/components/blog/GlossaryTermIllustration";
+import { Sparkles } from "lucide-react";
 
-const PUBLIC_PAGE_SIZE = 5; // Display 5 cards per page on the public page for clean spacing
+const PUBLIC_PAGE_SIZE = 5; // Display 5 terms per batch
 
 export default function GlossaryPage() {
   const { searchQuery } = useBlog();
   const [activeLetter, setActiveLetter] = useState("all");
+  const [activeScrollLetter, setActiveScrollLetter] = useState("all");
   const [terms, setTerms] = useState<GlossaryTerm[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
+
+  // Infinite Scroll State
+  const [visibleCount, setVisibleCount] = useState(PUBLIC_PAGE_SIZE);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const observerRef = useRef<HTMLDivElement | null>(null);
+  const activeBtnRef = useRef<HTMLButtonElement | null>(null);
 
   const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
@@ -31,18 +38,6 @@ export default function GlossaryPage() {
     loadTerms();
   }, []);
 
-  const speakTerm = (term: GlossaryTerm) => {
-    if (typeof window !== "undefined" && window.speechSynthesis) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(`${term.word}. ${term.definition}`);
-      utterance.rate = 0.95;
-      utterance.pitch = 1.0;
-      window.speechSynthesis.speak(utterance);
-    } else {
-      alert("Text-to-speech is not supported in this browser.");
-    }
-  };
-
   const filteredTerms = terms.filter((t) => {
     const matchesLetter =
       activeLetter === "all" || t.word.toLowerCase().startsWith(activeLetter.toLowerCase());
@@ -53,15 +48,96 @@ export default function GlossaryPage() {
     return matchesLetter && matchesSearch;
   });
 
-  // Whenever filters change, go back to page 1
+  // Whenever filters change, reset visible count and scroll letter
   useEffect(() => {
-    setCurrentPage(1);
+    setVisibleCount(PUBLIC_PAGE_SIZE);
+    if (activeLetter !== "all") {
+      setActiveScrollLetter(activeLetter);
+    } else {
+      setActiveScrollLetter("all");
+    }
   }, [activeLetter, searchQuery]);
 
-  // Pagination bounds
-  const totalPages = Math.ceil(filteredTerms.length / PUBLIC_PAGE_SIZE) || 1;
-  const safePage = Math.min(currentPage, totalPages);
-  const paginatedTerms = filteredTerms.slice((safePage - 1) * PUBLIC_PAGE_SIZE, safePage * PUBLIC_PAGE_SIZE);
+  const hasMoreItems = visibleCount < filteredTerms.length;
+
+  // IntersectionObserver for Infinite Scrolling
+  useEffect(() => {
+    const node = observerRef.current;
+    if (!node || !hasMoreItems) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !isLoadingMore) {
+          setIsLoadingMore(true);
+          setTimeout(() => {
+            setVisibleCount((prev) => prev + PUBLIC_PAGE_SIZE);
+            setIsLoadingMore(false);
+          }, 300);
+        }
+      },
+      { threshold: 0.1, rootMargin: "250px" }
+    );
+
+    observer.observe(node);
+    return () => {
+      observer.disconnect();
+    };
+  }, [hasMoreItems, isLoadingMore, filteredTerms.length]);
+
+  const displayedTerms = filteredTerms.slice(0, visibleCount);
+
+  // IntersectionObserver for dynamic scroll letter highlighting
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const cardElements = document.querySelectorAll(".term-card[data-letter]");
+    if (cardElements.length === 0) return;
+
+    const cardObserver = new IntersectionObserver(
+      (entries) => {
+        const visibleEntries = entries.filter((e) => e.isIntersecting);
+        if (visibleEntries.length > 0) {
+          visibleEntries.sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+          const topCard = visibleEntries[0].target as HTMLElement;
+          const letter = topCard.getAttribute("data-letter");
+          if (letter) {
+            setActiveScrollLetter(letter);
+          }
+        }
+      },
+      {
+        rootMargin: "-80px 0px -60% 0px",
+        threshold: 0.1,
+      }
+    );
+
+    cardElements.forEach((el) => cardObserver.observe(el));
+
+    return () => {
+      cardObserver.disconnect();
+    };
+  }, [displayedTerms, activeLetter]);
+
+  // Auto-scroll active letter button into view horizontally inside the alphabet bar
+  useEffect(() => {
+    if (activeBtnRef.current) {
+      activeBtnRef.current.scrollIntoView({
+        behavior: "smooth",
+        inline: "center",
+        block: "nearest",
+      });
+    }
+  }, [activeLetter, activeScrollLetter]);
+
+  const isLetterActive = (letter: string) => {
+    if (letter === "all") {
+      return activeLetter === "all" && activeScrollLetter === "all";
+    }
+    if (activeLetter !== "all") {
+      return activeLetter === letter;
+    }
+    return activeScrollLetter === letter;
+  };
 
   return (
     <div className="glossary-page">
@@ -86,20 +162,32 @@ export default function GlossaryPage() {
         <div className="alphabet-bar">
           <button
             type="button"
-            className={`letter-btn ${activeLetter === "all" ? "active" : ""}`}
-            onClick={() => setActiveLetter("all")}
+            ref={isLetterActive("all") ? activeBtnRef : null}
+            className={`letter-btn ${isLetterActive("all") ? "active" : ""}`}
+            onClick={() => {
+              setActiveLetter("all");
+              setActiveScrollLetter("all");
+            }}
           >
             All
           </button>
           {letters.map((letter) => {
             const hasTerms = terms.some((t) => t.word.toUpperCase().startsWith(letter));
+            const isActive = isLetterActive(letter);
+
             return (
               <button
                 key={letter}
+                ref={isActive ? activeBtnRef : null}
                 type="button"
-                className={`letter-btn ${activeLetter === letter ? "active" : ""} ${!hasTerms ? "disabled" : ""}`}
-                onClick={() => hasTerms && setActiveLetter(letter)}
-                disabled={!hasTerms && activeLetter !== letter}
+                className={`letter-btn ${isActive ? "active" : ""} ${!hasTerms ? "disabled" : ""}`}
+                onClick={() => {
+                  if (hasTerms) {
+                    setActiveLetter(letter);
+                    setActiveScrollLetter(letter);
+                  }
+                }}
+                disabled={!hasTerms && !isActive}
               >
                 {letter}
               </button>
@@ -119,75 +207,50 @@ export default function GlossaryPage() {
           </div>
         ) : (
           <>
-            {paginatedTerms.map((term) => (
-              <div key={term.id} className="term-card">
-                <div className="term-card-content">
-                  <div className="term-main-info">
-                    <div className="term-title-row">
-                      <div className="title-left">
-                        <h3 className="term-word">{term.word}</h3>
-                        {term.phonetic && <span className="term-phonetic">{term.phonetic}</span>}
+            {displayedTerms.map((term) => {
+              const firstLetter = term.word.charAt(0).toUpperCase();
+
+              return (
+                <div key={term.id} className="term-card" data-letter={firstLetter}>
+                  <div className="term-card-content">
+                    <div className="term-main-info">
+                      <div className="term-title-row">
+                        <div className="title-left">
+                          <h3 className="term-word">{term.word}</h3>
+                          {term.phonetic && <span className="term-phonetic">{term.phonetic}</span>}
+                        </div>
+
                       </div>
 
-                      <button
-                        type="button"
-                        className="speak-btn"
-                        onClick={() => speakTerm(term)}
-                        title="Listen to pronunciation"
-                      >
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-                          <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />
-                        </svg>
-                      </button>
+                      {term.category && (
+                        <span className="term-category-badge">{term.category}</span>
+                      )}
+                      <p className="term-definition-text" dangerouslySetInnerHTML={{ __html: term.definition }} />
                     </div>
 
-                    {term.category && (
-                      <span className="term-category-badge">{term.category}</span>
-                    )}
-                    <p className="term-definition-text" dangerouslySetInnerHTML={{ __html: term.definition }} />
+                    <GlossaryTermIllustration illustration={term.illustration} />
                   </div>
-
-                  <GlossaryTermIllustration illustration={term.illustration} />
                 </div>
-              </div>
-            ))}
+              );
+            })}
 
-            {filteredTerms.length > PUBLIC_PAGE_SIZE && (
-              <div className="public-pagination-bar">
-                <span className="pagination-info">
-                  Showing {(safePage - 1) * PUBLIC_PAGE_SIZE + 1}–{Math.min(safePage * PUBLIC_PAGE_SIZE, filteredTerms.length)} of {filteredTerms.length}
-                </span>
-                <div className="pagination-controls">
-                  <button
-                    type="button"
-                    className="page-btn"
-                    disabled={safePage <= 1}
-                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                  >
-                    ← Prev
-                  </button>
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                    <button
-                      key={page}
-                      type="button"
-                      className={`page-btn ${page === safePage ? "active" : ""}`}
-                      onClick={() => setCurrentPage(page)}
-                    >
-                      {page}
-                    </button>
-                  ))}
-                  <button
-                    type="button"
-                    className="page-btn"
-                    disabled={safePage >= totalPages}
-                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                  >
-                    Next →
-                  </button>
+            <div className="infinite-scroll-sentinel-wrapper">
+              {hasMoreItems ? (
+                <div ref={observerRef} className="infinite-loader-box">
+                  <svg viewBox="0 0 100 100" className="loader-lotus-spin">
+                    <path d="M50 25 C45 45 35 60 50 80 C65 60 55 45 50 25 Z" fill="none" stroke="#7c3aed" strokeWidth="4" />
+                    <path d="M50 80 C35 75 25 60 20 40 C35 50 45 60 50 80 Z" fill="none" stroke="#7c3aed" strokeWidth="4" />
+                    <path d="M50 80 C65 75 75 60 80 40 C65 50 55 60 50 80 Z" fill="none" stroke="#7c3aed" strokeWidth="4" />
+                  </svg>
+                  <span>Loading more definitions...</span>
                 </div>
-              </div>
-            )}
+              ) : filteredTerms.length > 0 ? (
+                <div className="end-of-list-badge">
+                  <Sparkles size={16} style={{ color: "#7c3aed" }} />
+                  <span>You've reached the end of the glossary</span>
+                </div>
+              ) : null}
+            </div>
           </>
         )}
       </div>
@@ -196,7 +259,7 @@ export default function GlossaryPage() {
         .glossary-page {
           display: flex;
           flex-direction: column;
-          gap: 36px;
+          gap: 28px;
           width: 100%;
         }
         .glossary-header {
@@ -223,10 +286,20 @@ export default function GlossaryPage() {
           display: flex;
           flex-direction: column;
           align-items: flex-start;
-          gap: 16px;
-          padding: 16px 10px;
+          gap: 12px;
+          padding: 14px 18px;
           width: 100%;
-          border-bottom: 1px solid rgba(168, 85, 247, 0.12);
+          position: sticky;
+          top: 80px;
+          z-index: 25;
+          background: rgba(255, 255, 255, 0.92);
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+          border: 1px solid rgba(168, 85, 247, 0.15);
+          border-radius: 20px;
+          box-shadow: 0 10px 30px rgba(124, 58, 237, 0.06);
+          box-sizing: border-box;
+          transition: border-color 0.3s ease, box-shadow 0.3s ease;
         }
         .glossary-active-search-badge {
           display: flex;
@@ -243,42 +316,56 @@ export default function GlossaryPage() {
         }
         .alphabet-bar {
           display: flex;
-          flex-wrap: wrap;
+          flex-wrap: nowrap;
           justify-content: flex-start;
+          align-items: center;
           gap: 6px;
           width: 100%;
-          max-width: 720px;
+          overflow-x: auto;
+          overflow-y: hidden;
+          padding: 2px 2px 6px;
+          scrollbar-width: none; /* Firefox */
+          -ms-overflow-style: none; /* IE 10+ */
+          -webkit-overflow-scrolling: touch;
+        }
+        .alphabet-bar::-webkit-scrollbar {
+          display: none; /* Chrome/Safari/Edge */
         }
         .letter-btn {
           font-family: var(--font-sans);
           font-size: 0.82rem;
           font-weight: 600;
-          color: hsl(var(--text-cream));
-          width: 32px;
-          height: 32px;
-          border-radius: 8px;
-          border: 1px solid rgba(0, 0, 0, 0.04);
-          background: rgba(255, 255, 255, 0.6);
+          color: #4b5563;
+          width: 34px;
+          height: 34px;
+          border-radius: 10px;
+          border: 1px solid rgba(168, 85, 247, 0.1);
+          background: rgba(255, 255, 255, 0.8);
           cursor: pointer;
-          transition: var(--transition-fast);
+          transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
           display: flex;
           align-items: center;
           justify-content: center;
+          flex-shrink: 0;
         }
         .letter-btn:hover:not(.disabled) {
           border-color: #7c3aed;
           color: #7c3aed;
-          background: rgba(168, 85, 247, 0.04);
+          background: rgba(168, 85, 247, 0.06);
+          transform: translateY(-2px);
         }
         .letter-btn.active {
           background: #7c3aed;
           color: #ffffff;
           border-color: #7c3aed;
+          box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35);
+          transform: scale(1.05);
         }
         .letter-btn.disabled {
           opacity: 0.3;
           cursor: not-allowed;
           background: transparent;
+          border-color: transparent;
         }
         .terms-container {
           display: flex;
@@ -322,25 +409,6 @@ export default function GlossaryPage() {
           font-family: var(--font-sans);
           font-style: italic;
         }
-        .speak-btn {
-          width: 36px;
-          height: 36px;
-          border-radius: 50%;
-          border: 1px solid rgba(168, 85, 247, 0.15);
-          background: rgba(168, 85, 247, 0.03);
-          color: #7c3aed;
-          cursor: pointer;
-          transition: var(--transition-fast);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-shrink: 0;
-        }
-        .speak-btn:hover {
-          background: #7c3aed;
-          color: #ffffff;
-          transform: scale(1.05);
-        }
         .term-category-badge {
           font-family: var(--font-sans);
           font-size: 0.72rem;
@@ -374,53 +442,52 @@ export default function GlossaryPage() {
           padding: 40px 10px;
           color: hsl(var(--text-muted));
         }
-        .public-pagination-bar {
+        .infinite-scroll-sentinel-wrapper {
           display: flex;
-          justify-content: space-between;
+          justify-content: center;
           align-items: center;
-          padding: 24px 10px 12px;
-          border-top: 1px solid rgba(168, 85, 247, 0.12);
-          flex-wrap: wrap;
-          gap: 12px;
-          margin-top: 12px;
+          padding: 28px 0 16px;
+          width: 100%;
         }
-        .pagination-info {
-          font-family: var(--font-sans);
-          font-size: 0.85rem;
-          color: hsl(var(--text-muted));
-        }
-        .pagination-controls {
+        .infinite-loader-box {
           display: flex;
-          gap: 4px;
-          flex-wrap: wrap;
-        }
-        .page-btn {
-          font-family: var(--font-sans);
-          font-size: 0.8rem;
-          font-weight: 600;
-          background: transparent;
-          border: 1px solid rgba(0, 0, 0, 0.08);
-          padding: 6px 12px;
-          border-radius: 6px;
-          color: hsl(var(--text-muted));
-          cursor: pointer;
-          transition: var(--transition-fast);
-          min-width: 32px;
-        }
-        .page-btn:hover:not(:disabled) {
-          border-color: #7c3aed;
+          align-items: center;
+          gap: 10px;
+          padding: 10px 20px;
+          border-radius: 20px;
+          background: rgba(124, 58, 237, 0.05);
+          border: 1px solid rgba(168, 85, 247, 0.15);
           color: #7c3aed;
+          font-family: var(--font-sans);
+          font-size: 0.82rem;
+          font-weight: 600;
         }
-        .page-btn.active {
-          background: #7c3aed;
-          color: #fff;
-          border-color: #7c3aed;
+        .loader-lotus-spin {
+          width: 20px;
+          height: 20px;
+          animation: spinLotus 2s linear infinite;
         }
-        .page-btn:disabled {
-          opacity: 0.4;
-          cursor: not-allowed;
+        @keyframes spinLotus {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        .end-of-list-badge {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-family: var(--font-sans);
+          font-size: 0.82rem;
+          color: #6b7280;
+          padding: 8px 16px;
+          background: #ffffff;
+          border-radius: 20px;
+          border: 1px solid rgba(0, 0, 0, 0.05);
         }
         @media (max-width: 680px) {
+          .glossary-controls-section {
+            top: 70px;
+            padding: 10px 14px;
+          }
           .term-card-content {
             flex-direction: column;
             align-items: stretch;
@@ -439,16 +506,16 @@ export default function GlossaryPage() {
         }
         @media (max-width: 480px) {
           .letter-btn {
-            width: 28px;
-            height: 28px;
+            width: 30px;
+            height: 30px;
             font-size: 0.75rem;
-          }
-          .alphabet-bar {
-            gap: 4px;
-            justify-content: center;
+            border-radius: 8px;
           }
         }
       `}</style>
     </div>
   );
 }
+
+
+

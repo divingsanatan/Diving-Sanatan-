@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { useBlog } from "@/app/blog/BlogContext";
 import Link from "next/link";
+import { cachedFetch } from "@/utils/apiCache";
 
 interface Blog {
   id: string;
@@ -128,21 +129,377 @@ export default function BlogDetailsPage() {
   const [expandedChapters, setExpandedChapters] = useState<Record<number, boolean>>({});
 
   const [allBlogs, setAllBlogs] = useState<Blog[]>([]);
+  const [allPillarGuides, setAllPillarGuides] = useState<any[]>([]);
 
   useEffect(() => {
-    async function fetchAllBlogs() {
-      try {
-        const res = await fetch("/api/blogs");
-        const json = await res.json();
-        if (json.success) {
-          setAllBlogs(json.data);
-        }
-      } catch (err) {
-        console.error("Failed to load all blogs for lookup:", err);
-      }
-    }
-    fetchAllBlogs();
+    let isMounted = true;
+
+    cachedFetch<any>("/api/blogs", undefined, (json) => {
+      if (json && json.success && isMounted) setAllBlogs(json.data);
+    })
+      .then((json) => {
+        if (json && json.success && isMounted) setAllBlogs(json.data);
+      })
+      .catch((err) => console.error("Failed to load all blogs for lookup:", err));
+
+    cachedFetch<any>("/api/pillar-guides", undefined, (json) => {
+      if (json && json.success && isMounted) setAllPillarGuides(json.data || []);
+    })
+      .then((json) => {
+        if (json && json.success && isMounted) setAllPillarGuides(json.data || []);
+      })
+      .catch((err) => console.error("Failed to load pillar guides for navigation:", err));
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
+
+  const pillarBlogsList = React.useMemo(() => {
+    const fromBlogs = allBlogs.filter((b) =>
+      b.section === "Pillar Guides" ||
+      b.section?.toLowerCase() === "pillar guides" ||
+      b.category?.toLowerCase() === "pillar guide" ||
+      b.category?.toLowerCase() === "pillar blog" ||
+      b.id?.startsWith("pl-pillar-")
+    );
+
+    const fromPillars: Blog[] = allPillarGuides.map((p) => ({
+      id: p.id,
+      slug: p.slug || p.id,
+      title: p.title,
+      category: p.category || "Pillar Guide",
+      author: p.author || "Diving Sanatan Team",
+      content: p.description || "",
+      date: p.date || "2026",
+      readTime: p.readTime || `${p.articles?.length || 0} Articles`,
+      image: p.image || "/images/insight_blog.png",
+      section: "Pillar Guides",
+    }));
+
+    const combined = [...fromBlogs];
+    fromPillars.forEach((p) => {
+      if (!combined.some((item) => item.id === p.id || (p.slug && item.slug === p.slug))) {
+        combined.push(p);
+      }
+    });
+
+    return combined;
+  }, [allBlogs, allPillarGuides]);
+
+  const currentPillarIndex = blog
+    ? pillarBlogsList.findIndex(
+        (p) => p.id === blog.id || (blog.slug && p.slug === blog.slug)
+      )
+    : -1;
+
+  const prevPillar =
+    currentPillarIndex > 0 && pillarBlogsList.length > 1
+      ? pillarBlogsList[currentPillarIndex - 1]
+      : currentPillarIndex === 0 && pillarBlogsList.length > 1
+      ? pillarBlogsList[pillarBlogsList.length - 1]
+      : null;
+
+  const nextPillar =
+    currentPillarIndex >= 0 && pillarBlogsList.length > 1
+      ? pillarBlogsList[(currentPillarIndex + 1) % pillarBlogsList.length]
+      : null;
+
+  // Find if current blog belongs to a Pillar Guide as a sub-article
+  const parentPillarGuide = React.useMemo(() => {
+    if (!blog || !allPillarGuides || allPillarGuides.length === 0) return null;
+    return allPillarGuides.find((g) =>
+      g.articles &&
+      g.articles.some((art: any) => {
+        const href = art.link || "";
+        const target = href.split("/blog/")[1] || "";
+        return (
+          (target && (target === blog.id || target === blog.slug)) ||
+          art.title?.toLowerCase() === blog.title?.toLowerCase()
+        );
+      })
+    );
+  }, [blog, allPillarGuides]);
+
+  // Determine sub-article navigation inside parentPillarGuide
+  const subArticleNav = React.useMemo(() => {
+    if (!blog || !parentPillarGuide || !parentPillarGuide.articles) {
+      return { prev: null, next: null, currentIndex: -1, total: 0 };
+    }
+    const articles = parentPillarGuide.articles;
+    const currentIndex = articles.findIndex((art: any) => {
+      const href = art.link || "";
+      const target = href.split("/blog/")[1] || "";
+      return (
+        (target && (target === blog.id || target === blog.slug)) ||
+        art.title?.toLowerCase() === blog.title?.toLowerCase()
+      );
+    });
+
+    if (currentIndex === -1) {
+      return { prev: null, next: null, currentIndex: -1, total: articles.length };
+    }
+
+    const prev = currentIndex > 0 ? articles[currentIndex - 1] : null;
+    const next = currentIndex < articles.length - 1 ? articles[currentIndex + 1] : null;
+
+    return { prev, next, currentIndex, total: articles.length };
+  }, [blog, parentPillarGuide]);
+
+  const renderNextNavigationSection = () => {
+    if (!blog) return null;
+
+    // 1. Pillar Sub-Article Navigation
+    if (parentPillarGuide && subArticleNav.currentIndex !== -1) {
+      const { prev, next, currentIndex, total } = subArticleNav;
+      const targetNext = next || nextPillar;
+      const nextHref = next
+        ? next.link
+        : nextPillar
+        ? `/blog/${nextPillar.slug || nextPillar.id}`
+        : "/blog/pillar";
+      const nextTitleText = next
+        ? next.title
+        : nextPillar
+        ? nextPillar.title
+        : "Explore All Pillar Guides";
+      const nextReadTimeText = next
+        ? next.readTime
+        : nextPillar
+        ? nextPillar.readTime
+        : "Pillar Guide";
+
+      return (
+        <div className="pillar-nav-section">
+          <div className="pillar-nav-header-row">
+            <div className="pillar-nav-title-group">
+              <span className="pillar-nav-sparkle">✦</span>
+              <span className="pillar-nav-header-text">
+                Pillar Guide: {parentPillarGuide.title}
+              </span>
+              <span className="pillar-nav-separate-tag">Pillar Series</span>
+            </div>
+            <span className="pillar-nav-counter">
+              Part {currentIndex + 1} of {total}
+            </span>
+          </div>
+
+          <div className="pillar-nav-cards-grid">
+            {prev && (
+              <div
+                className="pillar-nav-card pillar-nav-prev-card"
+                onClick={() => {
+                  router.push(prev.link);
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+              >
+                <div className="pillar-nav-card-badge">← Previous Sub-Article</div>
+                <div className="pillar-nav-card-content">
+                  <div className="pillar-nav-card-text">
+                    <span className="pillar-nav-card-cat">{prev.readTime || "Read"}</span>
+                    <h4 className="pillar-nav-card-title">{prev.title}</h4>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {targetNext && (
+              <div
+                className="pillar-nav-card pillar-nav-next-card"
+                onClick={() => {
+                  router.push(nextHref);
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+              >
+                <div className="pillar-nav-card-badge">
+                  {next ? "Next Sub-Article →" : "Next Pillar Guide →"}
+                </div>
+                <div className="pillar-nav-card-content">
+                  <div className="pillar-nav-card-text">
+                    <span className="pillar-nav-card-cat">{nextReadTimeText}</span>
+                    <h4 className="pillar-nav-card-title">{nextTitleText}</h4>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {targetNext && (
+            <div
+              className="next-pillar-line-bar"
+              onClick={() => {
+                router.push(nextHref);
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+            >
+              <div className="line-bar-left">
+                <div className="line-bar-pulse-dot" />
+                <div className="line-bar-label">
+                  <span className="label-top">
+                    {next
+                      ? `CONTINUE PILLAR (${currentIndex + 2}/${total})`
+                      : "CONTINUE TO NEXT PILLAR GUIDE"}
+                  </span>
+                  <span className="label-title">{nextTitleText}</span>
+                </div>
+              </div>
+
+              <button type="button" className="line-bar-action-btn">
+                <span>{next ? "Read Next Article" : "Read Next Pillar"}</span>
+                <span className="arrow">→</span>
+              </button>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // 2. Pillar Guide Main Page Navigation (isPillarBlog)
+    const isPillar =
+      blog &&
+      (blog.section === "Pillar Guides" ||
+        blog.section?.toLowerCase() === "pillar guides" ||
+        blog.category?.toLowerCase() === "pillar guide" ||
+        blog.category?.toLowerCase() === "pillar blog" ||
+        blog.id?.startsWith("pl-pillar-"));
+
+    if (isPillar || nextPillar || prevPillar) {
+      const targetNextPillar = nextPillar || (pillarBlogsList.length > 0 ? pillarBlogsList[0] : null);
+      if (!targetNextPillar) return null;
+
+      return (
+        <div className="pillar-nav-section">
+          <div className="pillar-nav-header-row">
+            <div className="pillar-nav-title-group">
+              <span className="pillar-nav-sparkle">✦</span>
+              <span className="pillar-nav-header-text">Pillar Guides Navigation</span>
+              <span className="pillar-nav-separate-tag">Pillar Section Only</span>
+            </div>
+            {currentPillarIndex >= 0 && (
+              <span className="pillar-nav-counter">
+                Pillar Guide {currentPillarIndex + 1} of {pillarBlogsList.length}
+              </span>
+            )}
+          </div>
+
+          <div className="pillar-nav-cards-grid">
+            {prevPillar && (
+              <div
+                className="pillar-nav-card pillar-nav-prev-card"
+                onClick={() => {
+                  router.push(`/blog/${prevPillar.slug || prevPillar.id}`);
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+              >
+                <div className="pillar-nav-card-badge">← Previous Pillar Guide</div>
+                <div className="pillar-nav-card-content">
+                  <img
+                    src={getBlogImage(prevPillar.image)}
+                    alt={prevPillar.title}
+                    className="pillar-nav-card-img"
+                  />
+                  <div className="pillar-nav-card-text">
+                    <span className="pillar-nav-card-cat">{prevPillar.category}</span>
+                    <h4 className="pillar-nav-card-title">{prevPillar.title}</h4>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {targetNextPillar && (
+              <div
+                className="pillar-nav-card pillar-nav-next-card"
+                onClick={() => {
+                  router.push(`/blog/${targetNextPillar.slug || targetNextPillar.id}`);
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+              >
+                <div className="pillar-nav-card-badge">Next Pillar Guide →</div>
+                <div className="pillar-nav-card-content">
+                  <img
+                    src={getBlogImage(targetNextPillar.image)}
+                    alt={targetNextPillar.title}
+                    className="pillar-nav-card-img"
+                  />
+                  <div className="pillar-nav-card-text">
+                    <span className="pillar-nav-card-cat">{targetNextPillar.category}</span>
+                    <h4 className="pillar-nav-card-title">{targetNextPillar.title}</h4>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {targetNextPillar && (
+            <div
+              className="next-pillar-line-bar"
+              onClick={() => {
+                router.push(`/blog/${targetNextPillar.slug || targetNextPillar.id}`);
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+            >
+              <div className="line-bar-left">
+                <div className="line-bar-pulse-dot" />
+                <div className="line-bar-label">
+                  <span className="label-top">CONTINUE TO NEXT PILLAR GUIDE</span>
+                  <span className="label-title">{targetNextPillar.title}</span>
+                </div>
+              </div>
+
+              <button type="button" className="line-bar-action-btn">
+                <span>Read Next Pillar</span>
+                <span className="arrow">→</span>
+              </button>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // 3. Fallback for Normal / General Blogs
+    const currentGeneralIndex = allBlogs.findIndex(
+      (b) => b.id === blog.id || (blog.slug && b.slug === blog.slug)
+    );
+    const nextGeneralBlog =
+      currentGeneralIndex >= 0 && allBlogs.length > 1
+        ? allBlogs[(currentGeneralIndex + 1) % allBlogs.length]
+        : null;
+
+    if (!nextGeneralBlog) return null;
+
+    return (
+      <div className="pillar-nav-section">
+        <div className="pillar-nav-header-row">
+          <div className="pillar-nav-title-group">
+            <span className="pillar-nav-sparkle">✦</span>
+            <span className="pillar-nav-header-text">Next Reading</span>
+            <span className="pillar-nav-separate-tag">Blog</span>
+          </div>
+        </div>
+
+        <div
+          className="next-pillar-line-bar"
+          onClick={() => {
+            router.push(`/blog/${nextGeneralBlog.slug || nextGeneralBlog.id}`);
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
+        >
+          <div className="line-bar-left">
+            <div className="line-bar-pulse-dot" />
+            <div className="line-bar-label">
+              <span className="label-top">CONTINUE READING</span>
+              <span className="label-title">{nextGeneralBlog.title}</span>
+            </div>
+          </div>
+
+          <button type="button" className="line-bar-action-btn">
+            <span>Read Next Article</span>
+            <span className="arrow">→</span>
+          </button>
+        </div>
+      </div>
+    );
+  };
 
   const getSlugOrIdFromHref = (href: string) => {
     const parts = href.split("/blog/");
@@ -341,32 +698,50 @@ export default function BlogDetailsPage() {
   // 2. Fetch blog details
   useEffect(() => {
     if (!id) return;
+    let isMounted = true;
 
-    async function loadBlogDetail() {
-      try {
-        setLoading(true);
-        const res = await fetch(`/api/blogs?id=${id}`);
-        const json = await res.json();
-        if (json.success) {
-          setBlog(json.data);
-          setActiveMediaIndex(0);
-          
-          // Increment view count in backend
-          fetch(`/api/blogs/views?id=${id}`, { method: "POST" }).catch((err) =>
-            console.error("Failed to increment views:", err)
-          );
-        } else {
-          setError(json.error || "Article not found");
-        }
-      } catch (err) {
-        console.error(err);
-        setError("Failed to resolve article server connection.");
-      } finally {
+    // Fast initial check against allBlogs lookup
+    const preMatch = allBlogs.find(
+      (b) => b.id === id || b.slug === id
+    );
+    if (preMatch && isMounted) {
+      setBlog(preMatch);
+      setLoading(false);
+    }
+
+    const processBlogJson = (json: any) => {
+      if (json && json.success && isMounted) {
+        setBlog(json.data);
+        setActiveMediaIndex(0);
+        setLoading(false);
+      } else if (json && !json.success && isMounted && !preMatch) {
+        setError(json.error || "Article not found");
         setLoading(false);
       }
-    }
-    loadBlogDetail();
-  }, [id]);
+    };
+
+    if (!preMatch) setLoading(true);
+
+    cachedFetch<any>(`/api/blogs?id=${id}`, undefined, processBlogJson)
+      .then((json) => {
+        processBlogJson(json);
+        // Increment view count in backend
+        fetch(`/api/blogs/views?id=${id}`, { method: "POST" }).catch((err) =>
+          console.error("Failed to increment views:", err)
+        );
+      })
+      .catch((err) => {
+        console.error(err);
+        if (isMounted && !preMatch) setError("Failed to resolve article server connection.");
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [id, allBlogs]);
 
   // 3. Fetch likes count & status
   useEffect(() => {
@@ -931,6 +1306,8 @@ export default function BlogDetailsPage() {
                       )}
                     </div>
 
+                    {renderNextNavigationSection()}
+
                     <div className="article-footer-actions">
                       <Button variant="gold-outline" onClick={() => router.push("/blog")}>
                         ← Back to Listings
@@ -944,7 +1321,13 @@ export default function BlogDetailsPage() {
               );
             }
 
-            const isPillarBlog = blog && blog.section === "Pillar Guides";
+            const isPillarBlog = blog && (
+              blog.section === "Pillar Guides" ||
+              blog.section?.toLowerCase() === "pillar guides" ||
+              blog.category?.toLowerCase() === "pillar guide" ||
+              blog.category?.toLowerCase() === "pillar blog" ||
+              blog.id?.startsWith("pl-pillar-")
+            );
             if (isPillarBlog) {
               return (
                 <>
@@ -1180,6 +1563,8 @@ export default function BlogDetailsPage() {
                       )}
                     </div>
 
+                    {renderNextNavigationSection()}
+
                     <div className="article-footer-actions">
                       <Button variant="gold-outline" onClick={() => router.push("/blog")}>
                         ← Back to Listings
@@ -1408,6 +1793,8 @@ export default function BlogDetailsPage() {
                       </div>
                     )}
                   </div>
+
+                  {renderNextNavigationSection()}
 
                   <div className="article-footer-actions">
                     <Button variant="gold-outline" onClick={() => router.push("/blog")}>
@@ -3062,6 +3449,210 @@ export default function BlogDetailsPage() {
           width: 100%;
           height: 100%;
           object-fit: cover;
+        }
+
+        /* Next & Previous Pillar Navigation Line Styles */
+        :global(.pillar-nav-section) {
+          margin-top: 36px !important;
+          margin-bottom: 32px !important;
+          padding: 24px !important;
+          background: linear-gradient(135deg, #FAF7FF 0%, #FFFFFF 100%) !important;
+          border: 1px solid rgba(168, 85, 247, 0.18) !important;
+          border-radius: 20px !important;
+          box-shadow: 0 8px 24px rgba(124, 58, 237, 0.06) !important;
+          display: flex !important;
+          flex-direction: column !important;
+          gap: 16px !important;
+          width: 100% !important;
+          box-sizing: border-box !important;
+        }
+        :global(.pillar-nav-header-row) {
+          display: flex !important;
+          align-items: center !important;
+          justify-content: space-between !important;
+          border-bottom: 1px solid rgba(168, 85, 247, 0.1) !important;
+          padding-bottom: 12px !important;
+          width: 100% !important;
+        }
+        :global(.pillar-nav-title-group) {
+          display: flex !important;
+          align-items: center !important;
+          gap: 8px !important;
+        }
+        :global(.pillar-nav-sparkle) {
+          color: #7c3aed !important;
+          font-size: 1.1rem !important;
+        }
+        :global(.pillar-nav-header-text) {
+          font-family: var(--font-sans), sans-serif !important;
+          font-size: 0.9rem !important;
+          font-weight: 800 !important;
+          color: #4c1d95 !important;
+          letter-spacing: 0.05em !important;
+          text-transform: uppercase !important;
+        }
+        :global(.pillar-nav-separate-tag) {
+          background: rgba(124, 58, 237, 0.08) !important;
+          color: #7c3aed !important;
+          font-size: 0.7rem !important;
+          font-weight: 700 !important;
+          padding: 2px 8px !important;
+          border-radius: 6px !important;
+          border: 1px solid rgba(124, 58, 237, 0.15) !important;
+        }
+        :global(.pillar-nav-counter) {
+          font-size: 0.78rem !important;
+          color: #6b7280 !important;
+          font-weight: 600 !important;
+        }
+        :global(.pillar-nav-cards-grid) {
+          display: grid !important;
+          grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)) !important;
+          gap: 14px !important;
+          width: 100% !important;
+        }
+        :global(.pillar-nav-card) {
+          background: #ffffff !important;
+          border: 1px solid rgba(168, 85, 247, 0.15) !important;
+          border-radius: 16px !important;
+          padding: 14px 18px !important;
+          cursor: pointer !important;
+          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+          display: flex !important;
+          flex-direction: column !important;
+          gap: 10px !important;
+        }
+        :global(.pillar-nav-card:hover) {
+          transform: translateY(-2px) !important;
+          border-color: #7c3aed !important;
+          box-shadow: 0 8px 20px rgba(124, 58, 237, 0.12) !important;
+          background: #faf5ff !important;
+        }
+        :global(.pillar-nav-card-badge) {
+          font-size: 0.75rem !important;
+          font-weight: 750 !important;
+          color: #7c3aed !important;
+          text-transform: uppercase !important;
+          letter-spacing: 0.04em !important;
+        }
+        :global(.pillar-nav-card-content) {
+          display: flex !important;
+          align-items: center !important;
+          gap: 12px !important;
+        }
+        :global(.pillar-nav-card-img) {
+          width: 50px !important;
+          height: 50px !important;
+          border-radius: 10px !important;
+          object-fit: cover !important;
+          flex-shrink: 0 !important;
+        }
+        :global(.pillar-nav-card-text) {
+          display: flex !important;
+          flex-direction: column !important;
+          gap: 2px !important;
+          min-width: 0 !important;
+        }
+        :global(.pillar-nav-card-cat) {
+          font-size: 0.72rem !important;
+          color: #9ca3af !important;
+        }
+        :global(.pillar-nav-card-title) {
+          font-family: var(--font-sans), sans-serif !important;
+          font-size: 0.92rem !important;
+          font-weight: 700 !important;
+          color: #111827 !important;
+          margin: 0 !important;
+          line-height: 1.3 !important;
+          white-space: nowrap !important;
+          overflow: hidden !important;
+          text-overflow: ellipsis !important;
+        }
+        :global(.next-pillar-line-bar) {
+          background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%) !important;
+          color: #ffffff !important;
+          border-radius: 14px !important;
+          padding: 16px 22px !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: space-between !important;
+          gap: 16px !important;
+          cursor: pointer !important;
+          box-shadow: 0 6px 18px rgba(124, 58, 237, 0.25) !important;
+          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+          width: 100% !important;
+          box-sizing: border-box !important;
+          margin-top: 6px !important;
+        }
+        :global(.next-pillar-line-bar:hover) {
+          transform: translateY(-2px) !important;
+          box-shadow: 0 10px 24px rgba(124, 58, 237, 0.35) !important;
+          background: linear-gradient(135deg, #6d28d9 0%, #5b21b6 100%) !important;
+        }
+        :global(.line-bar-left) {
+          display: flex !important;
+          align-items: center !important;
+          gap: 12px !important;
+          min-width: 0 !important;
+          flex: 1 !important;
+        }
+        :global(.line-bar-pulse-dot) {
+          width: 10px !important;
+          height: 10px !important;
+          border-radius: 50% !important;
+          background: #fde047 !important;
+          box-shadow: 0 0 10px #fde047 !important;
+          flex-shrink: 0 !important;
+          animation: pulseGlow 2s infinite ease-in-out !important;
+        }
+        :global(.line-bar-label) {
+          display: flex !important;
+          flex-direction: column !important;
+          gap: 2px !important;
+          min-width: 0 !important;
+        }
+        :global(.label-top) {
+          font-size: 0.7rem !important;
+          font-weight: 800 !important;
+          letter-spacing: 0.08em !important;
+          color: #ddd6fe !important;
+          text-transform: uppercase !important;
+        }
+        :global(.label-title) {
+          font-family: var(--font-sans), sans-serif !important;
+          font-size: 1rem !important;
+          font-weight: 750 !important;
+          color: #ffffff !important;
+          white-space: nowrap !important;
+          overflow: hidden !important;
+          text-overflow: ellipsis !important;
+        }
+        :global(.line-bar-action-btn) {
+          background: #ffffff !important;
+          color: #6d28d9 !important;
+          border: none !important;
+          padding: 10px 20px !important;
+          border-radius: 10px !important;
+          font-weight: 750 !important;
+          font-size: 0.85rem !important;
+          display: flex !important;
+          align-items: center !important;
+          gap: 6px !important;
+          cursor: pointer !important;
+          flex-shrink: 0 !important;
+          transition: transform 0.2s ease, background 0.2s ease !important;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+        }
+        :global(.next-pillar-line-bar:hover .line-bar-action-btn) {
+          transform: translateX(3px) !important;
+          background: #fcf5ff !important;
+        }
+        :global(.line-bar-action-btn .arrow) {
+          font-size: 1.1rem !important;
+          transition: transform 0.2s ease !important;
+        }
+        :global(.next-pillar-line-bar:hover .line-bar-action-btn .arrow) {
+          transform: translateX(2px) !important;
         }
 
 

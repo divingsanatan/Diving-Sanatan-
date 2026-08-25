@@ -117,9 +117,11 @@ export default function PillarListingClient() {
   // Accordion Expand/Collapse State
   const [expandedPillarId, setExpandedPillarId] = useState<string | null>(null);
 
-  // Pagination State
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 3; // 3 pillars per page makes pagination active and testable
+  // Infinite Scroll State
+  const [visibleCount, setVisibleCount] = useState(3);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const observerRef = useRef<HTMLDivElement | null>(null);
+  const BATCH_SIZE = 3;
 
   // Fetch pillar guides on mount
   useEffect(() => {
@@ -158,8 +160,34 @@ export default function PillarListingClient() {
       );
     }
     setFilteredPillars(result);
-    setCurrentPage(1); // Reset page on filter
+    setVisibleCount(3); // Reset visible count on search/filter
   }, [pillars, searchQuery]);
+
+  const hasMoreItems = visibleCount < filteredPillars.length;
+
+  // IntersectionObserver for Infinite Scrolling
+  useEffect(() => {
+    const node = observerRef.current;
+    if (!node || !hasMoreItems) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !isLoadingMore) {
+          setIsLoadingMore(true);
+          setTimeout(() => {
+            setVisibleCount((prev) => prev + BATCH_SIZE);
+            setIsLoadingMore(false);
+          }, 350);
+        }
+      },
+      { threshold: 0.1, rootMargin: "250px" }
+    );
+
+    observer.observe(node);
+    return () => {
+      observer.disconnect();
+    };
+  }, [hasMoreItems, isLoadingMore, filteredPillars.length]);
 
   const toggleAccordion = (id: string) => {
     setExpandedPillarId(prevId => (prevId === id ? null : id));
@@ -179,19 +207,43 @@ export default function PillarListingClient() {
     return <Flower size={18} />;
   };
 
-  // Pagination calculations
-  const totalPages = Math.ceil(filteredPillars.length / itemsPerPage);
-  const paginatedPillars = filteredPillars.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  const displayedPillars = filteredPillars.slice(0, visibleCount);
 
-  const handlePageChange = (pageNum: number) => {
-    setCurrentPage(pageNum);
-    const topElement = document.getElementById("pillar-header-section");
-    if (topElement) {
-      topElement.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
+  const renderInfiniteScrollSentinel = () => {
+    if (loading) return null;
+
+    return (
+      <div className="infinite-scroll-sentinel-wrapper">
+        {hasMoreItems ? (
+          <div ref={observerRef} className="infinite-loader-box">
+            <button 
+              type="button"
+              className="load-more-btn"
+              onClick={() => {
+                setIsLoadingMore(true);
+                setTimeout(() => {
+                  setVisibleCount((prev) => prev + BATCH_SIZE);
+                  setIsLoadingMore(false);
+                }, 250);
+              }}
+              disabled={isLoadingMore}
+            >
+              <svg viewBox="0 0 100 100" className={`loader-lotus-spin ${isLoadingMore ? 'spinning' : ''}`}>
+                <path d="M50 25 C45 45 35 60 50 80 C65 60 55 45 50 25 Z" fill="none" stroke="#7c3aed" strokeWidth="4" />
+                <path d="M50 80 C35 75 25 60 20 40 C35 50 45 60 50 80 Z" fill="none" stroke="#7c3aed" strokeWidth="4" />
+                <path d="M50 80 C65 75 75 60 80 40 C65 50 55 60 50 80 Z" fill="none" stroke="#7c3aed" strokeWidth="4" />
+              </svg>
+              <span>{isLoadingMore ? "Retrieving more guides..." : "Load More Sacred Guides"}</span>
+            </button>
+          </div>
+        ) : filteredPillars.length > 0 ? (
+          <div className="end-of-list-badge">
+            <Sparkles size={16} className="end-sparkles-icon" />
+            <span>You've explored all {filteredPillars.length} sacred pillar guides</span>
+          </div>
+        ) : null}
+      </div>
+    );
   };
 
   return (
@@ -230,9 +282,9 @@ export default function PillarListingClient() {
             <p className="empty-desc">We couldn't find any results matching "{searchQuery}". Try editing your keyword search.</p>
           </div>
         ) : (
-          paginatedPillars.map((pillar, index) => {
+          displayedPillars.map((pillar, index) => {
             const isOpen = expandedPillarId === pillar.id;
-            const displayIndex = (currentPage - 1) * itemsPerPage + index + 1;
+            const displayIndex = index + 1;
             
             return (
               <div 
@@ -311,42 +363,8 @@ export default function PillarListingClient() {
         )}
       </div>
 
-      {/* 3. Pagination Controls */}
-      {totalPages > 1 && (
-        <div className="pillar-pagination-wrapper">
-          <button
-            onClick={() => handlePageChange(Math.max(currentPage - 1, 1))}
-            disabled={currentPage === 1}
-            className="pagination-arrow-btn"
-            aria-label="Previous Page"
-          >
-            <ChevronLeft size={16} />
-            <span>Prev</span>
-          </button>
-          
-          <div className="pagination-numbers">
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNum => (
-              <button
-                key={pageNum}
-                onClick={() => handlePageChange(pageNum)}
-                className={`pagination-number-btn ${currentPage === pageNum ? 'active' : ''}`}
-              >
-                {pageNum}
-              </button>
-            ))}
-          </div>
-          
-          <button
-            onClick={() => handlePageChange(Math.min(currentPage + 1, totalPages))}
-            disabled={currentPage === totalPages}
-            className="pagination-arrow-btn"
-            aria-label="Next Page"
-          >
-            <span>Next</span>
-            <ChevronRight size={16} />
-          </button>
-        </div>
-      )}
+      {/* 3. Infinite Pagination Sentinel & Load More */}
+      {renderInfiniteScrollSentinel()}
 
       <style jsx>{`
         .pillar-dashboard-container {
@@ -718,69 +736,75 @@ export default function PillarListingClient() {
           transform: translateX(2px);
         }
 
-        /* 3. Pagination Wrapper */
-        .pillar-pagination-wrapper {
+        /* 3. Infinite Scroll Sentinel & Load More */
+        .infinite-scroll-sentinel-wrapper {
           display: flex;
           justify-content: center;
           align-items: center;
-          gap: 16px;
-          margin-top: 24px;
-          padding-top: 24px;
+          padding: 28px 0 16px;
+          margin-top: 16px;
           border-top: 1px solid rgba(168, 85, 247, 0.08);
           width: 100%;
         }
-        .pagination-arrow-btn {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          padding: 8px 16px;
-          border-radius: 20px;
-          border: 1px solid rgba(168, 85, 247, 0.15);
-          background: #ffffff;
-          color: #7c3aed;
-          font-size: 0.8rem;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.2s ease;
-        }
-        .pagination-arrow-btn:hover:not(:disabled) {
-          background: #faf5ff;
-          border-color: #7c3aed;
-          transform: translateY(-1px);
-        }
-        .pagination-arrow-btn:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-        .pagination-numbers {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-        .pagination-number-btn {
-          width: 36px;
-          height: 36px;
-          border-radius: 50%;
-          border: 1px solid transparent;
-          background: transparent;
-          color: #4b5563;
-          font-size: 0.85rem;
-          font-weight: 600;
+        .infinite-loader-box {
           display: flex;
           align-items: center;
           justify-content: center;
-          cursor: pointer;
-          transition: all 0.2s ease;
         }
-        .pagination-number-btn:hover:not(.active) {
-          background: #faf5ff;
+        .load-more-btn {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 10px 24px;
+          border-radius: 24px;
+          background: #ffffff;
+          border: 1px solid rgba(168, 85, 247, 0.2);
           color: #7c3aed;
-          border-color: rgba(168, 85, 247, 0.15);
+          font-family: var(--font-sans);
+          font-size: 0.85rem;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+          box-shadow: 0 4px 15px rgba(124, 58, 237, 0.06);
         }
-        .pagination-number-btn.active {
-          background: #7c3aed;
-          color: #ffffff;
-          box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
+        .load-more-btn:hover:not(:disabled) {
+          background: #faf5ff;
+          border-color: #7c3aed;
+          transform: translateY(-2px);
+          box-shadow: 0 8px 20px rgba(124, 58, 237, 0.12);
+        }
+        .load-more-btn:disabled {
+          opacity: 0.8;
+          cursor: wait;
+        }
+        .loader-lotus-spin {
+          width: 22px;
+          height: 22px;
+          flex-shrink: 0;
+          transition: transform 0.3s ease;
+        }
+        .loader-lotus-spin.spinning {
+          animation: spinLotus 1.8s linear infinite;
+        }
+        @keyframes spinLotus {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        .end-of-list-badge {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-family: var(--font-sans);
+          font-size: 0.82rem;
+          font-weight: 600;
+          color: #6b7280;
+          padding: 10px 20px;
+          background: #faf5ff;
+          border-radius: 20px;
+          border: 1px solid rgba(168, 85, 247, 0.1);
+        }
+        :global(.end-sparkles-icon) {
+          color: #a855f7;
         }
 
         /* Responsive Layout adjustments */

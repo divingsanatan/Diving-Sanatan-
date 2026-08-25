@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/utils/supabaseServer";
 import { slugify, getDb, saveDb } from "@/utils/db";
+import { getOrSetServerCache, invalidateServerCache } from "@/utils/serverCache";
 
 /**
  * GET Handler - Retrieves blog posts from Supabase / db.json
@@ -10,142 +11,139 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
     const category = searchParams.get("category");
+    const section = searchParams.get("section");
+    const adminView = searchParams.get("admin_view");
+
     const headers = {
       "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
     };
-    
-    if (id) {
-      let blog: any = null;
 
-      try {
-        const adminView = searchParams.get("admin_view");
+    const cacheKey = `blog_${adminView === "true" ? "admin" : "pub"}_${id || "list"}_${category || "all"}_${section || "all"}`;
 
-        // 1. First try querying by exact ID or slug
-        let query = supabaseServer.from("blogs").select("*");
-        if (adminView !== "true") {
-          query = query.eq("approval_status", "published");
-        }
-        
-        // Try exact match on ID or slug first
-        const { data: exactMatch } = await query.or(`id.eq.${id},slug.eq.${id}`);
-        if (exactMatch && exactMatch.length > 0) {
-          blog = exactMatch[0];
-        } else {
-          // 2. Query all blogs from Supabase only if exact match failed
-          let listQuery = supabaseServer.from("blogs").select("*");
+    const data = await getOrSetServerCache(cacheKey, 60, async () => {
+      if (id) {
+        let blog: any = null;
+
+        try {
+          // 1. First try querying by exact ID or slug
+          let query = supabaseServer.from("blogs").select("*");
           if (adminView !== "true") {
-            listQuery = listQuery.eq("approval_status", "published");
+            query = query.eq("approval_status", "published");
           }
-          const listRes = await listQuery;
-          if (listRes.data && listRes.data.length > 0) {
-            blog = listRes.data.find((b: any) =>
+          
+          const { data: exactMatch } = await query.or(`id.eq.${id},slug.eq.${id}`);
+          if (exactMatch && exactMatch.length > 0) {
+            blog = exactMatch[0];
+          } else {
+            let listQuery = supabaseServer.from("blogs").select("*");
+            if (adminView !== "true") {
+              listQuery = listQuery.eq("approval_status", "published");
+            }
+            const listRes = await listQuery;
+            if (listRes.data && listRes.data.length > 0) {
+              blog = listRes.data.find((b: any) =>
+                b.id === id ||
+                b.slug === id ||
+                slugify(b.slug || b.title || "") === id
+              );
+            }
+          }
+        } catch (err) {
+          console.warn("Supabase blog GET error:", err);
+        }
+
+        // Fallback: local db.json
+        if (!blog) {
+          try {
+            const localDb = getDb();
+            const found = localDb.blogs?.find((b: any) =>
               b.id === id ||
               b.slug === id ||
               slugify(b.slug || b.title || "") === id
             );
+            if (found) {
+              blog = {
+                ...found,
+                slug: found.slug || slugify(found.title) || found.id,
+                read_time: found.readTime || (found as any).read_time,
+                approval_status: "published",
+              };
+            }
+          } catch (err) {
+            console.error("Local DB fetch error:", err);
           }
+        }
+
+        if (!blog) return null;
+
+        return {
+          ...blog,
+          slug: blog.slug || slugify(blog.title) || blog.id,
+          readTime: blog.read_time || blog.readTime,
+          images: Array.isArray(blog.images) ? blog.images : [],
+          videos: Array.isArray(blog.videos) ? blog.videos : [],
+        };
+      }
+
+      let blogs: any[] = [];
+      try {
+        let query = supabaseServer.from("blogs").select("*");
+        if (adminView !== "true") {
+          query = query.eq("approval_status", "published");
+        }
+        if (category && category !== "all") {
+          query = query.ilike("category", category);
+        }
+        if (section) {
+          query = query.ilike("section", section);
+        }
+        
+        const res = await query.order("date", { ascending: false });
+        if (res.data && res.data.length > 0) {
+          blogs = res.data;
         }
       } catch (err) {
-        console.warn("Supabase blog GET error:", err);
+        console.warn("Supabase GET blogs list error:", err);
       }
 
-      // 3. Fallback: check local db.json if Supabase has no record
-      if (!blog) {
-        try {
-          const localDb = getDb();
-          const found = localDb.blogs?.find((b: any) =>
-            b.id === id ||
-            b.slug === id ||
-            slugify(b.slug || b.title || "") === id
-          );
-          if (found) {
-            blog = {
-              ...found,
-              slug: found.slug || slugify(found.title) || found.id,
-              read_time: found.readTime || (found as any).read_time,
-              approval_status: "published",
-            };
-          }
-        } catch (err) {
-          console.error("Local DB fetch error:", err);
+      try {
+        const localDb = getDb();
+        let localBlogs = localDb.blogs || [];
+        if (category && category !== "all") {
+          localBlogs = localBlogs.filter((b: any) => b.category?.toLowerCase() === category.toLowerCase());
         }
+        if (section) {
+          localBlogs = localBlogs.filter((b: any) => b.section?.toLowerCase() === section.toLowerCase());
+        }
+        
+        localBlogs.forEach((localBlog: any) => {
+          if (!blogs.some((b: any) => b.id === localBlog.id)) {
+            blogs.push({
+              ...localBlog,
+              slug: localBlog.slug || slugify(localBlog.title) || localBlog.id,
+              read_time: localBlog.readTime || (localBlog as any).read_time,
+              approval_status: "published"
+            });
+          }
+        });
+      } catch (err) {
+        console.error("Local DB fetch/merge error:", err);
       }
-
-      if (!blog) {
-        return NextResponse.json({ success: false, error: "Blog post not found" }, { status: 404 });
-      }
-
-      const mappedBlog = {
+      
+      return (blogs || []).map((blog: any) => ({
         ...blog,
         slug: blog.slug || slugify(blog.title) || blog.id,
         readTime: blog.read_time || blog.readTime,
         images: Array.isArray(blog.images) ? blog.images : [],
         videos: Array.isArray(blog.videos) ? blog.videos : [],
-      };
+      }));
+    });
 
-      return NextResponse.json({ success: true, data: mappedBlog }, { headers });
-    }
-    
-    const section = searchParams.get("section");
-    let blogs: any[] = [];
-    try {
-      let query = supabaseServer.from("blogs").select("*");
-      
-      const adminView = searchParams.get("admin_view");
-      if (adminView !== "true") {
-        query = query.eq("approval_status", "published");
-      }
-
-      if (category && category !== "all") {
-        query = query.ilike("category", category);
-      }
-
-      if (section) {
-        query = query.ilike("section", section);
-      }
-      
-      const res = await query.order("date", { ascending: false });
-      if (res.data && res.data.length > 0) {
-        blogs = res.data;
-      }
-    } catch (err) {
-      console.warn("Supabase GET blogs list error:", err);
+    if (id && !data) {
+      return NextResponse.json({ success: false, error: "Blog post not found" }, { status: 404 });
     }
 
-    // Merge Supabase blogs with local db.json blogs to ensure local updates are available
-    try {
-      const localDb = getDb();
-      let localBlogs = localDb.blogs || [];
-      if (category && category !== "all") {
-        localBlogs = localBlogs.filter((b: any) => b.category?.toLowerCase() === category.toLowerCase());
-      }
-      if (section) {
-        localBlogs = localBlogs.filter((b: any) => b.section?.toLowerCase() === section.toLowerCase());
-      }
-      
-      localBlogs.forEach((localBlog: any) => {
-        if (!blogs.some((b: any) => b.id === localBlog.id)) {
-          blogs.push({
-            ...localBlog,
-            slug: localBlog.slug || slugify(localBlog.title) || localBlog.id,
-            read_time: localBlog.readTime || (localBlog as any).read_time,
-            approval_status: "published"
-          });
-        }
-      });
-    } catch (err) {
-      console.error("Local DB fetch/merge error:", err);
-    }
-    
-    const mappedBlogs = (blogs || []).map((blog: any) => ({
-      ...blog,
-      slug: blog.slug || slugify(blog.title) || blog.id,
-      readTime: blog.read_time || blog.readTime,
-      images: Array.isArray(blog.images) ? blog.images : [],
-      videos: Array.isArray(blog.videos) ? blog.videos : [],
-    }));
-    
-    return NextResponse.json({ success: true, data: mappedBlogs }, { headers });
+    return NextResponse.json({ success: true, data }, { headers });
   } catch (error: any) {
     console.error("GET BLOG ERROR:", error);
     return NextResponse.json({ success: false, error: String(error?.stack || error?.message || error) }, { status: 500 });
@@ -259,7 +257,8 @@ export async function POST(req: NextRequest) {
       slug: finalSlug,
       readTime: (resultObj as any).read_time || readTime,
     };
-    
+
+    invalidateServerCache("blog");
     return NextResponse.json({ success: true, data: mapped }, { status: 201 });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message || "Failed to create blog" }, { status: 500 });

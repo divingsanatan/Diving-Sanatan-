@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/utils/supabaseServer";
 import { Service } from "@/types/database";
+import { getOrSetServerCache, invalidateServerCache } from "@/utils/serverCache";
 
 async function runSupabaseQuery<T extends { error: { message?: string } | null }>(
   operation: () => Promise<T>,
@@ -57,11 +58,39 @@ export async function GET(req: NextRequest) {
     };
     
     const adminView = searchParams.get("admin_view");
-    
-    // Support fetching a single service by ID
     const singleId = searchParams.get("id");
-    if (singleId) {
-      let query = supabaseServer
+    const maxPrice = searchParams.get("maxPrice");
+    const duration = searchParams.get("duration");
+    const category = searchParams.get("category");
+    const query = searchParams.get("query");
+
+    const cacheKey = `service_${adminView === "true" ? "admin" : "pub"}_${singleId || "all"}_${maxPrice || ""}_${duration || ""}`;
+
+    const rawData = await getOrSetServerCache(cacheKey, 60, async () => {
+      if (singleId) {
+        let q = supabaseServer
+          .from("services")
+          .select(`
+            *,
+            service_categories (
+              categories (
+                id,
+                name
+              )
+            )
+          `)
+          .eq("id", singleId);
+
+        if (adminView !== "true") {
+          q = q.eq("approval_status", "published");
+        }
+
+        const { data: service, error } = await q.single();
+        if (error || !service) return null;
+        return mapServiceCategories(service);
+      }
+
+      let supabaseQuery = supabaseServer
         .from("services")
         .select(`
           *,
@@ -71,70 +100,41 @@ export async function GET(req: NextRequest) {
               name
             )
           )
-        `)
-        .eq("id", singleId);
+        `);
 
       if (adminView !== "true") {
-        query = query.eq("approval_status", "published");
+        supabaseQuery = supabaseQuery.eq("approval_status", "published");
       }
 
-      const { data: service, error } = await query.single();
-        
-      if (error) {
-        return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+      if (maxPrice) {
+        supabaseQuery = supabaseQuery.lte("price", Number(maxPrice));
       }
-      if (!service) {
+
+      if (duration && duration !== "all") {
+        supabaseQuery = supabaseQuery.ilike("duration", duration);
+      }
+
+      const { data: services, error } = await supabaseQuery.order("name", { ascending: true });
+      if (error) throw new Error(error.message);
+
+      return (services || []).map(mapServiceCategories);
+    });
+
+    if (singleId) {
+      if (!rawData) {
         return NextResponse.json({ success: false, error: "Service not found" }, { status: 404 });
       }
-      return NextResponse.json({ success: true, data: mapServiceCategories(service) }, { headers });
+      return NextResponse.json({ success: true, data: rawData }, { headers });
     }
-    
-    // Select all fields along with joined categories
-    let supabaseQuery = supabaseServer
-      .from("services")
-      .select(`
-        *,
-        service_categories (
-          categories (
-            id,
-            name
-          )
-        )
-      `);
-      
-    if (adminView !== "true") {
-      supabaseQuery = supabaseQuery.eq("approval_status", "published");
-    }
-      
-    // Apply basic SQL-level filters
-    const maxPrice = searchParams.get("maxPrice");
-    if (maxPrice) {
-      supabaseQuery = supabaseQuery.lte("price", Number(maxPrice));
-    }
-    
-    const duration = searchParams.get("duration");
-    if (duration && duration !== "all") {
-      supabaseQuery = supabaseQuery.ilike("duration", duration);
-    }
-    
-    const { data: services, error } = await supabaseQuery.order("name", { ascending: true });
-    
-    if (error) {
-      return NextResponse.json({ success: false, error: error.message }, { status: 500 });
-    }
-    
-    // Map records to include the categories array
-    let mappedServices = (services || []).map(mapServiceCategories);
-    
-    // Apply JS-level filters for nested relation matching
-    const category = searchParams.get("category");
+
+    let mappedServices = (rawData as Service[]) || [];
+
     if (category && category !== "all") {
       mappedServices = mappedServices.filter(s => 
         s.categories?.some(c => c.toLowerCase() === category.toLowerCase())
       );
     }
     
-    const query = searchParams.get("query");
     if (query) {
       const q = query.toLowerCase();
       mappedServices = mappedServices.filter(s => 
@@ -146,8 +146,8 @@ export async function GET(req: NextRequest) {
     }
     
     return NextResponse.json({ success: true, data: mappedServices }, { headers });
-  } catch (error) {
-    return NextResponse.json({ success: false, error: "Failed to read services catalog" }, { status: 500 });
+  } catch (error: any) {
+    return NextResponse.json({ success: false, error: error?.message || "Failed to read services catalog" }, { status: 500 });
   }
 }
 
@@ -224,6 +224,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true, data: { ...newService, categories: [], categoryIds: [] } }, { status: 201 });
     }
     
+    invalidateServerCache("service_");
     return NextResponse.json({ success: true, data: mapServiceCategories(finalData) }, { status: 201 });
   } catch (error) {
     return NextResponse.json({ success: false, error: "Failed to save service" }, { status: 500 });

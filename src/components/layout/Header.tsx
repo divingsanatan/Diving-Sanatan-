@@ -52,6 +52,17 @@ export const Header: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileMenuOpen]);
+
   return (
     <>
       <header className="header-nav">
@@ -404,17 +415,17 @@ export const Header: React.FC = () => {
           right: -280px;
           width: 260px;
           height: calc(100vh - 70px);
-          background: rgba(255, 255, 255, 0.85);
-          backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
-          box-shadow: -10px 0 40px rgba(124, 58, 237, 0.08);
-          border-left: 1px solid rgba(128, 90, 213, 0.15);
+          background: rgba(255, 255, 255, 0.96);
+          backdrop-filter: blur(24px);
+          -webkit-backdrop-filter: blur(24px);
+          box-shadow: -12px 0 40px rgba(124, 58, 237, 0.15), -4px 0 16px rgba(0, 0, 0, 0.1);
+          border-left: 1px solid rgba(128, 90, 213, 0.2);
           padding: 32px 24px;
           display: flex;
           flex-direction: column;
           gap: 20px;
           z-index: 95;
-          transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+          transition: right 0.35s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .mobile-nav-drawer.open {
           right: 0;
@@ -446,13 +457,24 @@ export const Header: React.FC = () => {
         
         .mobile-drawer-backdrop {
           position: fixed;
-          top: 70px;
+          top: 0;
           left: 0;
           right: 0;
           bottom: 0;
-          background: rgba(0, 0, 0, 0.15);
-          backdrop-filter: blur(4px);
+          background: rgba(15, 23, 42, 0.55);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
           z-index: 90;
+          animation: fadeInBackdrop 0.25s ease-out forwards;
+        }
+
+        @keyframes fadeInBackdrop {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
         }
 
         @keyframes badgeGlow {
