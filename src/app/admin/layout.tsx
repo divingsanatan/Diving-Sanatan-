@@ -20,7 +20,8 @@ import {
   LogOut,
   Menu,
   Radar,
-  Compass
+  Compass,
+  Video
 } from "lucide-react";
 import "./admin-lte.css";
 
@@ -132,6 +133,8 @@ export default function AdminLayout({
         return "Public Q&A Board";
       case "/admin/blogs":
         return "Publication & Blogs";
+      case "/admin/video-blogs":
+        return "Video Blogs & Transcripts";
       case "/admin/pillar":
         return "Pillar Guides Manager";
       case "/admin/glossary":
@@ -169,6 +172,8 @@ export default function AdminLayout({
         return "Q&A Board";
       case "/admin/blogs":
         return "Blogs";
+      case "/admin/video-blogs":
+        return "Video Blogs";
       case "/admin/pillar":
         return "Pillar Guides";
       case "/admin/glossary":
@@ -302,6 +307,15 @@ export default function AdminLayout({
           >
             <FileText size={16} />
             <span>Blogs</span>
+          </Link>
+          <Link
+            href="/admin/video-blogs"
+            title="Video Blogs"
+            className={`sidebar-link ${pathname === "/admin/video-blogs" ? "active" : ""}`}
+            onClick={() => setSidebarOpen(false)}
+          >
+            <Video size={16} />
+            <span>Video Blogs</span>
           </Link>
           <Link
             href="/admin/pillar"

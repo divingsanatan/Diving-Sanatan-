@@ -8,21 +8,7 @@ import { useBlog } from "@/app/blog/BlogContext";
 import Link from "next/link";
 import { cachedFetch } from "@/utils/apiCache";
 
-interface Blog {
-  id: string;
-  slug?: string;
-  title: string;
-  category: string;
-  author: string;
-  content: string;
-  date: string;
-  readTime: string;
-  image: string;
-  images?: string[];
-  videos?: string[];
-  is_show_featured_page?: boolean;
-  section?: string | null;
-}
+import { Blog, ContentType } from "@/types/database";
 
 const getBlogImage = (img: string) => {
   if (!img) return "/images/insight_blog.png";
@@ -1003,14 +989,14 @@ export default function BlogDetailsPage() {
 
             const isVideoBlog = blog && (
               (blog.videos && blog.videos.length > 0) ||
+              Boolean(blog.video_embed_url) ||
+              blog.content_type === "video" ||
               blog.category.toLowerCase() === "video transcripts" ||
               blog.category.toLowerCase() === "video blog"
             );
 
-
-
             if (isVideoBlog) {
-              const mainVideoUrl = blog.videos?.[0] || "";
+              const mainVideoUrl = blog.video_embed_url || blog.videos?.[0] || "";
               return (
                 <>
                   <nav className="article-breadcrumb" aria-label="Breadcrumb">
@@ -1094,6 +1080,27 @@ export default function BlogDetailsPage() {
                     <div className="about-video-block">
                       <h4 className="video-section-title">About This Video</h4>
                       {renderArticleBody(blog.content)}
+
+                      {/* Interactive Video Transcript Block if present */}
+                      {blog.video_transcript && (
+                        <div style={{ marginTop: "24px", padding: "20px", background: "rgba(124, 58, 237, 0.04)", borderRadius: "16px", border: "1px solid rgba(124, 58, 237, 0.15)" }}>
+                          <h4 style={{ fontSize: "1.1rem", color: "#4c1d95", margin: "0 0 12px", fontWeight: 700 }}>
+                            📜 Timed Video Transcript Notes
+                          </h4>
+                          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                            {blog.video_transcript.split("\n").filter(Boolean).map((line, idx) => (
+                              <div key={idx} style={{ display: "flex", gap: "12px", fontSize: "0.92rem", lineHeight: "1.5" }}>
+                                <span style={{ fontFamily: "monospace", color: "#7c3aed", fontWeight: 700, flexShrink: 0 }}>
+                                  {line.match(/^\[?\d{1,2}:\d{2}\]?/) ? line.match(/^\[?\d{1,2}:\d{2}\]?/)?.[0] : "•"}
+                                </span>
+                                <span style={{ color: "hsl(var(--text-cream))" }}>
+                                  {line.replace(/^\[?\d{1,2}:\d{2}\]?\s*/, "")}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
 
                       <div className="article-blockquote custom-blockquote">
                         <span className="quote-mark">“</span>

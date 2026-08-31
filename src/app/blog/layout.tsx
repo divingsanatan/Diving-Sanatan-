@@ -31,7 +31,11 @@ function BlogLayoutInner({ children }: { children: React.ReactNode }) {
   };
 
   const config = searchConfig[pathname] ?? { title: "Search", placeholder: "Type keywords..." };
-  const isFullWidthPage = pathname === "/blog/faq" || pathname === "/blog/glossary" || pathname.startsWith("/blog/quora-qa");
+  const isFullWidthPage = 
+    pathname === "/blog/faq" || 
+    pathname === "/blog/glossary" || 
+    pathname.startsWith("/blog/quora-qa") ||
+    pathname.startsWith("/blog/video-transcripts");
 
   const isVideoBlog = activeBlog && (
     (activeBlog.videos && activeBlog.videos.length > 0) ||

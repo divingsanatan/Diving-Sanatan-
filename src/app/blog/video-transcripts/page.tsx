@@ -2,26 +2,41 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { Card } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
+import Link from "next/link";
+import { Blog } from "@/types/database";
 
-interface TranscriptLine {
+export interface TranscriptLine {
   timeStr: string;
   seconds: number;
   text: string;
 }
 
-interface VideoData {
+export interface ParsedVideoBlog {
   id: string;
+  slug: string;
   title: string;
-  duration: number; // in seconds
+  author: string;
+  category: string;
+  date: string;
+  readTime: string;
+  content: string;
+  videoEmbedUrl: string;
   lines: TranscriptLine[];
+  image: string;
 }
 
-const VIDEOS: VideoData[] = [
+export const FALLBACK_VIDEOS: ParsedVideoBlog[] = [
   {
-    id: "v-1",
+    id: "vblog-1",
+    slug: "chakra-shorts-awakening-the-heart-node",
     title: "Chakra Shorts: Awakening the Heart Node",
-    duration: 35,
+    author: "Master Zephyr",
+    category: "Chakra Shorts",
+    date: "2026-06-10",
+    readTime: "5 Min Watch",
+    content: "Sound wave healing acts as a direct conduit to rebalance our primary energetic nodes. In this short video session, we explore 528Hz crystal sound bowl frequencies.",
+    videoEmbedUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+    image: "/images/insight_video.png",
     lines: [
       { timeStr: "00:00", seconds: 0, text: "Currently, sound wave healing acts as a conduit to rebalance our primary nodes." },
       { timeStr: "00:06", seconds: 6, text: "By using sound bowls tuned to 528Hz, we target cellular water crystals." },
@@ -31,9 +46,16 @@ const VIDEOS: VideoData[] = [
     ],
   },
   {
-    id: "v-2",
+    id: "vblog-2",
+    slug: "aura-alignment-mineral-energy-fields",
     title: "Aura Alignment & Mineral Energy Fields",
-    duration: 40,
+    author: "Dr. Elara Vance",
+    category: "Aura Alignment",
+    date: "2026-06-15",
+    readTime: "6 Min Watch",
+    content: "Explore quartz crystal energy transmissions and piezoelectric field stabilization.",
+    videoEmbedUrl: "https://www.youtube.com/embed/L_LUpnjgPso",
+    image: "/images/insight_space.png",
     lines: [
       { timeStr: "00:00", seconds: 0, text: "Welcome to the study of quartz energy transmissions." },
       { timeStr: "00:08", seconds: 8, text: "Crystals carry stable crystalline structures that output continuous frequencies." },
@@ -42,530 +64,915 @@ const VIDEOS: VideoData[] = [
       { timeStr: "00:33", seconds: 33, text: "Remember to wash your gems monthly under cold running spring water." },
     ],
   },
+  {
+    id: "vblog-3",
+    slug: "somatic-breathwork-cortisol-release",
+    title: "Somatic Breathwork & Cortisol Release",
+    author: "Master Zephyr",
+    category: "Guided Sessions",
+    date: "2026-06-18",
+    readTime: "7 Min Watch",
+    content: "Learn box breathing and vagus nerve stimulation techniques to calm hyperactive stress responses.",
+    videoEmbedUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+    image: "/images/insight_blog.png",
+    lines: [
+      { timeStr: "00:00", seconds: 0, text: "In moments of high anxiety, our sympathetic nervous system triggers fight-or-flight." },
+      { timeStr: "00:10", seconds: 10, text: "Box breathing slows down the pulse rate within 90 seconds." },
+      { timeStr: "00:20", seconds: 20, text: "Inhale for 4 seconds, hold for 4, exhale for 4." },
+    ],
+  },
 ];
 
-export default function VideoTranscriptsPage() {
-  const [selectedVideoId, setSelectedVideoId] = useState("v-1");
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const playIntervalRef = useRef<NodeJS.Timeout | null>(null);
+export const parseTranscriptText = (text?: string): TranscriptLine[] => {
+  if (!text || !text.trim()) return [];
+  const lines = text.split("\n");
+  const parsed: TranscriptLine[] = [];
 
-  const activeVideo = VIDEOS.find((v) => v.id === selectedVideoId) || VIDEOS[0];
+  for (const rawLine of lines) {
+    const trimmed = rawLine.trim();
+    if (!trimmed) continue;
+
+    const timeMatch = trimmed.match(/^\[?(\d{1,2}):(\d{2})\]?\s*(.*)/);
+    if (timeMatch) {
+      const minutes = parseInt(timeMatch[1], 10);
+      const seconds = parseInt(timeMatch[2], 10);
+      const totalSeconds = minutes * 60 + seconds;
+      const lineText = timeMatch[3] || trimmed;
+      const timeStr = `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+      parsed.push({
+        timeStr,
+        seconds: totalSeconds,
+        text: lineText,
+      });
+    } else {
+      parsed.push({
+        timeStr: "00:00",
+        seconds: 0,
+        text: trimmed,
+      });
+    }
+  }
+
+  return parsed;
+};
+
+export const normalizeEmbedUrl = (url?: string): string => {
+  if (!url) return "";
+  if (url.includes("youtube.com/watch")) {
+    const videoId = url.split("v=")[1]?.split("&")[0];
+    return `https://www.youtube.com/embed/${videoId}`;
+  }
+  if (url.includes("youtu.be/")) {
+    const videoId = url.split("youtu.be/")[1]?.split("?")[0];
+    return `https://www.youtube.com/embed/${videoId}`;
+  }
+  return url;
+};
+
+export default function VideoTranscriptsPage() {
+  const [videoList, setVideoList] = useState<ParsedVideoBlog[]>(FALLBACK_VIDEOS);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  // Active modal player state
+  const [activeModalVideo, setActiveModalVideo] = useState<ParsedVideoBlog | null>(null);
+  const [activeTimestampSeconds, setActiveTimestampSeconds] = useState<number>(0);
+
+  // Infinite Scroll States
+  const [visibleCount, setVisibleCount] = useState<number>(6);
+  const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
+  const observerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    if (isPlaying) {
-      playIntervalRef.current = setInterval(() => {
-        setCurrentTime((prev) => {
-          if (prev >= activeVideo.duration) {
-            setIsPlaying(false);
-            return 0;
+    let isMounted = true;
+    fetch("/api/blogs")
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.success && Array.isArray(json.data) && isMounted) {
+          const rawBlogs: Blog[] = json.data;
+          const filtered = rawBlogs.filter(
+            (b) =>
+              b.content_type === "video" ||
+              Boolean(b.video_embed_url) ||
+              (b.videos && b.videos.length > 0) ||
+              b.category?.toLowerCase().includes("video") ||
+              b.section?.toLowerCase().includes("video")
+          );
+
+          if (filtered.length > 0) {
+            const parsed: ParsedVideoBlog[] = filtered.map((b) => {
+              const embed = normalizeEmbedUrl(b.video_embed_url || (b.videos?.[0] ?? ""));
+              const lines = parseTranscriptText(b.video_transcript);
+
+              return {
+                id: b.id,
+                slug: b.slug || b.id,
+                title: b.title,
+                author: b.author,
+                category: b.category || "Video Transcripts",
+                date: b.date,
+                readTime: b.readTime || "5 Min Watch",
+                content: b.content,
+                videoEmbedUrl: embed || "https://www.youtube.com/embed/dQw4w9WgXcQ",
+                image: b.image || "/images/insight_video.png",
+                lines: lines.length > 0 ? lines : [
+                  { timeStr: "00:00", seconds: 0, text: b.content.substring(0, 120) }
+                ],
+              };
+            });
+
+            setVideoList(parsed);
           }
-          return prev + 1;
-        });
-      }, 1000);
-    } else {
-      if (playIntervalRef.current) {
-        clearInterval(playIntervalRef.current);
-      }
-    }
+        }
+      })
+      .catch((err) => console.error("Failed to load video blogs:", err))
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
 
     return () => {
-      if (playIntervalRef.current) {
-        clearInterval(playIntervalRef.current);
-      }
+      isMounted = false;
     };
-  }, [isPlaying, activeVideo.duration]);
+  }, []);
 
-  // Switch video resets time and play state
-  const handleVideoSelect = (id: string) => {
-    setSelectedVideoId(id);
-    setIsPlaying(false);
-    setCurrentTime(0);
+  const hasMoreItems = visibleCount < videoList.length;
+
+  // Infinite Pagination IntersectionObserver
+  useEffect(() => {
+    const node = observerRef.current;
+    if (!node || !hasMoreItems) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !isLoadingMore) {
+          setIsLoadingMore(true);
+          setTimeout(() => {
+            setVisibleCount((prev) => prev + 6);
+            setIsLoadingMore(false);
+          }, 350);
+        }
+      },
+      { threshold: 0.1, rootMargin: "200px" }
+    );
+
+    observer.observe(node);
+    return () => {
+      observer.disconnect();
+    };
+  }, [hasMoreItems, isLoadingMore, videoList.length]);
+
+  const handleOpenModal = (vid: ParsedVideoBlog) => {
+    setActiveModalVideo(vid);
+    setActiveTimestampSeconds(0);
   };
 
-  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setCurrentTime(parseInt(e.target.value, 10));
+  const getEmbedWithTime = (baseUrl: string, startSecs: number) => {
+    if (!baseUrl) return "";
+    const joinChar = baseUrl.includes("?") ? "&" : "?";
+    return `${baseUrl}${joinChar}autoplay=1&start=${startSecs}`;
   };
 
-  const formatTime = (secs: number) => {
-    const minutes = Math.floor(secs / 60);
-    const seconds = secs % 60;
-    return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
-  };
-
-  // Determine which line is currently active
-  const getActiveLineIndex = () => {
-    const lines = activeVideo.lines;
-    for (let i = lines.length - 1; i >= 0; i--) {
-      if (currentTime >= lines[i].seconds) {
-        return i;
-      }
-    }
-    return 0;
-  };
-
-  const activeLineIndex = getActiveLineIndex();
-
-  const handleJumpToTime = (secs: number) => {
-    setCurrentTime(secs);
-    setIsPlaying(true);
-  };
+  const displayedVideos = videoList.slice(0, visibleCount);
 
   return (
     <div className="transcripts-page">
-      {/* Header */}
+      {/* Page Title & Subtitle */}
       <div className="transcripts-header">
-        <h1 className="page-title">Video Transcripts & Guides</h1>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <span style={{ fontSize: "1.8rem" }}>🎥</span>
+          <h1 className="page-title">Video Blogs & Transcripts</h1>
+        </div>
         <p className="page-subtitle">
-          Watch guided video segments and review precise, time-synced transcript notes.
+          Watch guided video sessions, explore time-synced transcript notes, and deepen your healing journey.
         </p>
       </div>
 
-      {/* Control panel (Video selector inside glass panel) */}
-      <section className="transcripts-controls-section glass-panel">
-        <div className="video-tabs">
-          {VIDEOS.map((vid) => (
-            <button
-              key={vid.id}
-              className={`video-tab-btn ${selectedVideoId === vid.id ? "active" : ""}`}
-              onClick={() => handleVideoSelect(vid.id)}
-            >
-              {vid.title.split(":")[0]}
-            </button>
-          ))}
-        </div>
-      </section>
+      {/* Video Blog Cards List matching reference card design */}
+      <div className="video-cards-list">
+        {displayedVideos.map((vid) => (
+          <div key={vid.id} className="reference-style-card">
+            {/* Left Media Box Container */}
+            <div className="card-media-wrapper">
+              <Link href={`/blog/video-transcripts/${vid.slug}`} className="card-media-link">
+                <img
+                  src={vid.image}
+                  alt={vid.title}
+                  className="card-media-img"
+                  loading="lazy"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = "/images/insight_video.png";
+                  }}
+                />
+                <div className="play-overlay-circle">
+                  <span className="play-icon">▶</span>
+                </div>
+                <span className="pill-badge-left">{vid.category}</span>
+                <span className="pill-badge-right">{vid.readTime}</span>
+              </Link>
+            </div>
 
-      <div className="player-transcript-grid">
-        {/* Left: Custom Video Player */}
-        <div className="player-column">
-          <Card variant="glass" className="player-card">
-            {/* Visual Screen Area */}
-            <div className="video-screen">
-              <div className="screen-overlay">
-                <span className="video-meta-badge">1080p Stream</span>
-              </div>
-              
-              {/* Animated energy orb representation */}
-              <div className={`energy-orb-visual ${isPlaying ? "spinning" : ""}`}>
-                <svg width="120" height="120" viewBox="0 0 100 100">
-                  <defs>
-                    <radialGradient id="orbGlow" cx="50%" cy="50%" r="50%">
-                      <stop offset="0%" stopColor="#c084fc" stopOpacity="0.8" />
-                      <stop offset="50%" stopColor="#818cf8" stopOpacity="0.4" />
-                      <stop offset="100%" stopColor="#4c1d95" stopOpacity="0" />
-                    </radialGradient>
-                  </defs>
-                  
-                  {/* Energy Wave Rings */}
-                  <circle cx="50" cy="50" r="40" stroke="rgba(168, 85, 247, 0.2)" strokeWidth="1.5" fill="none" className="energy-ring-1" />
-                  <circle cx="50" cy="50" r="30" stroke="rgba(129, 140, 248, 0.3)" strokeWidth="1.5" fill="none" className="energy-ring-2" />
-                  
-                  {/* Glowing Core */}
-                  <circle cx="50" cy="50" r="20" fill="url(#orbGlow)" className="energy-core" />
-                  
-                  {/* Floating particles */}
-                  <circle cx="35" cy="35" r="2" fill="#22d3ee" className="particle-1" />
-                  <circle cx="65" cy="40" r="2.5" fill="#facc15" className="particle-2" />
-                  <circle cx="48" cy="68" r="1.5" fill="#4ade80" className="particle-3" />
-                </svg>
-              </div>
-
-              {/* Subtitles text over video overlay */}
-              <div className="video-subtitles-bar">
-                <p className="subtitle-text">
-                  {activeVideo.lines[activeLineIndex]?.text}
+            {/* Right Body Content */}
+            <div className="card-content-body">
+              <div className="card-header-block">
+                <Link href={`/blog/video-transcripts/${vid.slug}`} className="card-title-link">
+                  <h3 className="card-post-title">{vid.title}</h3>
+                </Link>
+                <p className="card-post-desc">
+                  <span className="summary-label">🧘 Transcript Summary: </span>
+                  {vid.content.replace(/<[^>]*>/g, "")}
                 </p>
               </div>
-            </div>
 
-            {/* Player Controls Bar */}
-            <div className="player-controls">
-              <div className="timeline-row">
-                <input
-                  type="range"
-                  min="0"
-                  max={activeVideo.duration}
-                  value={currentTime}
-                  onChange={handleSeek}
-                  className="timeline-slider"
-                />
-              </div>
+              <div className="card-footer-divider" />
 
-              <div className="buttons-row">
-                <div className="play-controls">
-                  <button className="control-btn" onClick={() => setIsPlaying(!isPlaying)} title={isPlaying ? "Pause" : "Play"}>
-                    {isPlaying ? (
-                      <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-                        <rect x="6" y="4" width="4" height="16" />
-                        <rect x="14" y="4" width="4" height="16" />
-                      </svg>
-                    ) : (
-                      <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-                        <polygon points="5 3 19 12 5 21 5 3" />
-                      </svg>
-                    )}
+              <div className="card-footer-row">
+                <div className="author-metadata">
+                  <div className="author-avatar-circle">{vid.author.charAt(0)}</div>
+                  <span className="author-fullname">{vid.author}</span>
+                  <span className="metadata-dot">•</span>
+                  <span className="publish-date-text">{vid.date}</span>
+                </div>
+
+                <div className="action-buttons-group">
+                  <button className="quick-watch-btn" onClick={() => handleOpenModal(vid)}>
+                    ▶ Quick Watch
                   </button>
-                  
-                  <span className="time-display">
-                    {formatTime(currentTime)} / {formatTime(activeVideo.duration)}
-                  </span>
-                </div>
-
-                <div className="volume-controls">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
-                  </svg>
-                  <div className="vol-bar"></div>
+                  <Link href={`/blog/video-transcripts/${vid.slug}`} className="read-article-link">
+                    Read Article &rarr;
+                  </Link>
                 </div>
               </div>
             </div>
-          </Card>
-
-          <div className="takeaways-box glass-panel">
-            <h4>Key Takeaways</h4>
-            <ul>
-              <li>Click on any transcript line to skip directly to that topic.</li>
-              <li>Practice using headphones to maximize sound wave therapy results.</li>
-            </ul>
           </div>
-        </div>
-
-        {/* Right: Synced Transcripts */}
-        <div className="transcript-column">
-          <div className="transcript-panel glass-panel">
-            <h3 className="panel-title">Interactive Transcript</h3>
-            <div className="lines-list">
-              {activeVideo.lines.map((line, idx) => {
-                const isActive = idx === activeLineIndex;
-                return (
-                  <div
-                    key={line.seconds}
-                    className={`transcript-line-item ${isActive ? "active" : ""}`}
-                    onClick={() => handleJumpToTime(line.seconds)}
-                  >
-                    <span className="timestamp">[{line.timeStr}]</span>
-                    <p className="line-text">{line.text}</p>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
+        ))}
       </div>
 
-      <style jsx>{`
+      {/* Infinite Scroll Sentinel / Loading Indicator */}
+      <div className="infinite-scroll-sentinel-wrapper">
+        {hasMoreItems ? (
+          <div ref={observerRef} className="infinite-loader-box">
+            <svg viewBox="0 0 100 100" className="loader-lotus-spin">
+              <path d="M50 25 C45 45 35 60 50 80 C65 60 55 45 50 25 Z" fill="none" stroke="#7c3aed" strokeWidth="4" />
+              <path d="M50 80 C35 75 25 60 20 40 C35 50 45 60 50 80 Z" fill="none" stroke="#7c3aed" strokeWidth="4" />
+              <path d="M50 80 C65 75 75 60 80 40 C65 50 55 60 50 80 Z" fill="none" stroke="#7c3aed" strokeWidth="4" />
+            </svg>
+            <span>Loading more video blogs...</span>
+          </div>
+        ) : (
+          <div className="end-of-list-badge">
+            <span>✦ You've reached the end of the video catalog ✦</span>
+          </div>
+        )}
+      </div>
+
+      {/* Interactive Video Player & Transcript Modal */}
+      {activeModalVideo && (
+        <div className="video-modal-overlay" onClick={() => setActiveModalVideo(null)}>
+          <div className="video-modal-container glass-panel" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close-btn" onClick={() => setActiveModalVideo(null)}>
+              ✕
+            </button>
+
+            <div className="video-modal-grid">
+              {/* Left Column: Embed Player */}
+              <div className="modal-player-col">
+                <div className="modal-video-screen">
+                  <iframe
+                    src={getEmbedWithTime(activeModalVideo.videoEmbedUrl, activeTimestampSeconds)}
+                    className="modal-yt-iframe"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    title={activeModalVideo.title}
+                  />
+                </div>
+
+                <div className="modal-video-info">
+                  <h2>{activeModalVideo.title}</h2>
+                  <div className="modal-meta-row">
+                    <span>By: <strong>{activeModalVideo.author}</strong></span>
+                    <span>•</span>
+                    <span>{activeModalVideo.readTime}</span>
+                    <span>•</span>
+                    <span>{activeModalVideo.date}</span>
+                  </div>
+                  <p className="modal-video-desc">{activeModalVideo.content.replace(/<[^>]*>/g, "")}</p>
+
+                  <Link href={`/blog/video-transcripts/${activeModalVideo.slug}`} className="modal-full-article-link">
+                    📖 Open Dedicated Article Page &rarr;
+                  </Link>
+                </div>
+              </div>
+
+              {/* Right Column: Time-synced Interactive Transcript */}
+              <div className="modal-transcript-col">
+                <h3 className="modal-transcript-title">Interactive Transcript</h3>
+                <div className="modal-lines-list">
+                  {activeModalVideo.lines.map((line, idx) => {
+                    const isActive = activeTimestampSeconds === line.seconds;
+                    return (
+                      <div
+                        key={`${line.seconds}-${idx}`}
+                        className={`modal-transcript-line ${isActive ? "active" : ""}`}
+                        onClick={() => setActiveTimestampSeconds(line.seconds)}
+                      >
+                        <span className="line-time">[{line.timeStr}]</span>
+                        <p className="line-text">{line.text}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <style jsx global>{`
         .transcripts-page {
           display: flex;
           flex-direction: column;
-          gap: 36px;
+          gap: 28px;
           width: 100%;
+          max-width: 100%;
+          box-sizing: border-box;
         }
-        .transcripts-header {
+        .transcripts-page .transcripts-header {
           text-align: left;
-          padding: 8px 0 0;
-        }
-        .page-title {
-          font-size: 2.4rem;
-          color: #4c1d95;
-          margin-bottom: 8px;
-          font-weight: 700;
-          letter-spacing: -0.01em;
-        }
-        .page-subtitle {
-          font-size: 1rem;
-          color: hsl(var(--text-muted));
-          max-width: 650px;
-          margin: 0;
-        }
-        .transcripts-controls-section {
-          display: flex;
-          justify-content: flex-start;
-          align-items: center;
-          padding: 12px 24px;
+          padding: 24px 28px;
+          background: linear-gradient(135deg, #fcfaff 0%, #f5f0ff 100%);
+          border: 1px solid rgba(168, 85, 247, 0.15);
           border-radius: 20px;
-          width: 100%;
+          box-shadow: 0 4px 20px rgba(124, 58, 237, 0.04);
         }
-        .video-tabs {
-          display: flex;
-          gap: 8px;
-          align-items: center;
+        .transcripts-page .page-title {
+          font-size: 2.2rem;
+          color: #3b0764;
+          margin: 0;
+          font-weight: 800;
+          letter-spacing: -0.01em;
+          line-height: 1.2;
         }
-        .video-tab-btn {
-          background: transparent;
-          border: 1px solid transparent;
-          color: hsl(var(--text-muted));
-          font-family: var(--font-serif);
-          font-size: 0.85rem;
-          font-weight: 600;
-          padding: 6px 14px;
-          border-radius: 30px;
-          cursor: pointer;
-          letter-spacing: 0.03em;
-          text-transform: uppercase;
-          transition: var(--transition-fast);
+        .transcripts-page .page-subtitle {
+          font-size: 1rem;
+          color: #64748b;
+          max-width: 720px;
+          margin: 8px 0 0;
+          line-height: 1.5;
         }
-        .video-tab-btn:hover {
-          color: #7c3aed;
-          background: rgba(168, 85, 247, 0.04);
-        }
-        .video-tab-btn.active {
-          color: #7c3aed;
-          background: linear-gradient(135deg, rgba(251, 207, 232, 0.25) 0%, rgba(233, 213, 255, 0.25) 100%);
-          border-color: rgba(168, 85, 247, 0.2);
-          box-shadow: 0 4px 10px rgba(168, 85, 247, 0.05);
-        }
-        .player-transcript-grid {
-          display: grid;
-          grid-template-columns: 1.1fr 0.9fr;
-          gap: 32px;
-          align-items: flex-start;
-        }
-        .player-column {
+
+        /* Reference-style Responsive Video Cards List */
+        .transcripts-page .video-cards-list {
           display: flex;
           flex-direction: column;
           gap: 24px;
+          width: 100%;
+          max-width: 100%;
+          box-sizing: border-box;
         }
-        .player-card {
-          padding: 0 !important;
-          border-radius: 20px;
-          overflow: hidden;
-          background: #090514 !important;
-          border: 1px solid rgba(168, 85, 247, 0.3) !important;
+        .transcripts-page .reference-style-card {
+          display: flex;
+          flex-direction: row;
+          width: 100%;
+          max-width: 100%;
+          min-width: 0;
+          box-sizing: border-box;
+          background: #ffffff;
+          border: 1px solid rgba(168, 85, 247, 0.12);
+          border-radius: 24px;
+          padding: 16px;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+          gap: 24px;
+          align-items: stretch;
+          transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease;
         }
-        .video-screen {
+        .transcripts-page .reference-style-card:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 14px 32px rgba(124, 58, 237, 0.08);
+          border-color: rgba(168, 85, 247, 0.28);
+        }
+
+        /* Fixed Media Thumbnail Wrapper (Laptop/Desktop) */
+        .transcripts-page .card-media-wrapper {
           position: relative;
-          height: 300px;
-          background: radial-gradient(circle at center, #1b103c 0%, #060212 100%);
+          width: 320px;
+          min-width: 320px;
+          max-width: 320px;
+          height: 200px;
+          flex-shrink: 0;
+          border-radius: 18px;
+          overflow: hidden;
+          background: #0f0a1e;
+          box-sizing: border-box;
+        }
+        .transcripts-page .card-media-link {
+          position: relative;
+          display: block;
+          width: 100%;
+          height: 100%;
+          text-decoration: none;
+        }
+        .transcripts-page .card-media-img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+          transition: transform 0.4s ease, opacity 0.4s ease;
+          opacity: 0.94;
+        }
+        .transcripts-page .card-media-wrapper:hover .card-media-img {
+          transform: scale(1.05);
+          opacity: 1;
+        }
+
+        /* Overlay Play Button & Badges */
+        .transcripts-page .play-overlay-circle {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          width: 50px;
+          height: 50px;
+          border-radius: 50%;
+          background: rgba(124, 58, 237, 0.9);
+          backdrop-filter: blur(4px);
           display: flex;
           align-items: center;
           justify-content: center;
+          box-shadow: 0 0 20px rgba(168, 85, 247, 0.5);
+          transition: transform 0.25s ease, background 0.2s ease;
+          z-index: 3;
+        }
+        .transcripts-page .card-media-wrapper:hover .play-overlay-circle {
+          transform: translate(-50%, -50%) scale(1.15);
+          background: #7c3aed;
+        }
+        .transcripts-page .play-icon {
+          color: #ffffff;
+          font-size: 1.15rem;
+          margin-left: 3px;
+          line-height: 1;
+        }
+        .transcripts-page .pill-badge-left {
+          position: absolute;
+          bottom: 12px;
+          left: 12px;
+          background: rgba(255, 255, 255, 0.95);
+          backdrop-filter: blur(4px);
+          color: #6b21a8;
+          font-size: 0.72rem;
+          font-weight: 800;
+          padding: 5px 12px;
+          border-radius: 12px;
+          text-transform: uppercase;
+          letter-spacing: 0.03em;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+          z-index: 2;
+        }
+        .transcripts-page .pill-badge-right {
+          position: absolute;
+          bottom: 12px;
+          right: 12px;
+          background: rgba(255, 255, 255, 0.95);
+          backdrop-filter: blur(4px);
+          color: #475569;
+          font-size: 0.75rem;
+          font-weight: 700;
+          padding: 5px 12px;
+          border-radius: 12px;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+          z-index: 2;
+        }
+
+        /* Right Content Body */
+        .transcripts-page .card-content-body {
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          flex: 1;
+          min-width: 0;
+          padding: 4px 8px 4px 0;
+          box-sizing: border-box;
+        }
+        .transcripts-page .card-header-block {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+        .transcripts-page .card-title-link {
+          text-decoration: none;
+        }
+        .transcripts-page .card-post-title {
+          font-size: 1.35rem;
+          color: #3b0764;
+          margin: 0;
+          font-weight: 800;
+          line-height: 1.3;
+          letter-spacing: -0.01em;
+          cursor: pointer;
+          transition: color 0.2s ease;
+        }
+        .transcripts-page .card-post-title:hover {
+          color: #7c3aed;
+        }
+        .transcripts-page .card-post-desc {
+          font-size: 0.92rem;
+          color: #64748b;
+          margin: 0;
+          line-height: 1.55;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
           overflow: hidden;
         }
-        .screen-overlay {
-          position: absolute;
-          top: 16px;
-          left: 16px;
-          z-index: 10;
-        }
-        .video-meta-badge {
-          background: rgba(0, 0, 0, 0.6);
-          border: 1px solid rgba(255, 255, 255, 0.15);
-          color: #22d3ee;
-          font-size: 0.72rem;
+        .transcripts-page .summary-label {
+          color: #7c3aed;
           font-weight: 700;
-          padding: 4px 8px;
-          border-radius: 6px;
-          letter-spacing: 0.05em;
         }
-        .energy-orb-visual {
-          z-index: 1;
+
+        .transcripts-page .card-footer-divider {
+          height: 1px;
+          background: #f1f5f9;
+          width: 100%;
+          margin: 16px 0 12px;
         }
-        .energy-orb-visual.spinning {
-          animation: spin 20s infinite linear;
+
+        .transcripts-page .card-footer-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          flex-wrap: wrap;
         }
-        .video-subtitles-bar {
-          position: absolute;
-          bottom: 0;
+        .transcripts-page .author-metadata {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+        .transcripts-page .author-avatar-circle {
+          width: 28px;
+          height: 28px;
+          border-radius: 50%;
+          background: #f3e8ff;
+          color: #7c3aed;
+          font-size: 0.8rem;
+          font-weight: 800;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .transcripts-page .author-fullname {
+          font-size: 0.88rem;
+          color: #475569;
+          font-weight: 600;
+        }
+        .transcripts-page .metadata-dot {
+          color: #cbd5e1;
+          font-size: 0.85rem;
+        }
+        .transcripts-page .publish-date-text {
+          font-size: 0.88rem;
+          color: #94a3b8;
+        }
+
+        .transcripts-page .action-buttons-group {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+        .transcripts-page .quick-watch-btn {
+          background: #f3e8ff;
+          color: #7c3aed;
+          border: 1px solid rgba(124, 58, 237, 0.15);
+          padding: 7px 16px;
+          border-radius: 20px;
+          font-size: 0.8rem;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          white-space: nowrap;
+        }
+        .transcripts-page .quick-watch-btn:hover {
+          background: #e9d5ff;
+        }
+        .transcripts-page .read-article-link {
+          font-size: 0.85rem;
+          color: #4c1d95;
+          font-weight: 700;
+          text-decoration: none;
+          transition: color 0.2s ease;
+          white-space: nowrap;
+        }
+        .transcripts-page .read-article-link:hover {
+          color: #7c3aed;
+        }
+
+        /* Responsive Breakpoints (Laptop / Tablet / Mobile) */
+        @media (max-width: 960px) {
+          .transcripts-page .card-media-wrapper {
+            width: 260px;
+            min-width: 260px;
+            max-width: 260px;
+            height: 180px;
+          }
+          .transcripts-page .card-post-title {
+            font-size: 1.2rem;
+          }
+        }
+
+        @media (max-width: 768px) {
+          .transcripts-page .transcripts-header {
+            padding: 18px 20px;
+            border-radius: 16px;
+          }
+          .transcripts-page .page-title {
+            font-size: 1.6rem;
+          }
+          .transcripts-page .page-subtitle {
+            font-size: 0.88rem;
+          }
+          .transcripts-page .reference-style-card {
+            flex-direction: column;
+            padding: 14px;
+            border-radius: 20px;
+            gap: 14px;
+          }
+          .transcripts-page .card-media-wrapper {
+            width: 100%;
+            min-width: 100%;
+            max-width: 100%;
+            height: 210px;
+            border-radius: 14px;
+          }
+          .transcripts-page .card-content-body {
+            padding: 0;
+            width: 100%;
+          }
+          .transcripts-page .card-footer-row {
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+          }
+        }
+
+        @media (max-width: 520px) {
+          .transcripts-page .card-media-wrapper {
+            height: 185px;
+          }
+          .transcripts-page .card-post-title {
+            font-size: 1.15rem;
+          }
+          .transcripts-page .card-footer-row {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+          }
+          .transcripts-page .action-buttons-group {
+            width: 100%;
+            justify-content: space-between;
+            align-items: center;
+          }
+          .transcripts-page .quick-watch-btn {
+            flex: 1;
+            text-align: center;
+          }
+          .transcripts-page .read-article-link {
+            padding: 7px 14px;
+            background: #f8fafc;
+            border-radius: 20px;
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            text-align: center;
+          }
+        }
+
+        /* Infinite Scroll Sentinel Wrapper */
+        .transcripts-page .infinite-scroll-sentinel-wrapper {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          padding: 24px 0 16px;
+          width: 100%;
+        }
+        .transcripts-page .infinite-loader-box {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 10px 22px;
+          border-radius: 30px;
+          background: #f5f3ff;
+          border: 1px solid rgba(124, 58, 237, 0.2);
+          color: #7c3aed;
+          font-size: 0.85rem;
+          font-weight: 700;
+        }
+        .transcripts-page .loader-lotus-spin {
+          width: 22px;
+          height: 22px;
+          animation: spinLotus 2s linear infinite;
+        }
+        @keyframes spinLotus {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        .transcripts-page .end-of-list-badge {
+          font-size: 0.85rem;
+          color: #64748b;
+          padding: 8px 18px;
+          background: #ffffff;
+          border-radius: 20px;
+          border: 1px solid rgba(0, 0, 0, 0.06);
+        }
+
+        /* Modal Player Overlay */
+        .video-modal-overlay {
+          position: fixed;
+          top: 0;
           left: 0;
           right: 0;
-          background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0) 100%);
-          padding: 30px 24px 20px;
-          text-align: center;
-          z-index: 5;
-        }
-        .subtitle-text {
-          color: #ffffff;
-          font-size: 1.05rem;
-          font-weight: 500;
-          text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
-          line-height: 1.4;
-          margin: 0;
-        }
-        .player-controls {
-          padding: 16px 20px;
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-          background: #110b24;
-          border-top: 1px solid rgba(168, 85, 247, 0.15);
-        }
-        .timeline-row {
-          width: 100%;
-        }
-        .timeline-slider {
-          width: 100%;
-          -webkit-appearance: none;
-          background: rgba(255, 255, 255, 0.1);
-          height: 6px;
-          border-radius: 3px;
-          outline: none;
-          cursor: pointer;
-        }
-        .timeline-slider::-webkit-slider-thumb {
-          -webkit-appearance: none;
-          width: 14px;
-          height: 14px;
-          border-radius: 50%;
-          background: #7c3aed;
-          box-shadow: 0 0 10px #c084fc;
-          transition: transform 0.1s;
-        }
-        .timeline-slider::-webkit-slider-thumb:hover {
-          transform: scale(1.2);
-        }
-        .buttons-row {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-        }
-        .play-controls {
-          display: flex;
-          align-items: center;
-          gap: 14px;
-        }
-        .control-btn {
-          background: transparent;
-          border: none;
-          color: #e9d5ff;
-          cursor: pointer;
-          transition: transform 0.2s, color 0.2s;
+          bottom: 0;
+          background: rgba(15, 23, 42, 0.6);
+          backdrop-filter: blur(8px);
+          z-index: 9999;
           display: flex;
           align-items: center;
           justify-content: center;
+          padding: 20px;
         }
-        .control-btn:hover {
-          color: #ffffff;
-          transform: scale(1.1);
+        .video-modal-container {
+          position: relative;
+          width: 100%;
+          max-width: 1050px;
+          max-height: 90vh;
+          background: #ffffff !important;
+          border: 1px solid rgba(168, 85, 247, 0.2) !important;
+          border-radius: 24px;
+          overflow-y: auto;
+          padding: 28px !important;
+          color: #1e1b4b;
+          box-shadow: 0 25px 50px -12px rgba(124, 58, 237, 0.22);
         }
-        .time-display {
-          font-size: 0.8rem;
-          color: #a78bfa;
-          font-family: monospace;
-        }
-        .volume-controls {
+        .modal-close-btn {
+          position: absolute;
+          top: 16px;
+          right: 20px;
+          background: #f1f5f9;
+          border: 1px solid rgba(0, 0, 0, 0.08);
+          color: #334155;
+          width: 34px;
+          height: 34px;
+          border-radius: 50%;
+          font-size: 1rem;
+          font-weight: 700;
+          cursor: pointer;
+          z-index: 10;
           display: flex;
           align-items: center;
-          gap: 8px;
-          color: #a78bfa;
+          justify-content: center;
+          transition: all 0.2s ease;
         }
-        .vol-bar {
-          width: 60px;
-          height: 4px;
-          background: #7c3aed;
-          border-radius: 2px;
+        .modal-close-btn:hover {
+          background: #e2e8f0;
+          color: #0f172a;
+        }
+        .video-modal-grid {
+          display: grid;
+          grid-template-columns: 1.2fr 0.8fr;
+          gap: 28px;
+          align-items: flex-start;
+        }
+        @media (max-width: 850px) {
+          .video-modal-grid {
+            grid-template-columns: 1fr;
+            gap: 20px;
+          }
+          .video-modal-container {
+            padding: 20px 16px !important;
+          }
+        }
+        .modal-video-screen {
           position: relative;
-        }
-        .takeaways-box {
-          padding: 20px;
-          border-radius: 16px;
-        }
-        .takeaways-box h4 {
-          font-size: 1.1rem;
-          color: #4c1d95;
-          margin-bottom: 10px;
-        }
-        .takeaways-box ul {
-          padding-left: 20px;
-          display: flex;
-          flex-direction: column;
-          gap: 6px;
-          font-size: 0.88rem;
-          color: hsl(var(--text-muted));
-        }
-        .transcript-column {
           width: 100%;
+          padding-top: 56.25%;
+          background: #000;
+          border-radius: 16px;
+          overflow: hidden;
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
         }
-        .transcript-panel {
-          padding: 24px;
-          border-radius: 20px;
-          height: 470px;
+        .modal-yt-iframe {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          border: none;
+        }
+        .modal-video-info {
+          margin-top: 18px;
           display: flex;
           flex-direction: column;
-          gap: 20px;
+          gap: 10px;
         }
-        .panel-title {
-          font-size: 1.3rem;
+        .modal-video-info h2 {
+          font-size: 1.4rem;
+          color: #2e1065;
+          margin: 0;
+          font-weight: 800;
+        }
+        .modal-meta-row {
+          font-size: 0.82rem;
+          color: #7c3aed;
+          display: flex;
+          gap: 8px;
+          font-weight: 600;
+        }
+        .modal-video-desc {
+          font-size: 0.9rem;
+          color: #475569;
+          line-height: 1.5;
+          margin: 0;
+        }
+        .modal-full-article-link {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          margin-top: 8px;
+          background: #7c3aed;
+          color: #ffffff;
+          padding: 8px 18px;
+          border-radius: 20px;
+          font-size: 0.85rem;
+          font-weight: 700;
+          text-decoration: none;
+          transition: background 0.2s ease;
+          width: fit-content;
+        }
+        .modal-full-article-link:hover {
+          background: #6d28d9;
+        }
+
+        .modal-transcript-col {
+          display: flex;
+          flex-direction: column;
+          gap: 14px;
+          max-height: 520px;
+          background: #faf5ff;
+          padding: 18px;
+          border-radius: 18px;
+          border: 1px solid rgba(168, 85, 247, 0.15);
+        }
+        .modal-transcript-title {
+          font-size: 1.15rem;
           color: #4c1d95;
-          border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-          padding-bottom: 10px;
+          margin: 0;
+          border-bottom: 1px solid rgba(124, 58, 237, 0.15);
+          padding-bottom: 8px;
+          font-weight: 750;
         }
-        .lines-list {
-          flex: 1;
+        .modal-lines-list {
           overflow-y: auto;
           display: flex;
           flex-direction: column;
-          gap: 12px;
-          padding-right: 8px;
+          gap: 8px;
+          max-height: 420px;
+          padding-right: 4px;
         }
-        .transcript-line-item {
+        .modal-transcript-line {
           display: flex;
-          gap: 14px;
-          padding: 12px;
+          align-items: flex-start;
+          gap: 10px;
+          padding: 10px 12px;
           border-radius: 10px;
+          background: #ffffff;
+          border: 1px solid rgba(168, 85, 247, 0.1);
           cursor: pointer;
-          border: 1px solid transparent;
-          transition: var(--transition-smooth);
+          transition: all 0.2s ease;
         }
-        .transcript-line-item:hover {
-          background: rgba(168, 85, 247, 0.03);
-          border-color: rgba(168, 85, 247, 0.08);
-        }
-        .transcript-line-item.active {
-          background: linear-gradient(135deg, rgba(251, 207, 232, 0.15) 0%, rgba(233, 213, 255, 0.15) 100%);
+        .modal-transcript-line:hover {
+          background: #f3e8ff;
           border-color: rgba(168, 85, 247, 0.25);
-          box-shadow: 0 4px 15px rgba(168, 85, 247, 0.03);
         }
-        .timestamp {
+        .modal-transcript-line.active {
+          background: #7c3aed;
+          border-color: #6d28d9;
+        }
+        .modal-transcript-line.active .line-time {
+          color: #e9d5ff;
+        }
+        .modal-transcript-line.active .line-text {
+          color: #ffffff;
+          font-weight: 600;
+        }
+        .line-time {
           font-family: monospace;
-          font-size: 0.85rem;
           color: #7c3aed;
           font-weight: 700;
+          font-size: 0.85rem;
           flex-shrink: 0;
         }
         .line-text {
-          font-size: 0.95rem;
-          line-height: 1.5;
-          color: hsl(var(--text-cream));
+          font-size: 0.88rem;
+          color: #334155;
           margin: 0;
-        }
-        .transcript-line-item.active .line-text {
-          color: #4c1d95;
-          font-weight: 500;
-        }
-        
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        
-        @keyframes pulse {
-          0%, 100% { transform: scale(1); opacity: 0.8; }
-          50% { transform: scale(1.1); opacity: 1; }
-        }
-        .energy-core {
-          animation: pulse 4s infinite ease-in-out;
-        }
-        
-        @keyframes orbit-1 {
-          0% { transform: translate(0, 0) scale(1); }
-          50% { transform: translate(10px, -15px) scale(0.8); }
-          100% { transform: translate(0, 0) scale(1); }
-        }
-        .particle-1 { animation: orbit-1 6s infinite alternate ease-in-out; }
-        
-        @keyframes orbit-2 {
-          0% { transform: translate(0, 0) scale(1); }
-          50% { transform: translate(-15px, 8px) scale(1.2); }
-          100% { transform: translate(0, 0) scale(1); }
-        }
-        .particle-2 { animation: orbit-2 8s infinite alternate-reverse ease-in-out; }
-
-        @media (max-width: 860px) {
-          .player-transcript-grid {
-            grid-template-columns: 1fr;
-          }
+          line-height: 1.45;
         }
       `}</style>
     </div>

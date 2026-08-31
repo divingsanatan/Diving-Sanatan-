@@ -68,6 +68,13 @@ export interface Blog {
   date: string;
   readTime: string;
   image: string;
+  images?: string[];
+  videos?: string[];
+  video_embed_url?: string;
+  video_transcript?: string;
+  content_type?: string;
+  section?: string | null;
+  approval_status?: string;
 }
 
 import { slugify } from "./slugify";
@@ -330,6 +337,44 @@ const initialData: DatabaseSchema = {
       readTime: "6 Min Read",
       image: "breathing_stress",
     },
+    {
+      id: "vblog-1",
+      slug: "chakra-shorts-awakening-the-heart-node",
+      title: "Chakra Shorts: Awakening the Heart Node",
+      category: "Video Transcripts",
+      author: "Master Zephyr",
+      content: "Sound wave healing acts as a direct conduit to rebalance our primary energetic nodes. In this short video session, we explore 528Hz crystal sound bowl frequencies and how sound vibrations release physical tension stored around the heart center.",
+      date: "2026-06-10",
+      readTime: "5 Min Watch",
+      image: "/images/insight_video.png",
+      content_type: "video",
+      video_embed_url: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+      video_transcript: `00:00 Currently, sound wave healing acts as a conduit to rebalance our primary nodes.
+00:06 By using sound bowls tuned to 528Hz, we target cellular water crystals.
+00:14 Key insights show that chakra blockages are often somatic reactions to stress.
+00:22 Practitioners can use targeted vibration maps to dissolve localized anxieties.
+00:29 The transcript here acts as a reference log for your personal audio sessions.`,
+      section: "video-transcripts"
+    },
+    {
+      id: "vblog-2",
+      slug: "aura-alignment-mineral-energy-fields",
+      title: "Aura Alignment & Mineral Energy Fields",
+      category: "Video Transcripts",
+      author: "Dr. Elara Vance",
+      content: "Explore quartz crystal energy transmissions and piezoelectric field stabilization. Learn how placement near nerve meridians calms voltage spikes in the nervous system.",
+      date: "2026-06-15",
+      readTime: "6 Min Watch",
+      image: "/images/insight_space.png",
+      content_type: "video",
+      video_embed_url: "https://www.youtube.com/embed/L_LUpnjgPso",
+      video_transcript: `00:00 Welcome to the study of quartz energy transmissions.
+00:08 Crystals carry stable crystalline structures that output continuous frequencies.
+00:16 When placed near active nerve endings, they help normalize nervous voltage.
+00:25 We call this process piezo-energy stabilizing.
+00:33 Remember to wash your gems monthly under cold running spring water.`,
+      section: "video-transcripts"
+    },
   ],
   pending_changes: [
     {
@@ -505,6 +550,16 @@ export function getDb(): DatabaseSchema {
       parsed.user_profiles = initialData.user_profiles;
       modified = true;
     }
+
+    if (!parsed.blogs) {
+      parsed.blogs = [];
+    }
+    initialData.blogs.forEach((seedBlog) => {
+      if (!parsed.blogs.some((b) => b.id === seedBlog.id || (seedBlog.slug && b.slug === seedBlog.slug))) {
+        parsed.blogs.push(seedBlog);
+        modified = true;
+      }
+    });
 
     if (modified) {
       fs.writeFileSync(DB_FILE, JSON.stringify(parsed, null, 2), "utf8");

@@ -523,6 +523,66 @@
       "section": null,
       "is_show_featured_page": false,
       "views": 3447
+    },
+    {
+      "id": "bl-1",
+      "title": "The Healing Power of Amethyst Crystals",
+      "category": "Crystals",
+      "author": "Dr. Elara Vance",
+      "content": "Amethyst is more than just a beautiful purple mineral; it is a natural tranquilizer. In energy medicine, amethyst is renowned for its high vibrational resonance that aligns directly with the Crown and Third Eye chakras. By placing amethyst stones around your sleeping quarters or wearing them during meditation, you allow the crystal's natural high-frequency currents to clear residual static from your aura. This encourages deep sleep, filters negative psychic thoughts, and fosters an environment of cognitive stillness. When beginning crystal layouts, ensure you cleanse your amethyst under cool salt water and charge it during a full moon cycle for peak efficacy.",
+      "date": "2026-05-18",
+      "readTime": "5 Min Read",
+      "image": "amethyst_crystals"
+    },
+    {
+      "id": "bl-2",
+      "title": "Unlocking the Chakras: A Beginner's Guide",
+      "category": "Energy Healing",
+      "author": "Dr. Celeste Thorne",
+      "content": "Chakras are the spinning energetic vortices that govern our emotional, mental, and biological wellness. Derived from the Sanskrit word for 'wheel', our seven primary chakras act as transformer stations along the spine—from the Root (Muladhara) at the tailbone to the Crown (Sahasrara) at the peak of the skull. When emotional trauma or daily stress triggers physical constriction, our chakras can become sluggish or completely blocked. This manifest as brain fog, chronic exhaustion, or physical tension. By utilizing targeted visualizations, color therapy, and vocalized mantras, you can break up stagnant energy and restore a free, healthy flow of vital force (Prana) throughout your system.",
+      "date": "2026-05-24",
+      "readTime": "8 Min Read",
+      "image": "chakras_guide"
+    },
+    {
+      "id": "bl-3",
+      "title": "Mindfulness and Anxiety: Breathing Through Stress",
+      "category": "Mindfulness",
+      "author": "Master Zephyr",
+      "content": "In moments of high anxiety, our sympathetic nervous system triggers the fight-or-flight cycle. Our breathing becomes shallow, chest muscles contract, and cortisol floods our bloodstream. The fastest portal back to equilibrium is your breath. By practicing conscious pranayama or box breathing (inhaling for 4 seconds, holding for 4, exhaling for 4, and holding empty for 4), you signal to your vagus nerve that you are safe. This activates the parasympathetic nervous system, lowering heart rate and bringing hyperactive neural circuits back to baseline. Make it a daily ritual: spend 10 minutes every morning sitting in silence, focusing solely on the tactile feeling of air entering and exiting your nostrils.",
+      "date": "2026-06-01",
+      "readTime": "6 Min Read",
+      "image": "breathing_stress"
+    },
+    {
+      "id": "vblog-1",
+      "slug": "chakra-shorts-awakening-the-heart-node",
+      "title": "Chakra Shorts: Awakening the Heart Node",
+      "category": "Video Transcripts",
+      "author": "Master Zephyr",
+      "content": "Sound wave healing acts as a direct conduit to rebalance our primary energetic nodes. In this short video session, we explore 528Hz crystal sound bowl frequencies and how sound vibrations release physical tension stored around the heart center.",
+      "date": "2026-06-10",
+      "readTime": "5 Min Watch",
+      "image": "/images/insight_video.png",
+      "content_type": "video",
+      "video_embed_url": "https://www.youtube.com/embed/dQw4w9WgXcQ",
+      "video_transcript": "00:00 Currently, sound wave healing acts as a conduit to rebalance our primary nodes.\n00:06 By using sound bowls tuned to 528Hz, we target cellular water crystals.\n00:14 Key insights show that chakra blockages are often somatic reactions to stress.\n00:22 Practitioners can use targeted vibration maps to dissolve localized anxieties.\n00:29 The transcript here acts as a reference log for your personal audio sessions.",
+      "section": "video-transcripts"
+    },
+    {
+      "id": "vblog-2",
+      "slug": "aura-alignment-mineral-energy-fields",
+      "title": "Aura Alignment & Mineral Energy Fields",
+      "category": "Video Transcripts",
+      "author": "Dr. Elara Vance",
+      "content": "Explore quartz crystal energy transmissions and piezoelectric field stabilization. Learn how placement near nerve meridians calms voltage spikes in the nervous system.",
+      "date": "2026-06-15",
+      "readTime": "6 Min Watch",
+      "image": "/images/insight_space.png",
+      "content_type": "video",
+      "video_embed_url": "https://www.youtube.com/embed/L_LUpnjgPso",
+      "video_transcript": "00:00 Welcome to the study of quartz energy transmissions.\n00:08 Crystals carry stable crystalline structures that output continuous frequencies.\n00:16 When placed near active nerve endings, they help normalize nervous voltage.\n00:25 We call this process piezo-energy stabilizing.\n00:33 Remember to wash your gems monthly under cold running spring water.",
+      "section": "video-transcripts"
     }
   ],
   "pending_changes": [

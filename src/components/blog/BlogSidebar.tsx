@@ -44,11 +44,16 @@ export const BlogSidebar: React.FC = () => {
         const res = await fetch("/api/blogs/categories");
         const json = await res.json();
         if (json.success) {
-          const items = json.data.map((cat: any) => ({
-            id: cat.name.toLowerCase(),
-            name: cat.name,
-            icon: getCategoryIcon(cat.name)
-          }));
+          const items = json.data
+            .filter((cat: any) => {
+              const name = (cat.name || "").toLowerCase();
+              return !name.includes("video") && !name.includes("pillar");
+            })
+            .map((cat: any) => ({
+              id: cat.name.toLowerCase(),
+              name: cat.name,
+              icon: getCategoryIcon(cat.name)
+            }));
           setCategoryItems(items);
         }
       } catch (err) {
