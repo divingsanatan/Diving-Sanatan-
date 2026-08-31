@@ -515,20 +515,38 @@ export default function Home() {
                 <form onSubmit={handleSearchSubmit} className="search-bar-form">
                   <div className={`search-input-wrapper ${searchError ? "shake-input-error" : ""}`}>
                     <Search className="search-icon" size={22} />
-                    <div className="search-input-main-container">
+                    <div className={`search-input-main-container ${searchQuery.trim() ? "has-query" : ""}`}>
                       <input
                         type="text"
                         placeholder={searchError ? "Please type something first..." : "What is stealing your peace right now?"}
-                        className="search-input"
+                        className={`search-input ${searchQuery.trim() ? "has-text" : ""}`}
                         value={searchQuery}
                         onChange={(e) => {
                           setSearchQuery(e.target.value);
                           if (e.target.value.trim()) setSearchError(false);
                         }}
                       />
-                      {/* <span className="search-input-suggestion">
-                        Try: Anxiety, Relationship, Self doubt, Financial issues
-                      </span> */}
+                      {!searchQuery.trim() && (
+                        <div className="search-input-suggestion">
+                          <span className="suggestion-label">e.g.,</span>
+                          {["Anxiety", "Relationship", "Self doubt", "Financial issues"].map((item, idx, arr) => (
+                            <React.Fragment key={idx}>
+                              <button
+                                type="button"
+                                className="suggestion-link"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  setSearchQuery(item);
+                                }}
+                              >
+                                {item}
+                              </button>
+                              {idx < arr.length - 1 && <span className="suggestion-sep">, </span>}
+                            </React.Fragment>
+                          ))}
+                        </div>
+                      )}
                     </div>
                     <button type="submit" className="search-submit-btn">
                       <span>Find Guidance</span>
@@ -1136,7 +1154,8 @@ export default function Home() {
           background: #ffffff;
           border: 1px solid rgba(124, 58, 237, 0.2);
           border-radius: 99px;
-          padding: 10px 10px 10px 28px;
+          padding: 10px 12px 10px 24px;
+          gap: 14px;
           box-shadow: 0 8px 30px rgba(124, 58, 237, 0.05);
           transition: var(--transition-smooth);
         }
@@ -1145,8 +1164,8 @@ export default function Home() {
           box-shadow: 0 12px 40px rgba(124, 58, 237, 0.12);
         }
         #section-landing .search-icon {
-          color: #6b7280;
-          margin-right: 14px;
+          color: #7c3aed;
+          margin-right: 0;
           flex-shrink: 0;
         }
         #section-landing .search-input-main-container {
@@ -1154,29 +1173,69 @@ export default function Home() {
           flex-direction: column;
           flex: 1;
           justify-content: center;
-          padding: 4px 0;
+          padding: 2px 0;
           min-width: 0;
+          gap: 2px;
         }
         #section-landing .search-input-suggestion {
           font-family: var(--font-sans);
-          font-size: 0.85rem;
+          font-size: 0.8rem;
           color: #6b7280;
-          margin-top: 4px;
+          margin-top: 0;
+          line-height: 1.2;
           text-align: left;
-          pointer-events: none;
+          pointer-events: auto;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
+          display: flex;
+          align-items: center;
+          gap: 3px;
+        }
+        #section-landing .suggestion-label {
+          color: #9ca3af;
+          margin-right: 2px;
+        }
+        #section-landing .suggestion-link {
+          background: none;
+          border: none;
+          padding: 0;
+          font: inherit;
+          color: #6b7280;
+          cursor: pointer;
+          transition: color 0.15s ease;
+          text-decoration: underline;
+          text-decoration-color: transparent;
+        }
+        #section-landing .suggestion-link:hover {
+          color: #7c3aed;
+          text-decoration-color: #7c3aed;
+        }
+        #section-landing .suggestion-sep {
+          color: #9ca3af;
         }
         #section-landing .search-input {
           width: 100%;
-          background: transparent;
-          border: none;
-          outline: none;
+          background: transparent !important;
+          border: none !important;
+          outline: none !important;
           color: #1f2937;
-          font-size: 1.15rem;
+          font-size: 1.05rem;
           font-family: var(--font-sans);
-          padding: 0;
+          padding: 0 !important;
+          margin: 0 !important;
+          height: auto !important;
+          line-height: 1.3 !important;
+          box-shadow: none !important;
+        }
+        #section-landing .search-input-main-container.has-query {
+          justify-content: center;
+          padding: 8px 0;
+          gap: 0;
+        }
+        #section-landing .search-input.has-text {
+          font-size: 1.15rem;
+          line-height: 1.5 !important;
         }
         #section-landing .search-input::placeholder {
           color: #9ca3af;

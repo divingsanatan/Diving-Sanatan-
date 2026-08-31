@@ -7,6 +7,7 @@ import { Blog } from "@/types/database";
 interface BlogContextType {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
+  executeSearch: (query: string) => void;
   activeCategory: string;
   setActiveCategory: (category: string) => void;
   activeBlog: Blog | null;
@@ -50,6 +51,28 @@ export function BlogProvider({ children }: { children: React.ReactNode }) {
     }
   }, [pathname, router]);
 
+  // Explicitly execute search: live update if on searchable page, or navigate to /blog?search=...
+  const executeSearch = useCallback((query: string) => {
+    const trimmed = query.trim();
+    setSearchQueryState(trimmed);
+
+    const searchablePages = ["/blog", "/blog/faq", "/blog/glossary", "/blog/pillar", "/blog/comparison"];
+    if (searchablePages.includes(pathname)) {
+      if (pathname === "/blog") {
+        const params = new URLSearchParams(window.location.search);
+        if (trimmed) params.set("search", trimmed);
+        else params.delete("search");
+        router.replace(`/blog?${params.toString()}`, { scroll: false });
+      }
+    } else {
+      if (trimmed) {
+        router.push(`/blog?search=${encodeURIComponent(trimmed)}`);
+      } else {
+        router.push("/blog");
+      }
+    }
+  }, [pathname, router]);
+
   // Category: update on /blog in-place; redirect from sub-pages
   const setActiveCategory = useCallback((cat: string) => {
     if (pathname === "/blog") {
@@ -71,6 +94,7 @@ export function BlogProvider({ children }: { children: React.ReactNode }) {
       value={{
         searchQuery,
         setSearchQuery,
+        executeSearch,
         activeCategory,
         setActiveCategory,
         activeBlog,

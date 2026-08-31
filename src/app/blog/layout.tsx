@@ -5,6 +5,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { BlogSidebar } from "@/components/blog/BlogSidebar";
 import { BlogRightSidebar } from "@/components/blog/BlogRightSidebar";
+import { BlogFloatingSearchBar } from "@/components/blog/BlogFloatingSearchBar";
 import { BlogProvider, useBlog } from "./BlogContext";
 import { usePathname } from "next/navigation";
 
@@ -150,6 +151,8 @@ function BlogLayoutInner({ children }: { children: React.ReactNode }) {
           </aside>
         )}
       </div>
+
+      <BlogFloatingSearchBar />
 
       <Footer />
 

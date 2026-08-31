@@ -456,49 +456,8 @@ export default function BlogDetailsPage() {
       );
     }
 
-    // 3. Fallback for Normal / General Blogs
-    const currentGeneralIndex = allBlogs.findIndex(
-      (b) => b.id === blog.id || (blog.slug && b.slug === blog.slug)
-    );
-    const nextGeneralBlog =
-      currentGeneralIndex >= 0 && allBlogs.length > 1
-        ? allBlogs[(currentGeneralIndex + 1) % allBlogs.length]
-        : null;
-
-    if (!nextGeneralBlog) return null;
-
-    return (
-      <div className="pillar-nav-section">
-        <div className="pillar-nav-header-row">
-          <div className="pillar-nav-title-group">
-            <span className="pillar-nav-sparkle">✦</span>
-            <span className="pillar-nav-header-text">Next Reading</span>
-            <span className="pillar-nav-separate-tag">Blog</span>
-          </div>
-        </div>
-
-        <div
-          className="next-pillar-line-bar"
-          onClick={() => {
-            router.push(`/blog/${nextGeneralBlog.slug || nextGeneralBlog.id}`);
-            window.scrollTo({ top: 0, behavior: "smooth" });
-          }}
-        >
-          <div className="line-bar-left">
-            <div className="line-bar-pulse-dot" />
-            <div className="line-bar-label">
-              <span className="label-top">CONTINUE READING</span>
-              <span className="label-title">{nextGeneralBlog.title}</span>
-            </div>
-          </div>
-
-          <button type="button" className="line-bar-action-btn">
-            <span>Read Next Article</span>
-            <span className="arrow">→</span>
-          </button>
-        </div>
-      </div>
-    );
+    // For normal/regular blogs, do not display Next Reading navigation (only for Pillar Blogs)
+    return null;
   };
 
   const getSlugOrIdFromHref = (href: string) => {
