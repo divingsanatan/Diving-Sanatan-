@@ -34,6 +34,7 @@ export type AdminPageType =
   | "quiz-questions"
   | "quora-qa"
   | "blogs"
+  | "video-blogs"
   | "glossary"
   | "faq"
   | "comparisons"
@@ -171,6 +172,16 @@ export default function StatsDashboard({ pageType, actions }: StatsDashboardProp
         { label: "Draft/Incomplete", trend: "Missing cover image", trendType: "attention", icon: Clock }
       ]
     },
+    "video-blogs": {
+      title: "Video Blogs & Transcripts",
+      subtitle: "Manage video content, YouTube embeds, timestamped transcripts, and video catalog.",
+      cards: [
+        { label: "Total Video Blogs", trend: "Published catalog", trendType: "up", icon: FileText },
+        { label: "With Transcripts", trend: "Timed notes added", trendType: "neutral", icon: List },
+        { label: "YouTube Connected", trend: "Active video embeds", trendType: "up", icon: Activity },
+        { label: "Published Status", trend: "Live on site", trendType: "up", icon: CheckCircle2 }
+      ]
+    },
     glossary: {
       title: "Sanskrit Glossary",
       subtitle: "Manage Sanskrit terms, definitions, translations, and illustrations.",
@@ -255,6 +266,7 @@ export default function StatsDashboard({ pageType, actions }: StatsDashboardProp
           keywords: ["/api/keywords", "/api/blogs"],
           "quiz-questions": ["/api/quiz-questions"],
           blogs: ["/api/blogs", "/api/blogs/categories"],
+          "video-blogs": ["/api/blogs"],
           glossary: ["/api/glossary"],
           faq: ["/api/faq"],
           comparisons: ["/api/comparisons"],
@@ -361,6 +373,19 @@ export default function StatsDashboard({ pageType, actions }: StatsDashboardProp
             val2 = blogCategories.length || new Set(blogs.map((b: any) => b.category).filter(Boolean)).size;
             val3 = blogs.filter((b: any) => b.section === "recommended" || b.section === "practice" || b.section === "discuss").length;
             val4 = blogs.filter((b: any) => !b.image).length;
+            break;
+
+          case "video-blogs":
+            const vBlogs = blogs.filter((b: any) =>
+              b.content_type === "video" ||
+              Boolean(b.video_embed_url) ||
+              b.category?.toLowerCase().includes("video") ||
+              b.section?.toLowerCase().includes("video")
+            );
+            val1 = vBlogs.length;
+            val2 = vBlogs.filter((b: any) => b.video_transcript && b.video_transcript.trim().length > 0).length;
+            val3 = vBlogs.filter((b: any) => Boolean(b.video_embed_url || (b.videos && b.videos.length > 0))).length;
+            val4 = vBlogs.filter((b: any) => (b.status || b.approval_status) === "published").length;
             break;
 
           case "glossary":

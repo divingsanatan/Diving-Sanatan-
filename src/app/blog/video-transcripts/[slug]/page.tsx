@@ -268,6 +268,19 @@ export default function VideoBlogDetailPage() {
     }
   };
 
+  const isDirectVideoFile = (url: string) => {
+    if (!url) return false;
+    const clean = url.trim().toLowerCase();
+    return (
+      clean.endsWith(".mp4") ||
+      clean.endsWith(".webm") ||
+      clean.endsWith(".mov") ||
+      clean.endsWith(".ogg") ||
+      clean.includes("/storage/v1/object/public/uploads/") ||
+      clean.includes("video/upload")
+    );
+  };
+
   const getEmbedWithTime = (baseUrl: string, startSecs: number) => {
     if (!baseUrl) return "";
     const joinChar = baseUrl.includes("?") ? "&" : "?";
@@ -342,13 +355,29 @@ export default function VideoBlogDetailPage() {
           {/* Main Video Screen */}
           <div className="video-player-column">
             <div className="video-screen-wrapper">
-              <iframe
-                src={getEmbedWithTime(videoBlog.videoEmbedUrl, activeTimestamp)}
-                className="video-iframe"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                title={videoBlog.title}
-              />
+              {isDirectVideoFile(videoBlog.videoEmbedUrl) ? (
+                <video
+                  src={videoBlog.videoEmbedUrl}
+                  controls
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "contain",
+                    background: "#000",
+                  }}
+                />
+              ) : (
+                <iframe
+                  src={getEmbedWithTime(videoBlog.videoEmbedUrl, activeTimestamp)}
+                  className="video-iframe"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  title={videoBlog.title}
+                />
+              )}
             </div>
             <p className="timestamp-note">
               💡 Tip: Click any transcript line on the right to jump directly to that timestamp in the video session!
