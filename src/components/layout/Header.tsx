@@ -63,6 +63,11 @@ export const Header: React.FC = () => {
     };
   }, [mobileMenuOpen]);
 
+  const isHomeActive = pathname === "/";
+  const isServicesActive = pathname === "/services" || pathname.startsWith("/services/");
+  const isAboutActive = pathname === "/about" || pathname.startsWith("/about/");
+  const isBlogActive = pathname === "/blog" || pathname.startsWith("/blog");
+
   return (
     <>
       <header className="header-nav">
@@ -73,12 +78,28 @@ export const Header: React.FC = () => {
             <span className="brand-text">DIVING SANATAN</span>
           </Link>
 
+          {/* Mobile/Tablet active section badge */}
+          <div className="mobile-active-section-pill">
+            <span className="mobile-pill-dot"></span>
+            <span className="mobile-pill-text">
+              {isHomeActive ? "Home" : isServicesActive ? "Services" : isAboutActive ? "About" : isBlogActive ? "Blog" : "Menu"}
+            </span>
+          </div>
+
           {/* Nav Links */}
           <nav className="nav-menu">
-            <Link href="/" className={`nav-item-link ${pathname === "/" ? "active" : ""}`}>Home</Link>
-            <Link href="/services" className={`nav-item-link ${pathname === "/services" || pathname.startsWith("/services/") ? "active" : ""}`}>Services</Link>
-            <Link href="/about" className={`nav-item-link ${pathname === "/about" ? "active" : ""}`}>About</Link>
-            <Link href="/blog" className={`nav-item-link ${pathname === "/blog" ? "active" : ""}`}>Blog</Link>
+            <Link href="/" className={`nav-item-link ${isHomeActive ? "active" : ""}`}>
+              <span>Home</span>
+            </Link>
+            <Link href="/services" className={`nav-item-link ${isServicesActive ? "active" : ""}`}>
+              <span>Services</span>
+            </Link>
+            <Link href="/about" className={`nav-item-link ${isAboutActive ? "active" : ""}`}>
+              <span>About</span>
+            </Link>
+            <Link href="/blog" className={`nav-item-link ${isBlogActive ? "active" : ""}`}>
+              <span>Blog</span>
+            </Link>
           </nav>
 
           {/* CTA Buttons */}
@@ -133,10 +154,30 @@ export const Header: React.FC = () => {
         {/* Sliding Drawer for Mobile Nav */}
         <div className={`mobile-nav-drawer ${mobileMenuOpen ? "open" : ""}`}>
           <nav className="mobile-drawer-menu">
-            <Link href="/" className={`mobile-drawer-link ${pathname === "/" ? "active" : ""}`} onClick={() => setMobileMenuOpen(false)}>Home</Link>
-            <Link href="/services" className={`mobile-drawer-link ${pathname === "/services" || pathname.startsWith("/services/") ? "active" : ""}`} onClick={() => setMobileMenuOpen(false)}>Services</Link>
-            <Link href="/about" className={`mobile-drawer-link ${pathname === "/about" ? "active" : ""}`} onClick={() => setMobileMenuOpen(false)}>About</Link>
-            <Link href="/blog" className={`mobile-drawer-link ${pathname === "/blog" ? "active" : ""}`} onClick={() => setMobileMenuOpen(false)}>Blog</Link>
+            <Link href="/" className={`mobile-drawer-link ${isHomeActive ? "active" : ""}`} onClick={() => setMobileMenuOpen(false)}>
+              <span className="drawer-link-inner">
+                <span>Home</span>
+                {isHomeActive && <span className="drawer-active-tag">Active</span>}
+              </span>
+            </Link>
+            <Link href="/services" className={`mobile-drawer-link ${isServicesActive ? "active" : ""}`} onClick={() => setMobileMenuOpen(false)}>
+              <span className="drawer-link-inner">
+                <span>Services</span>
+                {isServicesActive && <span className="drawer-active-tag">Active</span>}
+              </span>
+            </Link>
+            <Link href="/about" className={`mobile-drawer-link ${isAboutActive ? "active" : ""}`} onClick={() => setMobileMenuOpen(false)}>
+              <span className="drawer-link-inner">
+                <span>About</span>
+                {isAboutActive && <span className="drawer-active-tag">Active</span>}
+              </span>
+            </Link>
+            <Link href="/blog" className={`mobile-drawer-link ${isBlogActive ? "active" : ""}`} onClick={() => setMobileMenuOpen(false)}>
+              <span className="drawer-link-inner">
+                <span>Blog</span>
+                {isBlogActive && <span className="drawer-active-tag">Active</span>}
+              </span>
+            </Link>
           </nav>
         </div>
 
@@ -199,25 +240,77 @@ export const Header: React.FC = () => {
           gap: 16px;
         }
         .nav-item-link {
+          position: relative;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
           font-family: var(--font-serif);
           font-size: 1.15rem;
-          font-weight: 700;
-          color: var(--header-link-color);
+          font-weight: 600;
+          color: #475569;
           text-decoration: none !important;
           letter-spacing: 0.02em;
-          transition: var(--transition-fast);
+          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
           text-transform: none;
-          padding: 6px 16px;
+          padding: 8px 22px;
           border-radius: 99px;
+          border: 1.5px solid transparent;
         }
-        .nav-item-link.active {
-          background: #eedffd;
-          color: #4c1d95;
+        .nav-item-link span {
+          color: inherit;
+          font-weight: inherit;
+          transition: all 0.25s ease;
         }
         .nav-item-link:hover:not(.active) {
-          color: var(--header-link-hover-color);
-          background: rgba(168, 85, 247, 0.04);
+          color: #7c3aed !important;
+          background: rgba(124, 58, 237, 0.06);
+          transform: translateY(-1px);
         }
+
+        /* High-visibility Active Tab Styling */
+        .nav-item-link.active,
+        .nav-item-link.active span {
+          color: #4c1d95 !important; /* Deep Royal Purple Text */
+          font-weight: 800 !important; /* Extra Bold */
+        }
+        .nav-item-link.active {
+          background: #eedffd !important; /* Vivid Light Purple Background Pill */
+          border: 1.5px solid rgba(124, 58, 237, 0.35) !important;
+          box-shadow: 0 4px 16px rgba(124, 58, 237, 0.18) !important;
+        }
+
+        /* Mobile / Tablet Header Section Pill */
+        .mobile-active-section-pill {
+          display: none;
+          align-items: center;
+          gap: 6px;
+          padding: 4px 12px;
+          border-radius: 99px;
+          background: linear-gradient(135deg, rgba(243, 232, 255, 0.85) 0%, rgba(250, 245, 255, 0.95) 100%);
+          border: 1px solid rgba(168, 85, 247, 0.25);
+          box-shadow: 0 2px 8px rgba(124, 58, 237, 0.08);
+        }
+        .mobile-pill-dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: #7c3aed;
+          box-shadow: 0 0 6px rgba(124, 58, 237, 0.7);
+          animation: pulseDot 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
+        }
+        .mobile-pill-text {
+          font-family: var(--font-serif);
+          font-size: 0.78rem;
+          font-weight: 700;
+          color: #5b21b6;
+          letter-spacing: 0.04em;
+        }
+
+        @keyframes pulseDot {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.6; transform: scale(1.25); }
+        }
+
         .nav-actions {
           display: flex;
           align-items: center;
@@ -420,7 +513,7 @@ export const Header: React.FC = () => {
           -webkit-backdrop-filter: blur(24px);
           box-shadow: -12px 0 40px rgba(124, 58, 237, 0.15), -4px 0 16px rgba(0, 0, 0, 0.1);
           border-left: 1px solid rgba(128, 90, 213, 0.2);
-          padding: 32px 24px;
+          padding: 32px 20px;
           display: flex;
           flex-direction: column;
           gap: 20px;
@@ -437,22 +530,63 @@ export const Header: React.FC = () => {
         }
         .mobile-drawer-link {
           font-family: var(--font-serif);
-          font-size: 1.25rem;
-          font-weight: 700;
-          color: var(--header-link-color);
-          padding: 10px 20px;
-          border-radius: 99px;
-          transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+          font-size: 1.15rem;
+          font-weight: 500;
+          color: #475569 !important;
+          padding: 12px 18px;
+          border-radius: 14px;
+          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
           text-decoration: none !important;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          border: 1px solid transparent;
+        }
+        .mobile-drawer-link span {
+          color: inherit;
+          font-weight: inherit;
         }
         .mobile-drawer-link.active {
-          background: #eedffd;
-          color: #4c1d95;
+          background: rgba(124, 58, 237, 0.08) !important;
+          color: #7c3aed !important;
+          font-weight: 800 !important;
+          border-color: rgba(124, 58, 237, 0.25) !important;
+          border-left: 4px solid #7c3aed !important;
+          box-shadow: 0 4px 16px rgba(124, 58, 237, 0.12) !important;
+        }
+        .mobile-drawer-link.active span {
+          color: #7c3aed !important;
+          font-weight: 800 !important;
         }
         .mobile-drawer-link:hover:not(.active) {
           color: var(--header-link-hover-color);
           background: rgba(168, 85, 247, 0.06);
-          transform: translateX(6px);
+          transform: translateX(4px);
+        }
+        .drawer-link-inner {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+        .drawer-active-tag {
+          font-family: var(--font-sans);
+          font-size: 0.62rem;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+          color: #7c3aed;
+          background: rgba(124, 58, 237, 0.1);
+          padding: 2px 8px;
+          border-radius: 99px;
+          border: 1px solid rgba(124, 58, 237, 0.2);
+        }
+        .mobile-active-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background: #7c3aed;
+          box-shadow: 0 0 10px rgba(124, 58, 237, 0.8);
+          flex-shrink: 0;
         }
         
         .mobile-drawer-backdrop {
@@ -487,6 +621,9 @@ export const Header: React.FC = () => {
           }
           .nav-menu {
             display: none;
+          }
+          .mobile-active-section-pill {
+            display: flex;
           }
           .mobile-menu-toggle-btn {
             display: flex;
@@ -532,8 +669,7 @@ export const Header: React.FC = () => {
             padding: 0 12px;
           }
           .brand-text {
-            font-size: 0.85rem;
-            letter-spacing: 0.04em;
+            display: none;
           }
           .logo-brand {
             gap: 6px;

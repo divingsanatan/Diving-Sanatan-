@@ -8,6 +8,76 @@ function hashPassword(password: string) {
   return crypto.createHash("sha256").update(password).digest("hex");
 }
 
+async function syncPractitionerForUser(userId: string, userEmail: string, userName: string, userRole: string) {
+  if (userRole !== "healer" && userRole !== "guru") return;
+
+  try {
+    const { data: existingPrac } = await supabaseServer
+      .from("practitioners")
+      .select("id, name, email, user_id")
+      .or(`user_id.eq.${userId},email.eq.${userEmail}`)
+      .maybeSingle();
+
+    if (!existingPrac) {
+      const newPracDb = {
+        id: `prac-${Math.random().toString(36).substring(2, 9)}`,
+        user_id: userId,
+        email: userEmail,
+        name: userName,
+        specialty: "Holistic Healer & Practitioner",
+        bio: `${userName} is a certified healer offering spiritual wellness and holistic therapy.`,
+        rating: 5.0,
+        reviews_count: 0,
+        image: "elara_vance",
+        approval_status: "published",
+      };
+      await supabaseServer.from("practitioners").insert([newPracDb]);
+
+      try {
+        const { getDb, saveDb } = require("@/utils/db");
+        const db = getDb();
+        if (db && db.practitioners) {
+          if (!db.practitioners.some((p: any) => p.user_id === userId || p.email === userEmail)) {
+            db.practitioners.push({
+              id: newPracDb.id,
+              user_id: userId,
+              email: userEmail,
+              name: userName,
+              specialty: newPracDb.specialty,
+              bio: newPracDb.bio,
+              rating: 5.0,
+              reviewsCount: 0,
+              image: "elara_vance",
+            });
+            saveDb(db);
+          }
+        }
+      } catch (e) {}
+    } else {
+      await supabaseServer
+        .from("practitioners")
+        .update({ user_id: userId, email: userEmail, name: userName })
+        .eq("id", existingPrac.id);
+
+      try {
+        const { getDb, saveDb } = require("@/utils/db");
+        const db = getDb();
+        if (db && db.practitioners) {
+          const pIdx = db.practitioners.findIndex((p: any) => p.id === existingPrac.id || p.user_id === userId || p.email === userEmail);
+          if (pIdx !== -1) {
+            db.practitioners[pIdx].user_id = userId;
+            db.practitioners[pIdx].email = userEmail;
+            db.practitioners[pIdx].name = userName;
+            saveDb(db);
+          }
+        }
+      } catch (e) {}
+    }
+  } catch (err) {
+    console.error("Failed to sync practitioner for user:", err);
+  }
+}
+
 export async function GET(req: NextRequest) {
   try {
     const { data: users, error } = await supabaseServer
@@ -68,6 +138,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 
+    // Auto-provision healer profile if role is healer or guru
+    await syncPractitionerForUser(userId, email, name, role);
+
     return NextResponse.json({ success: true, data: newUser }, { status: 201 });
   } catch (error) {
     return NextResponse.json({ success: false, error: "Failed to create user" }, { status: 500 });
@@ -83,8 +156,6 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ success: false, error: "User ID is required" }, { status: 400 });
     }
 
-    // Fetch existing user to prevent role changes on super_admin if not allowed,
-    // or just to check if it's super_admin.
     const { data: existingUser } = await supabaseServer
       .from("user_profiles")
       .select("*")
@@ -121,6 +192,13 @@ export async function PUT(req: NextRequest) {
     if (error) {
       return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
+
+    const finalRole = updates.role || existingUser.role;
+    const finalEmail = updates.email || existingUser.email;
+    const finalName = updates.name || existingUser.name;
+
+    // Auto-provision/sync healer profile on role assignment
+    await syncPractitionerForUser(id, finalEmail, finalName, finalRole);
 
     return NextResponse.json({ success: true, message: "User updated successfully" });
   } catch (error) {
@@ -162,3 +240,4 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ success: false, error: "Failed to delete user" }, { status: 500 });
   }
 }
+

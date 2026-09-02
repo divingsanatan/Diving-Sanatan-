@@ -76,6 +76,9 @@
 .admin-lte-theme .sidebar-link.active {
   background-color: var(--admin-sidebar-active) !important;
   color: #fff !important;
+  border-left: 3.5px solid #60a5fa !important;
+  box-shadow: 0 4px 14px rgba(0, 123, 255, 0.3) !important;
+  font-weight: 600 !important;
 }
 
 .admin-lte-theme .sidebar-footer {

@@ -5,6 +5,8 @@ import { Practitioner } from "@/types/database";
 function mapPractitionerToCamelCase(p: any): Practitioner {
   return {
     id: p.id,
+    user_id: p.user_id || "",
+    email: p.email || "",
     name: p.name,
     specialty: p.specialty,
     bio: p.bio,
@@ -15,6 +17,7 @@ function mapPractitionerToCamelCase(p: any): Practitioner {
     certifications: p.certifications || [],
     expertise: p.expertise || [],
     social_links: p.social_links || {},
+    approval_status: p.approval_status || "published"
   };
 }
 
@@ -24,39 +27,31 @@ function mapPractitionerToCamelCase(p: any): Practitioner {
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const adminView = searchParams.get("admin_view");
     const id = searchParams.get("id");
 
     if (id) {
-      let query = supabaseServer
+      const { data: p, error } = await supabaseServer
         .from("practitioners")
         .select("*")
-        .eq("id", id);
-        
-      // Removed approval_status filter since admin doesn't have a publish button yet
-      
-      const { data: p, error } = await query.single();
-        
+        .eq("id", id)
+        .single();
+
       if (error) {
         return NextResponse.json({ success: false, error: error.message }, { status: 404 });
       }
-      
+
       return NextResponse.json({ success: true, data: mapPractitionerToCamelCase(p) });
     }
 
-    let query = supabaseServer
+    const { data: practitioners, error } = await supabaseServer
       .from("practitioners")
-      .select("*");
-      
-    // Removed approval_status filter since admin doesn't have a publish button yet
-    
+      .select("*")
+      .order("name", { ascending: true });
 
-    const { data: practitioners, error } = await query.order("name", { ascending: true });
-      
     if (error) {
       return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
-    
+
     const mapped = (practitioners || []).map(mapPractitionerToCamelCase);
     return NextResponse.json({ success: true, data: mapped });
   } catch (error) {
@@ -70,37 +65,47 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { name, specialty, bio, image, video_url, certifications, expertise, social_links, role, approval_status } = body;
-    
+    const { user_id, email, name, specialty, bio, image, video_url, certifications, expertise, social_links, role, approval_status } = body;
+
     if (!name || !specialty || !bio) {
       return NextResponse.json({ success: false, error: "Missing required practitioner fields" }, { status: 400 });
     }
-    
+
     const newPracDb = {
       id: `prac-${Math.random().toString(36).substring(2, 9)}`,
+      user_id: user_id || "",
+      email: email || "",
       name,
       specialty,
       bio,
       rating: 5.0, // Initial perfect score
       reviews_count: 0,
-      image: image || "elara_vance", // Default or uploaded image
+      image: image || "elara_vance",
       video_url: video_url || "",
       certifications: certifications || [],
       expertise: expertise || [],
       social_links: social_links || {},
       approval_status: role === "super_admin" ? (approval_status || "published") : "pending_approval",
     };
-    
+
     const { data, error } = await supabaseServer
       .from("practitioners")
       .insert([newPracDb])
       .select()
       .single();
-      
+
     if (error) {
       return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
-    
+
+    // Ensure associated user profile role is set to healer
+    if (user_id || email) {
+      let query = supabaseServer.from("user_profiles").update({ role: "healer" });
+      if (user_id) query = query.eq("id", user_id);
+      else if (email) query = query.eq("email", email);
+      await query;
+    }
+
     return NextResponse.json({ success: true, data: mapPractitionerToCamelCase(data) }, { status: 201 });
   } catch (error) {
     return NextResponse.json({ success: false, error: "Failed to create practitioner" }, { status: 500 });
@@ -113,13 +118,15 @@ export async function POST(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   try {
     const body = await req.json();
-    const { id, name, specialty, bio, image, video_url, certifications, expertise, social_links, role, approval_status } = body;
-    
+    const { id, user_id, email, name, specialty, bio, image, video_url, certifications, expertise, social_links, role, approval_status } = body;
+
     if (!id) {
       return NextResponse.json({ success: false, error: "Practitioner ID is required" }, { status: 400 });
     }
-    
+
     const updates: any = {};
+    if (user_id !== undefined) updates.user_id = user_id;
+    if (email !== undefined) updates.email = email;
     if (name) updates.name = name;
     if (specialty) updates.specialty = specialty;
     if (bio) updates.bio = bio;
@@ -128,24 +135,34 @@ export async function PUT(req: NextRequest) {
     if (certifications !== undefined) updates.certifications = certifications;
     if (expertise !== undefined) updates.expertise = expertise;
     if (social_links !== undefined) updates.social_links = social_links;
-    
+
     if (role === "super_admin" && approval_status) {
       updates.approval_status = approval_status;
     } else if (role !== "super_admin") {
       updates.approval_status = "pending_approval";
     }
-    
+
     const { data, error } = await supabaseServer
       .from("practitioners")
       .update(updates)
       .eq("id", id)
       .select()
       .single();
-      
+
     if (error) {
       return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
-    
+
+    // Ensure associated user profile role is set to healer
+    const targetUserId = user_id || data.user_id;
+    const targetEmail = email || data.email;
+    if (targetUserId || targetEmail) {
+      let query = supabaseServer.from("user_profiles").update({ role: "healer" });
+      if (targetUserId) query = query.eq("id", targetUserId);
+      else if (targetEmail) query = query.eq("email", targetEmail);
+      await query;
+    }
+
     return NextResponse.json({ success: true, data: mapPractitionerToCamelCase(data) });
   } catch (error) {
     return NextResponse.json({ success: false, error: "Failed to update practitioner" }, { status: 500 });
@@ -159,22 +176,23 @@ export async function DELETE(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
-    
+
     if (!id) {
       return NextResponse.json({ success: false, error: "Practitioner ID is required" }, { status: 400 });
     }
-    
+
     const { error } = await supabaseServer
       .from("practitioners")
       .delete()
       .eq("id", id);
-      
+
     if (error) {
       return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
-    
+
     return NextResponse.json({ success: true, message: "Practitioner removed successfully" });
   } catch (error) {
     return NextResponse.json({ success: false, error: "Failed to remove practitioner" }, { status: 500 });
   }
 }
+

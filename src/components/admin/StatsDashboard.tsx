@@ -421,7 +421,7 @@ export default function StatsDashboard({ pageType, actions }: StatsDashboardProp
           case "users":
             val1 = users.length;
             val2 = users.filter((u: any) => u.role === "admin" || u.role === "super_admin").length;
-            val3 = users.filter((u: any) => u.role === "guru").length;
+            val3 = users.filter((u: any) => u.role === "guru" || u.role === "healer").length;
             val4 = users.filter((u: any) => u.role === "user").length;
             break;
         }

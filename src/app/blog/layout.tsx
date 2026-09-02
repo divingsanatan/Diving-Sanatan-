@@ -83,6 +83,7 @@ function BlogLayoutInner({ children }: { children: React.ReactNode }) {
                 <path d="M50 80 C70 80 90 70 95 55 C80 65 65 70 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
               </svg>
               <span className="toggle-label">{getActivePageLabel()}</span>
+              <span className="mobile-blog-active-dot" />
             </div>
             <div className="toggle-icon-wrapper">
               {isMobileMenuOpen ? (
@@ -352,6 +353,15 @@ function BlogLayoutInner({ children }: { children: React.ReactNode }) {
             overflow: hidden;
             text-overflow: ellipsis;
             max-width: 200px;
+          }
+          .mobile-blog-active-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #7c3aed;
+            box-shadow: 0 0 8px rgba(124, 58, 237, 0.8);
+            flex-shrink: 0;
+            display: inline-block;
           }
           .toggle-icon-wrapper {
             display: flex;

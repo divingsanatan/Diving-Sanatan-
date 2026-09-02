@@ -21,6 +21,8 @@ export interface Service {
 
 export interface Practitioner {
   id: string;
+  user_id?: string;
+  email?: string;
   name: string;
   specialty: string;
   bio: string;
@@ -132,7 +134,7 @@ export interface UserProfileItem {
   email: string;
   password?: string;
   name: string;
-  role: "super_admin" | "admin" | "guru" | "user";
+  role: "super_admin" | "admin" | "subadmin" | "guru" | "healer" | "user";
   phone?: string;
   gender?: string;
   dob?: string;

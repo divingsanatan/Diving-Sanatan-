@@ -352,11 +352,12 @@ export const PortalNav: React.FC = () => {
         .panel-link.active {
           background: linear-gradient(
             135deg,
-            rgba(251, 207, 232, 0.25) 0%,
-            rgba(233, 213, 255, 0.25) 100%
+            rgba(243, 232, 255, 0.85) 0%,
+            rgba(238, 223, 253, 0.75) 100%
           );
-          border-color: rgba(168, 85, 247, 0.3);
-          box-shadow: 0 2px 10px rgba(168, 85, 247, 0.08);
+          border-color: rgba(168, 85, 247, 0.35);
+          border-left: 3px solid #7c3aed;
+          box-shadow: 0 4px 14px rgba(168, 85, 247, 0.12);
         }
         .panel-link-icon {
           display: flex;
@@ -374,7 +375,7 @@ export const PortalNav: React.FC = () => {
           background: rgba(168, 85, 247, 0.14);
         }
         .panel-link.active .panel-link-icon {
-          background: rgba(168, 85, 247, 0.15);
+          background: rgba(168, 85, 247, 0.2);
           color: #6d28d9;
         }
         .panel-link-name {
@@ -384,12 +385,17 @@ export const PortalNav: React.FC = () => {
           color: #4c1d95;
           flex: 1;
         }
+        .panel-link.active .panel-link-name {
+          font-weight: 700;
+          color: #3b0764;
+        }
         .active-dot {
-          width: 6px;
-          height: 6px;
+          width: 7px;
+          height: 7px;
           border-radius: 50%;
           background: #7c3aed;
-          box-shadow: 0 0 6px rgba(124, 58, 237, 0.5);
+          box-shadow: 0 0 10px rgba(124, 58, 237, 0.8);
+          animation: pulseDot 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
           flex-shrink: 0;
         }
 

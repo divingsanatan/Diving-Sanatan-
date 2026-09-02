@@ -253,7 +253,8 @@ export default function AdminUsersPage() {
                               disabled={user.role === 'super_admin'}
                             >
                               <option value="user">User</option>
-                              <option value="guru">Guru</option>
+                              <option value="healer">Healer</option>
+                              <option value="guru">Guru / Healer</option>
                               <option value="subadmin">Sub Admin</option>
                               <option value="admin">Admin</option>
                               {user.role === 'super_admin' && <option value="super_admin">Super Admin</option>}
@@ -310,7 +311,7 @@ export default function AdminUsersPage() {
             <div className="split-form-col">
               <Card variant="glass" className="card-success" style={{ padding: "0 !important" }}>
               <div style={{ borderBottom: "1px solid #dee2e6", padding: "12px 20px", background: "#f8f9fa", fontWeight: "700" }}>
-                Add New User / Admin
+                Add New User / Admin / Healer
               </div>
               <div style={{ padding: "20px" }}>
                 <form onSubmit={handleAddUser} className="admin-catalog-form">
@@ -352,7 +353,8 @@ export default function AdminUsersPage() {
                       onChange={(e) => setNewRole(e.target.value)}
                     >
                       <option value="user">User</option>
-                      <option value="guru">Guru</option>
+                      <option value="healer">Healer</option>
+                      <option value="guru">Guru / Healer</option>
                       <option value="subadmin">Sub Admin</option>
                       <option value="admin">Admin</option>
                     </select>

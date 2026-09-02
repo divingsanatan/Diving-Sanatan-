@@ -13,6 +13,8 @@ export interface SocialLinks {
 
 export interface Practitioner {
   id: string;
+  user_id?: string;
+  email?: string;
   name: string;
   specialty: string;
   bio: string;

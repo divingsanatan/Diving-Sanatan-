@@ -10,6 +10,7 @@ import StatsDashboard from "@/components/admin/StatsDashboard";
 
 export default function AdminPractitionersPage() {
   const [practitioners, setPractitioners] = useState<Practitioner[]>([]);
+  const [userAccounts, setUserAccounts] = useState<any[]>([]);
   const [expertiseOptions, setExpertiseOptions] = useState<Expertise[]>([]);
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState("admin");
@@ -27,6 +28,8 @@ export default function AdminPractitionersPage() {
 
   // Form states
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [selectedUserId, setSelectedUserId] = useState("");
+  const [selectedUserEmail, setSelectedUserEmail] = useState("");
   const [pracName, setPracName] = useState("");
   const [pracSpecialty, setPracSpecialty] = useState("");
   const [pracBio, setPracBio] = useState("");
@@ -72,6 +75,18 @@ export default function AdminPractitionersPage() {
     }
   };
 
+  const loadUserAccounts = async () => {
+    try {
+      const res = await fetch("/api/users");
+      const json = await res.json();
+      if (json.success) {
+        setUserAccounts(json.data);
+      }
+    } catch (err) {
+      console.error("Failed to load user accounts", err);
+    }
+  };
+
   const loadExpertiseOptions = async () => {
     try {
       const res = await fetch("/api/expertise");
@@ -86,11 +101,14 @@ export default function AdminPractitionersPage() {
 
   useEffect(() => {
     loadPractitioners();
+    loadUserAccounts();
     loadExpertiseOptions();
   }, []);
 
   const handleEditClick = (p: Practitioner) => {
     setEditingId(p.id);
+    setSelectedUserId(p.user_id || "");
+    setSelectedUserEmail(p.email || "");
     setPracName(p.name);
     setPracSpecialty(p.specialty);
     setPracBio(p.bio);
@@ -107,6 +125,8 @@ export default function AdminPractitionersPage() {
 
   const handleCancelEdit = () => {
     setEditingId(null);
+    setSelectedUserId("");
+    setSelectedUserEmail("");
     setPracName("");
     setPracSpecialty("");
     setPracBio("");
@@ -137,6 +157,8 @@ export default function AdminPractitionersPage() {
     const user = userStr ? JSON.parse(userStr) : {};
 
     const payload = {
+      user_id: selectedUserId,
+      email: selectedUserEmail,
       name: pracName,
       specialty: pracSpecialty,
       bio: pracBio,
@@ -415,6 +437,11 @@ export default function AdminPractitionersPage() {
                           </td>
                           <td>
                             <strong>{p.name}</strong>
+                            {p.email && (
+                              <div style={{ fontSize: "0.75rem", color: "#6b2c91", fontWeight: "600", marginTop: "1px" }}>
+                                👤 Linked: {p.email}
+                              </div>
+                            )}
                             <div style={{ fontSize: "0.8rem", color: "#28a745", fontWeight: "600" }}>{p.specialty}</div>
                             <div style={{ fontSize: "0.78rem", color: "#6c757d", maxWidth: "220px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={p.bio}>{p.bio}</div>
                           </td>
@@ -512,6 +539,36 @@ export default function AdminPractitionersPage() {
               
               <form onSubmit={handleSubmit} className="admin-catalog-form">
                 <div className="modal-form-scroll">
+                  {/* LINK USER ACCOUNT */}
+                  <div className="form-group">
+                    <label>Link User Account *</label>
+                    <select
+                      className="form-control"
+                      value={selectedUserId}
+                      onChange={(e) => {
+                        const uId = e.target.value;
+                        setSelectedUserId(uId);
+                        const foundUser = userAccounts.find((u) => u.id === uId);
+                        if (foundUser) {
+                          setSelectedUserEmail(foundUser.email);
+                          if (!pracName) setPracName(foundUser.name);
+                        } else {
+                          setSelectedUserEmail("");
+                        }
+                      }}
+                    >
+                      <option value="">-- Select Registered User Account --</option>
+                      {userAccounts.map((u) => (
+                        <option key={u.id} value={u.id}>
+                          {u.name} ({u.email}) - Role: {u.role}
+                        </option>
+                      ))}
+                    </select>
+                    <small style={{ color: "#6c757d", fontSize: "0.75rem", marginTop: "4px", display: "block" }}>
+                      Assigns role <strong>Healer</strong> to the selected user account.
+                    </small>
+                  </div>
+
                   <div className="form-group">
                     <label>Healer Name</label>
                     <input

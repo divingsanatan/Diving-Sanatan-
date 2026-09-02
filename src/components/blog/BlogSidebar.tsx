@@ -144,6 +144,7 @@ export const BlogSidebar: React.FC = () => {
           <div className="item-text-container">
             <span className="item-name">Pillar Blog</span>
           </div>
+          {(pathname === "/blog/pillar" || pathname.startsWith("/blog/pillar")) && <span className="sidebar-active-dot" />}
         </button>
 
         {/* Glossary */}
@@ -157,6 +158,7 @@ export const BlogSidebar: React.FC = () => {
           <div className="item-text-container">
             <span className="item-name">Glossary</span>
           </div>
+          {pathname === "/blog/glossary" && <span className="sidebar-active-dot" />}
         </button>
 
         {/* FAQ & Help */}
@@ -170,6 +172,7 @@ export const BlogSidebar: React.FC = () => {
           <div className="item-text-container">
             <span className="item-name">FAQ & Help</span>
           </div>
+          {pathname === "/blog/faq" && <span className="sidebar-active-dot" />}
         </button>
 
         {/* Q&A Community */}
@@ -183,6 +186,7 @@ export const BlogSidebar: React.FC = () => {
           <div className="item-text-container">
             <span className="item-name">Q&A Community</span>
           </div>
+          {pathname === "/blog/quora-qa" && <span className="sidebar-active-dot" />}
         </button>
 
         {/* Video Transcripts */}
@@ -196,6 +200,7 @@ export const BlogSidebar: React.FC = () => {
           <div className="item-text-container">
             <span className="item-name">Video Transcripts</span>
           </div>
+          {pathname === "/blog/video-transcripts" && <span className="sidebar-active-dot" />}
         </button>
 
       </div>
@@ -369,10 +374,20 @@ export const BlogSidebar: React.FC = () => {
 
         .sidebar-item.active,
         .sidebar-child-item.active {
-          background: #f3e8ff;
-          border-left-color: #a855f7;
+          background: linear-gradient(135deg, #f3e8ff 0%, #ede9fe 100%);
+          border-left: 3.5px solid #7c3aed;
           border-top-left-radius: 0;
           border-bottom-left-radius: 0;
+          box-shadow: 0 2px 10px rgba(124, 58, 237, 0.08);
+        }
+        .sidebar-active-dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: #7c3aed;
+          box-shadow: 0 0 8px rgba(124, 58, 237, 0.8);
+          animation: pulseDot 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
+          flex-shrink: 0;
         }
         .sidebar-item.active .sidebar-icon-box svg,
         .sidebar-child-item.active .sidebar-icon-box svg {
