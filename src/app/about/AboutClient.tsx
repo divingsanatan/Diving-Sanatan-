@@ -521,9 +521,11 @@ export default function AboutClient() {
                       Math.ceil(filteredHealers.length / 2) - 1
                     );
                     return (
-                      <div
+                      <button
                         key={idx}
+                        type="button"
                         className={`dot ${activeIndex === idx ? "active" : ""}`}
+                        aria-label={`Go to healer slide ${idx + 1}`}
                         onClick={() => {
                           if (healersCarouselRef.current) {
                             const maxScroll = healersCarouselRef.current.scrollWidth - healersCarouselRef.current.clientWidth;
@@ -593,9 +595,11 @@ export default function AboutClient() {
                       Math.ceil(filteredTeam.length / 2) - 1
                     );
                     return (
-                      <div
+                      <button
                         key={idx}
+                        type="button"
                         className={`dot ${activeIndex === idx ? "active" : ""}`}
+                        aria-label={`Go to team slide ${idx + 1}`}
                         onClick={() => {
                           if (teamCarouselRef.current) {
                             const maxScroll = teamCarouselRef.current.scrollWidth - teamCarouselRef.current.clientWidth;
@@ -726,7 +730,9 @@ export default function AboutClient() {
                 {Array.from({ length: maxFeaturedIndex + 1 }).map((_, idx) => (
                   <button
                     key={idx}
+                    type="button"
                     className={`carousel-dot ${featuredIndex === idx ? "active" : ""}`}
+                    aria-label={`Go to featured service slide ${idx + 1}`}
                     onClick={() => setFeaturedIndex(idx)}
                   />
                 ))}
@@ -814,9 +820,11 @@ export default function AboutClient() {
             </div>
             <div className="dots" style={{ marginTop: "14px" }}>
               {staticTestimonials.map((_, idx) => (
-                <div
+                <button
                   key={idx}
+                  type="button"
                   className={`dot ${testimonialIndex === idx ? "active" : ""}`}
+                  aria-label={`Go to testimonial ${idx + 1}`}
                   onClick={() => setTestimonialIndex(idx)}
                   style={{ cursor: "pointer" }}
                 />
@@ -1392,22 +1400,40 @@ export default function AboutClient() {
         .carousel-dots {
           display: flex;
           justify-content: center;
+          align-items: center;
+          flex-wrap: wrap;
           gap: 6px;
-          margin-top: 10px;
+          margin-top: 14px;
+          width: 100%;
+          max-width: 100%;
+          box-sizing: border-box;
         }
         .carousel-dot {
-          width: 6px;
-          height: 6px;
-          border-radius: 50%;
-          background: rgba(168, 85, 247, 0.15);
-          border: none;
+          width: 8px !important;
+          height: 8px !important;
+          min-width: 8px !important;
+          min-height: 8px !important;
+          max-width: 8px !important;
+          max-height: 8px !important;
+          padding: 0 !important;
+          margin: 0 !important;
+          border-radius: 50% !important;
+          background: rgba(168, 85, 247, 0.25) !important;
+          border: none !important;
+          outline: none !important;
           cursor: pointer;
-          transition: var(--transition-fast);
+          transition: all 0.25s ease;
+          flex-shrink: 0 !important;
+          box-shadow: none !important;
+          appearance: none !important;
+          -webkit-appearance: none !important;
         }
         .carousel-dot.active {
-          background: #7c3aed;
-          width: 14px;
-          border-radius: 99px;
+          background: #7c3aed !important;
+          width: 18px !important;
+          min-width: 18px !important;
+          max-width: 18px !important;
+          border-radius: 99px !important;
         }
 
         .carousel-wrap {
@@ -1616,23 +1642,42 @@ export default function AboutClient() {
         .dots {
           display: flex;
           justify-content: center;
+          align-items: center;
+          flex-wrap: wrap;
           gap: 8px;
           margin-top: 12px;
+          width: 100%;
+          max-width: 100%;
+          box-sizing: border-box;
         }
 
         .dot {
-          width: 8px;
-          height: 8px;
-          border-radius: 50%;
-          background: #ede0ff;
+          width: 8px !important;
+          height: 8px !important;
+          min-width: 8px !important;
+          min-height: 8px !important;
+          max-width: 8px !important;
+          max-height: 8px !important;
+          padding: 0 !important;
+          margin: 0 !important;
+          border-radius: 50% !important;
+          background: #ede0ff !important;
+          border: none !important;
+          outline: none !important;
           transition: all 0.3s ease;
           cursor: pointer;
+          flex-shrink: 0 !important;
+          box-shadow: none !important;
+          appearance: none !important;
+          -webkit-appearance: none !important;
         }
 
         .dot.active {
-          background: #7c3aed;
-          width: 18px;
-          border-radius: 4px;
+          background: #7c3aed !important;
+          width: 18px !important;
+          min-width: 18px !important;
+          max-width: 18px !important;
+          border-radius: 99px !important;
         }
 
         /* Media & Features */
@@ -2133,6 +2178,57 @@ export default function AboutClient() {
           }
           .story-image {
             min-height: 200px;
+          }
+        }
+
+        @media (max-width: 640px) {
+          .page {
+            padding: 16px 12px !important;
+            gap: 16px !important;
+            overflow-x: hidden !important;
+          }
+          .story-hero {
+            padding: 20px 16px !important;
+            gap: 16px !important;
+          }
+          .story-content h1 {
+            font-size: 1.4rem !important;
+            margin-bottom: 12px !important;
+          }
+          .story-content p {
+            font-size: 0.85rem !important;
+            margin-bottom: 16px !important;
+          }
+          .section {
+            padding: 16px 12px !important;
+            border-radius: 14px !important;
+          }
+          .arrow-nav-btn.absolute-left,
+          .arrow-nav-btn.absolute-right,
+          .arrow.left,
+          .arrow.right {
+            display: none !important;
+          }
+          .cards-carousel {
+            gap: 12px !important;
+          }
+          .healer-card {
+            flex: 0 0 170px !important;
+            width: 170px !important;
+            min-width: 170px !important;
+            max-width: 170px !important;
+            padding: 14px 10px 12px !important;
+          }
+          .healer-avatar {
+            width: 60px !important;
+            height: 60px !important;
+          }
+          .carousel-slide-item {
+            padding: 0 4px !important;
+          }
+          .carousel-dots, .dots {
+            gap: 6px !important;
+            margin-top: 10px !important;
           }
         }
       `}</style>
