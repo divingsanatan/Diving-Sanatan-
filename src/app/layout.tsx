@@ -44,6 +44,9 @@ export const metadata: Metadata = {
     siteName: "Diving Sanatan",
   },
   metadataBase: new URL("https://divingsanatan.com"),
+  other: {
+    "google-adsense-account": "ca-pub-4820128927673407",
+  },
 };
 
 export default function RootLayout({
@@ -55,6 +58,7 @@ export default function RootLayout({
     <html lang="en" data-theme="light" suppressHydrationWarning>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+        <meta name="google-adsense-account" content="ca-pub-4820128927673407" />
         {/* Organization Schema */}
         <script
           type="application/ld+json"
