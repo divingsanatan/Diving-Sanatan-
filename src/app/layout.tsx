@@ -106,6 +106,14 @@ export default function RootLayout({
           `}
         </Script>
 
+        {/* Google AdSense */}
+        <Script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4820128927673407"
+          crossOrigin="anonymous"
+          strategy="afterInteractive"
+        />
+
         {/* Meta Pixel Code */}
         <Script id="fb-pixel" strategy="afterInteractive">
           {`

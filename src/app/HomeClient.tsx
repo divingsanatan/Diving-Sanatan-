@@ -5,6 +5,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import AdSense from "@/components/AdSense";
 import { formatCurrency } from "@/utils/formatters";
 import { useRouter } from "next/navigation";
 import { Brain, Heart, IndianRupee, Compass, Users, User, Sparkles, Grid, Search, ArrowRight, Shield, Flower } from "lucide-react";
@@ -613,6 +614,9 @@ export default function Home() {
                     <span className="grid-item-text">View All</span>
                   </button>
                 </div>
+
+                {/* Google AdSense Unit */}
+                <AdSense adClient="ca-pub-4820128927673407" adSlot="7373192129" />
 
                 {/* Bottom Callout Section */}
                 <div className="bottom-callout-section">
