@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import Link from "next/link";
 import { useBlog } from "@/app/blog/BlogContext";
 import { Blog } from "@/types/database";
+import AdSense from "@/components/AdSense";
 import {
   FALLBACK_VIDEOS,
   ParsedVideoBlog,
@@ -414,6 +415,15 @@ export default function VideoBlogDetailPage() {
           <div
             className="video-content-body"
             dangerouslySetInnerHTML={{ __html: videoBlog.content }}
+          />
+
+          {/* Google AdSense In-Article Ad Slot */}
+          <AdSense
+            adClient="ca-pub-4820128927673407"
+            adSlot="3156896316"
+            adLayout="in-article"
+            adFormat="fluid"
+            style={{ display: "block", textAlign: "center" }}
           />
 
           {/* Social Actions & Engagement Row */}

@@ -12,6 +12,7 @@ interface AdSenseProps {
   adClient?: string;
   adSlot?: string;
   adFormat?: string;
+  adLayout?: string;
   fullWidthResponsive?: boolean;
   style?: React.CSSProperties;
   className?: string;
@@ -21,6 +22,7 @@ export default function AdSense({
   adClient = "ca-pub-4820128927673407",
   adSlot = "7373192129",
   adFormat = "auto",
+  adLayout,
   fullWidthResponsive = true,
   style = { display: "block" },
   className = ""
@@ -45,6 +47,7 @@ export default function AdSense({
         data-ad-client={adClient}
         data-ad-slot={adSlot}
         data-ad-format={adFormat}
+        {...(adLayout ? { "data-ad-layout": adLayout } : {})}
         data-full-width-responsive={fullWidthResponsive ? "true" : "false"}
       />
     </div>

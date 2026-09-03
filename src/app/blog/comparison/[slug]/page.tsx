@@ -7,6 +7,7 @@ import { MediaCarousel } from "@/components/ui/MediaCarousel";
 import { ServicesCartCarousel } from "@/components/services/ServicesCartCarousel";
 import { Button } from "@/components/ui/Button";
 import { useBlog } from "../../BlogContext";
+import AdSense from "@/components/AdSense";
 
 export default function ComparisonSlugPage() {
   const params = useParams();
@@ -105,6 +106,15 @@ export default function ComparisonSlugPage() {
           <div className="no-results">No rows match your search.</div>
         )}
       </div>
+
+      {/* Google AdSense In-Article Ad Slot */}
+      <AdSense
+        adClient="ca-pub-4820128927673407"
+        adSlot="3156896316"
+        adLayout="in-article"
+        adFormat="fluid"
+        style={{ display: "block", textAlign: "center" }}
+      />
 
       {/* Booking CTAs */}
       {(page.modalityAServiceId || page.modalityBServiceId) && (

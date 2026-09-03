@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { useBlog } from "@/app/blog/BlogContext";
 import Link from "next/link";
 import { cachedFetch } from "@/utils/apiCache";
+import AdSense from "@/components/AdSense";
 
 import { Blog, ContentType } from "@/types/database";
 
@@ -1111,6 +1112,15 @@ export default function BlogDetailsPage() {
                       </div>
                     </div>
 
+                    {/* Google AdSense In-Article Ad Slot */}
+                    <AdSense
+                      adClient="ca-pub-4820128927673407"
+                      adSlot="3156896316"
+                      adLayout="in-article"
+                      adFormat="fluid"
+                      style={{ display: "block", textAlign: "center" }}
+                    />
+
                     {/* Key Takeaways */}
                     <div className="takeaways-block">
                       <h4 className="video-section-title">Key Takeaways</h4>
@@ -1416,6 +1426,15 @@ export default function BlogDetailsPage() {
                       </div>
                     </div>
 
+                    {/* Google AdSense In-Article Ad Slot */}
+                    <AdSense
+                      adClient="ca-pub-4820128927673407"
+                      adSlot="3156896316"
+                      adLayout="in-article"
+                      adFormat="fluid"
+                      style={{ display: "block", textAlign: "center" }}
+                    />
+
                     {/* Standard Interactions & Comments */}
                     <div className="article-interactions-section">
                       <div className="interactions-bar">
@@ -1646,6 +1665,15 @@ export default function BlogDetailsPage() {
                   <div className="article-body-content-wrapper">
                     {renderArticleBody(blog.content)}
                   </div>
+
+                  {/* Google AdSense In-Article Ad Slot */}
+                  <AdSense
+                    adClient="ca-pub-4820128927673407"
+                    adSlot="3156896316"
+                    adLayout="in-article"
+                    adFormat="fluid"
+                    style={{ display: "block", textAlign: "center" }}
+                  />
 
                   {/* Standard Interactions & Comments */}
                   <div className="article-interactions-section">

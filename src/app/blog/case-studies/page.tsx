@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import AdSense from "@/components/AdSense";
 
 interface CaseStudy {
   id: string;
@@ -184,6 +185,15 @@ export default function CaseStudiesPage() {
             })}
           </div>
         </div>
+
+        {/* Google AdSense In-Article Ad Slot */}
+        <AdSense
+          adClient="ca-pub-4820128927673407"
+          adSlot="3156896316"
+          adLayout="in-article"
+          adFormat="fluid"
+          style={{ display: "block", textAlign: "center" }}
+        />
       </div>
 
       <style jsx>{`
