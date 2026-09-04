@@ -28,8 +28,11 @@ export default function AdminPractitionersPage() {
 
   // Form states
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [accountMode, setAccountMode] = useState<"existing" | "create_new" | "none">("none");
   const [selectedUserId, setSelectedUserId] = useState("");
   const [selectedUserEmail, setSelectedUserEmail] = useState("");
+  const [newAccountEmail, setNewAccountEmail] = useState("");
+  const [newAccountPassword, setNewAccountPassword] = useState("");
   const [pracName, setPracName] = useState("");
   const [pracSpecialty, setPracSpecialty] = useState("");
   const [pracBio, setPracBio] = useState("");
@@ -107,8 +110,23 @@ export default function AdminPractitionersPage() {
 
   const handleEditClick = (p: Practitioner) => {
     setEditingId(p.id);
-    setSelectedUserId(p.user_id || "");
-    setSelectedUserEmail(p.email || "");
+    if (p.user_id) {
+      setAccountMode("existing");
+      setSelectedUserId(p.user_id);
+      setSelectedUserEmail(p.email || "");
+      setNewAccountEmail("");
+    } else if (p.email) {
+      setAccountMode("none");
+      setSelectedUserId("");
+      setSelectedUserEmail("");
+      setNewAccountEmail(p.email);
+    } else {
+      setAccountMode("none");
+      setSelectedUserId("");
+      setSelectedUserEmail("");
+      setNewAccountEmail("");
+    }
+    setNewAccountPassword("");
     setPracName(p.name);
     setPracSpecialty(p.specialty);
     setPracBio(p.bio);
@@ -125,8 +143,11 @@ export default function AdminPractitionersPage() {
 
   const handleCancelEdit = () => {
     setEditingId(null);
+    setAccountMode("none");
     setSelectedUserId("");
     setSelectedUserEmail("");
+    setNewAccountEmail("");
+    setNewAccountPassword("");
     setPracName("");
     setPracSpecialty("");
     setPracBio("");
@@ -153,12 +174,33 @@ export default function AdminPractitionersPage() {
       return;
     }
 
+    let finalUserId = "";
+    let finalEmail = "";
+    let shouldCreateAccount = false;
+
+    if (accountMode === "existing") {
+      finalUserId = selectedUserId;
+      finalEmail = selectedUserEmail;
+    } else if (accountMode === "create_new") {
+      if (!newAccountEmail) {
+        alert("Please provide an email address for creating the healer user account.");
+        return;
+      }
+      finalEmail = newAccountEmail;
+      shouldCreateAccount = true;
+    } else if (accountMode === "none") {
+      finalUserId = "";
+      finalEmail = newAccountEmail;
+    }
+
     const userStr = window.sessionStorage.getItem("divingsanatan_admin_user");
     const user = userStr ? JSON.parse(userStr) : {};
 
     const payload = {
-      user_id: selectedUserId,
-      email: selectedUserEmail,
+      user_id: finalUserId,
+      email: finalEmail,
+      create_account: shouldCreateAccount,
+      new_account_password: newAccountPassword,
       name: pracName,
       specialty: pracSpecialty,
       bio: pracBio,
@@ -188,6 +230,7 @@ export default function AdminPractitionersPage() {
           alert("Healer updated successfully!");
           handleCancelEdit();
           loadPractitioners();
+          loadUserAccounts();
         } else {
           alert("Error: " + json.error);
         }
@@ -203,6 +246,7 @@ export default function AdminPractitionersPage() {
           alert("Healer registered successfully!");
           handleCancelEdit();
           loadPractitioners();
+          loadUserAccounts();
         } else {
           alert("Error: " + json.error);
         }
@@ -539,34 +583,112 @@ export default function AdminPractitionersPage() {
               
               <form onSubmit={handleSubmit} className="admin-catalog-form">
                 <div className="modal-form-scroll">
-                  {/* LINK USER ACCOUNT */}
-                  <div className="form-group">
-                    <label>Link User Account *</label>
-                    <select
-                      className="form-control"
-                      value={selectedUserId}
-                      onChange={(e) => {
-                        const uId = e.target.value;
-                        setSelectedUserId(uId);
-                        const foundUser = userAccounts.find((u) => u.id === uId);
-                        if (foundUser) {
-                          setSelectedUserEmail(foundUser.email);
-                          if (!pracName) setPracName(foundUser.name);
-                        } else {
-                          setSelectedUserEmail("");
-                        }
-                      }}
-                    >
-                      <option value="">-- Select Registered User Account --</option>
-                      {userAccounts.map((u) => (
-                        <option key={u.id} value={u.id}>
-                          {u.name} ({u.email}) - Role: {u.role}
-                        </option>
-                      ))}
-                    </select>
-                    <small style={{ color: "#6c757d", fontSize: "0.75rem", marginTop: "4px", display: "block" }}>
-                      Assigns role <strong>Healer</strong> to the selected user account.
-                    </small>
+                  {/* LINK USER ACCOUNT / MANUAL CREATION OPTIONS */}
+                  <div className="form-group" style={{ background: "#f8f9fa", padding: "12px 15px", borderRadius: "8px", border: "1px solid #ced4da" }}>
+                    <label style={{ fontWeight: "600", fontSize: "0.88rem", marginBottom: "6px", display: "block" }}>
+                      User Account Linkage
+                    </label>
+                    <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "10px" }}>
+                      <button
+                        type="button"
+                        className={`btn btn-sm ${accountMode === 'existing' ? 'btn-primary' : 'btn-outline-secondary'}`}
+                        style={{ fontSize: "0.78rem", padding: "4px 8px" }}
+                        onClick={() => setAccountMode('existing')}
+                      >
+                        🔗 Existing User
+                      </button>
+                      <button
+                        type="button"
+                        className={`btn btn-sm ${accountMode === 'create_new' ? 'btn-success' : 'btn-outline-secondary'}`}
+                        style={{ fontSize: "0.78rem", padding: "4px 8px" }}
+                        onClick={() => setAccountMode('create_new')}
+                      >
+                        ➕ Create Account Manually
+                      </button>
+                      <button
+                        type="button"
+                        className={`btn btn-sm ${accountMode === 'none' ? 'btn-secondary' : 'btn-outline-secondary'}`}
+                        style={{ fontSize: "0.78rem", padding: "4px 8px" }}
+                        onClick={() => setAccountMode('none')}
+                      >
+                        👤 No Account (Independent)
+                      </button>
+                    </div>
+
+                    {accountMode === "existing" && (
+                      <div>
+                        <select
+                          className="form-control"
+                          value={selectedUserId}
+                          onChange={(e) => {
+                            const uId = e.target.value;
+                            setSelectedUserId(uId);
+                            const foundUser = userAccounts.find((u) => u.id === uId);
+                            if (foundUser) {
+                              setSelectedUserEmail(foundUser.email);
+                              if (!pracName) setPracName(foundUser.name);
+                            } else {
+                              setSelectedUserEmail("");
+                            }
+                          }}
+                        >
+                          <option value="">-- Select Registered User Account --</option>
+                          {userAccounts.map((u) => (
+                            <option key={u.id} value={u.id}>
+                              {u.name} ({u.email}) - Role: {u.role}
+                            </option>
+                          ))}
+                        </select>
+                        <small style={{ color: "#6c757d", fontSize: "0.75rem", marginTop: "4px", display: "block" }}>
+                          Assigns role <strong>Healer</strong> to the selected user account.
+                        </small>
+                      </div>
+                    )}
+
+                    {accountMode === "create_new" && (
+                      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                        <div>
+                          <label style={{ fontSize: "0.8rem", fontWeight: "500" }}>Account Email *</label>
+                          <input
+                            type="email"
+                            className="form-control"
+                            placeholder="e.g. healer@example.com"
+                            value={newAccountEmail}
+                            onChange={(e) => setNewAccountEmail(e.target.value)}
+                            required={accountMode === "create_new"}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ fontSize: "0.8rem", fontWeight: "500" }}>Account Password (Optional)</label>
+                          <input
+                            type="password"
+                            className="form-control"
+                            placeholder="Defaults to 'Healer@123' if empty"
+                            value={newAccountPassword}
+                            onChange={(e) => setNewAccountPassword(e.target.value)}
+                          />
+                          <small style={{ color: "#28a745", fontSize: "0.75rem", marginTop: "2px", display: "block" }}>
+                            ✓ Will create a new login account with role <strong>Healer</strong> and link it automatically.
+                          </small>
+                        </div>
+                      </div>
+                    )}
+
+                    {accountMode === "none" && (
+                      <div>
+                        <label style={{ fontSize: "0.8rem", fontWeight: "500" }}>Contact Email (Optional)</label>
+                        <input
+                          type="email"
+                          className="form-control"
+                          placeholder="e.g. contact.healer@example.com"
+                          value={newAccountEmail}
+                          onChange={(e) => setNewAccountEmail(e.target.value)}
+                        />
+                        <small style={{ color: "#6c757d", fontSize: "0.75rem", marginTop: "4px", display: "block" }}>
+                          No user login account will be linked. Healer profile is registered independently.
+                        </small>
+                      </div>
+                    )}
                   </div>
 
                   <div className="form-group">
