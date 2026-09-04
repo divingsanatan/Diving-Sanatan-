@@ -394,6 +394,7 @@ export default function VideoTranscriptsPage() {
           width: 100%;
           max-width: 100%;
           box-sizing: border-box;
+          font-family: var(--font-family);
         }
         .transcripts-page .transcripts-header {
           text-align: left;
@@ -404,6 +405,7 @@ export default function VideoTranscriptsPage() {
           box-shadow: 0 4px 20px rgba(124, 58, 237, 0.04);
         }
         .transcripts-page .page-title {
+          font-family: var(--font-serif);
           font-size: 2.2rem;
           color: #3b0764;
           margin: 0;
@@ -412,6 +414,7 @@ export default function VideoTranscriptsPage() {
           line-height: 1.2;
         }
         .transcripts-page .page-subtitle {
+          font-family: var(--font-family);
           font-size: 1rem;
           color: #64748b;
           max-width: 720px;

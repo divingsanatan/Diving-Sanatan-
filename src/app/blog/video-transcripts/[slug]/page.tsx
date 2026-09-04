@@ -501,6 +501,7 @@ export default function VideoBlogDetailPage() {
           flex-direction: column;
           gap: 20px;
           width: 100%;
+          font-family: var(--font-family);
         }
 
         /* Breadcrumb */
@@ -510,6 +511,7 @@ export default function VideoBlogDetailPage() {
           gap: 8px;
           font-size: 0.85rem;
           color: #64748b;
+          font-family: var(--font-family);
         }
         .breadcrumb-link {
           color: #7c3aed;
@@ -535,6 +537,7 @@ export default function VideoBlogDetailPage() {
           display: flex;
           flex-direction: column;
           gap: 24px;
+          font-family: var(--font-family);
         }
 
         .video-detail-header {
@@ -565,6 +568,7 @@ export default function VideoBlogDetailPage() {
           border-radius: 20px;
         }
         .video-detail-title {
+          font-family: var(--font-serif);
           font-size: 2.2rem;
           color: #2e1065;
           margin: 0;
@@ -735,15 +739,17 @@ export default function VideoBlogDetailPage() {
           gap: 16px;
         }
         .section-title {
-          font-size: 1.3rem;
+          font-family: var(--font-serif);
+          font-size: 1.35rem;
           color: #3b0764;
           margin: 0;
           font-weight: 750;
         }
         .video-content-body {
-          font-size: 0.96rem;
-          color: #475569;
-          line-height: 1.7;
+          font-family: var(--font-family);
+          font-size: 1rem;
+          color: #334155;
+          line-height: 1.75;
         }
 
         /* Engagement Bar */
