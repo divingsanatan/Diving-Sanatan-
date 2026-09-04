@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { ImageCropperModal } from "@/components/ui/ImageCropperModal";
 import { Blog, Practitioner } from "@/types/database";
+import RichTextEditor from "@/components/ui/RichTextEditor";
 
 interface VideoBlogFormProps {
   initialData?: Blog | null;
@@ -755,14 +756,11 @@ export default function VideoBlogForm({ initialData, isEdit = false }: VideoBlog
             <label style={{ fontWeight: 700, display: "block", marginBottom: "6px" }}>
               Video Summary &amp; Transition Notes *
             </label>
-            <textarea
-              className="glass-input"
-              rows={4}
-              required
-              placeholder="Explain the background of this video, key takeaways, or healing exercises..."
+            <RichTextEditor
               value={content}
-              onChange={(e) => setContent(e.target.value)}
-              style={{ width: "100%", padding: "12px 16px", borderRadius: "10px" }}
+              onChange={setContent}
+              placeholder="Explain the background of this video, key takeaways, or healing exercises... use the toolbar above for formatting..."
+              required
             />
           </div>
 

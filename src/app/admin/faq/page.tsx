@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { FAQItem } from "@/types/database";
 import StatsDashboard from "@/components/admin/StatsDashboard";
+import RichTextEditor from "@/components/ui/RichTextEditor";
 
 const PAGE_SIZE = 10;
 
@@ -315,13 +316,11 @@ export default function AdminFAQPage() {
 
                   <div className="form-group">
                     <label>Answer *</label>
-                    <textarea
-                      className="glass-input textarea-input"
-                      required
-                      rows={6}
-                      placeholder="Enter the answer..."
+                    <RichTextEditor
                       value={answer}
-                      onChange={(e) => setAnswer(e.target.value)}
+                      onChange={setAnswer}
+                      placeholder="Enter the answer... use the toolbar above for formatting..."
+                      required
                     />
                   </div>
 

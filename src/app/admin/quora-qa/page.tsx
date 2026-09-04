@@ -6,6 +6,7 @@ import {
   Trash2, Edit, CheckCircle2, AlertCircle, PlusCircle, Search, Filter, MessageSquare, Trash 
 } from "lucide-react";
 import StatsDashboard from "@/components/admin/StatsDashboard";
+import RichTextEditor from "@/components/ui/RichTextEditor";
 
 interface HealerReply {
 
@@ -711,12 +712,10 @@ export default function QuoraQAAdmin() {
 
                 <div className="form-group">
                   <label>Additional Description / Context</label>
-                  <textarea 
+                  <RichTextEditor 
                     value={qDesc}
-                    onChange={(e) => setQDesc(e.target.value)}
+                    onChange={setQDesc}
                     placeholder="Provide context or details about the issue..."
-                    className="form-control"
-                    rows={3}
                   />
                 </div>
 
@@ -817,12 +816,10 @@ export default function QuoraQAAdmin() {
 
                 <div className="form-group">
                   <label>Introductory Diagnostic Paragraph</label>
-                  <textarea 
+                  <RichTextEditor 
                     value={ansContent}
-                    onChange={(e) => setAnsContent(e.target.value)}
+                    onChange={setAnsContent}
                     placeholder="Analyze the issue and write your main advice..."
-                    className="form-control"
-                    rows={3}
                     required
                   />
                 </div>
@@ -841,12 +838,10 @@ export default function QuoraQAAdmin() {
 
                 <div className="form-group">
                   <label>Encouraging Conclusion Paragraph</label>
-                  <textarea 
+                  <RichTextEditor 
                     value={ansConclusion}
-                    onChange={(e) => setAnsConclusion(e.target.value)}
+                    onChange={setAnsConclusion}
                     placeholder="Consistency is key to spiritual wellness..."
-                    className="form-control"
-                    rows={2}
                     required
                   />
                 </div>

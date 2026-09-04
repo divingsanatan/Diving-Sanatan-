@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { GlossaryTerm, GlossaryIllustration, GlossaryCategory } from "@/types/database";
 import { ImageCropperModal } from "@/components/ui/ImageCropperModal";
 import StatsDashboard from "@/components/admin/StatsDashboard";
+import RichTextEditor from "@/components/ui/RichTextEditor";
 
 const ILLUSTRATION_OPTIONS: { value: GlossaryIllustration; label: string }[] = [
   { value: null, label: "None" },
@@ -644,36 +645,12 @@ export default function AdminGlossaryPage() {
                   </div>
 
                   <div className="form-group">
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                      <label style={{ margin: 0 }}>Definition *</label>
-                      <button 
-                        type="button"
-                        onClick={insertLink}
-                        style={{
-                          fontSize: '0.8rem',
-                          padding: '4px 8px',
-                          background: 'rgba(168, 85, 247, 0.1)',
-                          border: '1px solid #7c3aed',
-                          borderRadius: '4px',
-                          color: '#7c3aed',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '4px'
-                        }}
-                      >
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
-                        Insert Link
-                      </button>
-                    </div>
-                    <textarea
-                      ref={definitionRef}
-                      className="glass-input textarea-input"
-                      required
-                      rows={5}
-                      placeholder="Full definition text... You can use the Insert Link button above."
+                    <label>Definition *</label>
+                    <RichTextEditor
                       value={definition}
-                      onChange={(e) => setDefinition(e.target.value)}
+                      onChange={setDefinition}
+                      placeholder="Full definition text... use the toolbar above for formatting..."
+                      required
                     />
                   </div>
 
