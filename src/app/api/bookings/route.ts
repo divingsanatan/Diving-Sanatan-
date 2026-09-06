@@ -164,8 +164,30 @@ export async function PATCH(req: NextRequest) {
     if (error) {
       return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
-    
-    return NextResponse.json({ success: true, data: mapBookingToCamelCase(data) });
+
+    const mapped = mapBookingToCamelCase(data);
+
+    if (status === "confirmed" || paymentStatus === "paid") {
+      try {
+        const { sendAdminBookingNotification } = require("@/utils/email");
+        await sendAdminBookingNotification({
+          id: mapped.id,
+          serviceName: mapped.serviceName,
+          practitionerName: mapped.practitionerName,
+          date: mapped.date,
+          timeSlot: mapped.timeSlot,
+          price: mapped.price,
+          clientName: mapped.clientName,
+          clientEmail: mapped.clientEmail,
+          clientPhone: mapped.clientPhone,
+          notes: mapped.notes,
+        });
+      } catch (emailErr: any) {
+        console.warn("Failed to send admin notification on booking status update:", emailErr?.message);
+      }
+    }
+
+    return NextResponse.json({ success: true, data: mapped });
   } catch (error) {
     return NextResponse.json({ success: false, error: "Failed to update booking status" }, { status: 500 });
   }
