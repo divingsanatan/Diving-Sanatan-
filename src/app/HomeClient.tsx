@@ -607,7 +607,7 @@ export default function Home() {
                     <span className="grid-item-text">Spiritual Crisis</span>
                   </button>
 
-                  <button type="button" className="grid-item-card" onClick={() => router.push("/search")}>
+                  <button type="button" className="grid-item-card" onClick={() => router.push("/explore-services")}>
                     <div className="grid-item-icon">
                       <Grid size={24} strokeWidth={1.5} />
                     </div>

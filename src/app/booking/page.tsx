@@ -2,12 +2,19 @@
 
 import React, { useState, useEffect, Suspense, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Script from "next/script";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { formatCurrency } from "@/utils/formatters";
 import { Service } from "@/types/database";
+
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
 
 interface Practitioner {
   id: string;
@@ -49,17 +56,25 @@ function BookingContent() {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   const getServiceImage = (imgName: string) => {
-    if (!imgName) return "/images/reiki_placeholder.jpg";
+    if (!imgName) return "/images/service_chakra_healing.png";
     if (imgName.startsWith("http") || imgName.startsWith("/")) return imgName;
     const mappings: Record<string, string> = {
-      aura_balancing: "/images/service_chakra.png",
-      crystal_healing: "/images/service_regression.png",
-      chakra_clearing: "/images/service_akashic.png",
-      mindfulness_meditation: "/images/service_chakra.png",
-      anxiety_release: "/images/service_regression.png",
-      spiritual_counseling: "/images/service_akashic.png",
+      chakra_healing: "/images/service_chakra_healing.png",
+      aura_scanning: "/images/service_aura_scanning.png",
+      reiki_healing: "/images/service_reiki_healing.png",
+      sound_healing: "/images/service_sound_healing.png",
+      personal_guidance: "/images/service_personal_guidance.png",
+      meditation_program: "/images/service_meditation_program.png",
+      full_moon_program: "/images/service_full_moon_program.png",
+      manifestation_program: "/images/service_manifestation_program.png",
+      aura_balancing: "/images/service_aura_scanning.png",
+      crystal_healing: "/images/service_reiki_healing.png",
+      chakra_clearing: "/images/service_chakra_healing.png",
+      mindfulness_meditation: "/images/service_meditation_program.png",
+      anxiety_release: "/images/service_reiki_healing.png",
+      spiritual_counseling: "/images/service_personal_guidance.png",
     };
-    return mappings[imgName] || "/images/reiki_placeholder.jpg";
+    return mappings[imgName] || "/images/service_chakra_healing.png";
   };
 
   const getEmbedUrl = (url: string) => {
@@ -77,19 +92,66 @@ function BookingContent() {
     return null;
   };
 
-  // Prefill details from localStorage
-  useEffect(() => {
-    const saved = window.localStorage.getItem("divingsanatan_user_profile");
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (parsed.name) setClientName(parsed.name);
-        if (parsed.email) setClientEmail(parsed.email);
-        if (parsed.phone) setClientPhone(parsed.phone);
-      } catch (e) {
-        console.warn("Failed to load saved profile in booking:", e);
+  // Account sync states
+  const [accountSynced, setAccountSynced] = useState(false);
+  const [syncedEmail, setSyncedEmail] = useState("");
+
+  const syncFromAccount = async () => {
+    try {
+      // 1. Check active user session first
+      const sessionStr = window.localStorage.getItem("divingsanatan_user_session");
+      if (sessionStr) {
+        const session = JSON.parse(sessionStr);
+        let filledName = session.name || "";
+        let filledEmail = session.email || "";
+        let filledPhone = session.phone || session.phoneNumber || "";
+
+        if (filledName) setClientName(filledName);
+        if (filledEmail) setClientEmail(filledEmail);
+        if (filledPhone) setClientPhone(filledPhone);
+
+        setAccountSynced(true);
+        if (filledEmail) setSyncedEmail(filledEmail);
+
+        // Fetch full profile from API to get any missing phone/details
+        if (session.id) {
+          try {
+            const pRes = await fetch(`/api/auth/profile?id=${session.id}`);
+            const pJson = await pRes.json();
+            if (pJson.success && pJson.data) {
+              if (pJson.data.name) setClientName(pJson.data.name);
+              if (pJson.data.email) {
+                setClientEmail(pJson.data.email);
+                setSyncedEmail(pJson.data.email);
+              }
+              if (pJson.data.phone) setClientPhone(pJson.data.phone);
+            }
+          } catch (apiErr) {
+            console.warn("Could not fetch remote profile details:", apiErr);
+          }
+        }
+        return;
       }
+
+      // 2. Fallback to saved profile cache
+      const profileStr = window.localStorage.getItem("divingsanatan_user_profile");
+      if (profileStr) {
+        const profile = JSON.parse(profileStr);
+        if (profile.name) setClientName(profile.name);
+        if (profile.email) {
+          setClientEmail(profile.email);
+          setSyncedEmail(profile.email);
+          setAccountSynced(true);
+        }
+        if (profile.phone) setClientPhone(profile.phone);
+      }
+    } catch (e) {
+      console.warn("Failed to load saved profile in booking:", e);
     }
+  };
+
+  useEffect(() => {
+    syncFromAccount();
   }, []);
 
   // Calendar dates mock (June 2026)
@@ -99,6 +161,41 @@ function BookingContent() {
 
   // Time slots mock
   const timeSlots = ["10:00 AM", "12:00 PM", "02:00 PM", "04:00 PM", "08:00 PM"];
+
+  // Helper to match or resolve practitioner reliably
+  const findPractitioner = (targetName: string, pList: Practitioner[]): Practitioner => {
+    if (!targetName && pList.length > 0) return pList[0];
+    const cleanTarget = (targetName || "").trim().toLowerCase();
+    
+    // 1. Exact match
+    let matched = pList.find(p => p.name === targetName);
+    if (matched) return matched;
+    
+    // 2. Case insensitive / trimmed match
+    matched = pList.find(p => p.name.trim().toLowerCase() === cleanTarget);
+    if (matched) return matched;
+
+    // 3. Partial match (e.g., "Elara Vance" vs "Dr. Elara Vance")
+    matched = pList.find(p => {
+      const cleanName = p.name.toLowerCase();
+      return cleanName.includes(cleanTarget) || cleanTarget.includes(cleanName);
+    });
+    if (matched) return matched;
+
+    // 4. First available practitioner from database
+    if (pList.length > 0) return pList[0];
+
+    // 5. Fallback object if practitioners list is empty
+    return {
+      id: "prac-default",
+      name: targetName || "Dr. Elara Vance",
+      specialty: "Energy Healing Practitioner",
+      bio: "Experienced practitioner specializing in energetic alignment and somatic balance.",
+      rating: 5.0,
+      reviewsCount: 42,
+      image: "elara_vance"
+    };
+  };
 
   // Load services and practitioners
   useEffect(() => {
@@ -111,22 +208,20 @@ function BookingContent() {
         const pJson = await pRes.json();
 
         if (sJson.success && pJson.success) {
-          setServices(sJson.data);
-          setPractitioners(pJson.data);
+          const loadedServices: Service[] = sJson.data || [];
+          const loadedPractitioners: Practitioner[] = pJson.data || [];
+          
+          setServices(loadedServices);
+          setPractitioners(loadedPractitioners);
 
-          // Resolve query service
-          if (queryServiceId) {
-            const activeSrv = sJson.data.find((s: Service) => s.id === queryServiceId);
-            if (activeSrv) {
-              setSelectedService(activeSrv);
-              const activePrac = pJson.data.find((p: Practitioner) => p.name === activeSrv.practitioner);
-              if (activePrac) setSelectedPractitioner(activePrac);
+          if (loadedServices.length > 0) {
+            let activeSrv = loadedServices[0];
+            if (queryServiceId) {
+              const matchedSrv = loadedServices.find((s: Service) => s.id === queryServiceId);
+              if (matchedSrv) activeSrv = matchedSrv;
             }
-          } else {
-            // Default select first items
-            setSelectedService(sJson.data[0]);
-            const activePrac = pJson.data.find((p: Practitioner) => p.name === sJson.data[0].practitioner);
-            if (activePrac) setSelectedPractitioner(activePrac);
+            setSelectedService(activeSrv);
+            setSelectedPractitioner(findPractitioner(activeSrv.practitioner, loadedPractitioners));
           }
         }
       } catch (err) {
@@ -141,8 +236,7 @@ function BookingContent() {
     const srv = services.find(s => s.id === e.target.value);
     if (srv) {
       setSelectedService(srv);
-      const prac = practitioners.find(p => p.name === srv.practitioner);
-      if (prac) setSelectedPractitioner(prac);
+      setSelectedPractitioner(findPractitioner(srv.practitioner, practitioners));
     }
   };
 
@@ -177,10 +271,19 @@ function BookingContent() {
   // Submit appointment booking
   const handleBookingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedService || !selectedPractitioner || !selectedDate || !selectedTimeSlot) {
+    
+    // Auto-resolve active practitioner if null
+    let activePrac = selectedPractitioner;
+    if (!activePrac && selectedService) {
+      activePrac = findPractitioner(selectedService.practitioner, practitioners);
+      setSelectedPractitioner(activePrac);
+    }
+
+    if (!selectedService || !activePrac || !selectedDate || !selectedTimeSlot) {
       alert("Please ensure all booking metrics (Service, Practitioner, Date, Time) are selected.");
       return;
     }
+
     if (!validateForm()) return;
 
     setSubmitting(true);
@@ -208,8 +311,8 @@ function BookingContent() {
         body: JSON.stringify({
           serviceId: selectedService.id,
           serviceName: selectedService.name,
-          practitionerId: selectedPractitioner.id,
-          practitionerName: selectedPractitioner.name,
+          practitionerId: activePrac.id,
+          practitionerName: activePrac.name,
           date: `2026-06-${selectedDate.toString().padStart(2, "0")}`,
           timeSlot: selectedTimeSlot,
           price: selectedService.price,
@@ -222,12 +325,113 @@ function BookingContent() {
 
       const json = await res.json();
       if (json.success) {
-        // Automatically save newly booked session in local selections cart for seamless payment
         const activeSelections = [selectedService];
         window.localStorage.setItem("divingsanatan_selections", JSON.stringify(activeSelections));
         window.localStorage.setItem("active_booking_id", json.data.id);
 
-        router.push("/checkout");
+        if (selectedService.price === 0) {
+          // Free session - confirm immediately
+          await fetch("/api/bookings", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              id: json.data.id,
+              status: "confirmed",
+              paymentStatus: "paid",
+            }),
+          });
+          window.localStorage.removeItem("divingsanatan_selections");
+          window.localStorage.removeItem("active_booking_id");
+          router.push("/checkout?success=true");
+          return;
+        }
+
+        // Trigger Razorpay payment directly
+        try {
+          const orderRes = await fetch("/api/razorpay/create-order", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              amount: selectedService.price,
+              bookingId: json.data.id,
+              notes: {
+                customerName: clientName,
+                customerEmail: clientEmail,
+                customerPhone: clientPhone,
+              },
+            }),
+          });
+
+          const orderJson = await orderRes.json();
+
+          if (orderJson.success && window.Razorpay) {
+            const options = {
+              key: orderJson.keyId,
+              amount: orderJson.order.amount,
+              currency: orderJson.order.currency,
+              name: "Diving Sanatan",
+              description: `${selectedService.name} - Guided by ${activePrac.name}`,
+              image: "/images/service_chakra.png",
+              order_id: orderJson.order.id,
+              handler: async function (response: any) {
+                try {
+                  const verifyRes = await fetch("/api/razorpay/verify-payment", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      razorpay_order_id: response.razorpay_order_id,
+                      razorpay_payment_id: response.razorpay_payment_id,
+                      razorpay_signature: response.razorpay_signature,
+                      bookingId: json.data.id,
+                    }),
+                  });
+
+                  const verifyJson = await verifyRes.json();
+
+                  if (verifyJson.success) {
+                    window.localStorage.removeItem("divingsanatan_selections");
+                    window.localStorage.removeItem("active_booking_id");
+                    router.push("/checkout?success=true");
+                  } else {
+                    setMessage(`Payment verification failed: ${verifyJson.error}`);
+                  }
+                } catch (vErr) {
+                  console.error("Verification error:", vErr);
+                  setMessage("Payment completed, but verification failed.");
+                } finally {
+                  setSubmitting(false);
+                }
+              },
+              prefill: {
+                name: clientName,
+                email: clientEmail,
+                contact: clientPhone,
+              },
+              theme: {
+                color: "#7c3aed",
+              },
+              modal: {
+                ondismiss: function () {
+                  setSubmitting(false);
+                },
+              },
+            };
+
+            const rzp = new window.Razorpay(options);
+            rzp.on("payment.failed", function (response: any) {
+              setMessage(`Payment Failed: ${response.error?.description || "Transaction cancelled"}`);
+              setSubmitting(false);
+            });
+            rzp.open();
+            return; // Stay on page while Razorpay modal is active
+          } else {
+            // Fallback to checkout page if SDK or order creation fails
+            router.push("/checkout");
+          }
+        } catch (rzpErr) {
+          console.error("Razorpay trigger error:", rzpErr);
+          router.push("/checkout");
+        }
       } else {
         setMessage(`Booking error: ${json.error}`);
       }
@@ -426,7 +630,31 @@ function BookingContent() {
             </Card>
 
             <Card variant="glass" className="card-pad-24 card-stack-20">
-              <h3 className="form-column-title">Client Details & Booking Form</h3>
+              <div className="client-details-header-row">
+                <h3 className="form-column-title">Client Details & Booking Form</h3>
+                {accountSynced && (
+                  <div className="account-synced-pill">
+                    <span className="synced-dot">✓</span>
+                    <span>Account Synced</span>
+                  </div>
+                )}
+              </div>
+
+              {accountSynced && (
+                <div className="sync-account-banner">
+                  <div className="sync-banner-text">
+                    ✨ Details auto-filled from your logged-in account {syncedEmail ? `(${syncedEmail})` : ""}
+                  </div>
+                  <button
+                    type="button"
+                    className="resync-action-btn"
+                    onClick={syncFromAccount}
+                    title="Refresh details from account"
+                  >
+                    🔄 Re-sync
+                  </button>
+                </div>
+              )}
 
               <div className="form-group">
                 <label>Full Name</label>
@@ -1017,11 +1245,72 @@ function BookingContent() {
           font-size: 0.88rem;
           line-height: 1.7;
         }
-        .modal-actions-footer {
+        .client-details-header-row {
           display: flex;
-          justify-content: flex-end;
-          margin-top: 12px;
+          justify-content: space-between;
+          align-items: center;
+          gap: 12px;
+          flex-wrap: wrap;
         }
+        .account-synced-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          background: rgba(16, 185, 129, 0.1);
+          border: 1px solid rgba(16, 185, 129, 0.3);
+          color: #059669;
+          font-size: 0.75rem;
+          font-weight: 700;
+          padding: 4px 10px;
+          border-radius: 99px;
+        }
+        .synced-dot {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 14px;
+          height: 14px;
+          border-radius: 50%;
+          background: #10b981;
+          color: #ffffff;
+          font-size: 0.65rem;
+          font-weight: bold;
+        }
+        .sync-account-banner {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          background: linear-gradient(135deg, rgba(124, 58, 237, 0.08) 0%, rgba(192, 132, 252, 0.12) 100%);
+          border: 1px solid rgba(124, 58, 237, 0.18);
+          border-radius: 12px;
+          padding: 10px 14px;
+          margin-top: 8px;
+          gap: 10px;
+        }
+        .sync-banner-text {
+          font-size: 0.82rem;
+          color: #4c1d95;
+          font-weight: 500;
+          line-height: 1.4;
+        }
+        .resync-action-btn {
+          background: #ffffff;
+          border: 1px solid rgba(124, 58, 237, 0.25);
+          color: #7c3aed;
+          font-weight: 600;
+          font-size: 0.75rem;
+          padding: 4px 10px;
+          border-radius: 8px;
+          cursor: pointer;
+          white-space: nowrap;
+          transition: all 0.2s ease;
+        }
+        .resync-action-btn:hover {
+          background: #7c3aed;
+          color: #ffffff;
+          border-color: #7c3aed;
+        }
+
         @keyframes scaleUp {
           from { transform: scale(0.95); opacity: 0; }
           to { transform: scale(1); opacity: 1; }

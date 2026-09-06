@@ -3,6 +3,10 @@ import { supabaseServer } from "@/utils/supabaseServer";
 import { Booking } from "@/types/database";
 
 function mapBookingToCamelCase(b: any): Booking {
+  const rawPaymentStatus = b.payment_status || b.paymentStatus;
+  const isPaid = rawPaymentStatus === "paid" || b.status === "confirmed";
+  const paymentStatus = isPaid ? "paid" : (rawPaymentStatus || "unpaid");
+
   return {
     id: b.id,
     serviceId: b.service_id,
@@ -17,31 +21,69 @@ function mapBookingToCamelCase(b: any): Booking {
     clientPhone: b.client_phone,
     notes: b.notes || "",
     status: b.status,
-    paymentStatus: b.payment_status,
+    paymentStatus: paymentStatus,
   };
 }
 
-/**
- * GET Handler - Retrieves bookings from Supabase (optional email filter, otherwise lists all)
- */
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const email = searchParams.get("email");
-    
-    let query = supabaseServer.from("bookings").select("*");
-    
-    if (email) {
-      query = query.ilike("client_email", email.toLowerCase());
+    const emailLower = email ? email.toLowerCase().trim() : null;
+
+    let mappedBookings: Booking[] = [];
+
+    // 1. Try fetching from Supabase
+    try {
+      let query = supabaseServer.from("bookings").select("*");
+      if (emailLower) {
+        query = query.ilike("client_email", emailLower);
+      }
+      const { data: bookings, error } = await query.order("created_at", { ascending: false });
+      if (!error && bookings && bookings.length > 0) {
+        mappedBookings = bookings.map(mapBookingToCamelCase);
+      }
+    } catch (sbErr) {
+      console.warn("Supabase fetch bookings warning:", sbErr);
     }
-    
-    const { data: bookings, error } = await query.order("created_at", { ascending: false });
-    
-    if (error) {
-      return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+
+    // 2. Fallback / Merge with local db.json bookings if needed
+    try {
+      const { getDb } = require("@/utils/db");
+      const db = getDb();
+      if (db && db.bookings && Array.isArray(db.bookings)) {
+        let localBookings = db.bookings;
+        if (emailLower) {
+          localBookings = localBookings.filter(
+            (b: any) => (b.clientEmail || b.client_email || "").toLowerCase() === emailLower
+          );
+        }
+        localBookings.forEach((lb: any) => {
+          const item: Booking = {
+            id: lb.id,
+            serviceId: lb.serviceId || lb.service_id,
+            serviceName: lb.serviceName || lb.service_name,
+            practitionerId: lb.practitionerId || lb.practitioner_id,
+            practitionerName: lb.practitionerName || lb.practitioner_name,
+            date: lb.date,
+            timeSlot: lb.timeSlot || lb.time_slot,
+            price: Number(lb.price),
+            clientName: lb.clientName || lb.client_name,
+            clientEmail: lb.clientEmail || lb.client_email,
+            clientPhone: lb.clientPhone || lb.client_phone,
+            notes: lb.notes || "",
+            status: lb.status || "pending",
+            paymentStatus: lb.paymentStatus || lb.payment_status || "unpaid",
+          };
+          if (!mappedBookings.some((b) => b.id === item.id)) {
+            mappedBookings.push(item);
+          }
+        });
+      }
+    } catch (dbErr) {
+      console.warn("Local DB fetch bookings warning:", dbErr);
     }
-    
-    const mappedBookings = (bookings || []).map(mapBookingToCamelCase);
+
     return NextResponse.json({ success: true, data: mappedBookings });
   } catch (error) {
     return NextResponse.json({ success: false, error: "Failed to read bookings database" }, { status: 500 });

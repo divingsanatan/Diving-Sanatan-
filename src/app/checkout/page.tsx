@@ -8,13 +8,24 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { formatCurrency } from "@/utils/formatters";
 
+import Script from "next/script";
+
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
+
 interface Service {
   id: string;
   name: string;
   price: number;
-  duration: string;
-  practitioner: string;
-  category: string;
+  duration?: string;
+  practitioner?: string;
+  category?: string;
+  categories?: string[];
+  image?: string;
+  description?: string;
 }
 
 interface BookingRecord {
@@ -28,6 +39,30 @@ interface BookingRecord {
   paymentStatus: string;
 }
 
+const getServiceImage = (imgName?: string) => {
+  if (!imgName) return "/images/service_chakra_healing.png";
+  if (imgName.startsWith("http") || imgName.startsWith("/")) return imgName;
+  const mappings: Record<string, string> = {
+    chakra_healing: "/images/service_chakra_healing.png",
+    aura_scanning: "/images/service_aura_scanning.png",
+    reiki_healing: "/images/service_reiki_healing.png",
+    sound_healing: "/images/service_sound_healing.png",
+    personal_guidance: "/images/service_personal_guidance.png",
+    meditation_program: "/images/service_meditation_program.png",
+    full_moon_program: "/images/service_full_moon_program.png",
+    manifestation_program: "/images/service_manifestation_program.png",
+    aura_balancing: "/images/service_aura_scanning.png",
+    crystal_healing: "/images/service_reiki_healing.png",
+    chakra_clearing: "/images/service_chakra_healing.png",
+    mindfulness_meditation: "/images/service_meditation_program.png",
+    anxiety_release: "/images/service_reiki_healing.png",
+    spiritual_counseling: "/images/service_personal_guidance.png",
+    akashic: "/images/service_akashic.png",
+    regression: "/images/service_regression.png",
+  };
+  return mappings[imgName] || "/images/service_chakra_healing.png";
+};
+
 export default function CheckoutPage() {
   const router = useRouter();
 
@@ -35,8 +70,12 @@ export default function CheckoutPage() {
   const [selections, setSelections] = useState<Service[]>([]);
   const [bookingId, setBookingId] = useState<string | null>(null);
   
+  // Customer details
+  const [clientEmail, setClientEmail] = useState("");
+  const [clientPhone, setClientPhone] = useState("");
+  
   // Form input states
-  const [paymentOption, setPaymentOption] = useState<"card" | "paypal" | "apple">("card");
+  const [paymentOption, setPaymentOption] = useState<"razorpay" | "card" | "paypal" | "apple">("razorpay");
   const [cardholderName, setCardholderName] = useState("");
   const [cardNumber, setCardNumber] = useState("");
   const [expiry, setExpiry] = useState("");
@@ -45,6 +84,7 @@ export default function CheckoutPage() {
 
   const [processing, setProcessing] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [paymentError, setPaymentError] = useState("");
 
   // Validation errors
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
@@ -52,27 +92,83 @@ export default function CheckoutPage() {
   // History state
   const [orderHistory, setOrderHistory] = useState<BookingRecord[]>([]);
 
-  // 1. Load Selections & Booking ID on mount
+  // 1. Load Selections & Booking ID on mount, and enrich with service database
   useEffect(() => {
-    try {
-      const storedSrv = window.localStorage.getItem("divingsanatan_selections");
-      if (storedSrv) {
-        setSelections(JSON.parse(storedSrv));
-      }
-      
-      const bid = window.localStorage.getItem("active_booking_id");
-      if (bid) {
-        setBookingId(bid);
-      }
+    async function initCheckoutData() {
+      try {
+        const storedSrv = window.localStorage.getItem("divingsanatan_selections");
+        let initialSelections: Service[] = storedSrv ? JSON.parse(storedSrv) : [];
 
-      const savedProfile = window.localStorage.getItem("divingsanatan_user_profile");
-      if (savedProfile) {
-        const parsed = JSON.parse(savedProfile);
-        if (parsed.name) setCardholderName(parsed.name);
+        const bid = window.localStorage.getItem("active_booking_id");
+        if (bid) {
+          setBookingId(bid);
+        }
+
+        // Fetch services from API to enrich image, duration, practitioner if missing
+        try {
+          const res = await fetch("/api/services");
+          const json = await res.json();
+          if (json.success && Array.isArray(json.data)) {
+            const dbServices: Service[] = json.data;
+            if (initialSelections.length > 0) {
+              const enriched = initialSelections.map((sel) => {
+                const match = dbServices.find(
+                  (s) => s.id === sel.id || s.name.toLowerCase() === sel.name.toLowerCase()
+                );
+                if (match) {
+                  return {
+                    ...match,
+                    ...sel,
+                    image: sel.image || match.image,
+                    category: sel.category || match.category || match.categories?.[0],
+                    duration: sel.duration || match.duration,
+                    practitioner: sel.practitioner || match.practitioner,
+                  };
+                }
+                return sel;
+              });
+              setSelections(enriched);
+            } else if (bid) {
+              const bRes = await fetch("/api/bookings");
+              const bJson = await bRes.json();
+              if (bJson.success && Array.isArray(bJson.data)) {
+                const activeBooking = bJson.data.find((b: any) => b.id === bid);
+                if (activeBooking) {
+                  const sMatch = dbServices.find(
+                    (s) => s.name.toLowerCase() === activeBooking.serviceName.toLowerCase()
+                  );
+                  if (sMatch) {
+                    setSelections([{ ...sMatch, practitioner: activeBooking.practitionerName || sMatch.practitioner }]);
+                  }
+                }
+              }
+            }
+          } else if (initialSelections.length > 0) {
+            setSelections(initialSelections);
+          }
+        } catch (srvErr) {
+          console.warn("Could not load service database for enrichment:", srvErr);
+          if (initialSelections.length > 0) {
+            setSelections(initialSelections);
+          }
+        }
+
+        const savedProfile = window.localStorage.getItem("divingsanatan_user_profile");
+        if (savedProfile) {
+          const parsed = JSON.parse(savedProfile);
+          if (parsed.name) setCardholderName(parsed.name);
+          if (parsed.email) setClientEmail(parsed.email);
+          if (parsed.phone) setClientPhone(parsed.phone);
+        }
+        if (typeof window !== "undefined" && window.location.search.includes("success=true")) {
+          setSuccess(true);
+        }
+      } catch (e) {
+        console.warn(e);
       }
-    } catch (e) {
-      console.warn(e);
     }
+
+    initCheckoutData();
   }, []);
 
   // 2. Fetch all bookings for order history sidebar
@@ -81,7 +177,6 @@ export default function CheckoutPage() {
       const res = await fetch("/api/bookings");
       const json = await res.json();
       if (json.success) {
-        // Sort bookings: latest date first
         setOrderHistory(json.data);
       }
     } catch (e) {
@@ -121,15 +216,12 @@ export default function CheckoutPage() {
   const validateForm = () => {
     if (totalCost === 0) return true;
     const errors: Record<string, string> = {};
-    if (paymentOption === "card") {
-      if (!cardholderName.trim()) {
-        errors.name = "Cardholder Name is required";
-      } else if (cardholderName.trim().length < 2) {
-        errors.name = "Name must be at least 2 characters";
-      } else if (!/^[A-Za-z\s]+$/.test(cardholderName)) {
-        errors.name = "Name must contain only letters and spaces";
-      }
+    
+    if (!cardholderName.trim()) {
+      errors.name = "Full Name is required";
+    }
 
+    if (paymentOption === "card") {
       const cleanedCard = cardNumber.replace(/\s+/g, "");
       if (!cleanedCard) {
         errors.cardNumber = "Card Number is required";
@@ -167,18 +259,159 @@ export default function CheckoutPage() {
     return Object.keys(errors).length === 0;
   };
 
+  // Razorpay Checkout handler
+  const handleRazorpayPayment = async () => {
+    setProcessing(true);
+    setPaymentError("");
+
+    try {
+      // 1. Create order on backend
+      const res = await fetch("/api/razorpay/create-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: totalCost,
+          bookingId: bookingId || "",
+          notes: {
+            customerName: cardholderName,
+            customerEmail: clientEmail,
+            customerPhone: clientPhone,
+          },
+        }),
+      });
+
+      const orderData = await res.json();
+      if (!orderData.success) {
+        setPaymentError(orderData.error || "Failed to initialize Razorpay payment");
+        setProcessing(false);
+        return;
+      }
+
+      const { order, keyId } = orderData;
+
+      if (!window.Razorpay) {
+        setPaymentError("Razorpay SDK failed to load. Please check your internet connection.");
+        setProcessing(false);
+        return;
+      }
+
+      // 2. Configure Razorpay modal options
+      const selectedImageName = selections[0]?.image;
+      const imagePath = getServiceImage(selectedImageName);
+      const absoluteImageUrl = typeof window !== "undefined" && imagePath.startsWith("/")
+        ? `${window.location.origin}${imagePath}`
+        : imagePath;
+
+      const options = {
+        key: keyId,
+        amount: order.amount,
+        currency: order.currency,
+        name: "Diving Sanatan",
+        description: selections.map(s => s.name).join(", ") || "Wellness Therapy Session",
+        image: absoluteImageUrl,
+        order_id: order.id,
+        handler: async function (response: any) {
+          try {
+            // 3. Verify signature on backend
+            const verifyRes = await fetch("/api/razorpay/verify-payment", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                bookingId: bookingId,
+              }),
+            });
+
+            const verifyJson = await verifyRes.json();
+
+            if (verifyJson.success) {
+              window.localStorage.removeItem("divingsanatan_selections");
+              window.localStorage.removeItem("active_booking_id");
+              setSelections([]);
+              setSuccess(true);
+              fetchOrderHistory();
+            } else {
+              setPaymentError(`Payment verification failed: ${verifyJson.error}`);
+            }
+          } catch (err: any) {
+            console.error("Verification error:", err);
+            setPaymentError("Payment verified, but sync failed.");
+          } finally {
+            setProcessing(false);
+          }
+        },
+        prefill: {
+          name: cardholderName || "Guest",
+          email: clientEmail || "guest@divingsanatan.com",
+          contact: clientPhone || "9999999999",
+        },
+        notes: {
+          bookingId: bookingId || "",
+        },
+        theme: {
+          color: "#7c3aed",
+        },
+        modal: {
+          ondismiss: function () {
+            setProcessing(false);
+          },
+        },
+      };
+
+      const rzp1 = new window.Razorpay(options);
+      rzp1.on("payment.failed", function (response: any) {
+        setPaymentError(`Payment Failed: ${response.error?.description || "Transaction cancelled"}`);
+        setProcessing(false);
+      });
+      rzp1.open();
+    } catch (err: any) {
+      console.error("Razorpay Payment Error:", err);
+      setPaymentError("Connection error while communicating with Razorpay.");
+      setProcessing(false);
+    }
+  };
+
   // Submit payment handler
   const handlePaymentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
-    setProcessing(true);
 
-    // Simulate network delay
+    if (totalCost === 0) {
+      // Free booking submit
+      setProcessing(true);
+      if (bookingId) {
+        await fetch("/api/bookings", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: bookingId,
+            status: "confirmed",
+            paymentStatus: "paid",
+          }),
+        });
+      }
+      window.localStorage.removeItem("divingsanatan_selections");
+      window.localStorage.removeItem("active_booking_id");
+      setSelections([]);
+      setSuccess(true);
+      fetchOrderHistory();
+      setProcessing(false);
+      return;
+    }
+
+    if (paymentOption === "razorpay") {
+      await handleRazorpayPayment();
+      return;
+    }
+
+    // Fallback Card / Simulated Option
+    setProcessing(true);
     await new Promise((resolve) => setTimeout(resolve, 1500));
 
     try {
       if (bookingId) {
-        // Update booking state in backend JSON DB
         await fetch("/api/bookings", {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
@@ -190,13 +423,11 @@ export default function CheckoutPage() {
         });
       }
       
-      // Clear selections & active ID
       window.localStorage.removeItem("divingsanatan_selections");
       window.localStorage.removeItem("active_booking_id");
       setSelections([]);
-      
       setSuccess(true);
-      fetchOrderHistory(); // Refresh history sidebar
+      fetchOrderHistory();
     } catch (err) {
       console.error("Payment registration failure:", err);
       alert("Payment processed, but failed to sync database session.");
@@ -207,15 +438,16 @@ export default function CheckoutPage() {
 
   return (
     <div className="page-shell">
+      <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
       <Header />
 
       <main className="checkout-container">
         
         {/* Page Title */}
         <section className="checkout-header">
-          <h2 className="checkout-header-title">Payment/Checkout Page</h2>
+          <h2 className="checkout-header-title">Payment / Checkout</h2>
           <p className="text-muted-sm">
-            Complete your wellness transaction. Submitting authorizes instant booking dispatch.
+            Complete your wellness transaction securely via Razorpay (UPI, Credit/Debit Cards, NetBanking, Wallets).
           </p>
         </section>
 
@@ -232,8 +464,45 @@ export default function CheckoutPage() {
             
             {/* Payment Details Form */}
             <div className="checkout-form-col">
+
+              {/* Active Service Highlight Banner */}
+              {selections.length > 0 && (
+                <div className="selected-service-checkout-banner glass-panel">
+                  <div className="banner-img-container">
+                    <img
+                      src={getServiceImage(selections[0].image)}
+                      alt={selections[0].name}
+                      className="banner-service-thumb"
+                    />
+                  </div>
+                  <div className="banner-service-info">
+                    <div className="banner-tag-row">
+                      <span className="banner-service-tag">
+                        {selections[0].category || selections[0].categories?.[0] || "Healing Session"}
+                      </span>
+                      {selections[0].duration && <span className="banner-duration-tag">⏱ {selections[0].duration}</span>}
+                    </div>
+                    <h3 className="banner-service-title">{selections[0].name}</h3>
+                    {selections[0].practitioner && (
+                      <p className="banner-practitioner-text">
+                        Guided by <strong>{selections[0].practitioner}</strong>
+                      </p>
+                    )}
+                  </div>
+                  <div className="banner-service-price">
+                    {formatCurrency(selections[0].price)}
+                  </div>
+                </div>
+              )}
+
               <form onSubmit={handlePaymentSubmit} noValidate className="payment-card-panel glass-panel">
-                <h3 className="checkout-section-title">Payment Details</h3>
+                <h3 className="checkout-section-title">Payment Method & Billing</h3>
+
+                {paymentError && (
+                  <div className="payment-error-banner">
+                    ⚠ {paymentError}
+                  </div>
+                )}
 
                 {totalCost === 0 ? (
                   <div className="free-session-notice-box">
@@ -243,14 +512,21 @@ export default function CheckoutPage() {
                   </div>
                 ) : (
                   <>
-                    {/* Options selector (From Slide 1) */}
+                    {/* Options selector */}
                     <div className="payment-options-row">
+                      <button 
+                        type="button" 
+                        className={`pay-opt-btn ${paymentOption === "razorpay" ? "active" : ""}`}
+                        onClick={() => setPaymentOption("razorpay")}
+                      >
+                        ⚡ Razorpay (UPI/Cards/NetBanking)
+                      </button>
                       <button 
                         type="button" 
                         className={`pay-opt-btn ${paymentOption === "card" ? "active" : ""}`}
                         onClick={() => setPaymentOption("card")}
                       >
-                        💳 Credit Card
+                        💳 Card
                       </button>
                       <button 
                         type="button" 
@@ -259,32 +535,35 @@ export default function CheckoutPage() {
                       >
                         🅿️ PayPal
                       </button>
-                      <button 
-                        type="button" 
-                        className={`pay-opt-btn ${paymentOption === "apple" ? "active" : ""}`}
-                        onClick={() => setPaymentOption("apple")}
-                      >
-                        🍎 Apple Pay
-                      </button>
                     </div>
 
-                    {paymentOption === "card" ? (
-                      <div className="payment-form-fields">
-                        <div className="form-group">
-                          <label>Cardholder Name</label>
-                          <input 
-                            type="text" 
-                            className={`glass-input ${formErrors.name ? "input-border-error" : ""}`} 
-                            placeholder="e.g. Sumeet" 
-                            value={cardholderName}
-                            onChange={(e) => {
-                              setCardholderName(e.target.value);
-                              if (formErrors.name) setFormErrors({ ...formErrors, name: "" });
-                            }}
-                          />
-                          {formErrors.name && <span className="inline-error-msg">{formErrors.name}</span>}
-                        </div>
+                    <div className="form-group mb-16">
+                      <label>Customer Name</label>
+                      <input 
+                        type="text" 
+                        className={`glass-input ${formErrors.name ? "input-border-error" : ""}`} 
+                        placeholder="e.g. Sumeet" 
+                        value={cardholderName}
+                        onChange={(e) => {
+                          setCardholderName(e.target.value);
+                          if (formErrors.name) setFormErrors({ ...formErrors, name: "" });
+                        }}
+                      />
+                      {formErrors.name && <span className="inline-error-msg">{formErrors.name}</span>}
+                    </div>
 
+                    {paymentOption === "razorpay" ? (
+                      <div className="razorpay-info-box">
+                        <div className="razorpay-badge-row">
+                          <span className="rzp-pill">🔒 Secure 256-bit Encryption</span>
+                          <span className="rzp-pill gold">Instant Confirmation</span>
+                        </div>
+                        <p className="razorpay-desc">
+                          Pay smoothly using <strong>UPI (Google Pay, PhonePe, Paytm, BHIM), Credit/Debit Cards, NetBanking</strong> or popular Mobile Wallets via Razorpay.
+                        </p>
+                      </div>
+                    ) : paymentOption === "card" ? (
+                      <div className="payment-form-fields">
                         <div className="form-group">
                           <label>Card Number</label>
                           <input 
@@ -354,12 +633,13 @@ export default function CheckoutPage() {
                   disabled={processing || selections.length === 0}
                   className="btn-full-mt-24"
                 >
-                  {processing ? "Securing Transaction..." : totalCost === 0 ? "Confirm Complimentary Booking" : `Complete Payment - ${formatCurrency(totalCost)}`}
+                  {processing ? "Securing Transaction..." : totalCost === 0 ? "Confirm Complimentary Booking" : paymentOption === "razorpay" ? `Pay with Razorpay - ${formatCurrency(totalCost)}` : `Complete Payment - ${formatCurrency(totalCost)}`}
                 </Button>
               </form>
             </div>
 
-            {/* Right side: Order Summary & Order History Sidebar (From Slide 2) */}
+
+            {/* Right side: Order Summary & Order History Sidebar */}
             <div className="checkout-summary-col">
               
               {/* Order Summary */}
@@ -372,12 +652,22 @@ export default function CheckoutPage() {
                 ) : (
                   <div className="checkout-summary-items-list summary-list-stack">
                     {selections.map(s => (
-                      <div key={s.id} className="summary-item-row">
-                        <div className="item-label-group">
-                          <span className="item-name">{s.name}</span>
-                          <span className="item-prac">Practitioner: {s.practitioner}</span>
+                      <div key={s.id} className="summary-item-card">
+                        <img
+                          src={getServiceImage(s.image)}
+                          alt={s.name}
+                          className="summary-item-thumb"
+                        />
+                        <div className="summary-item-info">
+                          <span className="summary-item-name">{s.name}</span>
+                          {s.practitioner && (
+                            <span className="summary-item-prac">Guided by {s.practitioner}</span>
+                          )}
+                          {s.duration && (
+                            <span className="summary-item-duration">⏱ {s.duration}</span>
+                          )}
                         </div>
-                        <span className="item-price">{formatCurrency(s.price)}</span>
+                        <span className="summary-item-price">{formatCurrency(s.price)}</span>
                       </div>
                     ))}
                     
@@ -388,41 +678,6 @@ export default function CheckoutPage() {
                   </div>
                 )}
               </Card>
-
-              {/* Order History Sidebar (From Slide 2) */}
-              <Card variant="glass" className="history-sidebar-card">
-                <h3 className="checkout-section-title section-title-bordered">
-                  Order History
-                </h3>
-                
-                <div className="history-list-container">
-                  {orderHistory.length === 0 ? (
-                    <p className="text-muted-xs-mt">
-                      No past booking telemetry resolved.
-                    </p>
-                  ) : (
-                    <div className="history-items-vertical-list">
-                      {orderHistory.map(oh => (
-                        <div key={oh.id} className="history-item-block">
-                          <div className="history-header">
-                            <span className="history-service-name">{oh.serviceName}</span>
-                            <span className={`history-status-badge ${oh.paymentStatus}`}>
-                              {oh.paymentStatus.toUpperCase()}
-                            </span>
-                          </div>
-                          
-                          <div className="history-body">
-                            <span>Practitioner: <strong>{oh.practitionerName}</strong></span>
-                            <span>Scheduled: <strong>{oh.date} ({oh.timeSlot})</strong></span>
-                            <span>Fee: <strong>{formatCurrency(oh.price)}</strong></span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </Card>
-
             </div>
 
           </div>
@@ -490,7 +745,53 @@ export default function CheckoutPage() {
           margin-bottom: 20px;
           letter-spacing: 0.05em;
         }
+        .payment-error-banner {
+          background: rgba(239, 68, 68, 0.08);
+          border: 1px solid rgba(239, 68, 68, 0.3);
+          color: #dc2626;
+          padding: 12px 16px;
+          border-radius: 10px;
+          font-size: 0.88rem;
+          margin-bottom: 16px;
+          font-weight: 500;
+        }
+        .razorpay-info-box {
+          background: linear-gradient(135deg, rgba(124, 58, 237, 0.05) 0%, rgba(168, 85, 247, 0.08) 100%);
+          border: 1px solid rgba(124, 58, 237, 0.2);
+          padding: 20px;
+          border-radius: 12px;
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          margin-bottom: 16px;
+        }
+        .razorpay-badge-row {
+          display: flex;
+          gap: 8px;
+          flex-wrap: wrap;
+        }
+        .rzp-pill {
+          background: rgba(124, 58, 237, 0.1);
+          color: #6d28d9;
+          font-size: 0.72rem;
+          font-weight: 700;
+          padding: 4px 10px;
+          border-radius: 20px;
+        }
+        .rzp-pill.gold {
+          background: rgba(217, 119, 6, 0.1);
+          color: #b45309;
+        }
+        .razorpay-desc {
+          font-size: 0.88rem;
+          color: #334155;
+          line-height: 1.5;
+        }
+        .mb-16 {
+          margin-bottom: 16px;
+        }
         .payment-options-row {
+
           display: flex;
           gap: 12px;
           margin-bottom: 24px;
@@ -561,35 +862,116 @@ export default function CheckoutPage() {
           font-size: 0.9rem;
           color: hsl(var(--text-muted));
         }
-        .checkout-summary-col {
+        .selected-service-checkout-banner {
           display: flex;
-          flex-direction: column;
-        }
-        .summary-item-row {
-          display: flex;
-          justify-content: space-between;
           align-items: center;
-          border-bottom: 1px dashed rgba(0,0,0,0.06);
-          padding-bottom: 12px;
+          gap: 16px;
+          padding: 16px 20px;
+          margin-bottom: 24px;
+          background: linear-gradient(135deg, rgba(124, 58, 237, 0.06) 0%, rgba(219, 39, 119, 0.06) 100%);
+          border: 1px solid rgba(124, 58, 237, 0.2);
+          border-radius: 16px;
         }
-        .item-label-group {
+        .banner-img-container {
+          width: 72px;
+          height: 72px;
+          border-radius: 12px;
+          overflow: hidden;
+          flex-shrink: 0;
+          border: 1px solid rgba(124, 58, 237, 0.2);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        }
+        .banner-service-thumb {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+        .banner-service-info {
+          flex: 1;
           display: flex;
           flex-direction: column;
           gap: 4px;
         }
-        .item-name {
-          font-size: 0.95rem;
-          color: hsl(var(--text-cream));
-          font-weight: 600;
+        .banner-tag-row {
+          display: flex;
+          gap: 8px;
+          align-items: center;
         }
-        .item-prac {
-          font-size: 0.8rem;
+        .banner-service-tag {
+          background: rgba(124, 58, 237, 0.12);
+          color: #6d28d9;
+          font-size: 0.7rem;
+          font-weight: 700;
+          padding: 2px 8px;
+          border-radius: 6px;
+          text-transform: uppercase;
+          letter-spacing: 0.03em;
+        }
+        .banner-duration-tag {
+          font-size: 0.75rem;
           color: hsl(var(--text-muted));
         }
-        .item-price {
+        .banner-service-title {
+          font-size: 1.1rem;
+          font-weight: 700;
+          color: #4c1d95;
+          margin: 0;
+        }
+        .banner-practitioner-text {
+          font-size: 0.8rem;
+          color: hsl(var(--text-muted));
+          margin: 0;
+        }
+        .banner-service-price {
+          font-family: var(--font-serif);
+          font-size: 1.4rem;
+          font-weight: 700;
+          color: #db2777;
+        }
+        .checkout-summary-col {
+          display: flex;
+          flex-direction: column;
+        }
+        .summary-item-card {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          border-bottom: 1px dashed rgba(0,0,0,0.08);
+          padding-bottom: 12px;
+          margin-bottom: 12px;
+        }
+        .summary-item-thumb {
+          width: 54px;
+          height: 54px;
+          border-radius: 10px;
+          object-fit: cover;
+          flex-shrink: 0;
+          border: 1px solid rgba(0,0,0,0.08);
+        }
+        .summary-item-info {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+        }
+        .summary-item-name {
+          font-size: 0.92rem;
+          color: #4c1d95;
+          font-weight: 700;
+        }
+        .summary-item-prac {
+          font-size: 0.78rem;
+          color: hsl(var(--text-muted));
+        }
+        .summary-item-duration {
+          font-size: 0.75rem;
+          color: #6d28d9;
+        }
+        .summary-item-price {
           font-family: var(--font-serif);
           color: #db2777;
           font-weight: 700;
+          font-size: 1.05rem;
         }
         .summary-total-row {
           display: flex;

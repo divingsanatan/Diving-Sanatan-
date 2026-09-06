@@ -357,6 +357,9 @@ export default function BlogListingPage() {
                   <path d="M50 80 C70 80 90 70 95 55 C80 65 65 70 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
                 </svg>
                 <h3 className="section-title">Our Services</h3>
+                <Link href="/explore-services" className="blog-services-view-all-link">
+                  View All →
+                </Link>
               </div>
               <div className="carousel-nav-arrows">
                 <button onClick={() => scrollCarousel(servicesScrollRef, "left")} className="arrow-btn" aria-label="Previous">
@@ -370,7 +373,7 @@ export default function BlogListingPage() {
 
             <div ref={servicesScrollRef} className="horizontal-scroll-container">
               {services.map((service) => (
-                <div key={service.id} onClick={() => router.push("/services")} className="service-simple-card">
+                <div key={service.id} onClick={() => router.push(`/booking?service=${service.id}`)} className="service-simple-card">
                   <div className="service-icon-circle">
                     {getServiceIcon(service.name)}
                   </div>
@@ -545,6 +548,26 @@ export default function BlogListingPage() {
           color: #111827;
           font-weight: 700 !important;
           margin: 0;
+        }
+        :global(.blog-services-view-all-link) {
+          font-size: 0.78rem;
+          font-weight: 700;
+          color: #7c3aed;
+          text-decoration: none;
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          margin-left: 8px;
+          padding: 4px 10px;
+          border-radius: 99px;
+          background: rgba(124, 58, 237, 0.08);
+          border: 1px solid rgba(124, 58, 237, 0.2);
+          transition: all 0.2s ease;
+        }
+        :global(.blog-services-view-all-link:hover) {
+          background: #7c3aed;
+          color: #ffffff;
+          transform: translateX(2px);
         }
         .carousel-nav-arrows {
           display: flex;

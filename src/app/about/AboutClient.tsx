@@ -662,7 +662,7 @@ export default function AboutClient() {
                     className="arrow-nav-btn absolute-left"
                     aria-label="Previous service"
                   >
-                    <ChevronLeft size={16} />
+                    <ChevronLeft size={18} strokeWidth={2.5} />
                   </button>
                 )}
 
@@ -687,7 +687,10 @@ export default function AboutClient() {
                           padding: "0 8px"
                         }}
                       >
-                        <div className="featured-item-card">
+                        <div
+                          className="featured-item-card"
+                          onClick={() => router.push(`/booking?service=${srv.id}`)}
+                        >
                           <div className="featured-card-media-wrapper">
                             <img
                               src={getServiceImage(srv.image)}
@@ -699,10 +702,11 @@ export default function AboutClient() {
                             <h4 className="featured-card-title">{srv.name}</h4>
                             <p className="featured-card-desc">{srv.description}</p>
                             <Link
-                              href={`/services/${srv.id}`}
+                              href={`/booking?service=${srv.id}`}
                               className="learn-more-link"
+                              onClick={(e) => e.stopPropagation()}
                             >
-                              Learn More <ArrowRight size={14} className="arrow-icon" />
+                              Book Now <ArrowRight size={14} className="arrow-icon" />
                             </Link>
                           </div>
                         </div>
@@ -718,7 +722,7 @@ export default function AboutClient() {
                     className="arrow-nav-btn absolute-right"
                     aria-label="Next service"
                   >
-                    <ChevronRight size={16} />
+                    <ChevronRight size={18} strokeWidth={2.5} />
                   </button>
                 )}
               </div>
@@ -1277,37 +1281,43 @@ export default function AboutClient() {
           padding: 6px 0;
         }
         .arrow-nav-btn {
-          width: 32px;
-          height: 32px;
+          width: 36px;
+          height: 36px;
+          min-width: 36px;
+          min-height: 36px;
+          flex-shrink: 0;
+          padding: 0;
           border-radius: 50%;
           background: #ffffff;
-          border: 1px solid rgba(168, 85, 247, 0.15);
+          border: 1px solid rgba(168, 85, 247, 0.25);
           color: #7c3aed;
           display: flex;
           align-items: center;
           justify-content: center;
           cursor: pointer;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-          transition: var(--transition-fast);
+          box-shadow: 0 4px 14px rgba(124, 58, 237, 0.15);
+          transition: all 0.2s ease;
+          z-index: 10;
+          box-sizing: border-box;
         }
         .arrow-nav-btn.absolute-left {
           position: absolute;
-          left: -18px;
-          top: 36%;
+          left: -14px;
+          top: 50%;
           transform: translateY(-50%);
-          z-index: 10;
         }
         .arrow-nav-btn.absolute-right {
           position: absolute;
-          right: -18px;
-          top: 36%;
+          right: -14px;
+          top: 50%;
           transform: translateY(-50%);
-          z-index: 10;
         }
         .arrow-nav-btn:hover:not(:disabled) {
-          background: #fbf8ff;
+          background: #7c3aed;
+          color: #ffffff;
           border-color: #7c3aed;
-          box-shadow: 0 4px 16px rgba(124, 58, 237, 0.12);
+          box-shadow: 0 6px 18px rgba(124, 58, 237, 0.3);
+          transform: translateY(-50%) scale(1.08);
         }
         .arrow-nav-btn:disabled {
           opacity: 0.3;
@@ -1316,17 +1326,25 @@ export default function AboutClient() {
 
         /* Featured Cards */
         .featured-item-card {
-          background: transparent;
-          border: none;
+          background: #ffffff;
+          border: 1px solid rgba(168, 85, 247, 0.14);
+          border-radius: 18px;
+          padding: 12px;
           display: flex;
           flex-direction: column;
           align-items: flex-start;
           text-align: left;
-          transition: var(--transition-smooth);
+          height: 100%;
+          box-sizing: border-box;
+          cursor: pointer;
+          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          box-shadow: 0 2px 10px rgba(168, 85, 247, 0.04);
           width: 100%;
         }
         .featured-item-card:hover {
           transform: translateY(-4px);
+          border-color: rgba(168, 85, 247, 0.35);
+          box-shadow: 0 8px 24px rgba(124, 58, 237, 0.12);
         }
         .featured-card-media-wrapper {
           width: 100%;

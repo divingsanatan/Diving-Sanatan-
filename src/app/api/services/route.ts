@@ -63,6 +63,9 @@ export async function GET(req: NextRequest) {
     const duration = searchParams.get("duration");
     const category = searchParams.get("category");
     const query = searchParams.get("query");
+    const sortBy = searchParams.get("sortBy");
+    const pageParam = searchParams.get("page");
+    const limitParam = searchParams.get("limit");
 
     const cacheKey = `service_${adminView === "true" ? "admin" : "pub"}_${singleId || "all"}_${maxPrice || ""}_${duration || ""}`;
 
@@ -140,12 +143,51 @@ export async function GET(req: NextRequest) {
       mappedServices = mappedServices.filter(s => 
         s.name.toLowerCase().includes(q) || 
         s.description.toLowerCase().includes(q) ||
-        s.practitioner.toLowerCase().includes(q) ||
+        s.practitioner?.toLowerCase().includes(q) ||
         s.categories?.some(c => c.toLowerCase().includes(q))
       );
     }
+
+    // Backend Sorting
+    if (sortBy === "price-asc") {
+      mappedServices.sort((a, b) => a.price - b.price);
+    } else if (sortBy === "price-desc") {
+      mappedServices.sort((a, b) => b.price - a.price);
+    } else if (sortBy === "duration") {
+      mappedServices.sort((a, b) => (a.duration || "").localeCompare(b.duration || ""));
+    }
+
+    // Backend Pagination
+    if (pageParam || limitParam) {
+      const page = Math.max(1, parseInt(pageParam || "1", 10) || 1);
+      const limit = Math.max(1, parseInt(limitParam || "9", 10) || 9);
+      const total = mappedServices.length;
+      const totalPages = Math.ceil(total / limit) || 1;
+      const startIndex = (page - 1) * limit;
+      const paginatedData = mappedServices.slice(startIndex, startIndex + limit);
+
+      return NextResponse.json({
+        success: true,
+        data: paginatedData,
+        pagination: {
+          total,
+          page,
+          limit,
+          totalPages
+        }
+      }, { headers });
+    }
     
-    return NextResponse.json({ success: true, data: mappedServices }, { headers });
+    return NextResponse.json({
+      success: true,
+      data: mappedServices,
+      pagination: {
+        total: mappedServices.length,
+        page: 1,
+        limit: mappedServices.length,
+        totalPages: 1
+      }
+    }, { headers });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error?.message || "Failed to read services catalog" }, { status: 500 });
   }

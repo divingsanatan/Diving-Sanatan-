@@ -17,56 +17,36 @@ interface ServicesCartCarouselProps {
 }
 
 const getServiceImage = (imgName: string) => {
-  if (!imgName) return "/images/reiki_placeholder.jpg";
+  if (!imgName) return "/images/service_chakra_healing.png";
   if (imgName.startsWith("http") || imgName.startsWith("/")) return imgName;
   const mappings: Record<string, string> = {
-    aura_balancing: "/images/service_chakra.png",
-    crystal_healing: "/images/service_regression.png",
-    chakra_clearing: "/images/service_akashic.png",
-    mindfulness_meditation: "/images/service_chakra.png",
-    anxiety_release: "/images/service_regression.png",
-    spiritual_counseling: "/images/service_akashic.png",
+    chakra_healing: "/images/service_chakra_healing.png",
+    aura_scanning: "/images/service_aura_scanning.png",
+    reiki_healing: "/images/service_reiki_healing.png",
+    sound_healing: "/images/service_sound_healing.png",
+    personal_guidance: "/images/service_personal_guidance.png",
+    meditation_program: "/images/service_meditation_program.png",
+    full_moon_program: "/images/service_full_moon_program.png",
+    manifestation_program: "/images/service_manifestation_program.png",
+    aura_balancing: "/images/service_aura_scanning.png",
+    crystal_healing: "/images/service_reiki_healing.png",
+    chakra_clearing: "/images/service_chakra_healing.png",
+    mindfulness_meditation: "/images/service_meditation_program.png",
+    anxiety_release: "/images/service_reiki_healing.png",
+    spiritual_counseling: "/images/service_personal_guidance.png",
   };
-  return mappings[imgName] || "/images/reiki_placeholder.jpg";
+  return mappings[imgName] || "/images/service_chakra_healing.png";
 };
 
 export const ServicesCartCarousel: React.FC<ServicesCartCarouselProps> = ({
   services,
-  title = "Add More Therapies to Cart",
+  title = "Featured Healing Therapies",
   activeServiceId = null,
   onBookThis,
   emptyMessage = "No therapies available.",
   className = "",
 }) => {
   const router = useRouter();
-  const [cartSelections, setCartSelections] = useState<Service[]>([]);
-
-  useEffect(() => {
-    try {
-      const stored = window.localStorage.getItem("divingsanatan_selections");
-      if (stored) setCartSelections(JSON.parse(stored));
-    } catch (e) {
-      console.warn("Could not read cart selections", e);
-    }
-  }, []);
-
-  const toggleCartSelection = (srv: Service) => {
-    const next = cartSelections.some(s => s.id === srv.id)
-      ? cartSelections.filter(s => s.id !== srv.id)
-      : [...cartSelections, srv];
-    setCartSelections(next);
-    window.localStorage.setItem("divingsanatan_selections", JSON.stringify(next));
-  };
-
-  const clearCartSelections = () => {
-    setCartSelections([]);
-    window.localStorage.removeItem("divingsanatan_selections");
-  };
-
-  const handleCartCheckout = () => {
-    if (cartSelections.length === 0) return;
-    router.push("/checkout");
-  };
 
   const handleBookThis = (srv: Service) => {
     if (onBookThis) {
@@ -75,8 +55,6 @@ export const ServicesCartCarousel: React.FC<ServicesCartCarouselProps> = ({
       router.push(`/booking?service=${srv.id}`);
     }
   };
-
-  const totalCartCost = cartSelections.reduce((sum, s) => sum + s.price, 0);
 
   if (services.length === 0) {
     return (
@@ -90,17 +68,14 @@ export const ServicesCartCarousel: React.FC<ServicesCartCarouselProps> = ({
 
   return (
     <>
-      <section
-        className={`services-cart-carousel-section ${cartSelections.length > 0 ? "has-cart-pad" : ""} ${className}`}
-      >
-        <Carousel title={title}>
+      <section className={`services-cart-carousel-section ${className}`}>
+        <Carousel title={title} viewAllHref="/explore-services">
           {services.map(srv => {
-            const inCart = cartSelections.some(s => s.id === srv.id);
             const isActive = activeServiceId === srv.id;
             return (
               <Card
                 key={srv.id}
-                variant={inCart ? "glowing" : "glass"}
+                variant="glass"
                 className={`carousel-service-card ${isActive ? "active-booking" : ""}`}
               >
                 <div className="carousel-service-image">
@@ -121,18 +96,10 @@ export const ServicesCartCarousel: React.FC<ServicesCartCarouselProps> = ({
                   <div className="carousel-service-actions">
                     <button
                       type="button"
-                      className={`cart-toggle-btn ${inCart ? "selected" : ""}`}
-                      onClick={() => toggleCartSelection(srv)}
-                      title={inCart ? "Remove from cart" : "Add to cart"}
-                    >
-                      {inCart ? "✓ In Cart" : "+ Add to Cart"}
-                    </button>
-                    <button
-                      type="button"
                       className={`book-select-btn ${isActive ? "active" : ""}`}
                       onClick={() => handleBookThis(srv)}
                     >
-                      {isActive ? "Selected" : "Book This"}
+                      {isActive ? "Selected" : "Book Session"}
                     </button>
                   </div>
                 </div>
@@ -141,38 +108,6 @@ export const ServicesCartCarousel: React.FC<ServicesCartCarouselProps> = ({
           })}
         </Carousel>
       </section>
-
-      {cartSelections.length > 0 && (
-        <div className="cart-drawer-panel">
-          <div className="cart-drawer-container">
-            <div className="cart-drawer-left">
-              <h4 className="cart-drawer-title">YOUR SELECTIONS ({cartSelections.length} Items)</h4>
-              <div className="cart-items-preview">
-                {cartSelections.map(s => (
-                  <span key={s.id} className="cart-preview-pill">
-                    {s.name} ({formatCurrency(s.price)})
-                    <button type="button" className="pill-remove-btn" onClick={() => toggleCartSelection(s)}>×</button>
-                  </span>
-                ))}
-              </div>
-            </div>
-            <div className="cart-drawer-right">
-              <div className="cart-price-summary">
-                <span className="cart-summary-label">Total Price:</span>
-                <span className="cart-summary-val">{formatCurrency(totalCartCost)}</span>
-              </div>
-              <div className="cart-drawer-actions">
-                <button type="button" className="drawer-clear-btn" onClick={clearCartSelections}>Clear All</button>
-                <button type="button" className="drawer-checkout-btn" onClick={handleCartCheckout}>
-                  Proceed to Payment
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {cartSelections.length > 0 && <div className="cart-page-spacer" aria-hidden="true" />}
 
       <style jsx>{`
         .services-cart-carousel-section {

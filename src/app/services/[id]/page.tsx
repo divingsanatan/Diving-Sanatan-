@@ -26,7 +26,7 @@ export default function ServiceDetailPage() {
   const getHeroImageUrl = (image: string) =>
     image && !image.startsWith("aura_") && !image.startsWith("crystal_") && !image.startsWith("chakra_")
       ? image
-      : "/images/reiki_placeholder.jpg";
+      : "/images/service_chakra_healing.png";
 
   const getPractitionerImageUrl = (image: string) =>
     image && !image.startsWith("elara_") && !image.startsWith("master_") && !image.startsWith("celeste_")
@@ -55,58 +55,8 @@ export default function ServiceDetailPage() {
 
   useEffect(() => {
     if (!serviceId) return;
-
-    async function loadServiceDetails() {
-      try {
-        setLoading(true);
-        // 1. Fetch Service details
-        const sRes = await fetch(`/api/services?id=${serviceId}`);
-        const sJson = await sRes.json();
-
-        if (!sJson.success) {
-          setError(sJson.error || "Service details could not be retrieved.");
-          setLoading(false);
-          return;
-        }
-
-        const serviceData = sJson.data as Service;
-        setService(serviceData);
-
-        // 2. Fetch Practitioner details matching name & reviews matching service ID
-        const [pRes, rRes] = await Promise.all([
-          fetch("/api/practitioners"),
-          fetch("/api/reviews")
-        ]);
-
-        const pJson = await pRes.json();
-        const rJson = await rRes.json();
-
-        if (pJson.success) {
-          const matchPrac = pJson.data.find(
-            (p: Practitioner) => p.name.toLowerCase() === serviceData.practitioner.toLowerCase()
-          );
-          if (matchPrac) {
-            setPractitioner(matchPrac);
-          }
-        }
-
-        if (rJson.success) {
-          const serviceReviews = rJson.data.filter(
-            (r: Review) => r.serviceId === serviceData.id || r.serviceName.toLowerCase() === serviceData.name.toLowerCase()
-          );
-          setReviews(serviceReviews);
-        }
-
-      } catch (err: any) {
-        console.error(err);
-        setError("An error occurred while loading this page.");
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadServiceDetails();
-  }, [serviceId]);
+    router.replace(`/booking?service=${serviceId}`);
+  }, [serviceId, router]);
 
   if (loading) {
     return (
@@ -229,7 +179,7 @@ export default function ServiceDetailPage() {
                   <video 
                     src={service.video_url} 
                     controls 
-                    poster={service.image && !service.image.startsWith("aura_") && !service.image.startsWith("crystal_") && !service.image.startsWith("chakra_") ? service.image : "/images/reiki_placeholder.jpg"}
+                    poster={service.image && !service.image.startsWith("aura_") && !service.image.startsWith("crystal_") && !service.image.startsWith("chakra_") ? service.image : "/images/service_chakra_healing.png"}
                     className="details-video-player"
                   />
                   <div className="video-tag-indicator">

@@ -2,12 +2,15 @@
 
 import React, { useState, useEffect, useRef } from "react";
 
+import Link from "next/link";
+
 interface CarouselProps {
   children: React.ReactNode[];
   title?: string;
+  viewAllHref?: string;
 }
 
-export const Carousel: React.FC<CarouselProps> = ({ children, title }) => {
+export const Carousel: React.FC<CarouselProps> = ({ children, title, viewAllHref }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [visibleCount, setVisibleCount] = useState(3);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -69,7 +72,14 @@ export const Carousel: React.FC<CarouselProps> = ({ children, title }) => {
   return (
     <div className="custom-carousel-wrapper">
       <div className="carousel-header">
-        {title && <h3 className="carousel-title">{title}</h3>}
+        <div className="carousel-header-title-group">
+          {title && <h3 className="carousel-title">{title}</h3>}
+          {viewAllHref && (
+            <Link href={viewAllHref} className="carousel-view-all-link">
+              View All <span>→</span>
+            </Link>
+          )}
+        </div>
         <div className="carousel-actions">
           <button
             onClick={handlePrev}
@@ -126,12 +136,36 @@ export const Carousel: React.FC<CarouselProps> = ({ children, title }) => {
           align-items: center;
           width: 100%;
         }
+        .carousel-header-title-group {
+          display: flex;
+          align-items: baseline;
+          gap: 16px;
+        }
         .carousel-title {
           font-family: var(--font-serif);
           font-size: 1.6rem;
           color: #4c1d95;
           font-weight: 700;
           margin: 0;
+        }
+        :global(.carousel-view-all-link) {
+          font-size: 0.82rem;
+          font-weight: 700;
+          color: #7c3aed;
+          text-decoration: none;
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          transition: all 0.2s ease;
+          padding: 4px 10px;
+          border-radius: 99px;
+          background: rgba(124, 58, 237, 0.08);
+          border: 1px solid rgba(124, 58, 237, 0.2);
+        }
+        :global(.carousel-view-all-link:hover) {
+          background: #7c3aed;
+          color: #ffffff;
+          transform: translateX(2px);
         }
         .carousel-actions {
           display: flex;

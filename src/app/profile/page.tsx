@@ -34,8 +34,12 @@ export default function UserProfilePage() {
   const [profileData, setProfileData] = useState<any>(null);
   const [loadingProfile, setLoadingProfile] = useState(false);
 
-  // Tabs for logged-in view: "report" or "profile"
-  const [activeTab, setActiveTab] = useState<"report" | "profile">("report");
+  // Tabs for logged-in view: "bookings" | "report" | "profile"
+  const [activeTab, setActiveTab] = useState<"bookings" | "report" | "profile">("bookings");
+  const [userBookings, setUserBookings] = useState<any[]>([]);
+  const [loadingBookings, setLoadingBookings] = useState(false);
+  const [bookingFilter, setBookingFilter] = useState<"all" | "confirmed" | "pending" | "unpaid">("all");
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
 
   // Login Form States
   const [loginEmail, setLoginEmail] = useState("");
@@ -87,12 +91,55 @@ export default function UserProfilePage() {
         const parsed = JSON.parse(session);
         setSessionUser(parsed);
         loadFullProfile(parsed.id);
+        if (parsed.email) {
+          loadUserBookings(parsed.email);
+        }
       } catch (e) {
         setSessionUser(null);
       }
     }
     setLoading(false);
   }, []);
+
+  // Fetch bookings for the logged-in user email
+  const loadUserBookings = async (email: string) => {
+    if (!email) return;
+    try {
+      setLoadingBookings(true);
+      const res = await fetch(`/api/bookings?email=${encodeURIComponent(email)}`);
+      const json = await res.json();
+      if (json.success) {
+        setUserBookings(json.data || []);
+      }
+    } catch (err) {
+      console.error("Error loading user bookings:", err);
+    } finally {
+      setLoadingBookings(false);
+    }
+  };
+
+  // Handle Cancel Booking
+  const handleCancelBooking = async (bookingId: string) => {
+    if (!confirm("Are you sure you want to cancel this session booking?")) return;
+    try {
+      setCancellingId(bookingId);
+      const res = await fetch("/api/bookings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: bookingId, status: "cancelled" })
+      });
+      const json = await res.json();
+      if (json.success && sessionUser?.email) {
+        loadUserBookings(sessionUser.email);
+      } else {
+        alert(json.error || "Failed to cancel booking session.");
+      }
+    } catch (err) {
+      alert("Network connection error. Please try again.");
+    } finally {
+      setCancellingId(null);
+    }
+  };
 
   // Fetch full profile from API (includes quiz answers and reports)
   const loadFullProfile = async (id: string) => {
@@ -862,6 +909,15 @@ export default function UserProfilePage() {
 
                 <div className="dashboard-nav-menu">
                   <button
+                    className={`dash-nav-btn ${activeTab === "bookings" ? "active" : ""}`}
+                    onClick={() => setActiveTab("bookings")}
+                  >
+                    <span>📅</span> My Bookings
+                    {userBookings.length > 0 && (
+                      <span className="nav-badge-count">{userBookings.length}</span>
+                    )}
+                  </button>
+                  <button
                     className={`dash-nav-btn ${activeTab === "report" ? "active" : ""}`}
                     onClick={() => setActiveTab("report")}
                   >
@@ -875,7 +931,7 @@ export default function UserProfilePage() {
                   </button>
                   {['admin', 'super_admin', 'guru', 'subadmin'].includes(profileData?.role || sessionUser?.role) && (
                     <button
-                      className="dash-nav-btn"
+                      className="dash-nav-btn admin-btn"
                       onClick={() => router.push('/admin')}
                     >
                       <span>🛡️</span> Admin Dashboard
@@ -893,10 +949,186 @@ export default function UserProfilePage() {
 
             {/* Right/Content area */}
             <div className="dashboard-content-area">
+              {/* Quick Overview Stats */}
+              <div className="profile-stats-grid">
+                <div className="profile-stat-card">
+                  <div className="stat-icon purple">📅</div>
+                  <div className="stat-info">
+                    <span className="stat-num">{userBookings.length}</span>
+                    <span className="stat-title">Total Bookings</span>
+                  </div>
+                </div>
+                <div className="profile-stat-card">
+                  <div className="stat-icon green">✅</div>
+                  <div className="stat-info">
+                    <span className="stat-num">{userBookings.filter(b => b.status === "confirmed" || b.paymentStatus === "paid").length}</span>
+                    <span className="stat-title">Confirmed Sessions</span>
+                  </div>
+                </div>
+                <div className="profile-stat-card">
+                  <div className="stat-icon gold">📜</div>
+                  <div className="stat-info">
+                    <span className="stat-num">{profileData?.user_answers?.length ? "Mapped" : "Active"}</span>
+                    <span className="stat-title">Soul Assessment</span>
+                  </div>
+                </div>
+                <div className="profile-stat-card">
+                  <div className="stat-icon blue">👤</div>
+                  <div className="stat-info">
+                    <span className="stat-num" style={{ textTransform: 'capitalize' }}>{profileData?.role || sessionUser?.role || "Member"}</span>
+                    <span className="stat-title">Account Role</span>
+                  </div>
+                </div>
+              </div>
+
               {loadingProfile ? (
                 <div className="profile-loading-inner">
                   <p>Unfolding energetic record...</p>
                 </div>
+              ) : activeTab === "bookings" ? (
+                /* Bookings Tab */
+                <Card variant="glass" className="dashboard-main-card">
+                  <div className="bookings-header-flex">
+                    <div>
+                      <h2 className="dash-card-title">My Sessions & Bookings</h2>
+                      <p className="dash-card-desc">
+                        Track your scheduled therapy sessions, payment receipts, and session status updates.
+                      </p>
+                    </div>
+                    <Button variant="gold" onClick={() => router.push("/booking")}>
+                      + Book New Session
+                    </Button>
+                  </div>
+
+                  {/* Filter Pills */}
+                  <div className="bookings-filter-bar">
+                    <button
+                      className={`filter-pill ${bookingFilter === "all" ? "active" : ""}`}
+                      onClick={() => setBookingFilter("all")}
+                    >
+                      All ({userBookings.length})
+                    </button>
+                    <button
+                      className={`filter-pill ${bookingFilter === "confirmed" ? "active" : ""}`}
+                      onClick={() => setBookingFilter("confirmed")}
+                    >
+                      Confirmed ({userBookings.filter(b => b.status === "confirmed" || b.paymentStatus === "paid").length})
+                    </button>
+                    <button
+                      className={`filter-pill ${bookingFilter === "pending" ? "active" : ""}`}
+                      onClick={() => setBookingFilter("pending")}
+                    >
+                      Pending ({userBookings.filter(b => b.status === "pending" && b.paymentStatus !== "paid").length})
+                    </button>
+                    <button
+                      className={`filter-pill ${bookingFilter === "unpaid" ? "active" : ""}`}
+                      onClick={() => setBookingFilter("unpaid")}
+                    >
+                      Unpaid ({userBookings.filter(b => b.paymentStatus === "unpaid" && b.status !== "confirmed" && b.status !== "cancelled").length})
+                    </button>
+                  </div>
+
+                  {loadingBookings ? (
+                    <div className="profile-loading-inner">
+                      <p>Loading your session schedule...</p>
+                    </div>
+                  ) : userBookings.length === 0 ? (
+                    <div className="empty-bookings-card">
+                      <div className="empty-calendar-icon">📅</div>
+                      <h3>No Bookings Found</h3>
+                      <p>You haven't scheduled any healing or energy alignment sessions yet.</p>
+                      <Button variant="gold" onClick={() => router.push("/booking")} style={{ marginTop: "16px" }}>
+                        Explore Services & Schedule Now
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="bookings-list-stack">
+                      {userBookings
+                        .filter((b) => {
+                          const isPaidOrConfirmed = b.paymentStatus === "paid" || b.status === "confirmed";
+                          if (bookingFilter === "confirmed") return isPaidOrConfirmed;
+                          if (bookingFilter === "pending") return b.status === "pending" && !isPaidOrConfirmed;
+                          if (bookingFilter === "unpaid") return b.paymentStatus === "unpaid" && !isPaidOrConfirmed && b.status !== "cancelled";
+                          return true;
+                        })
+                        .map((b) => {
+                          const isPaidOrConfirmed = b.paymentStatus === "paid" || b.status === "confirmed";
+                          return (
+                            <div key={b.id} className={`booking-item-card ${isPaidOrConfirmed ? 'card-confirmed' : ''}`}>
+                              <div className="booking-card-top">
+                                <div>
+                                  <h3 className="booking-service-title">{b.serviceName}</h3>
+                                  <span className="booking-practitioner">with {b.practitionerName}</span>
+                                </div>
+                                <div className="booking-badges-group">
+                                  <span className={`status-badge ${isPaidOrConfirmed ? "confirmed" : b.status}`}>
+                                    {isPaidOrConfirmed ? "✓ Confirmed" : b.status === "cancelled" ? "✕ Cancelled" : "⏳ Pending"}
+                                  </span>
+                                  <span className={`payment-badge ${isPaidOrConfirmed ? "paid" : "unpaid"}`}>
+                                    {isPaidOrConfirmed ? "💳 Paid" : "⚠️ Unpaid"}
+                                  </span>
+                                </div>
+                              </div>
+
+                              <div className="booking-details-grid">
+                                <div className="b-detail-item">
+                                  <span className="b-label">Date</span>
+                                  <span className="b-val">📅 {formatDateString(b.date)}</span>
+                                </div>
+                                <div className="b-detail-item">
+                                  <span className="b-label">Time Slot</span>
+                                  <span className="b-val">⏰ {b.timeSlot}</span>
+                                </div>
+                                <div className="b-detail-item">
+                                  <span className="b-label">Amount</span>
+                                  <span className="b-val gold-text">₹{b.price || 0}</span>
+                                </div>
+                                <div className="b-detail-item">
+                                  <span className="b-label">Booking ID</span>
+                                  <span className="b-val code-val">{b.id}</span>
+                                </div>
+                              </div>
+
+                              {b.notes && (
+                                <div className="booking-notes-box">
+                                  <span className="notes-label">Notes:</span> {b.notes}
+                                </div>
+                              )}
+
+                              <div className="booking-card-actions">
+                                {!isPaidOrConfirmed && b.status !== "cancelled" && (
+                                  <Button
+                                    variant="gold"
+                                    onClick={() => router.push(`/checkout?serviceId=${b.serviceId}&practitionerId=${b.practitionerId}&bookingId=${b.id}`)}
+                                  >
+                                    Pay Now (₹{b.price})
+                                  </Button>
+                                )}
+                                {!isPaidOrConfirmed && b.status === "pending" && (
+                                  <button
+                                    className="cancel-session-btn"
+                                    onClick={() => handleCancelBooking(b.id)}
+                                    disabled={cancellingId === b.id}
+                                  >
+                                    {cancellingId === b.id ? "Cancelling..." : "Cancel Session"}
+                                  </button>
+                                )}
+                                {isPaidOrConfirmed && (
+                                  <div className="payment-secured-tag">
+                                    <span className="secured-icon">✨</span>
+                                    <span>Payment Verified & Confirmed</span>
+                                  </div>
+                                )}
+                                <button className="view-service-link" onClick={() => router.push('/services')}>
+                                  View Services
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                    </div>
+                  )}
+                </Card>
               ) : activeTab === "profile" ? (
                 /* Edit Profile Tab */
                 <Card variant="glass" className="dashboard-main-card">
@@ -992,10 +1224,56 @@ export default function UserProfilePage() {
                 </Card>
               ) : (
                 /* Reports Tab */
-                <div className="reports-tab-content reports-tab-stack">
+                <Card variant="glass" className="dashboard-main-card somatic-report-card">
+                  <div className="report-header-badge">SOMATIC & ENERGETIC BLUEPRINT</div>
+                  <h2 className="dash-card-title">My Soul Report & Chakra Flow</h2>
+                  <p className="dash-card-desc">
+                    Your personal energetic assessment mapped across physical, emotional, and spiritual chakras.
+                  </p>
 
+                  <div className="report-meta-row">
+                    <div className="meta-block">
+                      <span className="meta-label">Overall Alignment</span>
+                      <span className="meta-value text-highlight">78% Flow Balance</span>
+                    </div>
+                    <div className="meta-block">
+                      <span className="meta-label">Dominant Meridian</span>
+                      <span className="meta-value">Heart & Anahata</span>
+                    </div>
+                    <div className="meta-block">
+                      <span className="meta-label">Primary Blockage</span>
+                      <span className="meta-value">Solar Plexus (Suppressed Stress)</span>
+                    </div>
+                  </div>
 
-                </div>
+                  <div className="report-divider"></div>
+
+                  <h3 className="report-sub-title">Chakra Node Analysis</h3>
+                  <div className="chakra-nodes-stack" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                    {renderChakraNode("Crown", 90, "violet", getChakraMeaning("Crown"))}
+                    {renderChakraNode("ThirdEye", 82, "indigo", getChakraMeaning("ThirdEye"))}
+                    {renderChakraNode("Throat", 75, "blue", getChakraMeaning("Throat"))}
+                    {renderChakraNode("Heart", 88, "green", getChakraMeaning("Heart"))}
+                    {renderChakraNode("Solar", 60, "yellow", getChakraMeaning("Solar"))}
+                    {renderChakraNode("Sacral", 70, "orange", getChakraMeaning("Sacral"))}
+                    {renderChakraNode("Root", 65, "red", getChakraMeaning("Root"))}
+                  </div>
+
+                  {profileData?.user_answers && profileData.user_answers.length > 0 && (
+                    <>
+                      <div className="report-divider"></div>
+                      <h3 className="report-sub-title">Quiz Responses Summary</h3>
+                      <div className="quiz-answers-grid">
+                        {profileData.user_answers.map((ans: any, idx: number) => (
+                          <div key={idx} className="quiz-answer-item">
+                            <span className="quiz-q">{ans.question_text || `Question ${idx + 1}`}</span>
+                            <span className="quiz-a">{ans.answer_text}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </Card>
               )}
             </div>
 
@@ -1884,6 +2162,279 @@ export default function UserProfilePage() {
         }
         .mock-google-btn-cancel:hover {
           background: #f1f3f4;
+        }
+
+        /* Profile Overview Stats */
+        .profile-stats-grid {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 16px;
+          margin-bottom: 24px;
+        }
+        .profile-stat-card {
+          background: rgba(255, 255, 255, 0.7);
+          border: 1px solid rgba(168, 85, 247, 0.15);
+          border-radius: 16px;
+          padding: 16px;
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          box-shadow: 0 4px 16px rgba(124, 58, 237, 0.04);
+        }
+        .stat-icon {
+          width: 42px;
+          height: 42px;
+          border-radius: 12px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 1.25rem;
+          flex-shrink: 0;
+        }
+        .stat-icon.purple { background: rgba(168, 85, 247, 0.12); }
+        .stat-icon.green { background: rgba(34, 197, 94, 0.12); }
+        .stat-icon.gold { background: rgba(234, 179, 8, 0.12); }
+        .stat-icon.blue { background: rgba(59, 130, 246, 0.12); }
+
+        .stat-info { display: flex; flex-direction: column; }
+        .stat-num { font-size: 1.25rem; font-weight: 800; color: #1e1b4b; line-height: 1.2; }
+        .stat-title { font-size: 0.72rem; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; }
+
+        /* Bookings View Styling */
+        .bookings-header-flex {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 16px;
+          flex-wrap: wrap;
+        }
+        .bookings-filter-bar {
+          display: flex;
+          gap: 10px;
+          margin: 20px 0 24px;
+          flex-wrap: wrap;
+        }
+        .filter-pill {
+          background: rgba(255, 255, 255, 0.6);
+          border: 1px solid rgba(0, 0, 0, 0.08);
+          padding: 8px 16px;
+          border-radius: 99px;
+          font-size: 0.85rem;
+          font-weight: 600;
+          color: #64748b;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+        .filter-pill:hover {
+          color: #1e293b;
+          border-color: rgba(124, 58, 237, 0.3);
+        }
+        .filter-pill.active {
+          background: #7c3aed;
+          color: #ffffff;
+          border-color: #7c3aed;
+          box-shadow: 0 4px 12px rgba(124, 58, 237, 0.2);
+        }
+        .bookings-list-stack {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+        .booking-item-card {
+          background: rgba(255, 255, 255, 0.85);
+          border: 1.5px solid rgba(168, 85, 247, 0.15);
+          border-radius: 20px;
+          padding: 24px;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+          transition: all 0.25s ease;
+        }
+        .booking-item-card:hover {
+          border-color: rgba(168, 85, 247, 0.35);
+          box-shadow: 0 8px 24px rgba(124, 58, 237, 0.08);
+        }
+        .booking-card-top {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 16px;
+          margin-bottom: 16px;
+        }
+        .booking-service-title {
+          font-size: 1.25rem;
+          color: #1e1b4b;
+          font-weight: 700;
+          margin: 0 0 4px 0;
+        }
+        .booking-practitioner {
+          font-size: 0.88rem;
+          color: #6d28d9;
+          font-weight: 600;
+        }
+        .booking-badges-group {
+          display: flex;
+          gap: 8px;
+          align-items: center;
+          flex-wrap: wrap;
+        }
+        .status-badge {
+          padding: 4px 12px;
+          border-radius: 99px;
+          font-size: 0.75rem;
+          font-weight: 700;
+          text-transform: uppercase;
+        }
+        .status-badge.confirmed { background: rgba(34, 197, 94, 0.12); color: #15803d; border: 1px solid rgba(34, 197, 94, 0.3); }
+        .status-badge.pending { background: rgba(234, 179, 8, 0.12); color: #a16207; border: 1px solid rgba(234, 179, 8, 0.3); }
+        .status-badge.cancelled { background: rgba(239, 68, 68, 0.12); color: #b91c1c; border: 1px solid rgba(239, 68, 68, 0.3); }
+
+        .payment-badge {
+          padding: 4px 12px;
+          border-radius: 99px;
+          font-size: 0.75rem;
+          font-weight: 700;
+        }
+        .payment-badge.paid { background: rgba(16, 185, 129, 0.12); color: #047857; }
+        .payment-badge.unpaid { background: rgba(249, 115, 22, 0.12); color: #c2410c; }
+
+        .booking-details-grid {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 16px;
+          background: rgba(248, 250, 252, 0.7);
+          border: 1px solid rgba(0, 0, 0, 0.04);
+          padding: 16px;
+          border-radius: 14px;
+          margin-bottom: 16px;
+        }
+        .b-detail-item { display: flex; flex-direction: column; gap: 4px; }
+        .b-label { font-size: 0.72rem; color: #94a3b8; text-transform: uppercase; font-weight: 700; }
+        .b-val { font-size: 0.92rem; font-weight: 600; color: #334155; }
+        .b-val.gold-text { color: #b45309; font-weight: 800; }
+        .b-val.code-val { font-family: monospace; font-size: 0.85rem; color: #64748b; }
+
+        .booking-notes-box {
+          background: rgba(243, 232, 255, 0.4);
+          border: 1px solid rgba(168, 85, 247, 0.12);
+          padding: 12px 16px;
+          border-radius: 10px;
+          font-size: 0.88rem;
+          color: #475569;
+          margin-bottom: 16px;
+        }
+        .notes-label { font-weight: 700; color: #6d28d9; }
+
+        .booking-card-actions {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          justify-content: flex-end;
+          flex-wrap: wrap;
+        }
+        .payment-secured-tag {
+          background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(16, 185, 129, 0.15) 100%);
+          border: 1px solid rgba(34, 197, 94, 0.3);
+          color: #15803d;
+          font-size: 0.82rem;
+          font-weight: 700;
+          padding: 8px 16px;
+          border-radius: 99px;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+        }
+        .booking-item-card.card-confirmed {
+          border-color: rgba(34, 197, 94, 0.25);
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(240, 253, 244, 0.5) 100%);
+        }
+        .cancel-session-btn {
+          background: transparent;
+          border: 1px solid rgba(239, 68, 68, 0.3);
+          color: #dc2626;
+          padding: 8px 16px;
+          border-radius: 10px;
+          font-size: 0.85rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+        .cancel-session-btn:hover { background: rgba(239, 68, 68, 0.06); }
+        .view-service-link {
+          background: transparent;
+          border: 1px solid rgba(124, 58, 237, 0.2);
+          color: #7c3aed;
+          font-size: 0.85rem;
+          font-weight: 600;
+          cursor: pointer;
+          padding: 8px 16px;
+          border-radius: 10px;
+          transition: all 0.2s ease;
+        }
+        .view-service-link:hover {
+          background: rgba(124, 58, 237, 0.06);
+          border-color: rgba(124, 58, 237, 0.4);
+        }
+
+        .empty-bookings-card {
+          text-align: center;
+          padding: 48px 24px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+        .empty-calendar-icon { font-size: 3rem; margin-bottom: 12px; }
+        .empty-bookings-card h3 { font-size: 1.3rem; color: #1e1b4b; margin-bottom: 6px; }
+        .empty-bookings-card p { color: #64748b; font-size: 0.9rem; }
+
+        .nav-badge-count {
+          background: #7c3aed;
+          color: #ffffff;
+          font-size: 0.72rem;
+          font-weight: 700;
+          padding: 2px 8px;
+          border-radius: 99px;
+          margin-left: auto;
+        }
+
+        .quiz-answers-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 16px;
+          margin-top: 16px;
+        }
+        .quiz-answer-item {
+          background: rgba(255, 255, 255, 0.6);
+          border: 1px solid rgba(168, 85, 247, 0.1);
+          padding: 14px 18px;
+          border-radius: 12px;
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+        .quiz-q { font-size: 0.78rem; font-weight: 700; color: #7c3aed; text-transform: uppercase; }
+        .quiz-a { font-size: 0.95rem; color: #334155; font-weight: 600; }
+
+        @media (max-width: 900px) {
+          .profile-stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
+          .booking-details-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
+        }
+        @media (max-width: 600px) {
+          .profile-stats-grid {
+            grid-template-columns: 1fr;
+          }
+          .booking-details-grid {
+            grid-template-columns: 1fr;
+          }
+          .quiz-answers-grid {
+            grid-template-columns: 1fr;
+          }
+          .booking-card-top {
+            flex-direction: column;
+            align-items: flex-start;
+          }
         }
       `}</style>
     </div>

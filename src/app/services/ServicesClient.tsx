@@ -30,6 +30,7 @@ import {
   Moon,
   Brain,
   Star,
+  Globe,
   ArrowRight
 } from "lucide-react";
 
@@ -101,7 +102,6 @@ export default function ServicesPage() {
   const [services, setServices] = useState<Service[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
-  const [cartSelections, setCartSelections] = useState<Service[]>([]);
 
   // Auto-close mobile menu on category changes
   useEffect(() => {
@@ -165,43 +165,7 @@ export default function ServicesPage() {
     };
   }, []);
 
-  // Load cart selections from localStorage
-  useEffect(() => {
-    try {
-      const stored = window.localStorage.getItem("divingsanatan_selections");
-      if (stored) {
-        setCartSelections(JSON.parse(stored));
-      }
-    } catch (e) {
-      console.warn("Could not read selections", e);
-    }
-  }, []);
-
-  // Sync cart helper
-  const toggleCartSelection = (srv: Service) => {
-    let next: Service[];
-    if (cartSelections.some(s => s.id === srv.id)) {
-      next = cartSelections.filter(s => s.id !== srv.id);
-    } else {
-      next = [...cartSelections, srv];
-    }
-    setCartSelections(next);
-    window.localStorage.setItem("divingsanatan_selections", JSON.stringify(next));
-  };
-
-  const clearSelections = () => {
-    setCartSelections([]);
-    window.localStorage.removeItem("divingsanatan_selections");
-  };
-
-  const handleCheckout = () => {
-    if (cartSelections.length === 0) return;
-    router.push("/checkout");
-  };
-
-  const totalSelectionsCost = cartSelections.reduce((s, x) => s + x.price, 0);
-
-  // Dynamic testimonial auto-rotation
+  // Auto-rotate testimonials
   useEffect(() => {
     if (reviews.length <= 1) return;
     const timer = setInterval(() => {
@@ -345,7 +309,7 @@ export default function ServicesPage() {
   }, [reviews, activeTestimonial]);
 
   return (
-    <div className={`page-shell ${cartSelections.length > 0 ? "page-shell--cart-pad" : ""}`}>
+    <div className="page-shell">
       <Header />
 
       <main className="services-main-container">
@@ -542,6 +506,13 @@ export default function ServicesPage() {
                     <path d="M50 80 C70 80 90 70 95 55 C80 65 65 70 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
                   </svg>
                   <h3 className="section-title">Our Featured Services</h3>
+                  <button
+                    type="button"
+                    onClick={() => router.push("/explore-services")}
+                    className="view-all-header-btn"
+                  >
+                    View All <ArrowRight size={14} />
+                  </button>
                 </div>
               </div>
 
@@ -558,7 +529,7 @@ export default function ServicesPage() {
                       className="arrow-nav-btn absolute-left"
                       aria-label="Previous service"
                     >
-                      <ChevronLeft size={16} />
+                      <ChevronLeft size={18} strokeWidth={2.5} />
                     </button>
                   )}
 
@@ -583,7 +554,10 @@ export default function ServicesPage() {
                             padding: "0 8px"
                           }}
                         >
-                          <div className="featured-item-card">
+                          <div
+                            className="featured-item-card"
+                            onClick={() => router.push(`/booking?service=${srv.id}`)}
+                          >
                             <div className="featured-card-media-wrapper">
                               <img
                                 src={getServiceImage(srv.image)}
@@ -596,9 +570,12 @@ export default function ServicesPage() {
                               <p className="featured-card-desc">{srv.description}</p>
                               <button
                                 className="learn-more-link"
-                                onClick={() => router.push(`/services/${srv.id}`)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  router.push(`/booking?service=${srv.id}`);
+                                }}
                               >
-                                Learn More <ArrowRight size={14} className="arrow-icon" />
+                                Book Now <ArrowRight size={14} className="arrow-icon" />
                               </button>
                             </div>
                           </div>
@@ -614,7 +591,7 @@ export default function ServicesPage() {
                       className="arrow-nav-btn absolute-right"
                       aria-label="Next service"
                     >
-                      <ChevronRight size={16} />
+                      <ChevronRight size={18} strokeWidth={2.5} />
                     </button>
                   )}
                 </div>
@@ -644,7 +621,11 @@ export default function ServicesPage() {
                     const isPopular = (prg.name || "").includes("Chakra") || (prg.name || "").includes("Meditation");
 
                     return (
-                      <div key={prg.id} className="program-item-card">
+                      <div
+                        key={prg.id}
+                        className="program-item-card"
+                        onClick={() => router.push(`/booking?service=${prg.id}`)}
+                      >
                         {isPopular && <span className="prog-badge badge-popular">Popular</span>}
                         {isNew && <span className="prog-badge badge-new">New</span>}
 
@@ -659,15 +640,22 @@ export default function ServicesPage() {
                           <h4 className="program-title">{prg.name}</h4>
                           <p className="program-desc">{prg.description}</p>
                           <div className="program-details-row">
-                            <span className="details-item">⏱️ {prg.duration}</span>
+                            <span className="details-item">
+                              <Clock size={12} strokeWidth={2} className="details-icon" /> {prg.duration}
+                            </span>
                             <span className="dot-divider">•</span>
-                            <span className="details-item">🌐 Online</span>
+                            <span className="details-item">
+                              <Globe size={12} strokeWidth={2} className="details-icon" /> Online
+                            </span>
                           </div>
                           <button
                             className="view-details-link"
-                            onClick={() => router.push(`/services/${prg.id}`)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              router.push(`/booking?service=${prg.id}`);
+                            }}
                           >
-                            View Details <ArrowRight size={14} className="arrow-icon" />
+                            Book Now <ArrowRight size={14} className="arrow-icon" />
                           </button>
                         </div>
                       </div>
@@ -833,37 +821,6 @@ export default function ServicesPage() {
 
         </div>
       </main>
-
-      {/* Cart Selection Drawer */}
-      {cartSelections.length > 0 && (
-        <div className="cart-drawer-panel">
-          <div className="cart-drawer-container">
-            <div className="cart-drawer-left">
-              <h4 className="cart-drawer-title">YOUR SELECTIONS ({cartSelections.length} Items)</h4>
-              <div className="cart-items-preview">
-                {cartSelections.map(s => (
-                  <span key={s.id} className="cart-preview-pill">
-                    {s.name} ({formatCurrency(s.price)})
-                    <button className="pill-remove-btn" onClick={() => toggleCartSelection(s)}>×</button>
-                  </span>
-                ))}
-              </div>
-            </div>
-            <div className="cart-drawer-right">
-              <div className="cart-price-summary">
-                <span className="cart-summary-label">Total Price:</span>
-                <span className="cart-summary-val">{formatCurrency(totalSelectionsCost)}</span>
-              </div>
-              <div className="cart-drawer-actions">
-                <button className="drawer-clear-btn" onClick={clearSelections}>Clear All</button>
-                <button className="drawer-checkout-btn" onClick={handleCheckout}>
-                  Proceed to Payment
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       <Footer />
 
@@ -1258,6 +1215,26 @@ export default function ServicesPage() {
           color: #111827;
           font-weight: 600 !important;
         }
+        .view-all-header-btn {
+          margin-left: auto;
+          font-size: 0.8rem;
+          font-weight: 700;
+          color: #7c3aed;
+          background: rgba(124, 58, 237, 0.08);
+          border: 1px solid rgba(124, 58, 237, 0.2);
+          padding: 5px 12px;
+          border-radius: 99px;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+        .view-all-header-btn:hover {
+          background: #7c3aed;
+          color: #ffffff;
+          transform: translateX(2px);
+        }
 
         /* Carousel Catalog Layout */
         .carousel-container-relative {
@@ -1270,64 +1247,78 @@ export default function ServicesPage() {
           padding: 6px 0;
         }
         .arrow-nav-btn {
-          width: 32px;
-          height: 32px;
+          width: 36px;
+          height: 36px;
+          min-width: 36px;
+          min-height: 36px;
+          flex-shrink: 0;
+          padding: 0;
           border-radius: 50%;
           background: #ffffff;
-          border: 1px solid rgba(168, 85, 247, 0.15);
+          border: 1px solid rgba(168, 85, 247, 0.25);
           color: #7c3aed;
           display: flex;
           align-items: center;
           justify-content: center;
           cursor: pointer;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-          transition: var(--transition-fast);
+          box-shadow: 0 4px 14px rgba(124, 58, 237, 0.15);
+          transition: all 0.2s ease;
+          z-index: 10;
+          box-sizing: border-box;
         }
         .arrow-nav-btn.absolute-left {
           position: absolute;
-          left: -18px;
-          top: 36%;
+          left: -14px;
+          top: 50%;
           transform: translateY(-50%);
-          z-index: 10;
         }
         .arrow-nav-btn.absolute-right {
           position: absolute;
-          right: -18px;
-          top: 36%;
+          right: -14px;
+          top: 50%;
           transform: translateY(-50%);
-          z-index: 10;
         }
         .arrow-nav-btn:hover:not(:disabled) {
-          background: #fbf8ff;
+          background: #7c3aed;
+          color: #ffffff;
           border-color: #7c3aed;
-          box-shadow: 0 4px 16px rgba(124, 58, 237, 0.12);
+          box-shadow: 0 6px 18px rgba(124, 58, 237, 0.3);
+          transform: translateY(-50%) scale(1.08);
         }
         .arrow-nav-btn:disabled {
           opacity: 0.3;
           cursor: not-allowed;
         }
 
-        /* Featured Cards */
+        /* Featured Cards - Full Clickable & Baked Small Border */
         .featured-item-card {
-          background: transparent;
-          border: none;
+          background: #ffffff;
+          border: 1px solid rgba(168, 85, 247, 0.14);
+          border-radius: 18px;
+          padding: 12px;
           display: flex;
           flex-direction: column;
           align-items: flex-start;
           text-align: left;
-          transition: var(--transition-smooth);
+          height: 100%;
+          box-sizing: border-box;
+          cursor: pointer;
+          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          box-shadow: 0 2px 10px rgba(168, 85, 247, 0.04);
         }
         .featured-item-card:hover {
           transform: translateY(-4px);
+          border-color: rgba(168, 85, 247, 0.35);
+          box-shadow: 0 8px 24px rgba(124, 58, 237, 0.12);
         }
         .featured-card-media-wrapper {
           width: 100%;
-          aspect-ratio: 4/3;
-          border-radius: 16px;
+          aspect-ratio: 16 / 10;
+          border-radius: 12px;
           overflow: hidden;
           background: #fbf8ff;
-          margin-bottom: 16px;
-          box-shadow: 0 8px 24px rgba(124, 58, 237, 0.08);
+          margin-bottom: 12px;
+          box-shadow: 0 4px 12px rgba(124, 58, 237, 0.06);
         }
         .featured-media-img {
           width: 100%;
@@ -1342,15 +1333,16 @@ export default function ServicesPage() {
           display: flex;
           flex-direction: column;
           align-items: flex-start;
-          gap: 8px;
+          gap: 6px;
           padding: 0 4px;
+          width: 100%;
         }
         .featured-card-title {
           font-family: var(--font-serif);
-          font-size: 1.1rem;
+          font-size: 1.05rem;
           color: #1e1b4b;
           font-weight: 700 !important;
-          line-height: 1.2;
+          line-height: 1.25;
         }
         .featured-card-desc {
           font-size: 0.78rem;
@@ -1415,18 +1407,20 @@ export default function ServicesPage() {
         }
         .program-item-card {
           background: #ffffff;
-          border: 1px solid rgba(168, 85, 247, 0.08);
+          border: 1px solid rgba(168, 85, 247, 0.14);
           border-radius: 20px;
           padding: 12px;
           display: flex;
           flex-direction: column;
           position: relative;
-          transition: var(--transition-smooth);
+          cursor: pointer;
+          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          box-shadow: 0 2px 10px rgba(168, 85, 247, 0.04);
         }
         .program-item-card:hover {
           transform: translateY(-4px);
-          box-shadow: 0 8px 24px rgba(168, 85, 247, 0.06);
-          border-color: rgba(168, 85, 247, 0.15);
+          box-shadow: 0 8px 24px rgba(124, 58, 237, 0.12);
+          border-color: rgba(168, 85, 247, 0.35);
         }
         .prog-badge {
           position: absolute;
@@ -1491,6 +1485,17 @@ export default function ServicesPage() {
           font-size: 0.7rem;
           color: #6b7280;
           font-weight: 600;
+        }
+        .details-item {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          font-size: 0.72rem;
+          color: #6b7280;
+        }
+        .details-icon {
+          color: #a855f7;
+          flex-shrink: 0;
         }
         .view-details-link {
           background: transparent;
