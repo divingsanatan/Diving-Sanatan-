@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/utils/supabaseServer";
 import { Practitioner } from "@/types/database";
+import { getOrSetServerCache, invalidateServerCache } from "@/utils/serverCache";
 
 function mapPractitionerToCamelCase(p: any): Practitioner {
   return {
@@ -28,34 +29,45 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
+    const headers = {
+      "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
+    };
 
     if (id) {
-      const { data: p, error } = await supabaseServer
-        .from("practitioners")
-        .select("*")
-        .eq("id", id)
-        .single();
+      const cacheKey = `practitioner_${id}`;
+      const data = await getOrSetServerCache(cacheKey, 60, async () => {
+        const { data: p, error } = await supabaseServer
+          .from("practitioners")
+          .select("*")
+          .eq("id", id)
+          .single();
 
-      if (error) {
-        return NextResponse.json({ success: false, error: error.message }, { status: 404 });
+        if (error || !p) return null;
+        return mapPractitionerToCamelCase(p);
+      });
+
+      if (!data) {
+        return NextResponse.json({ success: false, error: "Practitioner not found" }, { status: 404 });
       }
 
-      return NextResponse.json({ success: true, data: mapPractitionerToCamelCase(p) });
+      return NextResponse.json({ success: true, data }, { headers });
     }
 
-    const { data: practitioners, error } = await supabaseServer
-      .from("practitioners")
-      .select("*")
-      .order("name", { ascending: true });
+    const cacheKey = "practitioner_all";
+    const mapped = await getOrSetServerCache(cacheKey, 60, async () => {
+      const { data: practitioners, error } = await supabaseServer
+        .from("practitioners")
+        .select("*")
+        .order("name", { ascending: true });
 
-    if (error) {
-      return NextResponse.json({ success: false, error: error.message }, { status: 500 });
-    }
+      if (error) throw new Error(error.message);
 
-    const mapped = (practitioners || []).map(mapPractitionerToCamelCase);
-    return NextResponse.json({ success: true, data: mapped });
-  } catch (error) {
-    return NextResponse.json({ success: false, error: "Failed to read practitioners" }, { status: 500 });
+      return (practitioners || []).map(mapPractitionerToCamelCase);
+    });
+
+    return NextResponse.json({ success: true, data: mapped }, { headers });
+  } catch (error: any) {
+    return NextResponse.json({ success: false, error: error?.message || "Failed to read practitioners" }, { status: 500 });
   }
 }
 
@@ -219,6 +231,7 @@ export async function POST(req: NextRequest) {
       await query;
     }
 
+    invalidateServerCache("practitioner_");
     return NextResponse.json({ success: true, data: mapPractitionerToCamelCase(data || newPracDb) }, { status: 201 });
   } catch (error: any) {
     console.error("Failed to create practitioner:", error);
@@ -346,6 +359,7 @@ export async function PUT(req: NextRequest) {
       await query;
     }
 
+    invalidateServerCache("practitioner_");
     return NextResponse.json({ success: true, data: mapPractitionerToCamelCase(data || { id, ...updates }) });
   } catch (error: any) {
     console.error("Failed to update practitioner:", error);
@@ -384,6 +398,7 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 
+    invalidateServerCache("practitioner_");
     return NextResponse.json({ success: true, message: "Practitioner removed successfully" });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message || "Failed to remove practitioner" }, { status: 500 });

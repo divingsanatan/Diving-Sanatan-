@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { formatCurrency } from "@/utils/formatters";
 import { Service } from "@/types/database";
+import { cachedFetch } from "@/utils/apiCache";
 
 declare global {
   interface Window {
@@ -34,6 +35,7 @@ function BookingContent() {
   // Databases states
   const [services, setServices] = useState<Service[]>([]);
   const [practitioners, setPractitioners] = useState<Practitioner[]>([]);
+  const [loadingData, setLoadingData] = useState(true);
 
   // Selection states
   const [selectedService, setSelectedService] = useState<Service | null>(null);
@@ -197,24 +199,17 @@ function BookingContent() {
     };
   };
 
-  // Load services and practitioners
+  // Load services and practitioners in parallel with Stale-While-Revalidate caching
   useEffect(() => {
+    let isMounted = true;
     async function loadData() {
       try {
-        const sRes = await fetch("/api/services");
-        const sJson = await sRes.json();
-
-        const pRes = await fetch("/api/practitioners");
-        const pJson = await pRes.json();
-
-        if (sJson.success && pJson.success) {
-          const loadedServices: Service[] = sJson.data || [];
-          const loadedPractitioners: Practitioner[] = pJson.data || [];
-          
-          setServices(loadedServices);
-          setPractitioners(loadedPractitioners);
-
+        const applyServiceData = (loadedServices: Service[], loadedPractitioners: Practitioner[]) => {
+          if (!isMounted) return;
           if (loadedServices.length > 0) {
+            setServices(loadedServices);
+            setPractitioners(loadedPractitioners);
+
             let activeSrv = loadedServices[0];
             if (queryServiceId) {
               const matchedSrv = loadedServices.find((s: Service) => s.id === queryServiceId);
@@ -223,12 +218,36 @@ function BookingContent() {
             setSelectedService(activeSrv);
             setSelectedPractitioner(findPractitioner(activeSrv.practitioner, loadedPractitioners));
           }
+          setLoadingData(false);
+        };
+
+        const [sJson, pJson] = await Promise.all([
+          cachedFetch<any>("/api/services", undefined, (freshSJson) => {
+            if (isMounted && freshSJson?.success && freshSJson.data?.length > 0) {
+              setServices(freshSJson.data);
+            }
+          }),
+          cachedFetch<any>("/api/practitioners", undefined, (freshPJson) => {
+            if (isMounted && freshPJson?.success && freshPJson.data?.length > 0) {
+              setPractitioners(freshPJson.data);
+            }
+          })
+        ]);
+
+        if (sJson?.success && pJson?.success) {
+          applyServiceData(sJson.data || [], pJson.data || []);
+        } else {
+          if (isMounted) setLoadingData(false);
         }
       } catch (err) {
         console.error("Error loading scheduling databases:", err);
+        if (isMounted) setLoadingData(false);
       }
     }
     loadData();
+    return () => {
+      isMounted = false;
+    };
   }, [queryServiceId]);
 
   // Adjust practitioner when service changes
@@ -534,6 +553,16 @@ function BookingContent() {
                   </div>
                 </div>
               </Card>
+            ) : loadingData ? (
+              <Card variant="glass" className="service-showcase-card">
+                <div className="skeleton-loader" style={{ height: 260, borderRadius: "16px 16px 0 0" }} />
+                <div className="service-showcase-body card-stack-16" style={{ padding: 24 }}>
+                  <div className="skeleton-loader" style={{ width: "30%", height: 20 }} />
+                  <div className="skeleton-loader" style={{ width: "70%", height: 32 }} />
+                  <div className="skeleton-loader" style={{ width: "50%", height: 20 }} />
+                  <div className="skeleton-loader" style={{ width: "100%", height: 90 }} />
+                </div>
+              </Card>
             ) : (
               <Card variant="glass" className="service-showcase-card card-pad-40-center">
                 <p className="text-muted-center">Select a healing session to view details.</p>
@@ -802,6 +831,16 @@ function BookingContent() {
         .booking-service-col {
           position: sticky;
           top: 24px;
+          max-height: calc(100vh - 48px);
+          overflow-y: auto;
+          padding-right: 4px;
+        }
+        .booking-service-col::-webkit-scrollbar {
+          width: 4px;
+        }
+        .booking-service-col::-webkit-scrollbar-thumb {
+          background: rgba(124, 58, 237, 0.2);
+          border-radius: 4px;
         }
         :global(.service-showcase-card) {
           padding: 0 !important;
@@ -841,9 +880,10 @@ function BookingContent() {
         }
         .service-showcase-title {
           font-family: var(--font-serif);
-          font-size: 2rem;
+          font-size: clamp(1.4rem, 2.5vw, 2rem);
           color: #4c1d95;
-          line-height: 1.2;
+          line-height: 1.25;
+          word-break: break-word;
         }
         .service-practitioner-line {
           font-size: 0.9rem;
@@ -1041,16 +1081,22 @@ function BookingContent() {
         .calendar-dates-grid {
           display: grid;
           grid-template-columns: repeat(7, 1fr);
-          gap: 6px;
+          gap: 4px;
           text-align: center;
+          width: 100%;
+          box-sizing: border-box;
         }
         .calendar-date-cell {
+          width: 100%;
           height: 38px;
+          max-height: 42px;
           display: flex;
           align-items: center;
           justify-content: center;
           border-radius: 8px;
-          font-size: 0.9rem;
+          font-size: 0.88rem;
+          box-sizing: border-box;
+          min-width: 0;
         }
         .calendar-date-cell.empty {
           background: transparent;
@@ -1089,10 +1135,14 @@ function BookingContent() {
         }
         .slots-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
-          gap: 10px;
+          grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
+          gap: 8px;
+          width: 100%;
         }
         .slot-btn {
+          width: 100%;
+          box-sizing: border-box;
+          min-width: 0;
           background: rgba(0,0,0,0.02);
           border: 1px solid rgba(0,0,0,0.05);
           color: hsl(var(--text-cream));
@@ -1159,7 +1209,14 @@ function BookingContent() {
         .summary-row {
           display: flex;
           justify-content: space-between;
+          align-items: flex-start;
+          gap: 12px;
           font-size: 0.85rem;
+        }
+        .summary-row strong {
+          text-align: right;
+          word-break: break-word;
+          max-width: 65%;
         }
         .summary-row span {
           color: hsl(var(--text-muted));
@@ -1318,28 +1375,112 @@ function BookingContent() {
         @media (max-width: 1024px) {
           .booking-main-split {
             grid-template-columns: 1fr;
+            gap: 24px;
           }
           .booking-service-col {
             position: static;
+            max-height: none;
+            overflow-y: visible;
+            padding-right: 0;
+          }
+        }
+        @media (max-width: 768px) {
+          .booking-container {
+            padding: 20px 14px;
+            gap: 20px;
+          }
+          .booking-header-title {
+            font-size: 1.45rem;
+          }
+          .service-hero-image {
+            height: 210px;
+          }
+          .service-showcase-body {
+            padding: 18px 16px;
+            gap: 14px;
+          }
+          .video-placeholder-box {
+            min-height: 140px;
+            padding: 16px;
+          }
+          .practitioner-profile-row {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+          }
+          .view-bio-trigger-btn {
+            width: 100%;
+            text-align: center;
+          }
+          .sync-account-banner {
+            flex-direction: column;
+            align-items: flex-start;
+          }
+          .resync-action-btn {
+            align-self: flex-end;
+          }
+          .glass-input, .text-area-input, select.glass-input {
+            font-size: 16px !important; /* Prevents auto-zoom on mobile iOS */
           }
         }
         @media (max-width: 480px) {
+          .booking-container {
+            padding: 14px 10px;
+            gap: 16px;
+          }
+          .service-hero-image {
+            height: 180px;
+          }
+          .service-showcase-body {
+            padding: 14px 12px;
+          }
           .calendar-card {
-            padding: 16px !important;
+            padding: 14px 10px !important;
+          }
+          .calendar-header-row {
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+          }
+          .month-year-label {
+            font-size: 1.1rem;
+          }
+          .calendar-dates-grid {
+            gap: 3px;
           }
           .calendar-date-cell {
-            height: 32px !important;
+            height: 34px !important;
             font-size: 0.8rem !important;
+            border-radius: 6px;
           }
           .calendar-day-header {
             font-size: 0.65rem !important;
           }
           .slots-grid {
-            grid-template-columns: repeat(auto-fill, minmax(75px, 1fr)) !important;
+            grid-template-columns: repeat(3, 1fr) !important;
+            gap: 6px !important;
           }
           .slot-btn {
             font-size: 0.75rem !important;
-            padding: 6px 0 !important;
+            padding: 7px 0 !important;
+          }
+          .bio-modal-card {
+            padding: 20px 16px;
+            max-width: 94vw;
+            border-radius: 18px;
+          }
+          .bio-modal-header .modal-title {
+            font-size: 1.3rem;
+          }
+        }
+        @media (max-width: 360px) {
+          .slots-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+          }
+          .calendar-date-cell {
+            height: 30px !important;
+            font-size: 0.75rem !important;
           }
         }
       `}</style>

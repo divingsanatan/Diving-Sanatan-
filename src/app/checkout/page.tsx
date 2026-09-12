@@ -69,11 +69,11 @@ export default function CheckoutPage() {
   // Local state
   const [selections, setSelections] = useState<Service[]>([]);
   const [bookingId, setBookingId] = useState<string | null>(null);
-  
+
   // Customer details
   const [clientEmail, setClientEmail] = useState("");
   const [clientPhone, setClientPhone] = useState("");
-  
+
   // Form input states
   const [paymentOption, setPaymentOption] = useState<"razorpay" | "card" | "paypal" | "apple">("razorpay");
   const [cardholderName, setCardholderName] = useState("");
@@ -216,7 +216,7 @@ export default function CheckoutPage() {
   const validateForm = () => {
     if (totalCost === 0) return true;
     const errors: Record<string, string> = {};
-    
+
     if (!cardholderName.trim()) {
       errors.name = "Full Name is required";
     }
@@ -422,7 +422,7 @@ export default function CheckoutPage() {
           }),
         });
       }
-      
+
       window.localStorage.removeItem("divingsanatan_selections");
       window.localStorage.removeItem("active_booking_id");
       setSelections([]);
@@ -442,14 +442,8 @@ export default function CheckoutPage() {
       <Header />
 
       <main className="checkout-container">
-        
-        {/* Page Title */}
-        <section className="checkout-header">
-          <h2 className="checkout-header-title">Payment / Checkout</h2>
-          <p className="text-muted-sm">
-            Complete your wellness transaction securely via Razorpay (UPI, Credit/Debit Cards, NetBanking, Wallets).
-          </p>
-        </section>
+
+
 
         {success ? (
           <div className="checkout-success-view glass-panel">
@@ -460,226 +454,121 @@ export default function CheckoutPage() {
             <Button variant="gold" onClick={() => router.push("/")}>Return Home</Button>
           </div>
         ) : (
-          <div className="checkout-grid">
-            
-            {/* Payment Details Form */}
-            <div className="checkout-form-col">
+          <div className="payment-slip-wrapper">
+            <form onSubmit={handlePaymentSubmit} noValidate className="payment-slip-card glass-panel">
 
-              {/* Active Service Highlight Banner */}
-              {selections.length > 0 && (
-                <div className="selected-service-checkout-banner glass-panel">
-                  <div className="banner-img-container">
-                    <img
-                      src={getServiceImage(selections[0].image)}
-                      alt={selections[0].name}
-                      className="banner-service-thumb"
-                    />
+              {/* Slip Header Banner */}
+              <div className="slip-header">
+                <div className="slip-brand">
+                  <span className="slip-icon">✨</span>
+                  <div>
+                    <h3 className="slip-title">Diving Sanatan</h3>
+                    <p className="slip-subtitle">Official Checkout & Booking Voucher</p>
                   </div>
-                  <div className="banner-service-info">
-                    <div className="banner-tag-row">
-                      <span className="banner-service-tag">
-                        {selections[0].category || selections[0].categories?.[0] || "Healing Session"}
-                      </span>
-                      {selections[0].duration && <span className="banner-duration-tag">⏱ {selections[0].duration}</span>}
-                    </div>
-                    <h3 className="banner-service-title">{selections[0].name}</h3>
+                </div>
+                <div className="slip-badge">
+                  <span>EXPRESS CHECKOUT</span>
+                </div>
+              </div>
+
+              <div className="slip-divider"></div>
+
+              {/* Booking Item Details */}
+              {selections.length > 0 && (
+                <div className="slip-item-row">
+                  <img
+                    src={getServiceImage(selections[0].image)}
+                    alt={selections[0].name}
+                    className="slip-item-thumb"
+                  />
+                  <div className="slip-item-details">
+                    <span className="slip-item-category">
+                      {selections[0].category || selections[0].categories?.[0] || "Healing Therapy"}
+                    </span>
+                    <h4 className="slip-item-name">{selections[0].name}</h4>
                     {selections[0].practitioner && (
-                      <p className="banner-practitioner-text">
-                        Guided by <strong>{selections[0].practitioner}</strong>
-                      </p>
+                      <p className="slip-item-sub">Guided by {selections[0].practitioner}</p>
+                    )}
+                    {selections[0].duration && (
+                      <span className="slip-item-duration">⏱ {selections[0].duration}</span>
                     )}
                   </div>
-                  <div className="banner-service-price">
-                    {formatCurrency(selections[0].price)}
+                  <div className="slip-item-price-col">
+                    <span className="slip-price-label">Price</span>
+                    <span className="slip-price-val">{formatCurrency(selections[0].price)}</span>
                   </div>
                 </div>
               )}
 
-              <form onSubmit={handlePaymentSubmit} noValidate className="payment-card-panel glass-panel">
-                <h3 className="checkout-section-title">Payment Method & Billing</h3>
+              {/* Customer Input Section */}
+              <div className="slip-field-section">
+                <div className="form-group">
+                  <label className="slip-field-label">Customer Name</label>
+                  <input
+                    type="text"
+                    className={`glass-input slip-input ${formErrors.name ? "input-border-error" : ""}`}
+                    placeholder="Enter your full name for booking receipt..."
+                    value={cardholderName}
+                    onChange={(e) => {
+                      setCardholderName(e.target.value);
+                      if (formErrors.name) setFormErrors({ ...formErrors, name: "" });
+                    }}
+                  />
+                  {formErrors.name && <span className="inline-error-msg">{formErrors.name}</span>}
+                </div>
+              </div>
 
-                {paymentError && (
-                  <div className="payment-error-banner">
-                    ⚠ {paymentError}
-                  </div>
-                )}
+              {/* Payment Summary Line */}
+              <div className="slip-summary-box">
+                <div className="slip-summary-line">
+                  <span>Session Fee</span>
+                  <span>{formatCurrency(totalCost)}</span>
+                </div>
+                <div className="slip-summary-line">
+                  <span>Taxes & Service Charge</span>
+                  <span className="free-tag">Included</span>
+                </div>
+                <div className="slip-summary-line total-line">
+                  <span>Total Payable Amount</span>
+                  <span className="total-amount-highlight">{formatCurrency(totalCost)}</span>
+                </div>
+              </div>
 
-                {totalCost === 0 ? (
-                  <div className="free-session-notice-box">
-                    <span className="free-session-icon">✨</span>
-                    <h4 className="free-session-title">Complimentary Session</h4>
-                    <p className="free-session-desc">This session is completely free. No payment details or credit cards are required to secure your appointment.</p>
-                  </div>
+              {paymentError && (
+                <div className="payment-error-banner">
+                  ⚠ {paymentError}
+                </div>
+              )}
+
+              {/* Security & Direct Payment Info */}
+              <div className="slip-payment-method-box">
+                <div className="express-badge-row">
+                  <span className="rzp-pill">🔒 Instant Payment Gateway</span>
+                  <span className="rzp-pill gold">256-Bit SSL Encrypted</span>
+                </div>
+                <p className="express-desc">
+                  Pay smoothly via <strong>UPI (GPay, PhonePe, Paytm, BHIM), Credit/Debit Cards, NetBanking</strong> or Wallets.
+                </p>
+              </div>
+
+              {/* Submit CTA Button */}
+              <button
+                type="submit"
+                disabled={processing || selections.length === 0}
+                className="express-pay-btn slip-pay-btn"
+              >
+                {processing ? (
+                  "Launching Payment Modal..."
+                ) : totalCost === 0 ? (
+                  "Confirm Complimentary Booking"
                 ) : (
-                  <>
-                    {/* Options selector */}
-                    <div className="payment-options-row">
-                      <button 
-                        type="button" 
-                        className={`pay-opt-btn ${paymentOption === "razorpay" ? "active" : ""}`}
-                        onClick={() => setPaymentOption("razorpay")}
-                      >
-                        ⚡ Razorpay (UPI/Cards/NetBanking)
-                      </button>
-                      <button 
-                        type="button" 
-                        className={`pay-opt-btn ${paymentOption === "card" ? "active" : ""}`}
-                        onClick={() => setPaymentOption("card")}
-                      >
-                        💳 Card
-                      </button>
-                      <button 
-                        type="button" 
-                        className={`pay-opt-btn ${paymentOption === "paypal" ? "active" : ""}`}
-                        onClick={() => setPaymentOption("paypal")}
-                      >
-                        🅿️ PayPal
-                      </button>
-                    </div>
-
-                    <div className="form-group mb-16">
-                      <label>Customer Name</label>
-                      <input 
-                        type="text" 
-                        className={`glass-input ${formErrors.name ? "input-border-error" : ""}`} 
-                        placeholder="e.g. Sumeet" 
-                        value={cardholderName}
-                        onChange={(e) => {
-                          setCardholderName(e.target.value);
-                          if (formErrors.name) setFormErrors({ ...formErrors, name: "" });
-                        }}
-                      />
-                      {formErrors.name && <span className="inline-error-msg">{formErrors.name}</span>}
-                    </div>
-
-                    {paymentOption === "razorpay" ? (
-                      <div className="razorpay-info-box">
-                        <div className="razorpay-badge-row">
-                          <span className="rzp-pill">🔒 Secure 256-bit Encryption</span>
-                          <span className="rzp-pill gold">Instant Confirmation</span>
-                        </div>
-                        <p className="razorpay-desc">
-                          Pay smoothly using <strong>UPI (Google Pay, PhonePe, Paytm, BHIM), Credit/Debit Cards, NetBanking</strong> or popular Mobile Wallets via Razorpay.
-                        </p>
-                      </div>
-                    ) : paymentOption === "card" ? (
-                      <div className="payment-form-fields">
-                        <div className="form-group">
-                          <label>Card Number</label>
-                          <input 
-                            type="text" 
-                            className={`glass-input ${formErrors.cardNumber ? "input-border-error" : ""}`} 
-                            placeholder="1111 - 2222 - 3333 - 4444" 
-                            maxLength={19}
-                            value={cardNumber}
-                            onChange={handleCardNumberChange}
-                          />
-                          {formErrors.cardNumber && <span className="inline-error-msg">{formErrors.cardNumber}</span>}
-                        </div>
-
-                        <div className="form-row">
-                          <div className="form-group form-group-flex">
-                            <label>Expiry Date</label>
-                            <input 
-                              type="text" 
-                              className={`glass-input ${formErrors.expiry ? "input-border-error" : ""}`} 
-                              placeholder="MM/YY" 
-                              maxLength={5}
-                              value={expiry}
-                              onChange={handleExpiryChange}
-                            />
-                            {formErrors.expiry && <span className="inline-error-msg">{formErrors.expiry}</span>}
-                          </div>
-                          <div className="form-group form-group-flex">
-                            <label>CVV</label>
-                            <input 
-                              type="password" 
-                              className={`glass-input ${formErrors.cvv ? "input-border-error" : ""}`} 
-                              placeholder="•••" 
-                              maxLength={3}
-                              value={cvv}
-                              onChange={handleCvvChange}
-                            />
-                            {formErrors.cvv && <span className="inline-error-msg">{formErrors.cvv}</span>}
-                          </div>
-                        </div>
-
-                        <div className="form-group">
-                          <label>Billing Address</label>
-                          <input 
-                            type="text" 
-                            className={`glass-input ${formErrors.billingAddress ? "input-border-error" : ""}`} 
-                            placeholder="777 Ethereal Pathway, Zen City, CA" 
-                            value={billingAddress}
-                            onChange={(e) => {
-                              setBillingAddress(e.target.value);
-                              if (formErrors.billingAddress) setFormErrors({ ...formErrors, billingAddress: "" });
-                            }}
-                          />
-                          {formErrors.billingAddress && <span className="inline-error-msg">{formErrors.billingAddress}</span>}
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="mock-payment-message">
-                        <p>Redirecting transaction telemetry through secure {paymentOption === "paypal" ? "PayPal Vault" : "Apple Pay Gateway"} on confirmation click.</p>
-                      </div>
-                    )}
-                  </>
+                  `🔒 PAY ${formatCurrency(totalCost)} NOW & CONFIRM`
                 )}
+              </button>
 
-                <Button 
-                  variant="gold" 
-                  type="submit" 
-                  disabled={processing || selections.length === 0}
-                  className="btn-full-mt-24"
-                >
-                  {processing ? "Securing Transaction..." : totalCost === 0 ? "Confirm Complimentary Booking" : paymentOption === "razorpay" ? `Pay with Razorpay - ${formatCurrency(totalCost)}` : `Complete Payment - ${formatCurrency(totalCost)}`}
-                </Button>
-              </form>
-            </div>
+              <p className="instant-pay-hint">⚡ Click button above to complete transaction instantly</p>
 
-
-            {/* Right side: Order Summary & Order History Sidebar */}
-            <div className="checkout-summary-col">
-              
-              {/* Order Summary */}
-              <Card variant="glass" className="card-pad-24 card-mb-24">
-                <h3 className="checkout-section-title section-title-bordered">
-                  Order Summary
-                </h3>
-                {selections.length === 0 ? (
-                  <p className="text-muted-sm">No active sessions in cart.</p>
-                ) : (
-                  <div className="checkout-summary-items-list summary-list-stack">
-                    {selections.map(s => (
-                      <div key={s.id} className="summary-item-card">
-                        <img
-                          src={getServiceImage(s.image)}
-                          alt={s.name}
-                          className="summary-item-thumb"
-                        />
-                        <div className="summary-item-info">
-                          <span className="summary-item-name">{s.name}</span>
-                          {s.practitioner && (
-                            <span className="summary-item-prac">Guided by {s.practitioner}</span>
-                          )}
-                          {s.duration && (
-                            <span className="summary-item-duration">⏱ {s.duration}</span>
-                          )}
-                        </div>
-                        <span className="summary-item-price">{formatCurrency(s.price)}</span>
-                      </div>
-                    ))}
-                    
-                    <div className="summary-total-row">
-                      <span>Total Amount:</span>
-                      <span className="summary-total-val">{formatCurrency(totalCost)}</span>
-                    </div>
-                  </div>
-                )}
-              </Card>
-            </div>
-
+            </form>
           </div>
         )}
 
@@ -697,78 +586,207 @@ export default function CheckoutPage() {
           gap: 32px;
           width: 100%;
         }
-        .checkout-header-title {
-          font-size: 1.8rem;
-          color: #4c1d95;
-          margin-bottom: 8px;
-        }
-        .checkout-grid {
-          display: grid;
-          grid-template-columns: 1.4fr 1fr;
-          gap: 32px;
-          width: 100%;
-        }
-        .checkout-form-col {
-          display: flex;
-          flex-direction: column;
-        }
-        .payment-card-panel {
-          padding: 32px;
-        }
-        .free-session-notice-box {
-          background: rgba(168, 85, 247, 0.05);
-          border: 1px solid rgba(168, 85, 247, 0.2);
-          border-radius: 12px;
-          padding: 20px;
-          margin-bottom: 16px;
-          color: hsl(var(--text-cream));
+        .checkout-header {
           text-align: center;
         }
-        .free-session-icon {
+        .checkout-header-title {
           font-size: 2rem;
-          display: block;
-          margin-bottom: 8px;
-        }
-        .free-session-title {
-          color: #a855f7;
-          font-weight: 700;
+          color: #4c1d95;
           margin-bottom: 6px;
         }
-        .free-session-desc {
-          font-size: 0.88rem;
-          color: hsl(var(--text-muted));
+        .payment-slip-wrapper {
+          max-width: 620px;
+          margin: 0 auto;
+          width: 100%;
         }
-        .checkout-section-title {
-          font-family: var(--font-serif);
-          font-size: 1.25rem;
-          color: #4c1d95;
-          margin-bottom: 20px;
-          letter-spacing: 0.05em;
-        }
-        .payment-error-banner {
-          background: rgba(239, 68, 68, 0.08);
-          border: 1px solid rgba(239, 68, 68, 0.3);
-          color: #dc2626;
-          padding: 12px 16px;
-          border-radius: 10px;
-          font-size: 0.88rem;
-          margin-bottom: 16px;
-          font-weight: 500;
-        }
-        .razorpay-info-box {
-          background: linear-gradient(135deg, rgba(124, 58, 237, 0.05) 0%, rgba(168, 85, 247, 0.08) 100%);
+        .payment-slip-card {
+          padding: 36px;
+          border-radius: 24px;
+          background: rgba(255, 255, 255, 0.88);
+          backdrop-filter: blur(16px);
           border: 1px solid rgba(124, 58, 237, 0.2);
-          padding: 20px;
-          border-radius: 12px;
+          box-shadow: 0 20px 50px rgba(76, 29, 149, 0.08);
           display: flex;
           flex-direction: column;
-          gap: 12px;
-          margin-bottom: 16px;
+          gap: 22px;
         }
-        .razorpay-badge-row {
+        .slip-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+        .slip-brand {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+        .slip-icon {
+          font-size: 1.8rem;
+        }
+        .slip-title {
+          font-family: var(--font-serif);
+          font-size: 1.35rem;
+          color: #4c1d95;
+          margin: 0;
+          font-weight: 700;
+        }
+        .slip-subtitle {
+          font-size: 0.82rem;
+          color: #64748b;
+          margin: 0;
+        }
+        .slip-badge {
+          background: rgba(168, 85, 247, 0.1);
+          color: #7c3aed;
+          font-size: 0.68rem;
+          font-weight: 800;
+          padding: 4px 10px;
+          border-radius: 20px;
+          letter-spacing: 0.05em;
+          border: 1px solid rgba(124, 58, 237, 0.2);
+        }
+        .slip-divider {
+          height: 1px;
+          border-bottom: 2px dashed rgba(124, 58, 237, 0.18);
+          width: 100%;
+        }
+        .slip-item-row {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          background: linear-gradient(135deg, rgba(124, 58, 237, 0.03) 0%, rgba(219, 39, 119, 0.03) 100%);
+          border: 1px solid rgba(124, 58, 237, 0.15);
+          padding: 16px;
+          border-radius: 16px;
+        }
+        .slip-item-thumb {
+          width: 64px;
+          height: 64px;
+          border-radius: 12px;
+          object-fit: cover;
+          flex-shrink: 0;
+          border: 1px solid rgba(124, 58, 237, 0.2);
+        }
+        .slip-item-details {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          gap: 3px;
+        }
+        .slip-item-category {
+          font-size: 0.68rem;
+          color: #6d28d9;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+        }
+        .slip-item-name {
+          font-size: 1.05rem;
+          font-weight: 700;
+          color: #4c1d95;
+          margin: 0;
+        }
+        .slip-item-sub {
+          font-size: 0.8rem;
+          color: #64748b;
+          margin: 0;
+        }
+        .slip-item-duration {
+          font-size: 0.75rem;
+          color: #9333ea;
+        }
+        .slip-item-price-col {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-end;
+        }
+        .slip-price-label {
+          font-size: 0.7rem;
+          color: #64748b;
+          text-transform: uppercase;
+        }
+        .slip-price-val {
+          font-family: var(--font-serif);
+          font-size: 1.25rem;
+          font-weight: 700;
+          color: #db2777;
+        }
+        .slip-field-section {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+        .slip-field-label {
+          font-size: 0.82rem;
+          font-weight: 700;
+          color: #4c1d95;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+        }
+        .slip-input {
+          padding: 14px 16px;
+          border-radius: 12px;
+          border: 1px solid rgba(124, 58, 237, 0.2);
+          background: rgba(255, 255, 255, 0.95);
+          font-size: 0.95rem;
+          color: #1e1b4b;
+          width: 100%;
+        }
+        .slip-summary-box {
+          background: rgba(0, 0, 0, 0.02);
+          border: 1px solid rgba(0, 0, 0, 0.06);
+          border-radius: 14px;
+          padding: 16px 20px;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+        .slip-summary-line {
+          display: flex;
+          justify-content: space-between;
+          font-size: 0.88rem;
+          color: #64748b;
+        }
+        .free-tag {
+          color: #16a34a;
+          font-weight: 600;
+        }
+        .slip-summary-line.total-line {
+          border-top: 1px dashed rgba(0, 0, 0, 0.1);
+          padding-top: 12px;
+          margin-top: 4px;
+          font-size: 1.1rem;
+          font-weight: 800;
+          color: #4c1d95;
+        }
+        .total-amount-highlight {
+          font-family: var(--font-serif);
+          font-size: 1.45rem;
+          color: #db2777;
+          font-weight: 800;
+        }
+        .slip-payment-method-box {
+          background: linear-gradient(135deg, rgba(124, 58, 237, 0.05) 0%, rgba(219, 39, 119, 0.05) 100%);
+          border: 1px solid rgba(124, 58, 237, 0.2);
+          padding: 16px 20px;
+          border-radius: 14px;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+        .slip-pay-btn {
+          margin-top: 6px;
+        }
+        .express-badge-row {
           display: flex;
           gap: 8px;
           flex-wrap: wrap;
+        }
+        .express-desc {
+          font-size: 0.88rem;
+          color: #334155;
+          line-height: 1.5;
+          margin: 0;
         }
         .rzp-pill {
           background: rgba(124, 58, 237, 0.1);
@@ -782,13 +800,41 @@ export default function CheckoutPage() {
           background: rgba(217, 119, 6, 0.1);
           color: #b45309;
         }
-        .razorpay-desc {
-          font-size: 0.88rem;
-          color: #334155;
-          line-height: 1.5;
+        .mb-20 {
+          margin-bottom: 20px;
         }
-        .mb-16 {
-          margin-bottom: 16px;
+        .express-pay-btn {
+          width: 100%;
+          background: linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #db2777 100%);
+          color: #ffffff;
+          font-size: 1.15rem;
+          font-weight: 800;
+          padding: 16px 24px;
+          border-radius: 14px;
+          border: none;
+          cursor: pointer;
+          box-shadow: 0 8px 25px rgba(124, 58, 237, 0.35);
+          transition: all 0.25s ease;
+          letter-spacing: 0.03em;
+        }
+        .express-pay-btn:hover:not(:disabled) {
+          transform: translateY(-2px);
+          box-shadow: 0 12px 30px rgba(124, 58, 237, 0.45);
+          filter: brightness(1.05);
+        }
+        .express-pay-btn:active:not(:disabled) {
+          transform: translateY(0);
+        }
+        .express-pay-btn:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+        .instant-pay-hint {
+          text-align: center;
+          font-size: 0.8rem;
+          color: #64748b;
+          margin-top: 12px;
+          margin-bottom: 0;
         }
         .payment-options-row {
 
