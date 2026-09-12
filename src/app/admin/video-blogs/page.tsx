@@ -21,7 +21,7 @@ export default function AdminVideoBlogsPage() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const res = await fetch("/api/blogs?admin_view=true");
+      const res = await fetch("/api/blogs?admin_view=true", { cache: "no-store" });
       const json = await res.json();
       if (json.success) {
         setBlogs(json.data || []);

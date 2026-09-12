@@ -3,6 +3,26 @@ import { supabaseServer } from "@/utils/supabaseServer";
 import { slugify, getDb, saveDb } from "@/utils/db";
 import { getOrSetServerCache, invalidateServerCache } from "@/utils/serverCache";
 
+const VALID_SUPABASE_BLOG_COLUMNS = new Set([
+  "id", "slug", "title", "category", "author", "content", "date", "read_time",
+  "image", "images", "videos", "section", "is_show_featured_page", "views",
+  "approval_status", "content_type", "content_format", "meta_title",
+  "meta_description", "focus_keyword", "canonical_url", "robots_directive",
+  "author_bio", "reviewed_by", "faq_pairs", "tldr", "pillar_cluster",
+  "og_image_override", "moderation_status", "video_embed_url",
+  "video_transcript", "tags", "pinned_related_articles"
+]);
+
+function sanitizeForSupabase(obj: Record<string, any>) {
+  const sanitized: Record<string, any> = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (VALID_SUPABASE_BLOG_COLUMNS.has(key) && value !== undefined) {
+      sanitized[key] = value;
+    }
+  }
+  return sanitized;
+}
+
 /**
  * GET Handler - Retrieves blog posts from Supabase / db.json
  */
@@ -14,13 +34,15 @@ export async function GET(req: NextRequest) {
     const section = searchParams.get("section");
     const adminView = searchParams.get("admin_view");
 
-    const headers = {
+    const headers = adminView === "true" ? {
+      "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+    } : {
       "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
     };
 
     const cacheKey = `blog_${adminView === "true" ? "admin" : "pub"}_${id || "list"}_${category || "all"}_${section || "all"}`;
 
-    const data = await getOrSetServerCache(cacheKey, 60, async () => {
+    const data = await getOrSetServerCache(cacheKey, adminView === "true" ? 0 : 60, async () => {
       if (id) {
         let blog: any = null;
 
@@ -207,26 +229,46 @@ export async function POST(req: NextRequest) {
       status: status || "published",
       updated_at: nowISO,
     };
+
+    const sanitizedDb = sanitizeForSupabase(newBlogDb);
     
     let insertedData = null;
+    let insertError = null;
+
     const { data, error } = await supabaseServer
       .from("blogs")
-      .insert([newBlogDb])
+      .insert([sanitizedDb])
       .select()
       .single();
 
     if (error) {
-      const { slug: _, ...dbWithoutSlug } = newBlogDb;
+      console.warn("Supabase insert error (sanitized):", error.message);
+      insertError = error;
+      // Fallback: try minimal core fields if schema mismatches occur
+      const minimalDb = sanitizeForSupabase({
+        id: newBlogDb.id,
+        title: newBlogDb.title,
+        category: newBlogDb.category,
+        author: newBlogDb.author,
+        content: newBlogDb.content,
+        date: newBlogDb.date,
+        read_time: newBlogDb.read_time,
+        image: newBlogDb.image,
+        approval_status: newBlogDb.approval_status,
+      });
+
       const { data: retryData, error: retryErr } = await supabaseServer
         .from("blogs")
-        .insert([dbWithoutSlug])
+        .insert([minimalDb])
         .select()
         .single();
-      
-      if (retryErr) {
-        console.warn("Supabase insert failed, persisting to local db.json:", retryErr.message);
-      } else {
+
+      if (!retryErr) {
         insertedData = retryData;
+        insertError = null;
+      } else {
+        console.error("Supabase minimal insert fallback failed:", retryErr.message);
+        insertError = retryErr;
       }
     } else {
       insertedData = data;
@@ -251,6 +293,13 @@ export async function POST(req: NextRequest) {
       console.error("Failed to sync db.json:", dbErr);
     }
     
+    if (!insertedData && insertError) {
+      return NextResponse.json({
+        success: false,
+        error: `Database insertion failed: ${insertError.message}`
+      }, { status: 500 });
+    }
+
     const resultObj = insertedData || newBlogDb;
     const mapped = {
       ...resultObj,
@@ -348,23 +397,42 @@ export async function PUT(req: NextRequest) {
       updates.approval_status = "published";
     }
     
+    const sanitizedUpdates = sanitizeForSupabase(updates);
+
     let updatedData = null;
+    let updateError = null;
+
     const { data, error } = await supabaseServer
       .from("blogs")
-      .update(updates)
+      .update(sanitizedUpdates)
       .eq("id", id)
       .select()
       .single();
 
-    if (error && updates.slug) {
-      const { slug: _, ...updatesWithoutSlug } = updates;
-      const { data: retryData } = await supabaseServer
+    if (error) {
+      console.warn("Supabase update error (sanitized):", error.message);
+      updateError = error;
+      const minimalUpdates = sanitizeForSupabase({
+        title: updates.title,
+        category: updates.category,
+        author: updates.author,
+        content: updates.content,
+        date: updates.date,
+        read_time: updates.read_time,
+        image: updates.image,
+      });
+
+      const { data: retryData, error: retryErr } = await supabaseServer
         .from("blogs")
-        .update(updatesWithoutSlug)
+        .update(minimalUpdates)
         .eq("id", id)
         .select()
         .single();
-      updatedData = retryData;
+
+      if (!retryErr) {
+        updatedData = retryData;
+        updateError = null;
+      }
     } else {
       updatedData = data;
     }
@@ -392,12 +460,20 @@ export async function PUT(req: NextRequest) {
       console.error("Failed to sync db.json:", dbErr);
     }
     
+    if (!updatedData && updateError) {
+      return NextResponse.json({
+        success: false,
+        error: `Database update failed: ${updateError.message}`
+      }, { status: 500 });
+    }
+
     const mapped = {
       ...(updatedData || updates),
       slug: updates.slug || (updatedData as any)?.slug,
       readTime: (updatedData as any)?.read_time || readTime,
     };
     
+    invalidateServerCache("blog");
     return NextResponse.json({ success: true, data: mapped });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message || "Failed to update blog" }, { status: 500 });
@@ -425,10 +501,12 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
     
+    invalidateServerCache("blog");
     return NextResponse.json({ success: true, message: "Blog post removed successfully" });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message || "Failed to remove blog" }, { status: 500 });
   }
 }
+
 
 

@@ -72,7 +72,7 @@ export default function AdminLayout({
     if (adminUserStr) {
       try {
         currentUser = JSON.parse(adminUserStr);
-      } catch (e) {}
+      } catch (e) { }
     }
 
     if (isAdminAuth === "true") {
@@ -90,7 +90,7 @@ export default function AdminLayout({
             currentUser = userObj;
           }
         }
-      } catch (e) {}
+      } catch (e) { }
     }
 
     if (isAuthorized) {
@@ -361,27 +361,6 @@ export default function AdminLayout({
           >
             <BarChart2 size={16} />
             <span>Comparisons</span>
-          </Link>
-
-          {/* Section: SEO & SETTINGS */}
-          <div className="sidebar-nav-header">SEO & Settings</div>
-          <Link
-            href="/admin/seo-command"
-            title="SEO Command Center"
-            className={`sidebar-link ${pathname === "/admin/seo-command" ? "active" : ""}`}
-            onClick={() => setSidebarOpen(false)}
-          >
-            <Radar size={16} />
-            <span>SEO Command Center</span>
-          </Link>
-          <Link
-            href="/admin/keywords"
-            title="Keywords"
-            className={`sidebar-link ${pathname === "/admin/keywords" ? "active" : ""}`}
-            onClick={() => setSidebarOpen(false)}
-          >
-            <Key size={16} />
-            <span>Keywords</span>
           </Link>
 
           <div style={{ borderTop: "1px solid #4b545c", margin: "10px 0" }}></div>

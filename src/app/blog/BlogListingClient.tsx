@@ -77,7 +77,7 @@ export default function BlogListingPage() {
         const url = activeCategory && activeCategory !== "all"
           ? `/api/blogs?category=${encodeURIComponent(activeCategory)}`
           : `/api/blogs`;
-        const res = await fetch(url);
+        const res = await fetch(url, { cache: "no-cache" });
         const json = await res.json();
         if (json.success) {
           blogsCacheRef.current[cacheKey] = json.data;
