@@ -77,6 +77,25 @@ export interface Blog {
   content_type?: string;
   section?: string | null;
   approval_status?: string;
+  is_show_featured_page?: boolean;
+  meta_title?: string;
+  meta_description?: string;
+  focus_keyword?: string;
+  canonical_url?: string;
+  robots_directive?: string;
+  author_bio?: string;
+  reviewed_by?: string;
+  tldr?: string;
+  content_format?: string;
+  schema_type?: string;
+  faq_pairs?: any[];
+  featured_image_alt?: string;
+  og_image_override?: string;
+  tags?: string[];
+  pillar_cluster?: string;
+  pinned_related_articles?: string[];
+  status?: string;
+  [key: string]: any;
 }
 
 import { slugify } from "./slugify";
