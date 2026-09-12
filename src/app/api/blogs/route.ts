@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/utils/supabaseServer";
-import { slugify, getDb, saveDb } from "@/utils/db";
-import { getOrSetServerCache, invalidateServerCache } from "@/utils/serverCache";
+import { slugify } from "@/utils/slugify";
+import { invalidateServerCache } from "@/utils/serverCache";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 const VALID_SUPABASE_BLOG_COLUMNS = new Set([
   "id", "slug", "title", "category", "author", "content", "date", "read_time",
@@ -24,7 +27,7 @@ function sanitizeForSupabase(obj: Record<string, any>) {
 }
 
 /**
- * GET Handler - Retrieves blog posts from Supabase / db.json
+ * GET Handler - Retrieves blog posts directly from Supabase database
  */
 export async function GET(req: NextRequest) {
   try {
@@ -34,146 +37,85 @@ export async function GET(req: NextRequest) {
     const section = searchParams.get("section");
     const adminView = searchParams.get("admin_view");
 
-    const headers = adminView === "true" ? {
+    const headers = {
       "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
-    } : {
-      "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
     };
 
-    const cacheKey = `blog_${adminView === "true" ? "admin" : "pub"}_${id || "list"}_${category || "all"}_${section || "all"}`;
-
-    const data = await getOrSetServerCache(cacheKey, adminView === "true" ? 0 : 60, async () => {
-      if (id) {
-        let blog: any = null;
-
-        try {
-          // 1. First try querying by exact ID
-          let query = supabaseServer.from("blogs").select("*");
-          if (adminView !== "true") {
-            query = query.eq("approval_status", "published");
-          }
-          
-          const { data: exactMatch } = await query.eq("id", id);
-          if (exactMatch && exactMatch.length > 0) {
-            blog = exactMatch[0];
-          } else {
-            let listQuery = supabaseServer.from("blogs").select("*");
-            if (adminView !== "true") {
-              listQuery = listQuery.eq("approval_status", "published");
-            }
-            const listRes = await listQuery;
-            if (listRes.data && listRes.data.length > 0) {
-              blog = listRes.data.find((b: any) =>
-                b.id === id ||
-                b.slug === id ||
-                slugify(b.slug || b.title || "") === id
-              );
-            }
-          }
-        } catch (err) {
-          console.warn("Supabase blog GET error:", err);
-        }
-
-        // Fallback: local db.json
-        if (!blog) {
-          try {
-            const localDb = getDb();
-            const found = localDb.blogs?.find((b: any) =>
-              b.id === id ||
-              b.slug === id ||
-              slugify(b.slug || b.title || "") === id
-            );
-            if (found) {
-              blog = {
-                ...found,
-                slug: found.slug || slugify(found.title) || found.id,
-                read_time: found.readTime || (found as any).read_time,
-                approval_status: "published",
-              };
-            }
-          } catch (err) {
-            console.error("Local DB fetch error:", err);
-          }
-        }
-
-        if (!blog) return null;
-
-        return {
-          ...blog,
-          slug: blog.slug || slugify(blog.title) || blog.id,
-          readTime: blog.read_time || blog.readTime,
-          images: Array.isArray(blog.images) ? blog.images : [],
-          videos: Array.isArray(blog.videos) ? blog.videos : [],
-        };
-      }
-
-      let blogs: any[] = [];
-      try {
-        let query = supabaseServer.from("blogs").select("*");
-        if (adminView !== "true") {
-          query = query.eq("approval_status", "published");
-        }
-        if (category && category !== "all") {
-          query = query.ilike("category", category);
-        }
-        if (section) {
-          query = query.ilike("section", section);
-        }
-        
-        const res = await query.order("date", { ascending: false });
-        if (res.data && res.data.length > 0) {
-          blogs = res.data;
-        }
-      } catch (err) {
-        console.warn("Supabase GET blogs list error:", err);
-      }
-
-      try {
-        const localDb = getDb();
-        let localBlogs = localDb.blogs || [];
-        if (category && category !== "all") {
-          localBlogs = localBlogs.filter((b: any) => b.category?.toLowerCase() === category.toLowerCase());
-        }
-        if (section) {
-          localBlogs = localBlogs.filter((b: any) => b.section?.toLowerCase() === section.toLowerCase());
-        }
-        
-        localBlogs.forEach((localBlog: any) => {
-          if (!blogs.some((b: any) => b.id === localBlog.id)) {
-            blogs.push({
-              ...localBlog,
-              slug: localBlog.slug || slugify(localBlog.title) || localBlog.id,
-              read_time: localBlog.readTime || (localBlog as any).read_time,
-              approval_status: "published"
-            });
-          }
-        });
-      } catch (err) {
-        console.error("Local DB fetch/merge error:", err);
+    if (id) {
+      // 1. Query Supabase directly by ID (or fallback by slug for public single blog view)
+      let query = supabaseServer.from("blogs").select("*").eq("id", id);
+      if (adminView !== "true") {
+        query = query.eq("approval_status", "published");
       }
       
-      return (blogs || []).map((blog: any) => ({
-        ...blog,
-        slug: blog.slug || slugify(blog.title) || blog.id,
-        readTime: blog.read_time || blog.readTime,
-        images: Array.isArray(blog.images) ? blog.images : [],
-        videos: Array.isArray(blog.videos) ? blog.videos : [],
-      }));
-    });
+      let { data, error } = await query.maybeSingle();
 
-    if (id && !data) {
-      return NextResponse.json({ success: false, error: "Blog post not found" }, { status: 404 });
+      if (!data) {
+        // Fallback check by slug
+        let slugQuery = supabaseServer.from("blogs").select("*").eq("slug", id);
+        if (adminView !== "true") {
+          slugQuery = slugQuery.eq("approval_status", "published");
+        }
+        const { data: slugData } = await slugQuery.maybeSingle();
+        data = slugData;
+      }
+
+      if (error) {
+        console.error("Supabase GET single blog error:", error);
+        return NextResponse.json({ success: false, error: error.message }, { status: 500, headers });
+      }
+
+      if (!data) {
+        return NextResponse.json({ success: false, error: "Blog post not found" }, { status: 404, headers });
+      }
+
+      const formatted = {
+        ...data,
+        slug: data.slug || slugify(data.title) || data.id,
+        readTime: data.read_time || data.readTime,
+        images: Array.isArray(data.images) ? data.images : [],
+        videos: Array.isArray(data.videos) ? data.videos : [],
+      };
+
+      return NextResponse.json({ success: true, data: formatted }, { headers });
     }
 
-    return NextResponse.json({ success: true, data }, { headers });
+    // List query directly from Supabase
+    let query = supabaseServer.from("blogs").select("*");
+    if (adminView !== "true") {
+      query = query.eq("approval_status", "published");
+    }
+    if (category && category !== "all") {
+      query = query.ilike("category", category);
+    }
+    if (section) {
+      query = query.ilike("section", section);
+    }
+
+    const { data: blogs, error } = await query.order("date", { ascending: false });
+
+    if (error) {
+      console.error("Supabase GET blogs list error:", error);
+      return NextResponse.json({ success: false, error: error.message }, { status: 500, headers });
+    }
+
+    const formattedBlogs = (blogs || []).map((blog: any) => ({
+      ...blog,
+      slug: blog.slug || slugify(blog.title) || blog.id,
+      readTime: blog.read_time || blog.readTime,
+      images: Array.isArray(blog.images) ? blog.images : [],
+      videos: Array.isArray(blog.videos) ? blog.videos : [],
+    }));
+
+    return NextResponse.json({ success: true, data: formattedBlogs }, { headers });
   } catch (error: any) {
     console.error("GET BLOG ERROR:", error);
-    return NextResponse.json({ success: false, error: String(error?.stack || error?.message || error) }, { status: 500 });
+    return NextResponse.json({ success: false, error: String(error?.message || error) }, { status: 500 });
   }
 }
 
 /**
- * POST Handler - Creates a new blog post
+ * POST Handler - Creates a new blog post directly in Supabase database
  */
 export async function POST(req: NextRequest) {
   try {
@@ -232,118 +174,37 @@ export async function POST(req: NextRequest) {
 
     const sanitizedDb = sanitizeForSupabase(newBlogDb);
     
-    let insertedData = null;
-    let insertError = null;
+    const { data, error } = await supabaseServer
+      .from("blogs")
+      .insert([sanitizedDb])
+      .select()
+      .single();
 
-    try {
-      const { data, error } = await supabaseServer
-        .from("blogs")
-        .insert([sanitizedDb])
-        .select("id, title")
-        .maybeSingle();
-
-      if (error) {
-        console.warn("Supabase insert error (sanitized):", error.message);
-        insertError = error;
-        // Fallback: try minimal core fields without non-existent schema columns
-        const minimalDb = sanitizeForSupabase({
-          id: newBlogDb.id,
-          title: newBlogDb.title,
-          category: newBlogDb.category,
-          author: newBlogDb.author,
-          content: newBlogDb.content,
-          date: newBlogDb.date,
-          read_time: newBlogDb.read_time,
-          image: newBlogDb.image,
-          approval_status: newBlogDb.approval_status,
-        });
-
-        const { data: retryData, error: retryErr } = await supabaseServer
-          .from("blogs")
-          .insert([minimalDb])
-          .select("id, title")
-          .maybeSingle();
-
-        if (!retryErr) {
-          insertedData = retryData;
-          insertError = null;
-        } else {
-          console.error("Supabase minimal insert fallback failed:", retryErr.message);
-        }
-      } else {
-        insertedData = data;
-      }
-    } catch (sbInsertErr: any) {
-      console.warn("Supabase insert exception:", sbInsertErr);
-      insertError = sbInsertErr;
-    }
-
-    let localSaved = false;
-    try {
-      const db = getDb();
-      db.blogs = db.blogs || [];
-      db.blogs.unshift({
-        id: newBlogDb.id,
-        slug: newBlogDb.slug,
-        title: newBlogDb.title,
-        category: newBlogDb.category,
-        author: newBlogDb.author,
-        content: newBlogDb.content,
-        date: newBlogDb.date,
-        readTime: newBlogDb.read_time,
-        image: newBlogDb.image,
-        images: newBlogDb.images,
-        videos: newBlogDb.videos,
-        section: newBlogDb.section,
-        is_show_featured_page: newBlogDb.is_show_featured_page,
-        meta_title: newBlogDb.meta_title,
-        meta_description: newBlogDb.meta_description,
-        focus_keyword: newBlogDb.focus_keyword,
-        canonical_url: newBlogDb.canonical_url,
-        robots_directive: newBlogDb.robots_directive,
-        author_bio: newBlogDb.author_bio,
-        reviewed_by: newBlogDb.reviewed_by,
-        tldr: newBlogDb.tldr,
-        content_type: newBlogDb.content_type,
-        content_format: newBlogDb.content_format,
-        schema_type: newBlogDb.schema_type,
-        faq_pairs: newBlogDb.faq_pairs,
-        featured_image_alt: newBlogDb.featured_image_alt,
-        og_image_override: newBlogDb.og_image_override,
-        video_embed_url: newBlogDb.video_embed_url,
-        video_transcript: newBlogDb.video_transcript,
-        tags: newBlogDb.tags,
-        pillar_cluster: newBlogDb.pillar_cluster,
-        pinned_related_articles: newBlogDb.pinned_related_articles,
-        status: newBlogDb.status,
-      });
-      saveDb(db);
-      localSaved = true;
-    } catch (dbErr) {
-      console.error("Failed to sync db.json:", dbErr);
-    }
-    
-    if (!insertedData && insertError && !localSaved) {
+    if (error) {
+      console.error("Supabase insert error:", error);
       return NextResponse.json({
         success: false,
-        error: `Database insertion failed: ${insertError.message}`
+        error: `Database insertion failed: ${error.message}`
       }, { status: 500 });
     }
 
-    const resultObj = insertedData || newBlogDb;
     const mapped = {
-      ...resultObj,
-      slug: finalSlug,
-      readTime: (resultObj as any).read_time || readTime,
+      ...data,
+      slug: data.slug || finalSlug,
+      readTime: data.read_time || readTime,
     };
 
     invalidateServerCache("blog");
     return NextResponse.json({ success: true, data: mapped }, { status: 201 });
   } catch (error: any) {
+    console.error("POST BLOG ERROR:", error);
     return NextResponse.json({ success: false, error: error.message || "Failed to create blog" }, { status: 500 });
   }
 }
 
+/**
+ * PUT Handler - Updates a blog post directly in Supabase database matched strictly by ID
+ */
 export async function PUT(req: NextRequest) {
   try {
     const body = await req.json();
@@ -361,33 +222,7 @@ export async function PUT(req: NextRequest) {
     const nowISO = new Date().toISOString();
     const updates: any = { updated_at: nowISO };
 
-    // Fetch existing blog safely to check slug change
-    let oldSlug = "";
-    try {
-      const { data: existing } = await supabaseServer.from("blogs").select("title").eq("id", id).maybeSingle();
-      if (existing) oldSlug = (existing as any).slug || slugify(existing.title || "");
-    } catch (e) {
-      // ignore
-    }
-
-    if (slug !== undefined) {
-      const newSlug = slugify(slug);
-      updates.slug = newSlug;
-
-      // Auto-log 301 redirect if slug changed
-      if (oldSlug && oldSlug !== newSlug) {
-        try {
-          await supabaseServer.from("redirects").upsert({
-            source_path: `/blog/${oldSlug}`,
-            target_path: `/blog/${newSlug}`,
-            status_code: 301,
-          });
-        } catch (redirErr) {
-          console.warn("Failed to create automatic redirect for slug change:", redirErr);
-        }
-      }
-    }
-
+    if (slug !== undefined) updates.slug = slugify(slug);
     if (title !== undefined) updates.title = title;
     if (category !== undefined) updates.category = category;
     if (author !== undefined) updates.author = author;
@@ -429,120 +264,45 @@ export async function PUT(req: NextRequest) {
     
     const sanitizedUpdates = sanitizeForSupabase(updates);
 
-    let updatedData = null;
-    let updateError = null;
+    // Update strictly by ID
+    const { data, error } = await supabaseServer
+      .from("blogs")
+      .update(sanitizedUpdates)
+      .eq("id", id)
+      .select()
+      .single();
 
-    try {
-      const { data, error } = await supabaseServer
-        .from("blogs")
-        .update(sanitizedUpdates)
-        .eq("id", id)
-        .select("id, title")
-        .maybeSingle();
-
-      if (error) {
-        console.warn("Supabase update error (sanitized):", error.message);
-        updateError = error;
-        const minimalUpdates = sanitizeForSupabase({
-          title: updates.title,
-          category: updates.category,
-          author: updates.author,
-          content: updates.content,
-          date: updates.date,
-          read_time: updates.read_time,
-          image: updates.image,
-        });
-
-        const { data: retryData, error: retryErr } = await supabaseServer
-          .from("blogs")
-          .update(minimalUpdates)
-          .eq("id", id)
-          .select("id, title")
-          .maybeSingle();
-
-        if (!retryErr) {
-          updatedData = retryData;
-          updateError = null;
-        }
-      } else {
-        updatedData = data;
-      }
-    } catch (sbErr: any) {
-      console.warn("Supabase update exception:", sbErr);
-      updateError = sbErr;
-    }
-
-    let localUpdated = false;
-    try {
-      const db = getDb();
-      if (db.blogs) {
-        const idx = db.blogs.findIndex((b: any) => b.id === id || b.slug === id);
-        if (idx !== -1) {
-          db.blogs[idx] = {
-            ...db.blogs[idx],
-            ...(updates.slug ? { slug: updates.slug } : {}),
-            ...(title !== undefined ? { title } : {}),
-            ...(category !== undefined ? { category } : {}),
-            ...(author !== undefined ? { author } : {}),
-            ...(content !== undefined ? { content } : {}),
-            ...(date !== undefined ? { date } : {}),
-            ...(readTime !== undefined ? { readTime } : {}),
-            ...(image !== undefined ? { image } : {}),
-            ...(images !== undefined ? { images: Array.isArray(images) ? images : [] } : {}),
-            ...(videos !== undefined ? { videos: Array.isArray(videos) ? videos : [] } : {}),
-            ...(section !== undefined ? { section } : {}),
-            ...(is_show_featured_page !== undefined ? { is_show_featured_page } : {}),
-            ...(meta_title !== undefined ? { meta_title } : {}),
-            ...(meta_description !== undefined ? { meta_description } : {}),
-            ...(focus_keyword !== undefined ? { focus_keyword } : {}),
-            ...(canonical_url !== undefined ? { canonical_url } : {}),
-            ...(robots_directive !== undefined ? { robots_directive } : {}),
-            ...(author_bio !== undefined ? { author_bio } : {}),
-            ...(reviewed_by !== undefined ? { reviewed_by } : {}),
-            ...(tldr !== undefined ? { tldr } : {}),
-            ...(content_type !== undefined ? { content_type } : {}),
-            ...(content_format !== undefined ? { content_format } : {}),
-            ...(schema_type !== undefined ? { schema_type } : {}),
-            ...(faq_pairs !== undefined ? { faq_pairs } : {}),
-            ...(featured_image_alt !== undefined ? { featured_image_alt } : {}),
-            ...(og_image_override !== undefined ? { og_image_override } : {}),
-            ...(video_embed_url !== undefined ? { video_embed_url } : {}),
-            ...(video_transcript !== undefined ? { video_transcript } : {}),
-            ...(tags !== undefined ? { tags: Array.isArray(tags) ? tags : [] } : {}),
-            ...(pillar_cluster !== undefined ? { pillar_cluster } : {}),
-            ...(pinned_related_articles !== undefined ? { pinned_related_articles: Array.isArray(pinned_related_articles) ? pinned_related_articles : [] } : {}),
-            ...(status !== undefined ? { status } : {}),
-          };
-          saveDb(db);
-          localUpdated = true;
-        }
-      }
-    } catch (dbErr) {
-      console.error("Failed to sync db.json:", dbErr);
-    }
-    
-    if (!updatedData && updateError && !localUpdated) {
+    if (error) {
+      console.error("Supabase update error:", error);
       return NextResponse.json({
         success: false,
-        error: `Database update failed: ${updateError.message}`
+        error: `Database update failed: ${error.message}`
       }, { status: 500 });
     }
 
+    if (!data) {
+      return NextResponse.json({
+        success: false,
+        error: `No blog found with ID: ${id}`
+      }, { status: 44 });
+    }
+
     const mapped = {
-      ...(updatedData || updates),
-      slug: updates.slug || (updatedData as any)?.slug,
-      readTime: (updatedData as any)?.read_time || readTime,
+      ...data,
+      slug: data.slug || updates.slug,
+      readTime: data.read_time || readTime,
     };
     
     invalidateServerCache("blog");
     return NextResponse.json({ success: true, data: mapped });
   } catch (error: any) {
+    console.error("PUT BLOG ERROR:", error);
     return NextResponse.json({ success: false, error: error.message || "Failed to update blog" }, { status: 500 });
   }
 }
 
 /**
- * DELETE Handler - Removes a blog post
+ * DELETE Handler - Removes a blog post directly from Supabase database matched strictly by ID
  */
 export async function DELETE(req: NextRequest) {
   try {
@@ -552,46 +312,27 @@ export async function DELETE(req: NextRequest) {
     if (!id) {
       return NextResponse.json({ success: false, error: "Blog ID is required" }, { status: 400 });
     }
-    
-    // 1. Delete from local db.json
-    let localDeleted = false;
-    try {
-      const db = getDb();
-      if (db.blogs) {
-        const initialLen = db.blogs.length;
-        db.blogs = db.blogs.filter((b: any) => b.id !== id && b.slug !== id);
-        if (db.blogs.length !== initialLen) {
-          saveDb(db);
-          localDeleted = true;
-        }
-      }
-    } catch (dbErr) {
-      console.error("Failed to delete blog from db.json:", dbErr);
+
+    // Delete strictly by ID
+    const { data, error } = await supabaseServer
+      .from("blogs")
+      .delete()
+      .eq("id", id)
+      .select();
+
+    if (error) {
+      console.error("Supabase delete error:", error);
+      return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 
-    // 2. Delete from Supabase
-    let supabaseDeleted = false;
-    try {
-      const { error } = await supabaseServer
-        .from("blogs")
-        .delete()
-        .eq("id", id);
-        
-      if (!error) {
-        supabaseDeleted = true;
-      } else {
-        console.warn("Supabase delete warning:", error.message);
-      }
-    } catch (sbErr) {
-      console.warn("Supabase delete exception:", sbErr);
+    if (!data || data.length === 0) {
+      return NextResponse.json({ success: false, error: `No blog found with ID: ${id} to delete` }, { status: 404 });
     }
     
     invalidateServerCache("blog");
-    return NextResponse.json({ success: true, message: "Blog post removed successfully" });
+    return NextResponse.json({ success: true, message: "Blog post removed successfully from database" });
   } catch (error: any) {
+    console.error("DELETE BLOG ERROR:", error);
     return NextResponse.json({ success: false, error: error.message || "Failed to remove blog" }, { status: 500 });
   }
 }
-
-
-

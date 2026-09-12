@@ -88,10 +88,11 @@ export default function AdminBlogsPage() {
   const loadData = async () => {
     try {
       setLoading(true);
+      const t = Date.now();
       const [bRes, pRes, cRes] = await Promise.all([
-        fetch("/api/blogs?admin_view=true", { cache: "no-store" }),
-        fetch("/api/practitioners", { cache: "no-store" }),
-        fetch("/api/blogs/categories", { cache: "no-store" })
+        fetch(`/api/blogs?admin_view=true&_t=${t}`, { cache: "no-store", headers: { "Pragma": "no-cache" } }),
+        fetch(`/api/practitioners?_t=${t}`, { cache: "no-store" }),
+        fetch(`/api/blogs/categories?_t=${t}`, { cache: "no-store" })
       ]);
 
       const bJson = await bRes.json();
@@ -581,16 +582,19 @@ export default function AdminBlogsPage() {
 
   const handleDeleteBlog = async (id: string) => {
     if (!confirm("Are you sure you want to permanently delete this blog post?")) return;
+    setBlogs((prev) => prev.filter((b) => b.id !== id));
     try {
-      const res = await fetch(`/api/blogs?id=${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/blogs?id=${encodeURIComponent(id)}`, { method: "DELETE" });
       const json = await res.json();
       if (json.success) {
-        loadData();
+        await loadData();
       } else {
         alert("Failed to delete blog: " + json.error);
+        await loadData();
       }
     } catch (err) {
       console.error(err);
+      await loadData();
     }
   };
 

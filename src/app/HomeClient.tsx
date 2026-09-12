@@ -5,7 +5,6 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import AdSense from "@/components/AdSense";
 import { formatCurrency } from "@/utils/formatters";
 import { useRouter } from "next/navigation";
 import { Brain, Heart, IndianRupee, Compass, Users, User, Sparkles, Grid, Search, ArrowRight, Shield, Flower } from "lucide-react";
@@ -615,9 +614,6 @@ export default function Home() {
                   </button>
                 </div>
 
-                {/* Google AdSense Unit */}
-                <AdSense adClient="ca-pub-4820128927673407" adSlot="7373192129" />
-
                 {/* Bottom Callout Section */}
                 <div className="bottom-callout-section">
                   <div className="bottom-callout-text-small">Not sure where to start?</div>
@@ -848,112 +844,7 @@ export default function Home() {
             </div>
           </section>
 
-          {/* 4. Soul Report Viewport */}
-          <section id="section-report" className="viewport-section report-view">
-            <div className="section-container select-report-layout">
-              {activeStep === 4 && (
-                <div className="report-layout">
-                  {/* Top part: Two Column Layout */}
-                  <div className="report-columns-grid">
 
-                    {/* Left Column: Visual Chakras (Scanner) */}
-                    <div className="report-left-column glass-panel">
-                      <h3 className="visualizer-heading">Somatic Scanner</h3>
-                      <div className="chakra-interactive-visualizer">
-
-                        {/* SVG spinal channel with glowing nodes */}
-                        <div className="spinal-svg-wrapper spinal-svg-tall">
-                          <svg className="spinal-channel spinal-channel-visible" width="80" height="460" viewBox="0 0 80 460">
-                            <line x1="40" y1="20" x2="40" y2="440" stroke="rgba(168, 85, 247, 0.15)" strokeWidth="6" strokeDasharray="8 6" />
-
-                            <circle cx="40" cy="40" r="18" className="scanner-chakra scanner-chakra-crown" />
-                            <circle cx="40" cy="100" r="18" className="scanner-chakra scanner-chakra-thirdeye" />
-                            <circle cx="40" cy="160" r="18" className="scanner-chakra scanner-chakra-throat" />
-                            <circle cx="40" cy="220" r="18" className="scanner-chakra scanner-chakra-heart" />
-                            <circle cx="40" cy="280" r="18" className="scanner-chakra scanner-chakra-solar" />
-                            <circle cx="40" cy="340" r="18" className="scanner-chakra scanner-chakra-sacral" />
-                            <circle cx="40" cy="400" r="18" className="scanner-chakra scanner-chakra-root" />
-
-                            {/* Scanner Line */}
-                            <line x1="5" y1="20" x2="75" y2="20" stroke="#db2777" strokeWidth="3" className="scanner-line scanner-line-glow" />
-                          </svg>
-                        </div>
-                      </div>
-
-                      <div className="scanner-status">
-                        <span className="scanning-dot"></span>
-                        Analyzing Somatic Resonances...
-                      </div>
-                    </div>
-
-                    {/* Right Column: In Progress Details */}
-                    <div className="report-right-column glass-panel">
-                      <div className="report-header">
-                        <span className="report-status-badge report-status-in-progress">Preparation in Progress</span>
-                        <h2 className="report-title gold-text-gradient">Your Custom Soul Report</h2>
-                        <p className="report-owner">Prepared for <strong>{profileForm.name}</strong> • Focus Category: <strong>{selectedCategory}</strong></p>
-                      </div>
-
-                      <div className="soul-report-summary">
-                        <p className="report-paragraph">
-                          Thank you for completing your Somatic Alignment check. Your responses have been submitted to our wellness practitioners.
-                        </p>
-                        <p className="report-paragraph">
-                          Instead of generating a generic, automated template, our certified energy healers are manually analyzing your specific answers, mapping your chakra flow, and constructing a customized spiritual alignment plan.
-                        </p>
-                        <p className="report-paragraph">
-                          Your completed report will be sent to your email (<strong>{profileForm.email}</strong>) within 24 hours.
-                        </p>
-                      </div>
-
-                      <div className="alignment-step-card">
-                        <h4 className="alignment-step-label">Next Alignment Step</h4>
-                        <h3 className="alignment-step-title">Book a Free 15-Minute Diagnostic Session</h3>
-                        <p className="alignment-step-desc">
-                          Schedule a live video call with Dr. Elara Vance to scan your auric fields and map blockages.
-                        </p>
-                        <Button variant="gold" onClick={() => router.push("/booking?service=srv-free")} className="book-free-session-btn">
-                          🔮 Book Free Energy Session
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Bottom Section: Paid related sessions */}
-                  <div className="report-bottom-section glass-panel">
-                    <div className="bottom-section-header">
-                      <h3 className="bottom-section-title">Explore Custom Somatic Therapies</h3>
-                      <p className="bottom-section-subtitle">Below are the recommended paid sessions to target somatic blocks in your {selectedCategory} category.</p>
-                    </div>
-
-                    <div className="booking-options-grid booking-options-stacked">
-                      <div className="therapies-recommendation-card therapies-card-full">
-                        <div className="recommended-services-grid-layout recommended-grid-auto">
-                          {getRecommendedServices().map((srv) => (
-                            <Card key={srv.id} className="recommend-service-card" variant="glowing">
-                              <div className="card-top-row">
-                                <span className="card-badge">{srv.category}</span>
-                                <span className="card-price">{formatCurrency(srv.price)}</span>
-                              </div>
-                              <h4 className="recommend-card-title">{srv.name}</h4>
-                              <p className="recommend-card-desc">{srv.description}</p>
-                              <Button
-                                variant="gold-outline"
-                                onClick={() => router.push(`/booking?service=${srv.id}`)}
-
-                              >
-                                Book This Session
-                              </Button>
-                            </Card>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </section>
 
           {/* FAQ Modal (Homepage sidebar button trigger) */}
           {faqOpen && (

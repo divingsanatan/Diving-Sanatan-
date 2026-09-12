@@ -59,28 +59,21 @@ export default function BlogListingPage() {
     loadServices();
   }, []);
 
-  // Load blogs whenever activeCategory changes with client-side cache
+  // Load blogs whenever activeCategory changes
   useEffect(() => {
     async function loadBlogs() {
-      const cacheKey = activeCategory || "all";
       setVisibleCount(10); // Reset visible count on category change
-
-      // If we have cached data for this category, display it immediately
-      if (blogsCacheRef.current[cacheKey]) {
-        setBlogs(blogsCacheRef.current[cacheKey]);
-        setLoading(false);
-      } else {
-        setLoading(true);
-      }
+      setLoading(true);
 
       try {
-        const url = activeCategory && activeCategory !== "all"
+        const t = Date.now();
+        const baseUrl = activeCategory && activeCategory !== "all"
           ? `/api/blogs?category=${encodeURIComponent(activeCategory)}`
           : `/api/blogs`;
-        const res = await fetch(url, { cache: "no-cache" });
+        const url = `${baseUrl}${baseUrl.includes("?") ? "&" : "?"}_t=${t}`;
+        const res = await fetch(url, { cache: "no-store", headers: { "Pragma": "no-cache" } });
         const json = await res.json();
         if (json.success) {
-          blogsCacheRef.current[cacheKey] = json.data;
           setBlogs(json.data);
         }
       } catch (err) {
