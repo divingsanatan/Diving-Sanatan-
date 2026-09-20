@@ -154,11 +154,160 @@ const initialQuestions: QuestionItem[] = [
       likes: 19
     },
     comments: []
+  },
+  {
+    id: "throat-chakra-blockage",
+    category: "Chakra Healing",
+    title: "How do I clear a blocked Throat Chakra (Vishuddha)?",
+    description: "Lately I find it hard to express my feelings clearly and feel a constant tightness in my neck during conversations. Can sound healing help balance the Throat Chakra?",
+    askedBy: "Meera K.",
+    askedByAvatar: "👩",
+    date: "May 3, 2025",
+    views: "640",
+    followers: 15,
+    upvotes: 35,
+    commentsCount: 2,
+    bestAnswer: {
+      healerName: "Dr. Meera Sharma",
+      healerAvatar: "/images/anara.png",
+      healerRole: "Healer",
+      healerCredentials: "Holistic Therapist • 12 years experience",
+      date: "May 4, 2025",
+      content: "A blocked Throat Chakra (Vishuddha) directly restricts self-expression and truth. Sound therapy using the frequency of 741Hz or chanting the HAM seed mantra is highly effective to restore energy flow:",
+      bullets: [
+        "HAM Mantra: Chant the HAM sound for 10-15 minutes in a comfortable sitting posture.",
+        "Blue Lace Agate: Place this crystal on your neck during throat chakra meditations.",
+        "Sound Therapy: Listen to 741Hz Solfeggio frequency vibrations daily.",
+        "Journaling: Practice uncensored stream-of-consciousness writing to release blocked emotions."
+      ],
+      conclusion: "Speak your truth gently, and let the sound vibrations wash away the mental blocks.",
+      likes: 15
+    },
+    comments: []
+  },
+  {
+    id: "protect-energy-crowds",
+    category: "Aura & Energy",
+    title: "How to protect my energy field in crowded places?",
+    description: "As an empath, I feel extremely drained after visiting shopping malls or taking public transport. What crystals or practices can help shield my aura?",
+    askedBy: "Kabir M.",
+    askedByAvatar: "👨",
+    date: "May 1, 2025",
+    views: "810",
+    followers: 18,
+    upvotes: 56,
+    commentsCount: 3,
+    bestAnswer: {
+      healerName: "Guru Dev",
+      healerAvatar: "🧘",
+      healerRole: "Energy Master",
+      healerCredentials: "Kundalini Master • 15 years experience",
+      date: "May 2, 2025",
+      content: "Empaths naturally absorb the emotional energy of their surroundings. To shield your aura, you must establish clear boundaries and activate a protective energy shield before stepping out:",
+      bullets: [
+        "Aura Shielding: Visualize a bright white or violet sphere of light surrounding your body.",
+        "Protective Crystals: Carry Black Tourmaline, Hematite, or Labradorite in your pocket.",
+        "Salt Bath: Take a warm bath with Epsom salt after returning home to cleanse residual energy.",
+        "Rooting Practice: Keep your feet flat on the ground and feel anchored to the Earth."
+      ],
+      conclusion: "A healthy aura acts as a filter, not a sponge. Shield daily and cleanse regularly.",
+      likes: 24
+    },
+    comments: []
+  },
+  {
+    id: "solfeggio-528hz-healing",
+    category: "Meditation & Mindfulness",
+    title: "What makes the 528Hz frequency so special for healing?",
+    description: "I keep seeing 528Hz mentioned everywhere in sound healing videos as the 'Love Frequency' or 'Transformation Frequency'. What is the science behind it?",
+    askedBy: "Sneha G.",
+    askedByAvatar: "👧",
+    date: "Apr 28, 2025",
+    views: "1.1K",
+    followers: 20,
+    upvotes: 78,
+    commentsCount: 4,
+    bestAnswer: {
+      healerName: "Dr. Meera Sharma",
+      healerAvatar: "/images/anara.png",
+      healerRole: "Healer",
+      healerCredentials: "Holistic Therapist • 12 years experience",
+      date: "Apr 29, 2025",
+      content: "528Hz is one of the core Solfeggio frequencies. It is traditionally associated with cell regeneration and DNA repair, helping bring the body into a state of deep relaxation:",
+      bullets: [
+        "Cellular Resonance: Studies suggest sound at 528Hz stimulates cellular repair pathways.",
+        "Solar Plexus Activation: This frequency realigns the Manipura chakra, boosting confidence.",
+        "Stress Reduction: Sound baths at 528Hz reduce cortisol levels significantly within 20 minutes."
+      ],
+      conclusion: "Incorporate 528Hz meditation sessions into your evening routine for deep, restorative rest.",
+      likes: 38
+    },
+    comments: []
+  },
+  {
+    id: "self-reiki-stress",
+    category: "Reiki Healing",
+    title: "Can I perform self-Reiki for quick stress relief?",
+    description: "I recently finished a Reiki Level 1 course but feel unsure how to execute a session on myself when feeling overwhelmed at work. What are the key hand positions?",
+    askedBy: "Rahul V.",
+    askedByAvatar: "👦",
+    date: "Apr 25, 2025",
+    views: "520",
+    followers: 9,
+    upvotes: 19,
+    commentsCount: 1,
+    bestAnswer: {
+      healerName: "Guru Dev",
+      healerAvatar: "🧘",
+      healerRole: "Energy Master",
+      healerCredentials: "Kundalini Master • 15 years experience",
+      date: "Apr 26, 2025",
+      content: "Yes, self-Reiki is a beautiful tool for immediate centering. Even a 5-minute session in your office chair can redirect nervous energy:",
+      bullets: [
+        "Center Yourself: Rub your hands together, place them over your heart, and set a clear healing intention.",
+        "Third Eye / Crown Position: Place your hands gently on your forehead and eyes to quiet a racing mind.",
+        "Throat & Heart Position: Place one hand on your throat and the other on your chest to balance emotional expression.",
+        "Solar Plexus Position: Place hands on the upper abdomen to calm any physical anxiety sensations."
+      ],
+      conclusion: "Reiki flows wherever it is needed. Trust your hands, breathe deeply, and allow the energy to work.",
+      likes: 12
+    },
+    comments: []
+  },
+  {
+    id: "sound-bowls-insomnia",
+    category: "Meditation & Mindfulness",
+    title: "Do Tibetan singing bowls actually help with chronic insomnia?",
+    description: "I've struggled with waking up at 3 AM for months. Will listening to Tibetan singing bowls or crystal bowls help me stay asleep?",
+    askedBy: "Priya S.",
+    askedByAvatar: "👩",
+    date: "Apr 20, 2025",
+    views: "930",
+    followers: 25,
+    upvotes: 62,
+    commentsCount: 3,
+    bestAnswer: {
+      healerName: "Dr. Meera Sharma",
+      healerAvatar: "/images/anara.png",
+      healerRole: "Healer",
+      healerCredentials: "Holistic Therapist • 12 years experience",
+      date: "Apr 21, 2025",
+      content: "Yes, sound bowls are highly effective for sleep disorders. They work by entraining brainwaves from active Beta states into slow Theta and Delta states associated with deep sleep:",
+      bullets: [
+        "Brainwave Entrainment: The slow harmonic frequencies induce alpha/theta states, quieting active thoughts.",
+        "Vibrational Healing: The physical resonance relaxes tense muscle tissue and regulates breathing.",
+        "Nighttime Ritual: Listen to crystal bowl audio for 30 minutes before sleep without screen exposure."
+      ],
+      conclusion: "Creating a dedicated sound-healing environment before bed transforms sleep quality over time.",
+      likes: 41
+    },
+    comments: []
   }
 ];
 
 export default function QuoraQAAdmin() {
   const [questions, setQuestions] = useState<QuestionItem[]>([]);
+  const [healerCount, setHealerCount] = useState(24);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
@@ -211,6 +360,15 @@ export default function QuoraQAAdmin() {
   };
 
   useEffect(() => {
+    fetch("/api/practitioners")
+      .then(r => r.json())
+      .then(res => {
+        if (res?.success && Array.isArray(res.data) && res.data.length > 0) {
+          setHealerCount(res.data.length);
+        }
+      })
+      .catch(() => {});
+
     const stored = localStorage.getItem("divingsanatan_quora_questions");
     if (stored) {
       try {
@@ -423,6 +581,11 @@ export default function QuoraQAAdmin() {
     currentPage * itemsPerPage
   );
 
+  // Dynamic Stats Calculations
+  const totalQuestions = questions.length;
+  const totalAnswers = questions.filter(q => !!q.bestAnswer).length;
+  const pendingReview = questions.filter(q => !q.bestAnswer).length;
+
   return (
     <div className="dashboard-content">
       {/* Toast */}
@@ -434,6 +597,12 @@ export default function QuoraQAAdmin() {
 
       <StatsDashboard
         pageType="quora-qa"
+        customStats={{
+          val1: totalQuestions,
+          val2: totalAnswers,
+          val3: healerCount,
+          val4: pendingReview
+        }}
         actions={
           <div style={{ display: "flex", gap: "8px" }}>
             <button className="btn btn-secondary btn-sm" onClick={() => setShowCatModal(true)}>

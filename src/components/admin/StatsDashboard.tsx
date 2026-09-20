@@ -44,6 +44,12 @@ export type AdminPageType =
 interface StatsDashboardProps {
   pageType: AdminPageType;
   actions?: React.ReactNode;
+  customStats?: {
+    val1?: any;
+    val2?: any;
+    val3?: any;
+    val4?: any;
+  };
 }
 
 interface StatCardProps {
@@ -71,12 +77,12 @@ function StatCard({ label, value, trend, trendType, IconComponent }: StatCardPro
   );
 }
 
-export default function StatsDashboard({ pageType, actions }: StatsDashboardProps) {
+export default function StatsDashboard({ pageType, actions, customStats }: StatsDashboardProps) {
   const [statsData, setStatsData] = useState<{ val1: any; val2: any; val3: any; val4: any }>({
-    val1: 0,
-    val2: 0,
-    val3: 0,
-    val4: 0
+    val1: customStats?.val1 ?? 0,
+    val2: customStats?.val2 ?? 0,
+    val3: customStats?.val3 ?? 0,
+    val4: customStats?.val4 ?? 0
   });
   const [loading, setLoading] = useState(true);
 
@@ -156,9 +162,9 @@ export default function StatsDashboard({ pageType, actions }: StatsDashboardProp
       title: "Q&A Board Management",
       subtitle: "Moderate questions, verify expert answers, and manage community engagement.",
       cards: [
-        { label: "Total Questions", trend: "↑ 24% this month", trendType: "up", icon: MessageSquare },
-        { label: "Total Answers", trend: "↑ 18% this month", trendType: "up", icon: MessageSquare },
-        { label: "Expert Healers", trend: "Active", trendType: "up", icon: Users },
+        { label: "Total Questions", trend: "Active community questions", trendType: "up", icon: MessageSquare },
+        { label: "Total Answers", trend: "Verified expert answers", trendType: "up", icon: MessageSquare },
+        { label: "Expert Healers", trend: "Active in directory", trendType: "up", icon: Users },
         { label: "Pending Review", trend: "Needs attention", trendType: "attention", icon: Clock }
       ]
     },
@@ -236,21 +242,40 @@ export default function StatsDashboard({ pageType, actions }: StatsDashboardProp
   const meta = pageMeta[pageType];
 
   useEffect(() => {
+    if (customStats) {
+      setStatsData({
+        val1: customStats.val1 ?? 0,
+        val2: customStats.val2 ?? 0,
+        val3: customStats.val3 ?? 0,
+        val4: customStats.val4 ?? 0
+      });
+      setLoading(false);
+      return;
+    }
+
     let active = true;
     const fetchStats = async () => {
       try {
         setLoading(true);
         if (pageType === "quora-qa") {
-          const stored = localStorage.getItem("divingsanatan_quora_questions");
+          let pracCount = 24;
+          try {
+            const pracRes = await fetch("/api/practitioners").then(r => r.json());
+            if (pracRes?.success && Array.isArray(pracRes.data) && pracRes.data.length > 0) {
+              pracCount = pracRes.data.length;
+            }
+          } catch (e) {}
+
+          const stored = typeof window !== "undefined" ? localStorage.getItem("divingsanatan_quora_questions") : null;
           const questions = stored ? JSON.parse(stored) : [];
           const answers = questions.filter((q: any) => q.bestAnswer).length;
           const unanswered = questions.filter((q: any) => !q.bestAnswer).length;
           if (active) {
             setStatsData({
-              val1: questions.length || 142,
-              val2: answers || 486,
-              val3: 24,
-              val4: unanswered || 8
+              val1: questions.length,
+              val2: answers,
+              val3: pracCount,
+              val4: unanswered
             });
           }
           return;
@@ -438,7 +463,7 @@ export default function StatsDashboard({ pageType, actions }: StatsDashboardProp
     return () => {
       active = false;
     };
-  }, [pageType]);
+  }, [pageType, customStats?.val1, customStats?.val2, customStats?.val3, customStats?.val4]);
 
   // Format values nicely based on page type
   const getFormattedVal = (cardIdx: number, val: any) => {
