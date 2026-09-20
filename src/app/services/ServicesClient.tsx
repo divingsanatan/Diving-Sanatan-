@@ -111,7 +111,7 @@ export default function ServicesPage() {
   // UI Interactive States
   const [activeTestimonial, setActiveTestimonial] = useState(0);
   const [featuredIndex, setFeaturedIndex] = useState(0);
-  const [visibleCount, setVisibleCount] = useState(5); // Default to 5 visible slides for desktop
+  const [visibleCount, setVisibleCount] = useState(4); // Default to 4 visible slides for desktop
 
   // Handle responsive visibleCount dynamically
   useEffect(() => {
@@ -124,7 +124,7 @@ export default function ServicesPage() {
       } else if (width <= 1200) {
         setVisibleCount(3);
       } else {
-        setVisibleCount(5);
+        setVisibleCount(4);
       }
     };
     handleResize();
@@ -1336,6 +1336,7 @@ export default function ServicesPage() {
           gap: 6px;
           padding: 0 4px;
           width: 100%;
+          flex: 1;
         }
         .featured-card-title {
           font-family: var(--font-serif);
@@ -1343,6 +1344,11 @@ export default function ServicesPage() {
           color: #1e1b4b;
           font-weight: 700 !important;
           line-height: 1.25;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+          min-height: calc(1.25em * 2);
         }
         .featured-card-desc {
           font-size: 0.78rem;
@@ -1355,24 +1361,31 @@ export default function ServicesPage() {
           min-height: calc(1.45em * 2);
         }
         .learn-more-link {
-          background: transparent;
-          border: none;
+          margin-top: auto;
+          background: rgba(168, 85, 247, 0.08);
+          border: 1px solid rgba(168, 85, 247, 0.2);
+          border-radius: 99px;
           color: #7c3aed;
-          font-size: 0.78rem;
+          font-size: 0.8rem;
           font-weight: 700;
           cursor: pointer;
           display: flex;
           align-items: center;
+          justify-content: center;
           gap: 6px;
-          padding: 4px 0;
+          padding: 8px 14px;
+          width: 100%;
           transition: var(--transition-fast);
-          margin-top: 4px;
+          box-sizing: border-box;
         }
         .learn-more-link:hover {
-          color: #4c1d95;
+          background: #7c3aed;
+          color: #ffffff;
+          border-color: #7c3aed;
+          box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
         }
         .learn-more-link:hover .arrow-icon {
-          transform: translateX(2px);
+          transform: translateX(3px);
         }
         .arrow-icon {
           transition: transform 0.2s ease;
@@ -1466,6 +1479,11 @@ export default function ServicesPage() {
           color: #4c1d95;
           font-weight: 700 !important;
           line-height: 1.25;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+          min-height: calc(1.25em * 2);
         }
         .program-desc {
           font-size: 0.72rem;
@@ -1498,22 +1516,28 @@ export default function ServicesPage() {
           flex-shrink: 0;
         }
         .view-details-link {
-          background: transparent;
-          border: none;
+          margin-top: auto;
+          background: rgba(168, 85, 247, 0.08);
+          border: 1px solid rgba(168, 85, 247, 0.2);
+          border-radius: 99px;
           color: #7c3aed;
-          font-size: 0.75rem;
+          font-size: 0.8rem;
           font-weight: 700;
           cursor: pointer;
           display: flex;
           align-items: center;
-          gap: 4px;
-          padding: 6px 0;
-          margin-top: 4px;
+          justify-content: center;
+          gap: 6px;
+          padding: 8px 14px;
+          width: 100%;
           transition: var(--transition-fast);
-          width: fit-content;
+          box-sizing: border-box;
         }
         .view-details-link:hover {
-          color: #4c1d95;
+          background: #7c3aed;
+          color: #ffffff;
+          border-color: #7c3aed;
+          box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
         }
         .view-details-link:hover .arrow-icon {
           transform: translateX(2px);

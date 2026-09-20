@@ -147,6 +147,8 @@ export default function AdminLayout({
         return "Customer Leads Profiles";
       case "/admin/seo-command":
         return "SEO Command Center";
+      case "/admin/team":
+        return "Team Members Manager";
       default:
         return "Admin Portal";
     }
@@ -186,10 +188,13 @@ export default function AdminLayout({
         return "Leads";
       case "/admin/seo-command":
         return "SEO Command Center";
+      case "/admin/team":
+        return "Team Members";
       default:
         return null;
     }
   };
+
 
   // If the path is /admin/login, we do not want to show the sidebar layout wrapper
   if (pathname === "/admin/login") {
@@ -296,6 +301,16 @@ export default function AdminLayout({
             <Grid size={16} />
             <span>Categories</span>
           </Link>
+          <Link
+            href="/admin/team"
+            title="Team Members"
+            className={`sidebar-link ${pathname === "/admin/team" ? "active" : ""}`}
+            onClick={() => setSidebarOpen(false)}
+          >
+            <UserCheck size={16} />
+            <span>Team Members</span>
+          </Link>
+
 
           {/* Section: CONTENT & DIAGNOSTICS */}
           <div className="sidebar-nav-header">Content & Diagnostics</div>

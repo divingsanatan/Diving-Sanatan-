@@ -161,12 +161,23 @@ export interface UserProfileItem {
   created_at?: string;
 }
 
+export interface TeamMember {
+  id: string;
+  name: string;
+  role: string;
+  image: string;
+  bio?: string;
+  order_index?: number;
+  createdAt?: string;
+}
+
 export interface DatabaseSchema {
   services: Service[];
   practitioners: Practitioner[];
   bookings: Booking[];
   reviews: Review[];
   blogs: Blog[];
+  team_members?: TeamMember[];
   user_profiles?: UserProfileItem[];
   pending_changes?: PendingChangeItem[];
   agent_runs?: AgentRunItem[];
@@ -174,6 +185,7 @@ export interface DatabaseSchema {
   keyword_rankings?: KeywordRankingItem[];
   pillarGuides?: any[];
 }
+
 
 // Initial high-fidelity seed data
 const initialData: DatabaseSchema = {
@@ -529,6 +541,48 @@ const initialData: DatabaseSchema = {
       phone: "+91 9876543210",
       created_at: new Date().toISOString()
     }
+  ],
+  team_members: [
+    {
+      id: "team-1",
+      name: "Priya Sharma",
+      role: "Founder & CEO",
+      image: "https://i.pravatar.cc/100?img=49",
+      bio: "Visionary leader with 10+ years driving spiritual wellness initiatives and holistic brand strategy.",
+      order_index: 1
+    },
+    {
+      id: "team-2",
+      name: "Arjun Malhotra",
+      role: "Head of Healing",
+      image: "https://i.pravatar.cc/100?img=15",
+      bio: "Master energy practitioner guiding healer certifications and therapeutic quality standards.",
+      order_index: 2
+    },
+    {
+      id: "team-3",
+      name: "Kavya Nair",
+      role: "Content & Education",
+      image: "https://i.pravatar.cc/100?img=45",
+      bio: "Educator specializing in ancient Sanatan literature and modern mindfulness curriculum.",
+      order_index: 3
+    },
+    {
+      id: "team-4",
+      name: "Vikram Das",
+      role: "Operations Manager",
+      image: "https://i.pravatar.cc/100?img=13",
+      bio: "Managing seamless client booking experiences, sanctuary events, and platform infrastructure.",
+      order_index: 4
+    },
+    {
+      id: "team-5",
+      name: "Ishita Verma",
+      role: "Community Manager",
+      image: "https://i.pravatar.cc/100?img=20",
+      bio: "Fostering engaging community discussions, seeker events, and supportive client networks.",
+      order_index: 5
+    }
   ]
 };
 
@@ -551,10 +605,15 @@ export function getDb(): DatabaseSchema {
     const parsed = JSON.parse(content) as DatabaseSchema;
 
     let modified = false;
+    if (!parsed.team_members || parsed.team_members.length === 0) {
+      parsed.team_members = initialData.team_members;
+      modified = true;
+    }
     if (!parsed.pending_changes || parsed.pending_changes.length === 0) {
       parsed.pending_changes = initialData.pending_changes;
       modified = true;
     }
+
     if (!parsed.agent_runs || parsed.agent_runs.length === 0) {
       parsed.agent_runs = initialData.agent_runs;
       modified = true;

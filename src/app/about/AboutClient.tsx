@@ -55,8 +55,11 @@ export default function AboutClient() {
   // Dynamic Data States
   const [services, setServices] = useState<Service[]>([]);
   const [healers, setHealers] = useState<Practitioner[]>([]);
+  const [teamMembers, setTeamMembers] = useState<any[]>([]);
   const [loadingServices, setLoadingServices] = useState(true);
   const [loadingHealers, setLoadingHealers] = useState(true);
+  const [loadingTeam, setLoadingTeam] = useState(true);
+
 
   // Search & Navigation States
   const [searchQuery, setSearchQuery] = useState("");
@@ -174,9 +177,28 @@ export default function AboutClient() {
       }
     }
 
+    async function fetchTeam() {
+      try {
+        const res = await fetch("/api/team");
+        const json = await res.json();
+        if (json.success && json.data && json.data.length > 0) {
+          setTeamMembers(json.data);
+        } else {
+          setTeamMembers(staticTeam);
+        }
+      } catch (err) {
+        console.error("Failed to load team members", err);
+        setTeamMembers(staticTeam);
+      } finally {
+        setLoadingTeam(false);
+      }
+    }
+
     fetchServices();
     fetchPractitioners();
+    fetchTeam();
   }, []);
+
 
   // Intersection Observer for scroll-spy active state tracking
   useEffect(() => {
@@ -375,7 +397,8 @@ export default function AboutClient() {
     );
   });
 
-  const filteredTeam = staticTeam.filter((member) => {
+  const teamSource = teamMembers.length > 0 ? teamMembers : staticTeam;
+  const filteredTeam = teamSource.filter((member) => {
     const q = searchQuery.toLowerCase().trim();
     if (!q) return true;
     return (
@@ -383,6 +406,7 @@ export default function AboutClient() {
       member.role.toLowerCase().includes(q)
     );
   });
+
 
   return (
     <div className="page-shell">
@@ -569,14 +593,22 @@ export default function AboutClient() {
                 ref={teamCarouselRef}
                 onScroll={() => updateScrollProgress(teamCarouselRef, setTeamScrollProgress)}
               >
-                {filteredTeam.length === 0 ? (
+                {loadingTeam ? (
+                  Array.from({ length: 3 }).map((_, i) => (
+                    <div className="healer-card skeleton-card" key={i}>
+                      <div className="skeleton skeleton-avatar"></div>
+                      <div className="skeleton skeleton-title"></div>
+                      <div className="skeleton skeleton-role"></div>
+                    </div>
+                  ))
+                ) : filteredTeam.length === 0 ? (
                   <div className="no-results">No matching team members found.</div>
                 ) : (
                   filteredTeam.map((member) => (
                     <div className="healer-card" key={member.id}>
                       <img
                         className="healer-avatar"
-                        src={member.image}
+                        src={member.image || "https://i.pravatar.cc/100?img=49"}
                         alt={member.name}
                       />
                       <h4>{member.name}</h4>
@@ -586,6 +618,7 @@ export default function AboutClient() {
                   ))
                 )}
               </div>
+
 
               {filteredTeam.length > 0 && (
                 <div className="dots">
@@ -1371,14 +1404,20 @@ export default function AboutClient() {
           gap: 8px;
           padding: 0 4px;
           width: 100%;
+          flex: 1;
         }
         .featured-card-title {
           font-family: var(--font-serif);
-          font-size: 1.1rem;
+          font-size: 1.05rem;
           color: #1e1b4b;
           font-weight: 700 !important;
-          line-height: 1.2;
+          line-height: 1.25;
           margin: 0;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+          min-height: calc(1.25em * 2);
         }
         .featured-card-desc {
           font-size: 0.78rem;
@@ -1388,28 +1427,36 @@ export default function AboutClient() {
           -webkit-line-clamp: 2;
           -webkit-box-orient: vertical;
           overflow: hidden;
+          min-height: calc(1.45em * 2);
           margin: 0;
         }
         .learn-more-link {
-          background: transparent;
-          border: none;
+          margin-top: auto;
+          background: rgba(168, 85, 247, 0.08);
+          border: 1px solid rgba(168, 85, 247, 0.2);
+          border-radius: 99px;
           color: #7c3aed;
-          font-size: 0.78rem;
+          font-size: 0.8rem;
           font-weight: 700;
           cursor: pointer;
           display: flex;
           align-items: center;
+          justify-content: center;
           gap: 6px;
-          padding: 4px 0;
+          padding: 8px 14px;
+          width: 100%;
           transition: var(--transition-fast);
-          margin-top: 4px;
+          box-sizing: border-box;
           text-decoration: none;
         }
         .learn-more-link:hover {
-          color: #4c1d95;
+          background: #7c3aed;
+          color: #ffffff;
+          border-color: #7c3aed;
+          box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
         }
         .learn-more-link:hover .arrow-icon {
-          transform: translateX(2px);
+          transform: translateX(3px);
         }
         .arrow-icon {
           transition: transform 0.2s ease;

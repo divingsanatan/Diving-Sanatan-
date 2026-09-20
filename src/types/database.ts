@@ -210,3 +210,14 @@ export interface FAQItem {
   isPublished: boolean;
   createdAt?: string;
 }
+
+export interface TeamMember {
+  id: string;
+  name: string;
+  role: string;
+  image: string;
+  bio?: string;
+  order_index?: number;
+  createdAt?: string;
+}
+

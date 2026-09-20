@@ -39,7 +39,9 @@ export type AdminPageType =
   | "faq"
   | "comparisons"
   | "leads"
-  | "users";
+  | "users"
+  | "team";
+
 
 interface StatsDashboardProps {
   pageType: AdminPageType;
@@ -236,6 +238,16 @@ export default function StatsDashboard({ pageType, actions, customStats }: Stats
         { label: "Platform Gurus", trend: "Expert practitioners", trendType: "up", icon: Star },
         { label: "Standard Users", trend: "Regular accounts", trendType: "neutral", icon: CheckCircle2 }
       ]
+    },
+    team: {
+      title: "Team Members Manager",
+      subtitle: "Manage leadership, operations, education, and community team profiles.",
+      cards: [
+        { label: "Total Team Members", trend: "Active roster", trendType: "neutral", icon: Users },
+        { label: "Executive Leadership", trend: "Founders & Heads", trendType: "up", icon: Star },
+        { label: "Operations & Mgmt", trend: "Staff & Support", trendType: "neutral", icon: Briefcase },
+        { label: "Public Status", trend: "Live on site", trendType: "up", icon: CheckCircle2 }
+      ]
     }
   };
 
@@ -296,8 +308,10 @@ export default function StatsDashboard({ pageType, actions, customStats }: Stats
           faq: ["/api/faq"],
           comparisons: ["/api/comparisons"],
           leads: ["/api/leads"],
-          users: ["/api/users"]
+          users: ["/api/users"],
+          team: ["/api/team"]
         };
+
 
         const urls = endpoints[pageType] || [];
         const responses = await Promise.all(
@@ -327,10 +341,18 @@ export default function StatsDashboard({ pageType, actions, customStats }: Stats
         const comparisons = getDataset("comparisons");
         const leads = getDataset("leads");
         const users = getDataset("users");
+        const team = getDataset("team");
 
         let val1 = 0, val2 = 0, val3 = 0, val4: any = 0;
 
         switch (pageType) {
+          case "team":
+            val1 = team.length;
+            val2 = team.filter((t: any) => t.role?.toLowerCase().includes("founder") || t.role?.toLowerCase().includes("head") || t.role?.toLowerCase().includes("ceo") || t.role?.toLowerCase().includes("director")).length;
+            val3 = team.filter((t: any) => t.role?.toLowerCase().includes("manager") || t.role?.toLowerCase().includes("lead") || t.role?.toLowerCase().includes("ops")).length;
+            val4 = "All Live";
+            break;
+
           case "overview":
             const totalRevenue = bookings
               .filter((b: any) => b.paymentStatus === "paid" && b.status !== "cancelled")
