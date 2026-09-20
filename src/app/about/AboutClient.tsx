@@ -18,7 +18,10 @@ const featuredOrder = [
   "Personal Guidance"
 ];
 
+import { TeamMember } from "@/types/database";
+
 interface Practitioner {
+
   id: string;
   name: string;
   specialty: string;
@@ -55,10 +58,11 @@ export default function AboutClient() {
   // Dynamic Data States
   const [services, setServices] = useState<Service[]>([]);
   const [healers, setHealers] = useState<Practitioner[]>([]);
-  const [teamMembers, setTeamMembers] = useState<any[]>([]);
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [loadingServices, setLoadingServices] = useState(true);
   const [loadingHealers, setLoadingHealers] = useState(true);
   const [loadingTeam, setLoadingTeam] = useState(true);
+
 
 
   // Search & Navigation States
