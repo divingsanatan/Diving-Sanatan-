@@ -7,6 +7,8 @@ import { FAQItem } from "@/types/database";
 import StatsDashboard from "@/components/admin/StatsDashboard";
 import RichTextEditor from "@/components/ui/RichTextEditor";
 
+import { clearApiCache } from "@/utils/apiCache";
+
 const PAGE_SIZE = 10;
 
 export default function AdminFAQPage() {
@@ -36,7 +38,7 @@ export default function AdminFAQPage() {
   const loadFaqs = async () => {
     try {
       setLoading(true);
-      const res = await fetch("/api/faq");
+      const res = await fetch("/api/faq", { cache: "no-store" });
       const json = await res.json();
       if (json.success) {
         setFaqs(json.data);
@@ -105,6 +107,7 @@ export default function AdminFAQPage() {
       });
       const json = await res.json();
       if (json.success) {
+        clearApiCache("/api/faq");
         showToast(editMode ? "FAQ updated successfully!" : "FAQ created successfully!", "success");
         resetForm();
         loadFaqs();
@@ -124,6 +127,7 @@ export default function AdminFAQPage() {
       const res = await fetch(`/api/faq?id=${encodeURIComponent(id)}`, { method: "DELETE" });
       const json = await res.json();
       if (json.success) {
+        clearApiCache("/api/faq");
         showToast("FAQ deleted successfully!", "success");
         if (editId === id) resetForm();
         loadFaqs();

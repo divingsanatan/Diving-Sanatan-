@@ -414,9 +414,9 @@ export default function FAQPage() {
   useEffect(() => {
     let isMounted = true;
     const processFaqsJson = (json: any) => {
-      if (json && json.success && Array.isArray(json.data) && json.data.length > 0) {
+      if (json && json.success && Array.isArray(json.data)) {
         const published = json.data.filter((f: FAQItem) => f.isPublished);
-        if (published.length > 0 && isMounted) {
+        if (isMounted) {
           setFaqs(published);
         }
       }
