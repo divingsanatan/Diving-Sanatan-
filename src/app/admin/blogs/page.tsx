@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/Button";
 import { Blog, Practitioner, BlogCategory } from "@/types/database";
 import { ImageCropperModal } from "@/components/ui/ImageCropperModal";
 import StatsDashboard from "@/components/admin/StatsDashboard";
+import { clearApiCache } from "@/utils/apiCache";
+import RichTextEditor from "@/components/ui/RichTextEditor";
 
 export default function AdminBlogsPage() {
   const [blogs, setBlogs] = useState<Blog[]>([]);
@@ -326,35 +328,7 @@ export default function AdminBlogsPage() {
     setReadTime(computed);
   };
 
-  // Sync editor innerHTML → content state
-  const syncEditorContent = useCallback(() => {
-    if (editorRef.current) {
-      handleContentChange(editorRef.current.innerHTML);
-    }
-  }, []);
 
-  // Populate editor when modal opens
-  useEffect(() => {
-    if (isModalOpen && editorRef.current) {
-      editorRef.current.innerHTML = content || "";
-      setEditorReady(true);
-    }
-    if (!isModalOpen) {
-      setEditorReady(false);
-    }
-  }, [isModalOpen]);
-
-  // RTE exec helper
-  const execCmd = (cmd: string, value?: string) => {
-    document.execCommand(cmd, false, value);
-    editorRef.current?.focus();
-    syncEditorContent();
-  };
-
-  const insertLink = () => {
-    const url = window.prompt("Enter URL:", "https://");
-    if (url) execCmd("createLink", url);
-  };
 
   const handleCategoryChange = (val: string) => {
     setCategory(val);
@@ -567,6 +541,8 @@ export default function AdminBlogsPage() {
 
       const json = await res.json();
       if (json.success) {
+        clearApiCache("/api/blogs");
+        clearApiCache("/api/pillar-guides");
         setIsModalOpen(false);
         resetForm();
         alert(editMode ? "Blog details updated successfully!" : "Blog successfully added to publication catalog!");
@@ -587,6 +563,8 @@ export default function AdminBlogsPage() {
       const res = await fetch(`/api/blogs?id=${encodeURIComponent(id)}`, { method: "DELETE" });
       const json = await res.json();
       if (json.success) {
+        clearApiCache("/api/blogs");
+        clearApiCache("/api/pillar-guides");
         await loadData();
       } else {
         alert("Failed to delete blog: " + json.error);
@@ -1195,60 +1173,13 @@ export default function AdminBlogsPage() {
 
                 <div className="form-group">
                   <label>Article Content *</label>
-
-                  {/* ── Rich Text Editor ── */}
-                  <div className="rte-wrapper">
-
-                    {/* Toolbar */}
-                    <div className="rte-toolbar">
-                      <div className="rte-toolbar-group">
-                        <button type="button" className="rte-btn" title="Bold" onMouseDown={(e) => { e.preventDefault(); execCmd("bold"); }}><b>B</b></button>
-                        <button type="button" className="rte-btn" title="Italic" onMouseDown={(e) => { e.preventDefault(); execCmd("italic"); }}><i>I</i></button>
-                        <button type="button" className="rte-btn" title="Underline" onMouseDown={(e) => { e.preventDefault(); execCmd("underline"); }}><u>U</u></button>
-                        <button type="button" className="rte-btn" title="Strikethrough" onMouseDown={(e) => { e.preventDefault(); execCmd("strikeThrough"); }}><s>S</s></button>
-                      </div>
-                      <div className="rte-toolbar-divider" />
-                      <div className="rte-toolbar-group">
-                        <button type="button" className="rte-btn rte-btn-text" title="Heading 2" onMouseDown={(e) => { e.preventDefault(); execCmd("formatBlock", "H2"); }}>H2</button>
-                        <button type="button" className="rte-btn rte-btn-text" title="Heading 3" onMouseDown={(e) => { e.preventDefault(); execCmd("formatBlock", "H3"); }}>H3</button>
-                        <button type="button" className="rte-btn rte-btn-text" title="Paragraph" onMouseDown={(e) => { e.preventDefault(); execCmd("formatBlock", "P"); }}>¶</button>
-                      </div>
-                      <div className="rte-toolbar-divider" />
-                      <div className="rte-toolbar-group">
-                        <button type="button" className="rte-btn" title="Bullet List" onMouseDown={(e) => { e.preventDefault(); execCmd("insertUnorderedList"); }}>≡</button>
-                        <button type="button" className="rte-btn" title="Numbered List" onMouseDown={(e) => { e.preventDefault(); execCmd("insertOrderedList"); }}>1.</button>
-                        <button type="button" className="rte-btn" title="Blockquote" onMouseDown={(e) => { e.preventDefault(); execCmd("formatBlock", "BLOCKQUOTE"); }}>"</button>
-                      </div>
-                      <div className="rte-toolbar-divider" />
-                      <div className="rte-toolbar-group">
-                        <button type="button" className="rte-btn" title="Insert Link" onMouseDown={(e) => { e.preventDefault(); insertLink(); }}>🔗</button>
-                        <button type="button" className="rte-btn" title="Unlink" onMouseDown={(e) => { e.preventDefault(); execCmd("unlink"); }}>🚫</button>
-                        <button type="button" className="rte-btn rte-btn-danger" title="Clear Formatting" onMouseDown={(e) => { e.preventDefault(); execCmd("removeFormat"); }}>✕</button>
-                      </div>
-                    </div>
-
-                    {/* Simple Visual Editable area */}
-                    <div
-                      ref={editorRef}
-                      className="rte-editable"
-                      contentEditable
-                      suppressContentEditableWarning
-                      onInput={syncEditorContent}
-                      onBlur={syncEditorContent}
-                      data-placeholder="Draft the article content here — use the toolbar above for formatting..."
-                    />
-
-                    {/* Hidden input to satisfy required validation */}
-                    <input
-                      type="text"
-                      required
-                      value={content}
-                      onChange={() => { }}
-                      tabIndex={-1}
-                      className="visually-hidden-input"
-                    />
-                  </div>
-
+                  <RichTextEditor
+                    value={content}
+                    onChange={handleContentChange}
+                    placeholder="Draft the article content here — use the toolbar above for formatting..."
+                    minHeight="260px"
+                    required
+                  />
                   <small className="form-hint">
                     Word Count: {content.replace(/<[^>]*>/g, " ").trim().split(/\s+/).filter(Boolean).length} words
                   </small>

@@ -374,22 +374,30 @@ export default function RichTextEditor({
           margin: 8px 0;
         }
         .rte-editable :global(a) {
-          color: #7c3aed;
-          text-decoration: underline;
+          color: #7c3aed !important;
+          text-decoration: underline !important;
+          font-weight: 600;
+          cursor: pointer;
+        }
+        .rte-editable :global(a:hover) {
+          color: #5b21b6 !important;
         }
         .rte-editable :global(b),
         .rte-editable :global(strong) {
-          font-weight: 700;
+          font-weight: 700 !important;
+          color: #0f172a;
         }
         .rte-editable :global(i),
         .rte-editable :global(em) {
-          font-style: italic;
+          font-style: italic !important;
         }
         .rte-editable :global(u) {
-          text-decoration: underline;
+          text-decoration: underline !important;
         }
-        .rte-editable :global(s) {
-          text-decoration: line-through;
+        .rte-editable :global(s),
+        .rte-editable :global(strike),
+        .rte-editable :global(del) {
+          text-decoration: line-through !important;
         }
       `}</style>
     </div>

@@ -232,6 +232,7 @@ export function getDb(): DatabaseSchema {
     if (!parsed.agent_runs) { parsed.agent_runs = []; modified = true; }
     if (!parsed.distribution_log) { parsed.distribution_log = []; modified = true; }
     if (!parsed.keyword_rankings) { parsed.keyword_rankings = []; modified = true; }
+    if (!parsed.pillarGuides) { parsed.pillarGuides = []; modified = true; }
 
     if (modified) {
       fs.writeFileSync(DB_FILE, JSON.stringify(parsed, null, 2), "utf8");

@@ -128,7 +128,11 @@ export default function PillarListingClient() {
     async function loadData() {
       try {
         setLoading(true);
-        const res = await fetch("/api/pillar-guides");
+        const t = Date.now();
+        const res = await fetch(`/api/pillar-guides?_t=${t}`, {
+          cache: "no-store",
+          headers: { "Pragma": "no-cache" }
+        });
         const json = await res.json();
 
         if (json.success) {

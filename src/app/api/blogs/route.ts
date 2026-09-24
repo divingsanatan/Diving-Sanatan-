@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/utils/supabaseServer";
 import { slugify } from "@/utils/slugify";
 import { invalidateServerCache } from "@/utils/serverCache";
+import { getDb, saveDb } from "@/utils/db";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -336,7 +337,27 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
     
+    // Also cascade remove from local db.json pillarGuides if present
+    try {
+      const db = getDb();
+      if (db.pillarGuides && db.pillarGuides.length > 0) {
+        db.pillarGuides = db.pillarGuides.filter((g: any) => g.id !== id && g.slug !== id);
+        saveDb(db);
+      }
+    } catch {
+      // Ignore
+    }
+
+    // Also cascade remove from Supabase pillar_guides table if present
+    try {
+      await supabaseServer.from("pillar_guides").delete().eq("id", id);
+      await supabaseServer.from("pillar_guides").delete().eq("slug", id);
+    } catch {
+      // Ignore
+    }
+
     invalidateServerCache("blog");
+    invalidateServerCache("pillar");
     return NextResponse.json({ success: true, message: "Blog post removed successfully from database" });
   } catch (error: any) {
     console.error("DELETE BLOG ERROR:", error);

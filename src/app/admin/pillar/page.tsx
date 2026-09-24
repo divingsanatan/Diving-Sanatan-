@@ -7,11 +7,21 @@ import {
   Plus, Trash2, Edit2, Eye, Compass, MoveUp, MoveDown, 
   BookOpen, ExternalLink, RefreshCw, AlertCircle, Save, X 
 } from "lucide-react";
+import { clearApiCache } from "@/utils/apiCache";
 
 interface SubArticleInput {
   title: string;
   link: string;
   readTime: string;
+}
+
+interface AvailableBlog {
+  id: string;
+  title: string;
+  slug: string;
+  readTime?: string;
+  read_time?: string;
+  category?: string;
 }
 
 interface PillarGuide {
@@ -28,6 +38,7 @@ export default function AdminPillarPage() {
   const [guides, setGuides] = useState<PillarGuide[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [availableBlogs, setAvailableBlogs] = useState<AvailableBlog[]>([]);
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -46,7 +57,11 @@ export default function AdminPillarPage() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const res = await fetch("/api/pillar-guides");
+      const t = Date.now();
+      const res = await fetch(`/api/pillar-guides?_t=${t}`, {
+        cache: "no-store",
+        headers: { "Pragma": "no-cache" }
+      });
       const json = await res.json();
       if (json.success) {
         setGuides(json.data || []);
@@ -58,8 +73,21 @@ export default function AdminPillarPage() {
     }
   };
 
+  const loadBlogs = async () => {
+    try {
+      const res = await fetch("/api/blogs?admin_view=true", { cache: "no-store" });
+      const json = await res.json();
+      if (json.success) {
+        setAvailableBlogs(json.data || []);
+      }
+    } catch (err) {
+      console.error("Failed to load blogs for selection:", err);
+    }
+  };
+
   useEffect(() => {
     loadData();
+    loadBlogs();
   }, []);
 
   const resetForm = () => {
@@ -126,6 +154,39 @@ export default function AdminPillarPage() {
     setArticles([...articles, { title: "", link: "/blog/", readTime: "5 Min Read" }]);
   };
 
+  const handleAddExistingBlog = (blogId: string) => {
+    if (!blogId) return;
+    const blog = availableBlogs.find((b) => b.id === blogId || b.slug === blogId);
+    if (blog) {
+      const cleanSlug = blog.slug || blog.id;
+      const autoLink = cleanSlug.startsWith("/") ? cleanSlug : `/blog/${cleanSlug}`;
+      setArticles((prev) => [
+        ...prev,
+        {
+          title: blog.title,
+          link: autoLink,
+          readTime: blog.readTime || blog.read_time || "5 Min Read"
+        }
+      ]);
+    }
+  };
+
+  const handleSelectBlogForRow = (index: number, blogId: string) => {
+    if (!blogId) return;
+    const blog = availableBlogs.find((b) => b.id === blogId || b.slug === blogId);
+    if (blog) {
+      const cleanSlug = blog.slug || blog.id;
+      const autoLink = cleanSlug.startsWith("/") ? cleanSlug : `/blog/${cleanSlug}`;
+      const updated = [...articles];
+      updated[index] = {
+        title: blog.title,
+        link: autoLink,
+        readTime: blog.readTime || blog.read_time || "5 Min Read"
+      };
+      setArticles(updated);
+    }
+  };
+
   const handleUpdateSubArticle = (index: number, field: keyof SubArticleInput, value: string) => {
     const updated = [...articles];
     updated[index] = { ...updated[index], [field]: value };
@@ -182,6 +243,8 @@ export default function AdminPillarPage() {
 
       const json = await res.json();
       if (json.success) {
+        clearApiCache("/api/pillar-guides");
+        clearApiCache("/api/blogs");
         setIsModalOpen(false);
         resetForm();
         alert(editMode ? "Pillar Guide updated successfully!" : "Pillar Guide created successfully!");
@@ -201,6 +264,8 @@ export default function AdminPillarPage() {
       const res = await fetch(`/api/pillar-guides?id=${id}`, { method: "DELETE" });
       const json = await res.json();
       if (json.success) {
+        clearApiCache("/api/pillar-guides");
+        clearApiCache("/api/blogs");
         loadData();
       } else {
         alert("Failed to delete guide: " + json.error);
@@ -392,83 +457,144 @@ export default function AdminPillarPage() {
 
                 {/* Sub-articles List Builder */}
                 <div style={{ marginTop: "10px", borderTop: "1px solid #eee", paddingTop: "20px" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px", flexWrap: "wrap", gap: "8px" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                       <BookOpen size={16} color="#7c3aed" />
                       <h4 style={{ margin: 0, fontSize: "0.95rem", fontWeight: 700 }}>Sub-Articles Redirect List ({articles.length})</h4>
                     </div>
-                    <button
-                      type="button"
-                      onClick={handleAddSubArticle}
-                      style={{ display: "flex", alignItems: "center", gap: "4px", padding: "6px 12px", border: "1px solid #7c3aed", borderRadius: "8px", background: "#fdf4ff", color: "#7c3aed", fontSize: "0.8rem", fontWeight: "700", cursor: "pointer" }}
-                    >
-                      <Plus size={14} /> Add Sub-article
-                    </button>
+
+                    <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
+                      {/* Select existing blog dropdown */}
+                      <select
+                        onChange={(e) => {
+                          handleAddExistingBlog(e.target.value);
+                          e.target.value = "";
+                        }}
+                        value=""
+                        style={{
+                          padding: "6px 10px",
+                          border: "1px solid #7c3aed",
+                          borderRadius: "8px",
+                          background: "#ffffff",
+                          color: "#6d28d9",
+                          fontSize: "0.8rem",
+                          fontWeight: "600",
+                          cursor: "pointer",
+                          maxWidth: "230px"
+                        }}
+                      >
+                        <option value="" disabled>+ Select Existing Blog...</option>
+                        {availableBlogs.map((b) => (
+                          <option key={b.id} value={b.id}>
+                            {b.title}
+                          </option>
+                        ))}
+                      </select>
+
+                      <button
+                        type="button"
+                        onClick={handleAddSubArticle}
+                        style={{ display: "flex", alignItems: "center", gap: "4px", padding: "6px 12px", border: "1px solid #7c3aed", borderRadius: "8px", background: "#fdf4ff", color: "#7c3aed", fontSize: "0.8rem", fontWeight: "700", cursor: "pointer" }}
+                      >
+                        <Plus size={14} /> Add Empty Sub-article
+                      </button>
+                    </div>
                   </div>
 
                   {articles.length === 0 ? (
                     <div style={{ border: "1px dashed #dee2e6", padding: "20px", borderRadius: "8px", textAlign: "center", color: "#6c757d", fontSize: "0.8rem" }}>
                       <AlertCircle size={20} style={{ margin: "0 auto 8px", display: "block" }} />
-                      No sub-articles added yet. Click "Add Sub-article" to link some redirect items.
+                      No sub-articles added yet. Select an existing blog or click "Add Empty Sub-article" to link items.
                     </div>
                   ) : (
-                    <div style={{ display: "flex", flexDirection: "column", gap: "12px", maxHeight: "280px", overflowY: "auto" }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "12px", maxHeight: "320px", overflowY: "auto" }}>
                       {articles.map((article, idx) => (
-                        <div key={idx} style={{ display: "flex", gap: "12px", alignItems: "center", background: "#f8f9fa", padding: "12px 16px", borderRadius: "10px", border: "1px solid #e9ecef", flexWrap: "wrap", width: "100%" }}>
+                        <div key={idx} style={{ display: "flex", flexDirection: "column", gap: "8px", background: "#f8f9fa", padding: "12px 16px", borderRadius: "10px", border: "1px solid #e9ecef", width: "100%" }}>
                           
-                          {/* Order actions */}
-                          <div style={{ display: "flex", gap: "4px" }}>
-                            <button type="button" onClick={() => handleMoveSubArticle(idx, "up")} disabled={idx === 0} style={{ background: "none", border: "none", cursor: "pointer", opacity: idx === 0 ? 0.3 : 0.8, padding: "4px" }}>
-                              <MoveUp size={16} />
+                          {/* Option to pick an existing blog for this row */}
+                          {availableBlogs.length > 0 && (
+                            <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "#f1f5f9", padding: "6px 10px", borderRadius: "6px" }}>
+                              <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "#475569", whiteSpace: "nowrap" }}>
+                                Select Existing Blog:
+                              </span>
+                              <select
+                                onChange={(e) => handleSelectBlogForRow(idx, e.target.value)}
+                                defaultValue=""
+                                style={{
+                                  flex: 1,
+                                  padding: "4px 8px",
+                                  borderRadius: "6px",
+                                  border: "1px solid #cbd5e1",
+                                  fontSize: "0.78rem",
+                                  background: "#ffffff",
+                                  color: "#334155"
+                                }}
+                              >
+                                <option value="" disabled>-- Choose blog to auto-fill title & path --</option>
+                                {availableBlogs.map((b) => (
+                                  <option key={b.id} value={b.id}>
+                                    {b.title} (/blog/{b.slug || b.id})
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          )}
+
+                          <div style={{ display: "flex", gap: "12px", alignItems: "center", flexWrap: "wrap", width: "100%" }}>
+                            {/* Order actions */}
+                            <div style={{ display: "flex", gap: "4px" }}>
+                              <button type="button" onClick={() => handleMoveSubArticle(idx, "up")} disabled={idx === 0} style={{ background: "none", border: "none", cursor: "pointer", opacity: idx === 0 ? 0.3 : 0.8, padding: "4px" }}>
+                                <MoveUp size={16} />
+                              </button>
+                              <button type="button" onClick={() => handleMoveSubArticle(idx, "down")} disabled={idx === articles.length - 1} style={{ background: "none", border: "none", cursor: "pointer", opacity: idx === articles.length - 1 ? 0.3 : 0.8, padding: "4px" }}>
+                                <MoveDown size={16} />
+                              </button>
+                            </div>
+
+                            {/* Title input */}
+                            <div style={{ flex: "2 1 180px", minWidth: "150px" }}>
+                              <input
+                                type="text"
+                                required
+                                placeholder="Article Title (e.g. Reiki Guide)"
+                                value={article.title}
+                                onChange={(e) => handleUpdateSubArticle(idx, "title", e.target.value)}
+                                style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1px solid #ced4da", fontSize: "0.85rem", background: "#ffffff" }}
+                              />
+                            </div>
+
+                            {/* Redirect Link input */}
+                            <div style={{ flex: "2 1 200px", minWidth: "180px" }}>
+                              <input
+                                type="text"
+                                required
+                                placeholder="Redirect Link (e.g. /blog/reiki-guide)"
+                                value={article.link}
+                                onChange={(e) => handleUpdateSubArticle(idx, "link", e.target.value)}
+                                style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1px solid #ced4da", fontSize: "0.85rem", background: "#ffffff" }}
+                              />
+                            </div>
+
+                            {/* Read Time input */}
+                            <div style={{ flex: "1 1 100px", minWidth: "90px" }}>
+                              <input
+                                type="text"
+                                placeholder="Read Time"
+                                value={article.readTime}
+                                onChange={(e) => handleUpdateSubArticle(idx, "readTime", e.target.value)}
+                                style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1px solid #ced4da", fontSize: "0.85rem", background: "#ffffff" }}
+                              />
+                            </div>
+
+                            {/* Delete */}
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveSubArticle(idx)}
+                              style={{ background: "none", border: "none", cursor: "pointer", color: "#dc3545", padding: "6px" }}
+                            >
+                              <Trash2 size={18} />
                             </button>
-                            <button type="button" onClick={() => handleMoveSubArticle(idx, "down")} disabled={idx === articles.length - 1} style={{ background: "none", border: "none", cursor: "pointer", opacity: idx === articles.length - 1 ? 0.3 : 0.8, padding: "4px" }}>
-                              <MoveDown size={16} />
-                            </button>
                           </div>
-
-                          {/* Title input */}
-                          <div style={{ flex: "2 1 180px", minWidth: "150px" }}>
-                            <input
-                              type="text"
-                              required
-                              placeholder="Article Title (e.g. Reiki Guide)"
-                              value={article.title}
-                              onChange={(e) => handleUpdateSubArticle(idx, "title", e.target.value)}
-                              style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1px solid #ced4da", fontSize: "0.85rem", background: "#ffffff" }}
-                            />
-                          </div>
-
-                          {/* Redirect Link input */}
-                          <div style={{ flex: "2 1 200px", minWidth: "180px" }}>
-                            <input
-                              type="text"
-                              required
-                              placeholder="Redirect Link (e.g. /blog/reiki-guide)"
-                              value={article.link}
-                              onChange={(e) => handleUpdateSubArticle(idx, "link", e.target.value)}
-                              style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1px solid #ced4da", fontSize: "0.85rem", background: "#ffffff" }}
-                            />
-                          </div>
-
-                          {/* Read Time input */}
-                          <div style={{ flex: "1 1 100px", minWidth: "90px" }}>
-                            <input
-                              type="text"
-                              placeholder="Read Time"
-                              value={article.readTime}
-                              onChange={(e) => handleUpdateSubArticle(idx, "readTime", e.target.value)}
-                              style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1px solid #ced4da", fontSize: "0.85rem", background: "#ffffff" }}
-                            />
-                          </div>
-
-                          {/* Delete */}
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveSubArticle(idx)}
-                            style={{ background: "none", border: "none", cursor: "pointer", color: "#dc3545", padding: "6px" }}
-                          >
-                            <Trash2 size={18} />
-                          </button>
                         </div>
                       ))}
                     </div>
