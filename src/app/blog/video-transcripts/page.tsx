@@ -130,7 +130,7 @@ export const normalizeEmbedUrl = (url?: string): string => {
 };
 
 export default function VideoTranscriptsPage() {
-  const [videoList, setVideoList] = useState<ParsedVideoBlog[]>(FALLBACK_VIDEOS);
+  const [videoList, setVideoList] = useState<ParsedVideoBlog[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
   // Active modal player state
@@ -158,30 +158,28 @@ export default function VideoTranscriptsPage() {
               b.section?.toLowerCase().includes("video")
           );
 
-          if (filtered.length > 0) {
-            const parsed: ParsedVideoBlog[] = filtered.map((b) => {
-              const embed = normalizeEmbedUrl(b.video_embed_url || (b.videos?.[0] ?? ""));
-              const lines = parseTranscriptText(b.video_transcript);
+          const parsed: ParsedVideoBlog[] = filtered.map((b) => {
+            const embed = normalizeEmbedUrl(b.video_embed_url || (b.videos?.[0] ?? ""));
+            const lines = parseTranscriptText(b.video_transcript);
 
-              return {
-                id: b.id,
-                slug: b.slug || b.id,
-                title: b.title,
-                author: b.author,
-                category: b.category || "Video Transcripts",
-                date: b.date,
-                readTime: b.readTime || "5 Min Watch",
-                content: b.content,
-                videoEmbedUrl: embed || "https://www.youtube.com/embed/dQw4w9WgXcQ",
-                image: b.image || "/images/insight_video.png",
-                lines: lines.length > 0 ? lines : [
-                  { timeStr: "00:00", seconds: 0, text: b.content.substring(0, 120) }
-                ],
-              };
-            });
+            return {
+              id: b.id,
+              slug: b.slug || b.id,
+              title: b.title,
+              author: b.author,
+              category: b.category || "Video Transcripts",
+              date: b.date,
+              readTime: b.readTime || "5 Min Watch",
+              content: b.content,
+              videoEmbedUrl: embed || "https://www.youtube.com/embed/dQw4w9WgXcQ",
+              image: b.image || "/images/insight_video.png",
+              lines: lines.length > 0 ? lines : [
+                { timeStr: "00:00", seconds: 0, text: b.content.substring(0, 120) }
+              ],
+            };
+          });
 
-            setVideoList(parsed);
-          }
+          setVideoList(parsed);
         }
       })
       .catch((err) => console.error("Failed to load video blogs:", err))

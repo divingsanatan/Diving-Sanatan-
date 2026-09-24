@@ -369,7 +369,7 @@ const INITIAL_FAQS: FAQItem[] = faqSchema.mainEntity.map((item, index) => {
 export default function FAQPage() {
   const router = useRouter();
   const { searchQuery, setSearchQuery } = useBlog();
-  const [faqs, setFaqs] = useState<FAQItem[]>(INITIAL_FAQS);
+  const [faqs, setFaqs] = useState<FAQItem[]>([]);
   const [loading, setLoading] = useState(false);
 
   // Infinite Scroll State
@@ -378,9 +378,7 @@ export default function FAQPage() {
   const observerRef = useRef<HTMLDivElement | null>(null);
 
   // Custom accordions state - auto open first item
-  const [openAccordions, setOpenAccordions] = useState<Record<string, boolean>>({
-    [INITIAL_FAQS[0]?.id || "heal-1"]: true,
-  });
+  const [openAccordions, setOpenAccordions] = useState<Record<string, boolean>>({});
 
   // Handle accordion toggle
   const toggleAccordion = (id: string) => {

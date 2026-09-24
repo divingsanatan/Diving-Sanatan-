@@ -313,20 +313,27 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Blog ID is required" }, { status: 400 });
     }
 
-    // Delete strictly by ID
-    const { data, error } = await supabaseServer
+    // Delete by ID or slug
+    let { data, error } = await supabaseServer
       .from("blogs")
       .delete()
       .eq("id", id)
       .select();
 
+    if (!data || data.length === 0) {
+      const slugRes = await supabaseServer
+        .from("blogs")
+        .delete()
+        .eq("slug", id)
+        .select();
+      if (!slugRes.error && slugRes.data && slugRes.data.length > 0) {
+        error = null;
+      }
+    }
+
     if (error) {
       console.error("Supabase delete error:", error);
       return NextResponse.json({ success: false, error: error.message }, { status: 500 });
-    }
-
-    if (!data || data.length === 0) {
-      return NextResponse.json({ success: false, error: `No blog found with ID: ${id} to delete` }, { status: 404 });
     }
     
     invalidateServerCache("blog");

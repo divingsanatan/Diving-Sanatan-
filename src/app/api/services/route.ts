@@ -425,6 +425,7 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
     
+    invalidateServerCache("service_");
     return NextResponse.json({ success: true, message: "Service deleted successfully" });
   } catch (error) {
     return NextResponse.json({ success: false, error: "Failed to delete service" }, { status: 500 });

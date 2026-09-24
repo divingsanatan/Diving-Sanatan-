@@ -374,11 +374,10 @@ export default function QuoraQAAdmin() {
       try {
         setQuestions(JSON.parse(stored));
       } catch (e) {
-        setQuestions(initialQuestions);
+        setQuestions([]);
       }
     } else {
-      setQuestions(initialQuestions);
-      localStorage.setItem("divingsanatan_quora_questions", JSON.stringify(initialQuestions));
+      setQuestions([]);
     }
 
     const storedCats = localStorage.getItem("divingsanatan_quora_categories");

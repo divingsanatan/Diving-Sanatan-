@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
       .select("*");
       
     if (adminView !== "true") {
-      query = query.eq("approval_status", "published");
+      query = query.or("approval_status.eq.published,approval_status.is.null");
     }
 
     const { data, error } = await query.order("name", { ascending: true });
@@ -40,7 +40,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { name, role, approval_status } = body;
+    const { name, approval_status } = body;
 
     if (!name?.trim()) {
       return NextResponse.json({ success: false, error: "Category name is required" }, { status: 400 });
@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
     const row = {
       id,
       name: name.trim(),
-      approval_status: role === "super_admin" ? (approval_status || "published") : "pending_approval",
+      approval_status: approval_status || "published",
     };
 
     const { data, error } = await supabaseServer
@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   try {
     const body = await req.json();
-    const { id, name, role, approval_status } = body;
+    const { id, name, approval_status } = body;
 
     if (!id || !name?.trim()) {
       return NextResponse.json({ success: false, error: "Category ID and name are required" }, { status: 400 });
@@ -93,10 +93,8 @@ export async function PUT(req: NextRequest) {
     const newName = name.trim();
 
     const updates: any = { name: newName };
-    if (role === "super_admin" && approval_status) {
+    if (approval_status) {
       updates.approval_status = approval_status;
-    } else if (role !== "super_admin") {
-      updates.approval_status = "pending_approval";
     }
 
     // 2. Update category in database

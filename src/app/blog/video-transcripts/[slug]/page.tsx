@@ -23,7 +23,7 @@ export default function VideoBlogDetailPage() {
   const { setActiveBlog } = useBlog();
 
   const [videoBlog, setVideoBlog] = useState<ParsedVideoBlog | null>(null);
-  const [allVideos, setAllVideos] = useState<ParsedVideoBlog[]>(FALLBACK_VIDEOS);
+  const [allVideos, setAllVideos] = useState<ParsedVideoBlog[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
 
@@ -65,11 +65,6 @@ export default function VideoBlogDetailPage() {
     setLoading(true);
     setError("");
 
-    // Fallback lookup first
-    const fallbackMatch = FALLBACK_VIDEOS.find(
-      (v) => v.slug === rawSlug || v.id === rawSlug
-    );
-
     fetch("/api/blogs")
       .then((res) => res.json())
       .then((json) => {
@@ -106,38 +101,24 @@ export default function VideoBlogDetailPage() {
             };
           });
 
-          // Merge fallbacks if not present
-          const combined = [...parsedList];
-          FALLBACK_VIDEOS.forEach((fv) => {
-            if (!combined.some((item) => item.id === fv.id || item.slug === fv.slug)) {
-              combined.push(fv);
-            }
-          });
+          setAllVideos(parsedList);
 
-          setAllVideos(combined);
-
-          const target = combined.find(
+          const target = parsedList.find(
             (v) => v.slug === rawSlug || v.id === rawSlug
           );
 
           if (target) {
             setVideoBlog(target);
-          } else if (fallbackMatch) {
-            setVideoBlog(fallbackMatch);
           } else {
             setError("Video blog post not found.");
           }
-        } else if (fallbackMatch) {
-          setVideoBlog(fallbackMatch);
         } else {
           setError("Failed to resolve video blog.");
         }
       })
       .catch((err) => {
         console.error("Failed to load video blog details:", err);
-        if (fallbackMatch && isMounted) {
-          setVideoBlog(fallbackMatch);
-        } else if (isMounted) {
+        if (isMounted) {
           setError("Connection error while loading video blog.");
         }
       })

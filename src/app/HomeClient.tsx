@@ -195,34 +195,8 @@ export default function Home() {
       const dbCat = getDbCategory(cat);
       const res = await fetch(`/api/quiz-questions?category=${encodeURIComponent(dbCat)}`);
       const json = await res.json();
-      if (json.success && json.data && json.data.length > 0) {
+      if (json.success && Array.isArray(json.data)) {
         setCurrentQuestions(json.data);
-      } else {
-        // Fallback questions if database query is empty
-        const fallbacks = [
-          {
-            id: `f1-${dbCat}`,
-            category: dbCat,
-            question_text: `How long have you been experiencing this ${dbCat.toLowerCase()}-related challenge?`,
-            question_type: "choice",
-            options: ["Less than a month", "1 to 6 months", "Over 6 months", "It has been years"]
-          },
-          {
-            id: `f2-${dbCat}`,
-            category: dbCat,
-            question_text: `On a scale of 1-10, how severely does this block your daily peace?`,
-            question_type: "choice",
-            options: ["Mild (1-3)", "Moderate (4-6)", "Severe (7-8)", "Overwhelming (9-10)"]
-          },
-          {
-            id: `f3-${dbCat}`,
-            category: dbCat,
-            question_text: `What primary release mechanism is your soul seeking right now?`,
-            question_type: "choice",
-            options: ["Deep acoustic sound vibrations", "Somatic crystal energy alignment", "Gentle counselor conversations", "Just a space to let go and breathe"]
-          }
-        ];
-        setCurrentQuestions(fallbacks);
       }
     } catch (err) {
       console.error("Error fetching questions:", err);

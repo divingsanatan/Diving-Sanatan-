@@ -28,8 +28,8 @@ export async function GET(req: NextRequest) {
           .select("*")
           .order("order_index", { ascending: true });
 
-        if (!error && data && data.length > 0) {
-          return NextResponse.json({ success: true, data });
+        if (!error && data) {
+          return NextResponse.json({ success: true, data: data || [] });
         }
       }
     } catch (sbError) {

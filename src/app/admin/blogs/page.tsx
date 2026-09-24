@@ -92,7 +92,7 @@ export default function AdminBlogsPage() {
       const [bRes, pRes, cRes] = await Promise.all([
         fetch(`/api/blogs?admin_view=true&_t=${t}`, { cache: "no-store", headers: { "Pragma": "no-cache" } }),
         fetch(`/api/practitioners?_t=${t}`, { cache: "no-store" }),
-        fetch(`/api/blogs/categories?_t=${t}`, { cache: "no-store" })
+        fetch(`/api/blogs/categories?admin_view=true&_t=${t}`, { cache: "no-store" })
       ]);
 
       const bJson = await bRes.json();

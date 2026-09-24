@@ -475,15 +475,17 @@ function QuoraQAInner() {
     }
   ]);
 
-  // Load questions and categories from localStorage or initialize with defaults
+  // Load questions and categories from localStorage or initialize with empty list
   useEffect(() => {
     const stored = localStorage.getItem("divingsanatan_quora_questions");
     if (stored) {
       try {
         setQuestions(JSON.parse(stored));
       } catch (e) {
-        console.error("Failed to parse stored questions", e);
+        setQuestions([]);
       }
+    } else {
+      setQuestions([]);
     }
 
     const storedCats = localStorage.getItem("divingsanatan_quora_categories");

@@ -165,7 +165,7 @@ function BookingContent() {
   const timeSlots = ["10:00 AM", "12:00 PM", "02:00 PM", "04:00 PM", "08:00 PM"];
 
   // Helper to match or resolve practitioner reliably
-  const findPractitioner = (targetName: string, pList: Practitioner[]): Practitioner => {
+  const findPractitioner = (targetName: string, pList: Practitioner[]): Practitioner | null => {
     if (!targetName && pList.length > 0) return pList[0];
     const cleanTarget = (targetName || "").trim().toLowerCase();
     
@@ -187,16 +187,7 @@ function BookingContent() {
     // 4. First available practitioner from database
     if (pList.length > 0) return pList[0];
 
-    // 5. Fallback object if practitioners list is empty
-    return {
-      id: "prac-default",
-      name: targetName || "Dr. Elara Vance",
-      specialty: "Energy Healing Practitioner",
-      bio: "Experienced practitioner specializing in energetic alignment and somatic balance.",
-      rating: 5.0,
-      reviewsCount: 42,
-      image: "elara_vance"
-    };
+    return null;
   };
 
   // Load services and practitioners in parallel with Stale-While-Revalidate caching

@@ -185,14 +185,11 @@ export default function AboutClient() {
       try {
         const res = await fetch("/api/team");
         const json = await res.json();
-        if (json.success && json.data && json.data.length > 0) {
+        if (json.success && Array.isArray(json.data)) {
           setTeamMembers(json.data);
-        } else {
-          setTeamMembers(staticTeam);
         }
       } catch (err) {
         console.error("Failed to load team members", err);
-        setTeamMembers(staticTeam);
       } finally {
         setLoadingTeam(false);
       }
@@ -401,8 +398,7 @@ export default function AboutClient() {
     );
   });
 
-  const teamSource = teamMembers.length > 0 ? teamMembers : staticTeam;
-  const filteredTeam = teamSource.filter((member) => {
+  const filteredTeam = teamMembers.filter((member) => {
     const q = searchQuery.toLowerCase().trim();
     if (!q) return true;
     return (
