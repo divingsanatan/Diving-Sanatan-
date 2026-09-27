@@ -157,8 +157,6 @@ function BlogLayoutInner({ children }: { children: React.ReactNode }) {
         )}
       </div>
 
-      <BlogFloatingSearchBar />
-
       <Footer />
 
       <style jsx global>{`
@@ -394,11 +392,5 @@ export default function BlogLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <Suspense fallback={<div className="layout-loading">Loading layout...</div>}>
-      <BlogProvider>
-        <BlogLayoutInner>{children}</BlogLayoutInner>
-      </BlogProvider>
-    </Suspense>
-  );
+  return <BlogLayoutInner>{children}</BlogLayoutInner>;
 }

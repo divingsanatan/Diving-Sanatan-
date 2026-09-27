@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/utils/supabaseServer";
 import { slugify } from "@/utils/slugify";
 import { invalidateServerCache } from "@/utils/serverCache";
-import { getDb, saveDb } from "@/utils/db";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -134,9 +133,10 @@ export async function POST(req: NextRequest) {
 
     const finalSlug = slug ? slugify(slug) : slugify(title);
     const nowISO = new Date().toISOString();
+    const blogId = `bl-${Math.random().toString(36).substring(2, 9)}`;
     
     const newBlogDb = {
-      id: `bl-${Math.random().toString(36).substring(2, 9)}`,
+      id: blogId,
       slug: finalSlug,
       title,
       category,
@@ -151,7 +151,7 @@ export async function POST(req: NextRequest) {
       is_show_featured_page: is_show_featured_page !== undefined ? is_show_featured_page : true,
       approval_status: role === "super_admin" ? (approval_status || "published") : "published",
       meta_title: meta_title || title,
-      meta_description: meta_description || (content ? content.substring(0, 160) : ""),
+      meta_description: meta_description || (content ? content.replace(/<[^>]*>/g, " ").substring(0, 160) : ""),
       focus_keyword: focus_keyword || "",
       canonical_url: canonical_url || `https://divingsanatan.online/blog/${finalSlug}`,
       robots_directive: robots_directive || "index, follow",
@@ -169,7 +169,6 @@ export async function POST(req: NextRequest) {
       tags: Array.isArray(tags) ? tags : [],
       pillar_cluster: pillar_cluster || "",
       pinned_related_articles: Array.isArray(pinned_related_articles) ? pinned_related_articles : [],
-      status: status || "published",
       updated_at: nowISO,
     };
 
@@ -182,12 +181,46 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (error) {
-      console.error("Supabase insert error:", error);
+      console.error("Supabase insert error for blogs:", error);
       return NextResponse.json({
         success: false,
         error: `Database insertion failed: ${error.message}`
       }, { status: 500 });
     }
+
+    // Sync into pillar_guides table in Supabase if category/section is pillar
+    const isPillar = 
+      category?.toLowerCase().includes("pillar") ||
+      section?.toLowerCase().includes("pillar") ||
+      Boolean(pillar_cluster?.trim());
+
+    if (isPillar) {
+      const pillarGuideItem = {
+        id: blogId,
+        slug: finalSlug,
+        title: title.trim(),
+        description: (content ? content.replace(/<[^>]*>/g, " ").substring(0, 160) : "").trim(),
+        category: category || "Pillar Guide",
+        readTime: readTime || "1 Articles",
+        image: image || "",
+        articles: [
+          {
+            title: title.trim(),
+            link: `/blog/${finalSlug}`,
+            readTime: readTime || "5 Min Read"
+          }
+        ]
+      };
+
+      try {
+        await supabaseServer.from("pillar_guides").upsert([pillarGuideItem]);
+      } catch {
+        // Ignore if table does not exist
+      }
+    }
+
+    invalidateServerCache("blog");
+    invalidateServerCache("pillar");
 
     const mapped = {
       ...data,
@@ -195,7 +228,6 @@ export async function POST(req: NextRequest) {
       readTime: data.read_time || readTime,
     };
 
-    invalidateServerCache("blog");
     return NextResponse.json({ success: true, data: mapped }, { status: 201 });
   } catch (error: any) {
     console.error("POST BLOG ERROR:", error);
@@ -204,7 +236,7 @@ export async function POST(req: NextRequest) {
 }
 
 /**
- * PUT Handler - Updates a blog post directly in Supabase database matched strictly by ID
+ * PUT Handler - Updates a blog post directly in Supabase database
  */
 export async function PUT(req: NextRequest) {
   try {
@@ -255,17 +287,19 @@ export async function PUT(req: NextRequest) {
     if (tags !== undefined) updates.tags = Array.isArray(tags) ? tags : [];
     if (pillar_cluster !== undefined) updates.pillar_cluster = pillar_cluster;
     if (pinned_related_articles !== undefined) updates.pinned_related_articles = Array.isArray(pinned_related_articles) ? pinned_related_articles : [];
-    if (status !== undefined) updates.status = status;
     
     if (role === "super_admin" && approval_status) {
       updates.approval_status = approval_status;
+    } else if (approval_status) {
+      updates.approval_status = approval_status;
+    } else if (status) {
+      updates.approval_status = status;
     } else if (role !== "super_admin") {
       updates.approval_status = "published";
     }
     
     const sanitizedUpdates = sanitizeForSupabase(updates);
 
-    // Update strictly by ID
     const { data, error } = await supabaseServer
       .from("blogs")
       .update(sanitizedUpdates)
@@ -274,7 +308,7 @@ export async function PUT(req: NextRequest) {
       .single();
 
     if (error) {
-      console.error("Supabase update error:", error);
+      console.error("Supabase update error for blog:", error);
       return NextResponse.json({
         success: false,
         error: `Database update failed: ${error.message}`
@@ -285,7 +319,38 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({
         success: false,
         error: `No blog found with ID: ${id}`
-      }, { status: 44 });
+      }, { status: 404 });
+    }
+
+    // Sync into pillar_guides table in Supabase if category/section is pillar
+    const isPillar = 
+      data.category?.toLowerCase().includes("pillar") ||
+      data.section?.toLowerCase().includes("pillar") ||
+      Boolean(data.pillar_cluster?.trim());
+
+    if (isPillar) {
+      const pillarGuideItem = {
+        id: data.id,
+        slug: data.slug || data.id,
+        title: data.title,
+        description: data.content ? data.content.replace(/<[^>]*>/g, " ").substring(0, 160) : "",
+        category: data.category || "Pillar Guide",
+        readTime: data.read_time || "1 Articles",
+        image: data.image || "",
+        articles: [
+          {
+            title: data.title,
+            link: `/blog/${data.slug || data.id}`,
+            readTime: data.read_time || "5 Min Read"
+          }
+        ]
+      };
+
+      try {
+        await supabaseServer.from("pillar_guides").upsert([pillarGuideItem]);
+      } catch {
+        // Ignore
+      }
     }
 
     const mapped = {
@@ -295,6 +360,7 @@ export async function PUT(req: NextRequest) {
     };
     
     invalidateServerCache("blog");
+    invalidateServerCache("pillar");
     return NextResponse.json({ success: true, data: mapped });
   } catch (error: any) {
     console.error("PUT BLOG ERROR:", error);
@@ -333,22 +399,11 @@ export async function DELETE(req: NextRequest) {
     }
 
     if (error) {
-      console.error("Supabase delete error:", error);
+      console.error("Supabase delete error for blog:", error);
       return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
-    
-    // Also cascade remove from local db.json pillarGuides if present
-    try {
-      const db = getDb();
-      if (db.pillarGuides && db.pillarGuides.length > 0) {
-        db.pillarGuides = db.pillarGuides.filter((g: any) => g.id !== id && g.slug !== id);
-        saveDb(db);
-      }
-    } catch {
-      // Ignore
-    }
 
-    // Also cascade remove from Supabase pillar_guides table if present
+    // Cascade remove from Supabase pillar_guides table if present
     try {
       await supabaseServer.from("pillar_guides").delete().eq("id", id);
       await supabaseServer.from("pillar_guides").delete().eq("slug", id);

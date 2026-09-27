@@ -112,7 +112,8 @@ export async function applyApprovedChange(changeId: string, approvedBy = "admin"
       if (proposed_data.video_transcript) updatePayload.video_transcript = proposed_data.video_transcript;
       if (proposed_data.tags) updatePayload.tags = proposed_data.tags;
       if (proposed_data.pillar_cluster) updatePayload.pillar_cluster = proposed_data.pillar_cluster;
-      if (proposed_data.status) updatePayload.status = proposed_data.status;
+      if (proposed_data.approval_status) updatePayload.approval_status = proposed_data.approval_status;
+      else if (proposed_data.status) updatePayload.approval_status = proposed_data.status;
       updatePayload.updated_at = nowISO;
 
       (async () => {

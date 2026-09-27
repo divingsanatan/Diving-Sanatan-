@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Script from "next/script";
 import "./globals.css";
 import StyledJsxRegistry from "./registry";
+import { GlobalSearchProvider } from "@/components/providers/GlobalSearchProvider";
 
 export const metadata: Metadata = {
   title: {
@@ -148,7 +149,11 @@ export default function RootLayout({
           <div className="glow-orb-1"></div>
           <div className="glow-orb-2"></div>
         </div>
-        <StyledJsxRegistry>{children}</StyledJsxRegistry>
+        <StyledJsxRegistry>
+          <GlobalSearchProvider>
+            {children}
+          </GlobalSearchProvider>
+        </StyledJsxRegistry>
       </body>
     </html>
   );

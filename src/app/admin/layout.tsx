@@ -141,8 +141,6 @@ export default function AdminLayout({
         return "Sanskrit Glossary";
       case "/admin/faq":
         return "FAQs Manager";
-      case "/admin/comparisons":
-        return "Comparisons Board";
       case "/admin/leads":
         return "Customer Leads Profiles";
       case "/admin/seo-command":
@@ -182,8 +180,6 @@ export default function AdminLayout({
         return "Glossary";
       case "/admin/faq":
         return "FAQs";
-      case "/admin/comparisons":
-        return "Comparisons";
       case "/admin/leads":
         return "Leads";
       case "/admin/seo-command":
@@ -367,15 +363,6 @@ export default function AdminLayout({
           >
             <HelpCircle size={16} />
             <span>FAQs</span>
-          </Link>
-          <Link
-            href="/admin/comparisons"
-            title="Comparisons"
-            className={`sidebar-link ${pathname === "/admin/comparisons" ? "active" : ""}`}
-            onClick={() => setSidebarOpen(false)}
-          >
-            <BarChart2 size={16} />
-            <span>Comparisons</span>
           </Link>
 
           <div style={{ borderTop: "1px solid #4b545c", margin: "10px 0" }}></div>

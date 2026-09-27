@@ -37,7 +37,6 @@ export type AdminPageType =
   | "video-blogs"
   | "glossary"
   | "faq"
-  | "comparisons"
   | "leads"
   | "users"
   | "team";
@@ -209,16 +208,7 @@ export default function StatsDashboard({ pageType, actions, customStats }: Stats
         { label: "Draft/Hidden", trend: "Hidden from public", trendType: "attention", icon: EyeOff }
       ]
     },
-    comparisons: {
-      title: "Comparisons Board",
-      subtitle: "Manage service comparisons, feature grids, and therapeutic differentiators.",
-      cards: [
-        { label: "Total Comparisons", trend: "Active grids", trendType: "neutral", icon: BarChart2 },
-        { label: "Comparison Metrics", trend: "Evaluation criteria", trendType: "neutral", icon: List },
-        { label: "Linked Services", trend: "Compared offerings", trendType: "up", icon: Briefcase },
-        { label: "Active Status", trend: "Public comparisons", trendType: "up", icon: CheckCircle2 }
-      ]
-    },
+
     leads: {
       title: "Customer Leads Profiles",
       subtitle: "Track potential clients, contact requests, consultation details, and follow-ups.",
@@ -306,7 +296,7 @@ export default function StatsDashboard({ pageType, actions, customStats }: Stats
           "video-blogs": ["/api/blogs"],
           glossary: ["/api/glossary"],
           faq: ["/api/faq"],
-          comparisons: ["/api/comparisons"],
+
           leads: ["/api/leads"],
           users: ["/api/users"],
           team: ["/api/team"]
@@ -338,7 +328,7 @@ export default function StatsDashboard({ pageType, actions, customStats }: Stats
         const blogs = getDataset("blogs");
         const glossary = getDataset("glossary");
         const faq = getDataset("faq");
-        const comparisons = getDataset("comparisons");
+
         const leads = getDataset("leads");
         const users = getDataset("users");
         const team = getDataset("team");
@@ -450,13 +440,6 @@ export default function StatsDashboard({ pageType, actions, customStats }: Stats
             val4 = 0;
             break;
 
-          case "comparisons":
-            val1 = comparisons.length;
-            const compMetrics = comparisons.length ? comparisons[0].metrics?.length || 5 : 5;
-            val2 = compMetrics;
-            val3 = comparisons.reduce((sum: number, c: any) => sum + (c.services?.length || 0), 0);
-            val4 = "Published";
-            break;
 
           case "leads":
             val1 = leads.length;
