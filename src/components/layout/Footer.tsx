@@ -63,7 +63,6 @@ export const Footer: React.FC = () => {
           <ul className="footer-links-list">
             <li><Link href="/contact" className="footer-link">Contact Us</Link></li>
             <li><Link href="/privacy" className="footer-link">Privacy Policy</Link></li>
-            <li><Link href="/admin" className="footer-link">Admin Panel</Link></li>
           </ul>
         </div>
 

@@ -418,8 +418,14 @@ export const BlogRightSidebar: React.FC = () => {
 
   // Dynamic filter for Normal Blog Layout
   const matchedAuthor = activeBlog
-    ? practitioners.find(p => p.name.toLowerCase() === activeBlog.author.toLowerCase())
+    ? practitioners.find(p => {
+        const pName = p.name.toLowerCase().trim();
+        const aName = activeBlog.author.toLowerCase().trim();
+        return pName === aName || pName.includes(aName) || aName.includes(pName);
+      })
     : null;
+
+  const authorProfileLink = matchedAuthor ? `/gurus/${matchedAuthor.id}` : `/gurus`;
 
   const relatedBlogs = activeBlog
     ? allBlogs
@@ -827,25 +833,27 @@ export const BlogRightSidebar: React.FC = () => {
       {/* About The Author Profile */}
       {activeBlog && (
         <div className="right-sidebar-card author-profile-card">
-          <div className="sidebar-title-row">
+          <Link href={authorProfileLink} style={{ textDecoration: 'none' }} className="sidebar-title-row author-header-link">
             <svg viewBox="0 0 100 100" className="sidebar-lotus-icon">
               <path d="M50 25 C45 45 35 60 50 80 C65 60 55 45 50 25 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
               <path d="M50 80 C35 75 25 60 20 40 C35 50 45 60 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
               <path d="M50 80 C65 75 75 60 80 40 C65 50 55 60 50 80 Z" fill="none" stroke="#a855f7" strokeWidth="4" />
             </svg>
-            <h4 className="sidebar-heading">About The Author</h4>
-          </div>
+            <h4 className="sidebar-heading author-heading-hover">About The Author</h4>
+          </Link>
 
           <div className="author-summary-layout">
-            <img src={authorPhoto} alt={activeBlog.author} className="author-avatar-img" />
-            <h5 className="author-name-text">{activeBlog.author}</h5>
+            <Link href={authorProfileLink} className="author-avatar-link">
+              <img src={authorPhoto} alt={activeBlog.author} className="author-avatar-img author-avatar-hover" />
+            </Link>
+            <Link href={authorProfileLink} style={{ textDecoration: 'none' }}>
+              <h5 className="author-name-text author-name-hover">{activeBlog.author}</h5>
+            </Link>
             <span className="author-specialty-badge">{authorSpecialty}</span>
             <p className="author-bio-desc">{authorBio}</p>
-            {matchedAuthor && (
-              <Link href={`/gurus`} className="author-view-profile-btn">
-                View Profile
-              </Link>
-            )}
+            <Link href={authorProfileLink} className="author-view-profile-btn">
+              View Profile
+            </Link>
           </div>
         </div>
       )}
@@ -978,6 +986,11 @@ export const BlogRightSidebar: React.FC = () => {
           border: 2px solid var(--gold-border);
           box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
           margin-bottom: 4px;
+          transition: transform 0.2s ease;
+          cursor: pointer;
+        }
+        .author-avatar-hover:hover {
+          transform: scale(1.06);
         }
         .author-name-text {
           font-family: var(--font-sans);
@@ -985,6 +998,18 @@ export const BlogRightSidebar: React.FC = () => {
           font-weight: 700;
           color: #1e1b4b;
           margin: 0;
+          transition: color 0.2s ease;
+          cursor: pointer;
+        }
+        .author-name-hover:hover {
+          color: #7c3aed;
+        }
+        .author-heading-hover {
+          transition: color 0.2s ease;
+          cursor: pointer;
+        }
+        :global(.author-header-link:hover) .author-heading-hover {
+          color: #7c3aed;
         }
         .author-specialty-badge {
           font-size: 0.72rem;

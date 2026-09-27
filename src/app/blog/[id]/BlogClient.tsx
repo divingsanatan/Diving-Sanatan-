@@ -1017,7 +1017,7 @@ export default function BlogDetailsPage() {
                       <h1 className="article-title">{blog.title}</h1>
                       <p className="article-subtitle">{intro}</p>
                       <div className="article-meta">
-                        <span>By: <strong>{blog.author}</strong></span>
+                        <span>By: <Link href="/gurus" className="author-header-link"><strong>{blog.author}</strong></Link></span>
                         <span>•</span>
                         <span>Released: <strong>{blog.date}</strong></span>
                         <span>•</span>
@@ -1320,7 +1320,7 @@ export default function BlogDetailsPage() {
                       <span className="pillar-badge">Pillar Guide</span>
                       <h1 className="article-title">{blog.title}</h1>
                       <div className="article-meta">
-                        <span>By: <strong>{blog.author}</strong></span>
+                        <span>By: <Link href="/gurus" className="author-header-link"><strong>{blog.author}</strong></Link></span>
                         <span>•</span>
                         <span>Released: <strong>{blog.date}</strong></span>
                         <span>•</span>
@@ -1578,7 +1578,7 @@ export default function BlogDetailsPage() {
                   <div className="article-header normal-header">
                     <h1 className="article-title">{blog.title}</h1>
                     <div className="article-meta">
-                      <span>By: <strong>{blog.author}</strong></span>
+                      <span>By: <Link href="/gurus" className="author-header-link"><strong>{blog.author}</strong></Link></span>
                       <span>•</span>
                       <span>Released: <strong>{blog.date}</strong></span>
                       <span>•</span>
@@ -2129,7 +2129,7 @@ export default function BlogDetailsPage() {
           text-align: center;
           margin-bottom: 28px;
           gap: 12px;
-          padding: 24px !important;
+          padding: 30px 24px !important;
           border-radius: 20px;
           background: linear-gradient(135deg, #FAF7FF 0%, #FFFFFF 100%);
           border: 1px solid rgba(168, 85, 247, 0.08);
@@ -2438,7 +2438,7 @@ export default function BlogDetailsPage() {
           display: flex;
           flex-direction: column;
           gap: 16px;
-          padding: 0;
+          padding: 30px 24px;
           background: linear-gradient(135deg, #FAF7FF 0%, #FFFFFF 100%);
           border-radius: 20px;
           border: 1px solid rgba(124, 58, 237, 0.05);
