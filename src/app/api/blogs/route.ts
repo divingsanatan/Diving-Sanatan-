@@ -37,6 +37,8 @@ export async function GET(req: NextRequest) {
     const section = searchParams.get("section");
     const adminView = searchParams.get("admin_view");
 
+    const excludePillar = searchParams.get("exclude_pillar");
+
     const headers = {
       "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
     };
@@ -99,13 +101,23 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: false, error: error.message }, { status: 500, headers });
     }
 
-    const formattedBlogs = (blogs || []).map((blog: any) => ({
+    let formattedBlogs = (blogs || []).map((blog: any) => ({
       ...blog,
       slug: blog.slug || slugify(blog.title) || blog.id,
       readTime: blog.read_time || blog.readTime,
       images: Array.isArray(blog.images) ? blog.images : [],
       videos: Array.isArray(blog.videos) ? blog.videos : [],
     }));
+
+    if (excludePillar === "true") {
+      formattedBlogs = formattedBlogs.filter((blog: any) => {
+        const cat = (blog.category || "").toLowerCase();
+        const sec = (blog.section || "").toLowerCase();
+        const ct = (blog.content_type || "").toLowerCase();
+        const pc = (blog.pillar_cluster || "").trim();
+        return !cat.includes("pillar") && !sec.includes("pillar") && !ct.includes("pillar") && !pc;
+      });
+    }
 
     return NextResponse.json({ success: true, data: formattedBlogs }, { headers });
   } catch (error: any) {

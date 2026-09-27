@@ -59,6 +59,20 @@ export default function BlogListingPage() {
     loadServices();
   }, []);
 
+  // Helper to determine if a blog post is a Pillar Blog
+  const isPillarBlog = (b: Blog) => {
+    const cat = (b.category || "").toLowerCase();
+    const sec = (b.section || "").toLowerCase();
+    const ct = ((b as any).content_type || "").toLowerCase();
+    const pc = ((b as any).pillar_cluster || "").trim();
+    return (
+      cat.includes("pillar") ||
+      sec.includes("pillar") ||
+      ct.includes("pillar") ||
+      Boolean(pc)
+    );
+  };
+
   // Load blogs whenever activeCategory changes
   useEffect(() => {
     async function loadBlogs() {
@@ -68,13 +82,14 @@ export default function BlogListingPage() {
       try {
         const t = Date.now();
         const baseUrl = activeCategory && activeCategory !== "all"
-          ? `/api/blogs?category=${encodeURIComponent(activeCategory)}`
-          : `/api/blogs`;
+          ? `/api/blogs?category=${encodeURIComponent(activeCategory)}&exclude_pillar=true`
+          : `/api/blogs?exclude_pillar=true`;
         const url = `${baseUrl}${baseUrl.includes("?") ? "&" : "?"}_t=${t}`;
         const res = await fetch(url, { cache: "no-store", headers: { "Pragma": "no-cache" } });
         const json = await res.json();
         if (json.success) {
-          setBlogs(json.data);
+          const normalBlogs = (json.data || []).filter((b: Blog) => !isPillarBlog(b));
+          setBlogs(normalBlogs);
         }
       } catch (err) {
         console.error("Failed to load blogs:", err);

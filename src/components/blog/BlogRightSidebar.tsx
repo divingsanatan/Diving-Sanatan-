@@ -396,8 +396,22 @@ export const BlogRightSidebar: React.FC = () => {
     activeBlog.category.toLowerCase() === "video blog"
   );
 
-  // Sort blogs by views descending and take top 3
+  const isPillarBlog = (b: Blog) => {
+    const cat = (b.category || "").toLowerCase();
+    const sec = (b.section || "").toLowerCase();
+    const ct = ((b as any).content_type || "").toLowerCase();
+    const pc = ((b as any).pillar_cluster || "").trim();
+    return (
+      cat.includes("pillar") ||
+      sec.includes("pillar") ||
+      ct.includes("pillar") ||
+      Boolean(pc)
+    );
+  };
+
+  // Sort blogs by views descending and take top 3 (excluding pillar blogs)
   const mostViewedBlogs = [...allBlogs]
+    .filter(b => !isPillarBlog(b))
     .sort((a, b) => (b.views || 0) - (a.views || 0))
     .slice(0, 3);
 
@@ -429,7 +443,7 @@ export const BlogRightSidebar: React.FC = () => {
 
   const relatedBlogs = activeBlog
     ? allBlogs
-        .filter(b => b.id !== activeBlog.id && b.category.toLowerCase() === activeBlog.category.toLowerCase())
+        .filter(b => b.id !== activeBlog.id && !isPillarBlog(b) && b.category.toLowerCase() === activeBlog.category.toLowerCase())
         .slice(0, 3)
     : [];
 
