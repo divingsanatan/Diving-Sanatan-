@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { useBlog } from "../BlogContext";
 import { useRouter } from "next/navigation";
 import { FAQItem } from "@/types/database";
+import { normalizeBlogHtml } from "@/utils/normalizeBlogHtml";
 import { cachedFetch } from "@/utils/apiCache";
 import {
   Plus,
@@ -555,7 +556,7 @@ export default function FAQPage() {
                     <div className={`accordion-collapse-wrapper ${isOpen ? "expanded" : "collapsed"}`}>
                       <div className="accordion-content-inner">
                         <div className="accordion-content-divider" />
-                        <p className="faq-answer-paragraph" dangerouslySetInnerHTML={{ __html: faq.answer }} />
+                        <p className="faq-answer-paragraph" dangerouslySetInnerHTML={{ __html: normalizeBlogHtml(faq.answer) }} />
 
                         <div className="faq-card-footer">
                           <div className="footer-tags">

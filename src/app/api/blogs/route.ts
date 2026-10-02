@@ -114,8 +114,7 @@ export async function GET(req: NextRequest) {
         const cat = (blog.category || "").toLowerCase();
         const sec = (blog.section || "").toLowerCase();
         const ct = (blog.content_type || "").toLowerCase();
-        const pc = (blog.pillar_cluster || "").trim();
-        return !cat.includes("pillar") && !sec.includes("pillar") && !ct.includes("pillar") && !pc;
+        return !cat.includes("pillar") && !sec.includes("pillar") && !ct.includes("pillar");
       });
     }
 

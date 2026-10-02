@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { useBlog } from "@/app/blog/BlogContext";
 import Link from "next/link";
 import { cachedFetch } from "@/utils/apiCache";
+import { normalizeBlogHtml } from "@/utils/normalizeBlogHtml";
 import AdSense from "@/components/AdSense";
 
 import { Blog, ContentType } from "@/types/database";
@@ -945,7 +946,7 @@ export default function BlogDetailsPage() {
       return (
         <div
           className="article-rich-content"
-          dangerouslySetInnerHTML={{ __html: content }}
+          dangerouslySetInnerHTML={{ __html: normalizeBlogHtml(content) }}
         />
       );
     }
@@ -1345,7 +1346,7 @@ export default function BlogDetailsPage() {
                     {parsedPillar?.summary && (
                       <div 
                         className="pillar-summary-block"
-                        dangerouslySetInnerHTML={{ __html: parsedPillar.summary }}
+                        dangerouslySetInnerHTML={{ __html: normalizeBlogHtml(parsedPillar.summary) }}
                       />
                     )}
 
@@ -1387,7 +1388,7 @@ export default function BlogDetailsPage() {
                                 <div className="chapter-expanded-body">
                                   <div 
                                     className="chapter-full-html"
-                                    dangerouslySetInnerHTML={{ __html: chapter.fullHtml }}
+                                    dangerouslySetInnerHTML={{ __html: normalizeBlogHtml(chapter.fullHtml) }}
                                   />
                                   
                                   {hasLinks && (

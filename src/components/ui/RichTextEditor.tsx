@@ -11,6 +11,28 @@ interface RichTextEditorProps {
   className?: string;
 }
 
+// Strip presentational markup carried over from pasted content (e.g. white text copied
+// from a dark-mode page), which otherwise renders invisible on the light editor.
+const STRIP_ATTRS = ["style", "class", "id", "color", "bgcolor", "face", "size"];
+const REMOVE_TAGS = "style, script, meta, link, title";
+const UNWRAP_TAGS = "span, font";
+
+function sanitizeHtml(html: string): string {
+  if (!html || typeof document === "undefined") return html;
+  const container = document.createElement("div");
+  container.innerHTML = html;
+
+  container.querySelectorAll(REMOVE_TAGS).forEach((el) => el.remove());
+  container.querySelectorAll("*").forEach((el) => {
+    STRIP_ATTRS.forEach((attr) => el.removeAttribute(attr));
+  });
+  container.querySelectorAll(UNWRAP_TAGS).forEach((el) => {
+    el.replaceWith(...Array.from(el.childNodes));
+  });
+
+  return container.innerHTML;
+}
+
 export default function RichTextEditor({
   value,
   onChange,
@@ -30,9 +52,16 @@ export default function RichTextEditor({
         return;
       }
       if (editorRef.current.innerHTML !== (value || "")) {
-        editorRef.current.innerHTML = value || "";
+        const clean = sanitizeHtml(value || "");
+        editorRef.current.innerHTML = clean;
+        // Persist the cleaned markup so previously saved content gets fixed on next save
+        if (clean !== (value || "")) {
+          isInternalChange.current = true;
+          onChange(clean);
+        }
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
 
   const handleInput = useCallback(() => {
@@ -48,6 +77,17 @@ export default function RichTextEditor({
   const execCmd = (cmd: string, arg?: string) => {
     document.execCommand(cmd, false, arg);
     editorRef.current?.focus();
+    handleInput();
+  };
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const html = e.clipboardData.getData("text/html");
+    if (html) {
+      document.execCommand("insertHTML", false, sanitizeHtml(html));
+    } else {
+      document.execCommand("insertText", false, e.clipboardData.getData("text/plain"));
+    }
     handleInput();
   };
 
@@ -232,6 +272,7 @@ export default function RichTextEditor({
         suppressContentEditableWarning
         onInput={handleInput}
         onBlur={handleInput}
+        onPaste={handlePaste}
         data-placeholder={placeholder}
         style={{ minHeight }}
       />

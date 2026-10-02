@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import Link from "next/link";
 import { useBlog } from "@/app/blog/BlogContext";
 import { Blog } from "@/types/database";
+import { normalizeBlogHtml } from "@/utils/normalizeBlogHtml";
 import AdSense from "@/components/AdSense";
 import {
   FALLBACK_VIDEOS,
@@ -395,7 +396,7 @@ export default function VideoBlogDetailPage() {
           <h3 className="section-title">About This Guided Video Session</h3>
           <div
             className="video-content-body"
-            dangerouslySetInnerHTML={{ __html: videoBlog.content }}
+            dangerouslySetInnerHTML={{ __html: normalizeBlogHtml(videoBlog.content) }}
           />
 
           {/* Google AdSense In-Article Ad Slot */}

@@ -60,16 +60,15 @@ export default function BlogListingPage() {
   }, []);
 
   // Helper to determine if a blog post is a Pillar Blog
+  // (pillar_cluster only links a supporting article to a pillar, so it doesn't count)
   const isPillarBlog = (b: Blog) => {
     const cat = (b.category || "").toLowerCase();
     const sec = (b.section || "").toLowerCase();
     const ct = ((b as any).content_type || "").toLowerCase();
-    const pc = ((b as any).pillar_cluster || "").trim();
     return (
       cat.includes("pillar") ||
       sec.includes("pillar") ||
-      ct.includes("pillar") ||
-      Boolean(pc)
+      ct.includes("pillar")
     );
   };
 

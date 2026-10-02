@@ -400,12 +400,10 @@ export const BlogRightSidebar: React.FC = () => {
     const cat = (b.category || "").toLowerCase();
     const sec = (b.section || "").toLowerCase();
     const ct = ((b as any).content_type || "").toLowerCase();
-    const pc = ((b as any).pillar_cluster || "").trim();
     return (
       cat.includes("pillar") ||
       sec.includes("pillar") ||
-      ct.includes("pillar") ||
-      Boolean(pc)
+      ct.includes("pillar")
     );
   };
 

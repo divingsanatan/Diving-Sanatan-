@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useBlog } from "../BlogContext";
 import { GlossaryTerm } from "@/types/database";
+import { normalizeBlogHtml } from "@/utils/normalizeBlogHtml";
 import { GlossaryTermIllustration } from "@/components/blog/GlossaryTermIllustration";
 import { Sparkles } from "lucide-react";
 
@@ -225,7 +226,7 @@ export default function GlossaryPage() {
                       {term.category && (
                         <span className="term-category-badge">{term.category}</span>
                       )}
-                      <p className="term-definition-text" dangerouslySetInnerHTML={{ __html: term.definition }} />
+                      <p className="term-definition-text" dangerouslySetInnerHTML={{ __html: normalizeBlogHtml(term.definition) }} />
                     </div>
 
                     <GlossaryTermIllustration illustration={term.illustration} />
