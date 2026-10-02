@@ -1,8 +1,24 @@
 import type { Metadata } from "next";
 import Script from "next/script";
+import { Cormorant_Garamond, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import StyledJsxRegistry from "./registry";
 import { GlobalSearchProvider } from "@/components/providers/GlobalSearchProvider";
+
+// Self-hosted at build time so fonts load on every device in production.
+// No fixed weights: variable fonts render every font-weight used in the CSS.
+const cormorant = Cormorant_Garamond({
+  subsets: ["latin"],
+  style: ["normal", "italic"],
+  display: "swap",
+  variable: "--font-cormorant",
+});
+
+const jakarta = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-jakarta",
+});
 
 export const metadata: Metadata = {
   title: {
@@ -56,7 +72,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" data-theme="light" suppressHydrationWarning>
+    <html lang="en" data-theme="light" className={`${cormorant.variable} ${jakarta.variable}`} suppressHydrationWarning>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
         <meta name="google-adsense-account" content="ca-pub-4820128927673407" />
