@@ -18,6 +18,7 @@ function cleanStyle(_match: string, dq?: string, sq?: string): string {
 export function normalizeBlogHtml(html: string): string {
   if (!html) return html;
   return html
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
     .replace(/<\/?font\b[^>]*>/gi, "")
     .replace(/<[a-z][a-z0-9-]*\b[^>]*>/gi, (tag) =>
       tag.replace(PRESENTATIONAL_ATTR, "").replace(STYLE_ATTR, cleanStyle)

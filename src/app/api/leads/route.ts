@@ -14,6 +14,7 @@ const PROFILE_SELECT = `
   report_content,
   chakra_scores,
   password,
+  role,
   user_answers (
     id,
     question_id,

@@ -1413,7 +1413,7 @@ article *:not([class*="fa-"]):not([class*="fa"]):not(i):not(svg):not(path),
 .blog-content-body,
 .article-rich-content {
   font-family: var(--font-family);
-  font-size: 1rem;
+  font-size: 0.85rem !important;
   line-height: 1.75;
   color: var(--text-main, #334155);
 }
@@ -1463,7 +1463,7 @@ article *:not([class*="fa-"]):not([class*="fa"]):not(i):not(svg):not(path),
 .video-content-body p,
 .blog-content-body p,
 .article-rich-content p {
-  font-size: 1rem;
+  font-size: 0.85rem !important;
   line-height: 1.75;
   margin-bottom: 1.15rem;
   color: #334155;
@@ -1479,6 +1479,7 @@ article *:not([class*="fa-"]):not([class*="fa"]):not(i):not(svg):not(path),
   border-radius: 0 12px 12px 0;
   font-style: italic;
   color: #4c1d95;
+  font-size: 0.85rem !important;
 }
 
 .video-content-body ul,
@@ -1500,10 +1501,23 @@ article *:not([class*="fa-"]):not([class*="fa"]):not(i):not(svg):not(path),
 .video-content-body li,
 .blog-content-body li,
 .article-rich-content li {
-  font-size: 1rem;
+  font-size: 0.85rem !important;
   line-height: 1.7;
   margin-bottom: 0.4rem;
   color: #334155;
+}
+
+/* Universal blog typography overrides: make sidebar font size (0.85rem) default across all blog content regardless of backend markup */
+.video-content-body *:not(h1):not(h2):not(h3):not(h4):not(h5):not(h6):not(svg):not(path):not([class*="icon"]):not(button):not(input):not(textarea),
+.blog-content-body *:not(h1):not(h2):not(h3):not(h4):not(h5):not(h6):not(svg):not(path):not([class*="icon"]):not(button):not(input):not(textarea),
+.article-rich-content *:not(h1):not(h2):not(h3):not(h4):not(h5):not(h6):not(svg):not(path):not([class*="icon"]):not(button):not(input):not(textarea) {
+  font-size: 0.85rem !important;
+}
+
+.video-content-body h1 *, .video-content-body h2 *, .video-content-body h3 *, .video-content-body h4 *, .video-content-body h5 *, .video-content-body h6 *,
+.blog-content-body h1 *, .blog-content-body h2 *, .blog-content-body h3 *, .blog-content-body h4 *, .blog-content-body h5 *, .blog-content-body h6 *,
+.article-rich-content h1 *, .article-rich-content h2 *, .article-rich-content h3 *, .article-rich-content h4 *, .article-rich-content h5 *, .article-rich-content h6 * {
+  font-size: inherit !important;
 }
 
 .video-content-body a,

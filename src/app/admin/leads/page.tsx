@@ -25,6 +25,7 @@ interface LeadProfile {
   report_content?: string;
   chakra_scores?: Record<string, number>;
   has_auth?: boolean;
+  role?: string;
 }
 
 const PAGE_SIZE = 10;
@@ -184,6 +185,27 @@ Diving Sanatan Wellness Team`);
     }
   };
 
+  const handlePromoteToAdmin = async (id: string, name: string) => {
+    if (!confirm(`Are you sure you want to make "${name}" an Admin?`)) return;
+    try {
+      const res = await fetch("/api/users", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, role: "admin" })
+      });
+      const json = await res.json();
+      if (json.success) {
+        alert(`Success! "${name}" has been promoted to Admin.`);
+        fetchLeads();
+      } else {
+        alert(json.error || "Failed to make admin.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error making admin.");
+    }
+  };
+
   const formatDate = (dateStr: string) => {
     try {
       return new Date(dateStr).toLocaleDateString("en-US", {
@@ -272,7 +294,7 @@ Diving Sanatan Wellness Team`);
                   <th>Email</th>
                   <th>Phone</th>
                   <th>Category</th>
-                  <th>Answers</th>
+                  <th>Role</th>
                   <th>Auth</th>
                   <th>Actions</th>
                 </tr>
@@ -293,8 +315,16 @@ Diving Sanatan Wellness Team`);
                         <span className="category-badge">{lead.category}</span>
                       </td>
                       <td>
-                        <span className="answers-count">
-                          {lead.user_answers?.length || 0}
+                        <span style={{
+                          display: "inline-block",
+                          padding: "2px 8px",
+                          borderRadius: "10px",
+                          fontSize: "0.75rem",
+                          fontWeight: "700",
+                          background: lead.role === "super_admin" ? "#6f42c1" : (lead.role === "admin" ? "#0d6efd" : "#6c757d"),
+                          color: "#fff"
+                        }}>
+                          {lead.role === "super_admin" ? "Super Admin" : (lead.role === "admin" ? "Admin" : (lead.role || "User"))}
                         </span>
                       </td>
                       <td>
@@ -304,6 +334,16 @@ Diving Sanatan Wellness Team`);
                       </td>
                       <td>
                         <div className="action-btns-group">
+                          {lead.role !== "admin" && lead.role !== "super_admin" && (
+                            <button 
+                              className="tbl-btn"
+                              style={{ background: "#e7f1ff", color: "#0d6efd", border: "1px solid #b6d4fe", fontWeight: "600", fontSize: "0.75rem", padding: "4px 8px" }}
+                              onClick={() => handlePromoteToAdmin(lead.id, lead.name)}
+                              title="Make this user an Admin"
+                            >
+                              🛡️ Make Admin
+                            </button>
+                          )}
                           <button className="tbl-btn view" onClick={() => openViewModal(lead)}>
                             View
                           </button>

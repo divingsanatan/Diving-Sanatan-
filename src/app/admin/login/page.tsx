@@ -13,6 +13,14 @@ export default function AdminLoginPage() {
 
   // Redirect if already authenticated
   useEffect(() => {
+    // If arriving from a logout action, ensure all local/session storage items are purged and avoid redirect
+    if (typeof window !== "undefined" && window.location.search.includes("logout")) {
+      window.sessionStorage.removeItem("divingsanatan_admin_auth");
+      window.sessionStorage.removeItem("divingsanatan_admin_user");
+      window.localStorage.removeItem("divingsanatan_user_session");
+      return;
+    }
+
     // 1. Check admin specific session
     const isAdminAuth = window.sessionStorage.getItem("divingsanatan_admin_auth");
     

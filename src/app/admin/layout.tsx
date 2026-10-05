@@ -16,6 +16,7 @@ import {
   BookOpen,
   BarChart2,
   UserCheck,
+  ShieldCheck,
   Globe,
   LogOut,
   Menu,
@@ -106,11 +107,16 @@ export default function AdminLayout({
   }, [pathname, router]);
 
   const handleLogout = () => {
-    window.sessionStorage.removeItem("divingsanatan_admin_auth");
-    window.sessionStorage.removeItem("divingsanatan_admin_user");
+    try {
+      window.sessionStorage.removeItem("divingsanatan_admin_auth");
+      window.sessionStorage.removeItem("divingsanatan_admin_user");
+      window.localStorage.removeItem("divingsanatan_user_session");
+    } catch (e) {
+      console.error("Error clearing admin session on logout:", e);
+    }
     setAuthenticated(false);
     setAdminUser(null);
-    router.push("/admin/login");
+    window.location.href = "/admin/login?logout=1";
   };
 
   const getSectionName = () => {
@@ -147,6 +153,8 @@ export default function AdminLayout({
         return "SEO Command Center";
       case "/admin/team":
         return "Team Members Manager";
+      case "/admin/users":
+        return "User Management & Role Access";
       default:
         return "Admin Portal";
     }
@@ -186,6 +194,8 @@ export default function AdminLayout({
         return "SEO Command Center";
       case "/admin/team":
         return "Team Members";
+      case "/admin/users":
+        return "Users & Admins";
       default:
         return null;
     }
@@ -257,6 +267,15 @@ export default function AdminLayout({
           >
             <UserCheck size={16} />
             <span>Leads Profiles</span>
+          </Link>
+          <Link
+            href="/admin/users"
+            title="User & Admin Management"
+            className={`sidebar-link ${pathname === "/admin/users" ? "active" : ""}`}
+            onClick={() => setSidebarOpen(false)}
+          >
+            <ShieldCheck size={16} />
+            <span>Users & Admins</span>
           </Link>
 
           {/* Section: CORE DIRECTORIES */}
@@ -378,9 +397,9 @@ export default function AdminLayout({
         </nav>
 
         <div className="sidebar-footer">
-          <button onClick={handleLogout} className="logout-btn">
+          <button onClick={handleLogout} className="logout-btn" title="Sign Out / Logout">
             <LogOut size={14} style={{ marginRight: "6px", display: "inline-block", verticalAlign: "middle" }} />
-            <span>Lock Panel</span>
+            <span>Logout</span>
           </button>
         </div>
       </aside>
@@ -396,9 +415,13 @@ export default function AdminLayout({
             <h4 className="navbar-section-title">{getSectionName()}</h4>
           </div>
           <div className="admin-navbar-right">
-            <span style={{ fontSize: "0.85rem", color: "#6c757d" }}>
-              Logged in as {adminUser?.name || adminUser?.email || "Admin User"} {adminUser?.role ? `(${adminUser.role})` : ""}
+            <span className="navbar-user-info" style={{ fontSize: "0.85rem", color: "#6c757d" }}>
+              Logged in as <strong style={{ color: "#333" }}>{adminUser?.name || adminUser?.email || "Admin User"}</strong> {adminUser?.role ? `(${adminUser.role})` : ""}
             </span>
+            <button onClick={handleLogout} className="navbar-logout-btn" title="Sign Out / Logout">
+              <LogOut size={14} style={{ marginRight: "5px", verticalAlign: "middle" }} />
+              <span>Logout</span>
+            </button>
           </div>
         </header>
 

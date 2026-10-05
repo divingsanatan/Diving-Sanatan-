@@ -28,6 +28,10 @@
   transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1), transform 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
   z-index: 1035 !important;
   overflow-x: hidden !important;
+  position: sticky !important;
+  top: 0 !important;
+  height: 100vh !important;
+  max-height: 100vh !important;
 }
 
 .admin-lte-theme .sidebar-brand {
@@ -39,6 +43,7 @@
   background-color: #22252a !important;
   color: #fff !important;
   gap: 10px !important;
+  flex-shrink: 0 !important;
 }
 
 .admin-lte-theme .brand-label {
@@ -53,6 +58,9 @@
   display: flex !important;
   flex-direction: column !important;
   gap: 4px !important;
+  flex: 1 1 auto !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
 }
 
 .admin-lte-theme .sidebar-link {
@@ -86,6 +94,7 @@
   padding: 15px !important;
   background-color: #22252a !important;
   margin-top: auto !important;
+  flex-shrink: 0 !important;
 }
 
 .admin-lte-theme .logout-btn {
@@ -154,6 +163,35 @@
   display: flex !important;
   align-items: center !important;
   gap: 15px !important;
+}
+
+.admin-lte-theme .navbar-logout-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  background-color: #fee2e2 !important;
+  color: #dc2626 !important;
+  border: 1px solid #fca5a5 !important;
+  border-radius: 6px !important;
+  padding: 5px 12px !important;
+  font-size: 0.82rem !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  flex-shrink: 0 !important;
+}
+
+.admin-lte-theme .navbar-logout-btn:hover {
+  background-color: #dc2626 !important;
+  color: #ffffff !important;
+  border-color: #dc2626 !important;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.25) !important;
+}
+
+@media (max-width: 576px) {
+  .admin-lte-theme .navbar-user-info {
+    display: none !important;
+  }
 }
 
 .admin-lte-theme.admin-layout-wrapper {

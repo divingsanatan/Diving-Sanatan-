@@ -107,12 +107,38 @@ export async function POST(req: NextRequest) {
     // Check if email already exists
     const { data: existingUser } = await supabaseServer
       .from("user_profiles")
-      .select("id")
+      .select("id, role, name")
       .eq("email", email)
-      .single();
+      .maybeSingle();
 
     if (existingUser) {
-      return NextResponse.json({ success: false, error: "Email is already registered" }, { status: 400 });
+      // If user exists, update their role and info rather than throwing an error
+      const updates: any = { role };
+      if (name) updates.name = name;
+      if (phone) updates.phone = phone;
+      if (gender) updates.gender = gender;
+      if (dob) updates.dob = dob;
+      if (category) updates.category = category;
+      if (password && password.trim() !== "") {
+        updates.password = hashPassword(password);
+      }
+
+      const { error: updateError } = await supabaseServer
+        .from("user_profiles")
+        .update(updates)
+        .eq("id", existingUser.id);
+
+      if (updateError) {
+        return NextResponse.json({ success: false, error: updateError.message }, { status: 500 });
+      }
+
+      await syncPractitionerForUser(existingUser.id, email, name || existingUser.name, role);
+
+      return NextResponse.json({
+        success: true,
+        message: `Existing user account was found. Updated role to ${role}!`,
+        data: { id: existingUser.id, email, ...updates }
+      }, { status: 200 });
     }
 
     const hashedPassword = hashPassword(password);
@@ -141,7 +167,7 @@ export async function POST(req: NextRequest) {
     // Auto-provision healer profile if role is healer or guru
     await syncPractitionerForUser(userId, email, name, role);
 
-    return NextResponse.json({ success: true, data: newUser }, { status: 201 });
+    return NextResponse.json({ success: true, message: `User created successfully with role ${role}!`, data: newUser }, { status: 201 });
   } catch (error) {
     return NextResponse.json({ success: false, error: "Failed to create user" }, { status: 500 });
   }
