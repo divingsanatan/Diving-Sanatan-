@@ -1,0 +1,219 @@
+.footer {
+  --deep: #0c1424;
+  --foam: #eef1f7;
+  --mist: #a3aec4;
+  --diya: #f2a43a;
+  --line: rgba(163, 174, 196, 0.16);
+  --display: var(--font-footer-display, "Tiro Devanagari Hindi", "Noto Serif Devanagari", Georgia, serif);
+
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: var(--deep);
+  color: var(--mist);
+  padding: clamp(3.5rem, 8vw, 6rem) clamp(1.25rem, 5vw, 4rem) 2rem;
+}
+
+/* Thin marigold horizon at the top edge */
+.footer::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--diya) 50%, transparent);
+  opacity: 0.55;
+}
+
+.inner {
+  position: relative;
+  max-width: 72rem;
+  margin: 0 auto;
+}
+
+/* ---- Top: tagline + call to action ---- */
+.top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 2rem;
+}
+
+.tagline {
+  margin: 0;
+  font-family: var(--display);
+  font-size: clamp(2rem, 5vw, 3.25rem);
+  font-weight: 400;
+  line-height: 1.2;
+  color: var(--foam);
+}
+
+.sub {
+  margin: 0.75rem 0 0;
+  max-width: 34ch;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.cta {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.85rem 1.6rem;
+  border: 1px solid rgba(242, 164, 58, 0.6);
+  border-radius: 999px;
+  color: var(--foam);
+  font-size: 0.9375rem;
+  text-decoration: none;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.cta:hover {
+  background: var(--diya);
+  border-color: var(--diya);
+  color: var(--deep);
+}
+
+/* ---- Link columns ---- */
+.cols {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2.5rem;
+  max-width: 46rem;
+  margin-top: clamp(3rem, 7vw, 5rem);
+}
+
+.heading {
+  margin: 0 0 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--foam);
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.link {
+  color: var(--mist);
+  font-size: 0.9375rem;
+  text-decoration: none;
+  background: linear-gradient(var(--diya), var(--diya)) 0 100% / 0 1px no-repeat;
+  padding-bottom: 2px;
+  transition: color 0.2s ease, background-size 0.25s ease;
+}
+
+.link:hover {
+  color: var(--foam);
+  background-size: 100% 1px;
+}
+
+.link:focus-visible,
+.cta:focus-visible {
+  outline: 2px solid var(--diya);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+/* ---- Bottom bar ---- */
+.bottom {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 2rem;
+  margin-top: clamp(3rem, 7vw, 4.5rem);
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+  font-size: 0.8125rem;
+}
+
+.legal,
+.mantra {
+  margin: 0;
+}
+
+.legalLinks {
+  display: flex;
+  gap: 1.25rem;
+}
+
+.legalLinks .link {
+  font-size: 0.8125rem;
+}
+
+.mantra {
+  margin-left: auto;
+  font-family: var(--display);
+  font-size: 1rem;
+  color: var(--diya);
+}
+
+/* ---- Bindu + ripples (the one memorable element) ---- */
+.rings {
+  position: absolute;
+  right: -10rem;
+  bottom: -14rem;
+  z-index: -1;
+  width: 42rem;
+  max-width: none;
+  color: var(--diya);
+  pointer-events: none;
+}
+
+.ring {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+  transform-box: fill-box;
+  transform-origin: center;
+  opacity: 0;
+  animation: ripple 12s cubic-bezier(0.2, 0.6, 0.3, 1) infinite;
+  animation-delay: calc(var(--i) * -2.4s);
+}
+
+.bindu {
+  fill: currentColor;
+}
+
+@keyframes ripple {
+  from {
+    transform: scale(0.08);
+    opacity: 0.5;
+  }
+  to {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ring {
+    animation: none;
+    opacity: 0.14;
+    transform: scale(calc(0.2 + var(--i) * 0.2));
+  }
+}
+
+/* ---- Small screens ---- */
+@media (max-width: 40rem) {
+  .cols {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2rem 1.5rem;
+  }
+
+  .rings {
+    right: -16rem;
+    bottom: -18rem;
+    opacity: 0.7;
+  }
+
+  .mantra {
+    margin-left: 0;
+    width: 100%;
+  }
+}
