@@ -1,678 +1,384 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import {
+  ArrowRight,
+  BookOpen,
+  ChevronDown,
+  House,
+  Info,
+  LayoutDashboard,
+  LogOut,
+  Mail,
+  Menu,
+  ShoppingBag,
+  Sparkles,
+  Star,
+  UserRound,
+  Users,
+  X,
+} from "lucide-react";
 import { Logo } from "./Logo";
+import styles from "./Header.module.css";
+
+type SessionUser = {
+  name?: string;
+  email?: string;
+  avatarUrl?: string;
+  role?: string;
+};
+
+type NavItem = {
+  label: string;
+  href: string;
+  icon: React.ComponentType<{ size?: number; "aria-hidden"?: boolean }>;
+  /** Extra path prefixes that should also light up this item. */
+  matches?: string[];
+};
+
+const STAFF_ROLES = ["admin", "super_admin", "guru", "subadmin"];
+
+// Edit the site's top-level navigation here.
+const NAV: NavItem[] = [
+  { label: "Home", href: "/", icon: House },
+  {
+    label: "Services",
+    href: "/services",
+    icon: Sparkles,
+    matches: ["/explore-services", "/search", "/booking", "/checkout"],
+  },
+  { label: "Gurus", href: "/gurus", icon: Users },
+  { label: "About", href: "/about", icon: Info },
+  { label: "Blog", href: "/blog", icon: BookOpen },
+];
+
+// Shown only inside the mobile menu.
+const MORE: NavItem[] = [
+  { label: "Reviews", href: "/reviews", icon: Star },
+  { label: "Contact", href: "/contact", icon: Mail },
+];
+
+const isActive = (item: NavItem, pathname: string) => {
+  if (item.href === "/") return pathname === "/";
+  return [item.href, ...(item.matches ?? [])].some(
+    (base) => pathname === base || pathname.startsWith(`${base}/`)
+  );
+};
+
+function Avatar({ user, className }: { user: SessionUser; className: string }) {
+  const initial = user.name ? user.name.trim().charAt(0).toUpperCase() : "U";
+  return (
+    <span className={className}>
+      {user.avatarUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={user.avatarUrl} alt="" className={styles.avatarImg} />
+      ) : (
+        <span aria-hidden="true">{initial}</span>
+      )}
+      <span className={styles.onlineDot} aria-hidden="true" />
+    </span>
+  );
+}
 
 export const Header: React.FC = () => {
   const pathname = usePathname();
-  const [cartCount, setCartCount] = useState(0);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [user, setUser] = useState<any>(null);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [user, setUser] = useState<SessionUser | null>(null);
+  const [selectionCount, setSelectionCount] = useState(0);
+  const [scrolled, setScrolled] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const lastRaw = useRef({ session: "", selections: "" });
 
+  // Keep user + selection count in sync with browser storage.
   useEffect(() => {
-    // Keep check on local selections, admin auth, and user session states
-    const checkState = () => {
+    const read = () => {
+      let sessionRaw = "";
+      let selectionsRaw = "";
       try {
-        const item = window.localStorage.getItem("divingsanatan_selections");
-        if (item) {
-          const parsed = JSON.parse(item);
-          setCartCount(parsed.length || 0);
-        } else {
-          setCartCount(0);
-        }
-      } catch (err) {
-        setCartCount(0);
+        sessionRaw = window.localStorage.getItem("divingsanatan_user_session") || "";
+        selectionsRaw = window.localStorage.getItem("divingsanatan_selections") || "";
+      } catch {
+        /* storage unavailable (private mode etc.) */
       }
 
-      try {
-        const auth = window.sessionStorage.getItem("divingsanatan_admin_auth");
-        setIsAdmin(auth === "true");
-      } catch (err) {
-        setIsAdmin(false);
+      if (selectionsRaw !== lastRaw.current.selections) {
+        lastRaw.current.selections = selectionsRaw;
+        let count = 0;
+        try {
+          const parsed = JSON.parse(selectionsRaw);
+          count = Array.isArray(parsed) ? parsed.length : 0;
+        } catch {
+          count = 0;
+        }
+        setSelectionCount(count);
       }
 
-      try {
-        const session = window.localStorage.getItem("divingsanatan_user_session");
-        if (session) {
-          setUser(JSON.parse(session));
-        } else {
-          setUser(null);
+      if (sessionRaw !== lastRaw.current.session) {
+        lastRaw.current.session = sessionRaw;
+        let parsed: SessionUser | null = null;
+        try {
+          const value = sessionRaw ? JSON.parse(sessionRaw) : null;
+          parsed = value && typeof value === "object" ? value : null;
+        } catch {
+          parsed = null;
         }
-      } catch (err) {
-        setUser(null);
+        setUser(parsed);
       }
     };
 
-    checkState();
-    // Poll storage slightly for state updates
-    const interval = setInterval(checkState, 1000);
-    return () => clearInterval(interval);
+    read();
+    // Same-tab changes don't fire "storage", so poll lightly as well.
+    const interval = window.setInterval(read, 1000);
+    window.addEventListener("storage", read);
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener("storage", read);
+    };
   }, []);
 
+  // Subtle elevation once the page scrolls.
   useEffect(() => {
-    if (mobileMenuOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // Close menus whenever the route changes.
+  const [lastPath, setLastPath] = useState(pathname);
+  if (lastPath !== pathname) {
+    setLastPath(pathname);
+    setMobileOpen(false);
+    setMenuOpen(false);
+  }
+
+  // Lock page scroll while the mobile menu is open.
+  useEffect(() => {
+    document.body.style.overflow = mobileOpen ? "hidden" : "";
     return () => {
       document.body.style.overflow = "";
     };
-  }, [mobileMenuOpen]);
+  }, [mobileOpen]);
 
-  const isHomeActive = pathname === "/";
-  const isServicesActive = pathname === "/services" || pathname.startsWith("/services/");
-  const isAboutActive = pathname === "/about" || pathname.startsWith("/about/");
-  const isBlogActive = pathname === "/blog" || pathname.startsWith("/blog");
+  // Escape closes anything open; clicking outside closes the user menu.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setMobileOpen(false);
+        setMenuOpen(false);
+      }
+    };
+    const onPointer = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("mousedown", onPointer);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("mousedown", onPointer);
+    };
+  }, []);
+
+  // If the window grows to desktop width, drop the mobile menu.
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 1024px)");
+    const onChange = () => mq.matches && setMobileOpen(false);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+
+  const signOut = useCallback(() => {
+    try {
+      window.localStorage.removeItem("divingsanatan_user_session");
+      window.sessionStorage.removeItem("divingsanatan_admin_auth");
+      window.sessionStorage.removeItem("divingsanatan_admin_user");
+    } catch {
+      /* ignore */
+    }
+    setUser(null);
+    setMenuOpen(false);
+    setMobileOpen(false);
+    window.location.assign("/");
+  }, []);
+
+  const isStaff = !!user?.role && STAFF_ROLES.includes(user.role);
+  const displayName = user?.name || "Account";
 
   return (
     <>
-      <header className="header-nav">
-        <div className="nav-container">
-          {/* Stylized Brand Logo */}
-          <Link href="/" className="logo-brand" onClick={() => setMobileMenuOpen(false)}>
-            <Logo size={36} />
-            <span className="brand-text">DIVING SANATAN</span>
+      <header className={`${styles.header} ${scrolled ? styles.scrolled : ""}`}>
+        <div className={styles.bar}>
+          <Link href="/" className={styles.brand} aria-label="Diving Sanatan home">
+            <Logo size={34} />
+            <span className={styles.brandText}>DIVING SANATAN</span>
           </Link>
 
-          {/* Mobile/Tablet active section badge */}
-          <div className="mobile-active-section-pill">
-            <span className="mobile-pill-dot"></span>
-            <span className="mobile-pill-text">
-              {isHomeActive ? "Home" : isServicesActive ? "Services" : isAboutActive ? "About" : isBlogActive ? "Blog" : "Menu"}
-            </span>
-          </div>
-
-          {/* Nav Links */}
-          <nav className="nav-menu">
-            <Link href="/" className={`nav-item-link ${isHomeActive ? "active" : ""}`}>
-              <span>Home</span>
-            </Link>
-            <Link href="/services" className={`nav-item-link ${isServicesActive ? "active" : ""}`}>
-              <span>Services</span>
-            </Link>
-            <Link href="/about" className={`nav-item-link ${isAboutActive ? "active" : ""}`}>
-              <span>About</span>
-            </Link>
-            <Link href="/blog" className={`nav-item-link ${isBlogActive ? "active" : ""}`}>
-              <span>Blog</span>
-            </Link>
+          <nav className={styles.nav} aria-label="Primary">
+            {NAV.map((item) => {
+              const active = isActive(item, pathname);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`${styles.link} ${active ? styles.active : ""}`}
+                  aria-current={active ? "page" : undefined}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
           </nav>
 
-          {/* CTA Buttons */}
-          <div className="nav-actions">
-            {user ? (
-              <Link href="/profile" className="user-profile-btn" onClick={() => setMobileMenuOpen(false)} aria-label="User Profile">
-                <div className="user-avatar-wrapper">
-                  {user.avatarUrl ? (
-                    <img src={user.avatarUrl} alt={user.name} className="user-avatar-img" />
-                  ) : (
-                    <div className="user-avatar-initials">
-                      {user.name ? user.name.charAt(0).toUpperCase() : "U"}
-                    </div>
-                  )}
-                  <span className="user-online-dot"></span>
-                </div>
-                <span className="user-name-text">{user.name}</span>
-                <svg className="user-chevron-down" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="6 9 12 15 18 9" />
-                </svg>
-              </Link>
-            ) : (
-              <Link href="/profile" className="user-profile-btn login" onClick={() => setMobileMenuOpen(false)}>
-                Sign In
+          <div className={styles.actions}>
+            {selectionCount > 0 && (
+              <Link
+                href="/checkout"
+                className={styles.iconBtn}
+                aria-label={`${selectionCount} selected ${
+                  selectionCount === 1 ? "service" : "services"
+                }, go to checkout`}
+                title="Your selected services"
+              >
+                <ShoppingBag size={19} aria-hidden="true" />
+                <span className={styles.badge}>{selectionCount}</span>
               </Link>
             )}
 
-            {/* Mobile Menu Toggle Hamburger Button */}
+            <Link href="/explore-services" className={styles.cta}>
+              Book a session
+            </Link>
+
+            {user ? (
+              <div className={styles.userWrap} ref={menuRef}>
+                <button
+                  type="button"
+                  className={styles.userBtn}
+                  aria-haspopup="menu"
+                  aria-expanded={menuOpen}
+                  onClick={() => setMenuOpen((v) => !v)}
+                >
+                  <Avatar user={user} className={styles.avatar} />
+                  <span className={styles.userName}>{displayName}</span>
+                  <ChevronDown
+                    size={15}
+                    aria-hidden="true"
+                    className={`${styles.chevron} ${menuOpen ? styles.chevronOpen : ""}`}
+                  />
+                </button>
+
+                {menuOpen && (
+                  <div className={styles.menu} role="menu">
+                    <div className={styles.menuHead}>
+                      <strong>{displayName}</strong>
+                      {user.email && <span>{user.email}</span>}
+                    </div>
+                    <Link href="/profile" className={styles.menuItem} role="menuitem">
+                      <UserRound size={17} aria-hidden="true" /> My profile
+                    </Link>
+                    {isStaff && (
+                      <Link href="/admin" className={styles.menuItem} role="menuitem">
+                        <LayoutDashboard size={17} aria-hidden="true" /> Dashboard
+                      </Link>
+                    )}
+                    <button
+                      type="button"
+                      className={`${styles.menuItem} ${styles.menuDanger}`}
+                      role="menuitem"
+                      onClick={signOut}
+                    >
+                      <LogOut size={17} aria-hidden="true" /> Sign out
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Link href="/profile" className={styles.signIn}>
+                Sign in
+              </Link>
+            )}
+
             <button
-              className={`mobile-menu-toggle-btn ${mobileMenuOpen ? "active" : ""}`}
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              aria-label="Toggle mobile menu"
+              type="button"
+              className={styles.burger}
+              aria-label={mobileOpen ? "Close menu" : "Open menu"}
+              aria-expanded={mobileOpen}
+              aria-controls="mobile-nav"
+              onClick={() => setMobileOpen((v) => !v)}
             >
-              <span className="hamburger-bar"></span>
-              <span className="hamburger-bar"></span>
-              <span className="hamburger-bar"></span>
+              {mobileOpen ? <X size={22} aria-hidden="true" /> : <Menu size={22} aria-hidden="true" />}
             </button>
           </div>
         </div>
-
-        {/* Sliding Drawer for Mobile Nav */}
-        <div className={`mobile-nav-drawer ${mobileMenuOpen ? "open" : ""}`}>
-          <nav className="mobile-drawer-menu">
-            <Link href="/" className={`mobile-drawer-link ${isHomeActive ? "active" : ""}`} onClick={() => setMobileMenuOpen(false)}>
-              <span className="drawer-link-inner">
-                <span>Home</span>
-                {isHomeActive && <span className="drawer-active-tag">Active</span>}
-              </span>
-            </Link>
-            <Link href="/services" className={`mobile-drawer-link ${isServicesActive ? "active" : ""}`} onClick={() => setMobileMenuOpen(false)}>
-              <span className="drawer-link-inner">
-                <span>Services</span>
-                {isServicesActive && <span className="drawer-active-tag">Active</span>}
-              </span>
-            </Link>
-            <Link href="/about" className={`mobile-drawer-link ${isAboutActive ? "active" : ""}`} onClick={() => setMobileMenuOpen(false)}>
-              <span className="drawer-link-inner">
-                <span>About</span>
-                {isAboutActive && <span className="drawer-active-tag">Active</span>}
-              </span>
-            </Link>
-            <Link href="/blog" className={`mobile-drawer-link ${isBlogActive ? "active" : ""}`} onClick={() => setMobileMenuOpen(false)}>
-              <span className="drawer-link-inner">
-                <span>Blog</span>
-                {isBlogActive && <span className="drawer-active-tag">Active</span>}
-              </span>
-            </Link>
-          </nav>
-        </div>
-
-        {/* Drawer Backdrop Overlay */}
-        {mobileMenuOpen && (
-          <div className="mobile-drawer-backdrop" onClick={() => setMobileMenuOpen(false)} />
-        )}
       </header>
 
-      {/* Spacer to push content below fixed header */}
-      <div className="header-spacer" />
+      {/* Mobile menu lives outside <header> so the header's blur doesn't trap it. */}
+      <div
+        className={`${styles.backdrop} ${mobileOpen ? styles.backdropOpen : ""}`}
+        onClick={() => setMobileOpen(false)}
+        aria-hidden="true"
+      />
+      <aside
+        id="mobile-nav"
+        className={`${styles.drawer} ${mobileOpen ? styles.drawerOpen : ""}`}
+        aria-label="Mobile navigation"
+        aria-hidden={!mobileOpen}
+      >
+        {user ? (
+          <Link href="/profile" className={styles.drawerUser}>
+            <Avatar user={user} className={styles.avatarLg} />
+            <span className={styles.drawerUserText}>
+              <strong>{displayName}</strong>
+              <span>{user.email || "View your profile"}</span>
+            </span>
+            <ArrowRight size={18} aria-hidden="true" />
+          </Link>
+        ) : (
+          <div className={styles.drawerGuest}>
+            <p>Begin your healing journey</p>
+            <span>Sign in to view your bookings and soul report.</span>
+            <Link href="/profile" className={styles.drawerSignIn}>
+              Sign in
+            </Link>
+          </div>
+        )}
 
-      <style jsx>{`
-        .header-nav {
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          z-index: 100;
-          background: var(--header-bg);
-          backdrop-filter: blur(16px);
-          border-bottom: 1.5px solid var(--border-glass);
-          height: 70px;
-          display: flex;
-          align-items: center;
-          transition: var(--transition-smooth);
-        }
-        .header-spacer {
-          height: 70px;
-          flex-shrink: 0;
-        }
-        .nav-container {
-          max-width: 100%;
-          margin: 0 auto;
-          padding: 0 40px;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          width: 100%;
-        }
-        .logo-brand {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          text-decoration: none !important;
-        }
-        .brand-text {
-          font-family: var(--font-serif);
-          color: #7c3aed; /* Purple brand text matching mockup */
-          font-size: 1.15rem;
-          font-weight: 700;
-          letter-spacing: 0.12em;
-          text-shadow: 0 0 10px rgba(124, 58, 237, 0.05);
-          text-decoration: none !important;
-          white-space: nowrap;
-        }
-        .nav-menu {
-          display: flex;
-          align-items: center;
-          gap: 16px;
-        }
-        .nav-item-link {
-          position: relative;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          font-family: var(--font-serif);
-          font-size: 1.15rem;
-          font-weight: 600;
-          color: #475569;
-          text-decoration: none !important;
-          letter-spacing: 0.02em;
-          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-          text-transform: none;
-          padding: 8px 22px;
-          border-radius: 99px;
-          border: 1.5px solid transparent;
-        }
-        .nav-item-link span {
-          color: inherit;
-          font-weight: inherit;
-          transition: all 0.25s ease;
-        }
-        .nav-item-link:hover:not(.active) {
-          color: #7c3aed !important;
-          background: rgba(124, 58, 237, 0.06);
-          transform: translateY(-1px);
-        }
+        <nav className={styles.drawerNav} aria-label="Mobile primary">
+          {[...NAV, ...MORE].map((item) => {
+            const active = isActive(item, pathname);
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`${styles.drawerLink} ${active ? styles.drawerActive : ""}`}
+                aria-current={active ? "page" : undefined}
+              >
+                <Icon size={20} aria-hidden={true} />
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
 
-        /* High-visibility Active Tab Styling */
-        .nav-item-link.active,
-        .nav-item-link.active span {
-          color: #4c1d95 !important; /* Deep Royal Purple Text */
-          font-weight: 800 !important; /* Extra Bold */
-        }
-        .nav-item-link.active {
-          background: #eedffd !important; /* Vivid Light Purple Background Pill */
-          border: 1.5px solid rgba(124, 58, 237, 0.35) !important;
-          box-shadow: 0 4px 16px rgba(124, 58, 237, 0.18) !important;
-        }
+        <div className={styles.drawerFoot}>
+          <Link href="/explore-services" className={styles.drawerCta}>
+            Book a session <ArrowRight size={18} aria-hidden="true" />
+          </Link>
+          {user && (
+            <button type="button" className={styles.drawerOut} onClick={signOut}>
+              <LogOut size={17} aria-hidden="true" /> Sign out
+            </button>
+          )}
+        </div>
+      </aside>
 
-        /* Mobile / Tablet Header Section Pill */
-        .mobile-active-section-pill {
-          display: none;
-          align-items: center;
-          gap: 6px;
-          padding: 4px 12px;
-          border-radius: 99px;
-          background: linear-gradient(135deg, rgba(243, 232, 255, 0.85) 0%, rgba(250, 245, 255, 0.95) 100%);
-          border: 1px solid rgba(168, 85, 247, 0.25);
-          box-shadow: 0 2px 8px rgba(124, 58, 237, 0.08);
-        }
-        .mobile-pill-dot {
-          width: 6px;
-          height: 6px;
-          border-radius: 50%;
-          background: #7c3aed;
-          box-shadow: 0 0 6px rgba(124, 58, 237, 0.7);
-          animation: pulseDot 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
-        }
-        .mobile-pill-text {
-          font-family: var(--font-serif);
-          font-size: 0.78rem;
-          font-weight: 700;
-          color: #5b21b6;
-          letter-spacing: 0.04em;
-        }
-
-        @keyframes pulseDot {
-          0%, 100% { opacity: 1; transform: scale(1); }
-          50% { opacity: 0.6; transform: scale(1.25); }
-        }
-
-        .nav-actions {
-          display: flex;
-          align-items: center;
-          gap: 16px;
-        }
-        .cart-badge-container {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: transparent;
-          border: none;
-          padding: 6px;
-          color: #475569;
-          text-decoration: none !important;
-          transition: var(--transition-fast);
-          border-radius: 99px;
-        }
-        .cart-badge-container:hover {
-          color: var(--header-link-hover-color);
-          background: rgba(124, 58, 237, 0.05);
-        }
-        .cart-icon-wrapper {
-          position: relative;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 32px;
-          height: 32px;
-        }
-        .cart-icon {
-          color: #7c3aed;
-          transition: var(--transition-fast);
-        }
-        .cart-floating-badge {
-          position: absolute;
-          top: -4px;
-          right: -4px;
-          background: #e11d48;
-          color: #ffffff;
-          font-family: var(--font-sans);
-          font-size: 0.65rem;
-          font-weight: 700;
-          border-radius: 99px;
-          min-width: 16px;
-          height: 16px;
-          padding: 0 4px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border: 1.5px solid #ffffff;
-          box-shadow: 0 2px 6px rgba(225, 29, 72, 0.3);
-          line-height: 1;
-        }
-        .admin-cta-btn {
-          font-family: var(--font-serif);
-          font-size: 0.72rem;
-          font-weight: 700;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-          background: var(--admin-cta-bg);
-          border: 1.5px solid var(--admin-cta-border);
-          color: var(--admin-cta-text);
-          padding: 8px 16px;
-          border-radius: 10px;
-          text-decoration: none !important;
-          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-          box-shadow: 0 4px 12px var(--admin-cta-shadow);
-        }
-        .admin-cta-btn:hover {
-          background: var(--admin-cta-hover-bg);
-          border-color: var(--admin-cta-hover-border);
-          box-shadow: 0 6px 16px var(--admin-cta-hover-shadow);
-          transform: translateY(-1px);
-        }
-        .user-profile-btn {
-          font-family: var(--font-sans);
-          font-size: 0.9rem;
-          font-weight: 600;
-          color: #475569;
-          background: #ffffff;
-          border: 1.5px solid rgba(124, 58, 237, 0.2);
-          padding: 4px 12px 4px 6px;
-          border-radius: 99px;
-          text-decoration: none !important;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
-        }
-        .user-profile-btn:hover {
-          background: rgba(124, 58, 237, 0.04);
-          border-color: rgba(124, 58, 237, 0.6);
-          color: #7c3aed;
-          box-shadow: 0 4px 12px rgba(124, 58, 237, 0.08);
-        }
-        .user-profile-btn.login {
-          color: #7c3aed;
-          background: #ffffff;
-          border-color: rgba(124, 58, 237, 0.4);
-          padding: 6px 16px;
-        }
-        .user-profile-btn.login:hover {
-          background: rgba(124, 58, 237, 0.04);
-          border-color: #7c3aed;
-          color: #6d28d9;
-        }
-        .user-avatar-wrapper {
-          position: relative;
-          width: 32px;
-          height: 32px;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: #eef2f6;
-          border: 1px solid rgba(0, 0, 0, 0.05);
-          flex-shrink: 0;
-        }
-        .user-avatar-img {
-          width: 100%;
-          height: 100%;
-          border-radius: 50%;
-          object-fit: cover;
-        }
-        .user-avatar-initials {
-          font-family: var(--font-sans);
-          font-size: 0.85rem;
-          font-weight: 700;
-          color: #7c3aed;
-        }
-        .user-online-dot {
-          position: absolute;
-          bottom: -1px;
-          right: -1px;
-          width: 10px;
-          height: 10px;
-          border-radius: 50%;
-          background: #10b981;
-          border: 2px solid #ffffff;
-          box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.2);
-        }
-        .user-name-text {
-          max-width: 100px;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .user-chevron-down {
-          color: #94a3b8;
-          transition: var(--transition-fast);
-        }
-        .user-profile-btn:hover .user-chevron-down {
-          color: #7c3aed;
-          transform: translateY(1px);
-        }
-
-        /* Mobile menu hamburger button styles */
-        .mobile-menu-toggle-btn {
-          display: none;
-          flex-direction: column;
-          justify-content: space-between;
-          width: 22px;
-          height: 16px;
-          background: transparent;
-          border: none;
-          cursor: pointer;
-          padding: 0;
-          z-index: 110;
-          outline: none;
-        }
-        .hamburger-bar {
-          width: 100%;
-          height: 2px;
-          background-color: #7c3aed;
-          border-radius: 99px;
-          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        
-        /* Transform hamburger lines on active */
-        .mobile-menu-toggle-btn.active .hamburger-bar:nth-child(1) {
-          transform: translateY(7px) rotate(45deg);
-        }
-        .mobile-menu-toggle-btn.active .hamburger-bar:nth-child(2) {
-          opacity: 0;
-        }
-        .mobile-menu-toggle-btn.active .hamburger-bar:nth-child(3) {
-          transform: translateY(-7px) rotate(-45deg);
-        }
-
-        /* Mobile drawer */
-        .mobile-nav-drawer {
-          position: fixed;
-          top: 70px;
-          right: -280px;
-          width: 260px;
-          height: calc(calc(100vh / var(--ui-zoom, 1)) - 70px);
-          background: rgba(255, 255, 255, 0.96);
-          backdrop-filter: blur(24px);
-          -webkit-backdrop-filter: blur(24px);
-          box-shadow: -12px 0 40px rgba(124, 58, 237, 0.15), -4px 0 16px rgba(0, 0, 0, 0.1);
-          border-left: 1px solid rgba(128, 90, 213, 0.2);
-          padding: 32px 20px;
-          display: flex;
-          flex-direction: column;
-          gap: 20px;
-          z-index: 95;
-          transition: right 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .mobile-nav-drawer.open {
-          right: 0;
-        }
-        .mobile-drawer-menu {
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-        }
-        .mobile-drawer-link {
-          font-family: var(--font-serif);
-          font-size: 1.15rem;
-          font-weight: 500;
-          color: #475569 !important;
-          padding: 12px 18px;
-          border-radius: 14px;
-          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-          text-decoration: none !important;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          border: 1px solid transparent;
-        }
-        .mobile-drawer-link span {
-          color: inherit;
-          font-weight: inherit;
-        }
-        .mobile-drawer-link.active {
-          background: rgba(124, 58, 237, 0.08) !important;
-          color: #7c3aed !important;
-          font-weight: 800 !important;
-          border-color: rgba(124, 58, 237, 0.25) !important;
-          border-left: 4px solid #7c3aed !important;
-          box-shadow: 0 4px 16px rgba(124, 58, 237, 0.12) !important;
-        }
-        .mobile-drawer-link.active span {
-          color: #7c3aed !important;
-          font-weight: 800 !important;
-        }
-        .mobile-drawer-link:hover:not(.active) {
-          color: var(--header-link-hover-color);
-          background: rgba(168, 85, 247, 0.06);
-          transform: translateX(4px);
-        }
-        .drawer-link-inner {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-        }
-        .drawer-active-tag {
-          font-family: var(--font-sans);
-          font-size: 0.62rem;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.08em;
-          color: #7c3aed;
-          background: rgba(124, 58, 237, 0.1);
-          padding: 2px 8px;
-          border-radius: 99px;
-          border: 1px solid rgba(124, 58, 237, 0.2);
-        }
-        .mobile-active-dot {
-          width: 8px;
-          height: 8px;
-          border-radius: 50%;
-          background: #7c3aed;
-          box-shadow: 0 0 10px rgba(124, 58, 237, 0.8);
-          flex-shrink: 0;
-        }
-        
-        .mobile-drawer-backdrop {
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: rgba(15, 23, 42, 0.55);
-          backdrop-filter: blur(12px);
-          -webkit-backdrop-filter: blur(12px);
-          z-index: 90;
-          animation: fadeInBackdrop 0.25s ease-out forwards;
-        }
-
-        @keyframes fadeInBackdrop {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
-        }
-
-        @keyframes badgeGlow {
-          0%, 100% { transform: scale(1); opacity: 0.8; }
-          50% { transform: scale(1.4); opacity: 1; }
-        }
-        @media (max-width: 768px) {
-          .nav-container {
-            padding: 0 20px;
-          }
-          .nav-menu {
-            display: none;
-          }
-          .mobile-active-section-pill {
-            display: flex;
-          }
-          .mobile-menu-toggle-btn {
-            display: flex;
-          }
-          .nav-actions {
-            gap: 10px;
-          }
-          .brand-text {
-            font-size: 0.95rem;
-            letter-spacing: 0.06em;
-          }
-          .logo-brand {
-            gap: 8px;
-          }
-          .cart-badge-container {
-            padding: 2px;
-          }
-          .user-profile-btn {
-            padding: 0;
-            border: none;
-            background: transparent;
-            box-shadow: none;
-          }
-          .user-profile-btn:hover {
-            background: transparent;
-            box-shadow: none;
-          }
-          .user-name-text {
-            display: none;
-          }
-          .user-chevron-down {
-            display: none;
-          }
-          .user-profile-btn.login {
-            padding: 4px 10px;
-            font-size: 0.75rem;
-            border: 1.5px solid rgba(124, 58, 237, 0.4);
-            background: #ffffff;
-          }
-        }
-        @media (max-width: 480px) {
-          .nav-container {
-            padding: 0 12px;
-          }
-          .brand-text {
-            display: none;
-          }
-          .logo-brand {
-            gap: 6px;
-          }
-          .nav-actions {
-            gap: 8px;
-          }
-          /* Override svg size via class */
-          .logo-brand :global(.ds-logo-svg) {
-            width: 28px !important;
-            height: 28px !important;
-          }
-        }
-      `}</style>
+      {/* Reserves the header's height so page content starts below it. */}
+      <div className={styles.spacer} />
     </>
   );
 };
