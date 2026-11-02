@@ -364,7 +364,7 @@ export default function GurusPage() {
           justify-content: center;
           align-items: center;
           gap: 20px;
-          min-height: 40vh;
+          min-height: calc(40vh / var(--ui-zoom, 1));
           color: hsl(var(--text-muted));
         }
 

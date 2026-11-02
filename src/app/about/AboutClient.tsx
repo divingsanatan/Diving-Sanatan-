@@ -943,7 +943,7 @@ export default function AboutClient() {
           max-width: 1600px;
           margin: 0 auto;
           background: transparent;
-          min-height: 100vh;
+          min-height: calc(100vh / var(--ui-zoom, 1));
         }
 
         /* ===== Left Sidebar ===== */
@@ -957,7 +957,7 @@ export default function AboutClient() {
           display: flex;
           flex-direction: column;
           gap: 16px;
-          max-height: calc(100vh - 110px);
+          max-height: calc(calc(100vh / var(--ui-zoom, 1)) - 110px);
           overflow-y: auto;
           overflow-x: hidden;
           scrollbar-width: none;
@@ -2005,7 +2005,7 @@ export default function AboutClient() {
           box-shadow: 0 20px 50px rgba(74, 43, 110, 0.2);
           border: 1px solid rgba(168, 85, 247, 0.25);
           animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-          max-height: 90vh;
+          max-height: calc(90vh / var(--ui-zoom, 1));
           display: flex;
           flex-direction: column;
         }

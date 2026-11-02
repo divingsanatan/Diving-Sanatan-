@@ -2042,7 +2042,7 @@ function QuoraQAInner() {
               <button className="close-btn" onClick={() => setShowAnswerModal(false)}><X size={16} /></button>
             </div>
 
-            <form onSubmit={handleSaveAnswer} className="login-form-fields" style={{ maxHeight: '60vh', overflowY: 'auto', paddingRight: '8px' }}>
+            <form onSubmit={handleSaveAnswer} className="login-form-fields" style={{ maxHeight: 'calc(60vh / var(--ui-zoom, 1))', overflowY: 'auto', paddingRight: '8px' }}>
               <div className="input-group">
                 <label htmlFor="ans-healer-name">Healer Name</label>
                 <input
@@ -2496,7 +2496,7 @@ function QuoraQAInner() {
           gap: 24px;
           position: sticky;
           top: 94px;
-          max-height: calc(100vh - 110px);
+          max-height: calc(calc(100vh / var(--ui-zoom, 1)) - 110px);
           overflow-y: auto;
           scrollbar-width: none;
           padding-bottom: 10px;

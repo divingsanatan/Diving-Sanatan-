@@ -802,7 +802,7 @@ export default function VideoTranscriptsPage() {
           position: relative;
           width: 100%;
           max-width: 1050px;
-          max-height: 90vh;
+          max-height: calc(90vh / var(--ui-zoom, 1));
           background: #ffffff !important;
           border: 1px solid rgba(168, 85, 247, 0.2) !important;
           border-radius: 24px;

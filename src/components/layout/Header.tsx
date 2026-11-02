@@ -496,7 +496,7 @@ export const Header: React.FC = () => {
           top: 70px;
           right: -280px;
           width: 260px;
-          height: calc(100vh - 70px);
+          height: calc(calc(100vh / var(--ui-zoom, 1)) - 70px);
           background: rgba(255, 255, 255, 0.96);
           backdrop-filter: blur(24px);
           -webkit-backdrop-filter: blur(24px);

@@ -774,7 +774,7 @@ Diving Sanatan Wellness Team`);
           border-radius: 16px;
           width: 100%;
           max-width: 720px;
-          max-height: 90vh;
+          max-height: calc(90vh / var(--ui-zoom, 1));
           overflow-y: auto;
           box-shadow: 0 20px 60px rgba(0,0,0,0.2);
         }
@@ -973,7 +973,7 @@ Diving Sanatan Wellness Team`);
           .modal-overlay { padding: 0; align-items: flex-end; }
           .modal-panel {
             border-radius: 20px 20px 0 0;
-            max-height: 95vh;
+            max-height: calc(95vh / var(--ui-zoom, 1));
             max-width: 100%;
           }
           .modal-header { padding: 16px 16px 0; }

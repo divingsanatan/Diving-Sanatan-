@@ -822,7 +822,7 @@ function BookingContent() {
         .booking-service-col {
           position: sticky;
           top: 24px;
-          max-height: calc(100vh - 48px);
+          max-height: calc(calc(100vh / var(--ui-zoom, 1)) - 48px);
           overflow-y: auto;
           padding-right: 4px;
         }

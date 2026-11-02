@@ -244,7 +244,7 @@ export default function GuruDetailPage() {
             gap: 16px;
             color: hsl(var(--text-muted));
             font-size: 1.1rem;
-            min-height: 50vh;
+            min-height: calc(50vh / var(--ui-zoom, 1));
           }
           .spinner {
             width: 40px;
@@ -287,7 +287,7 @@ export default function GuruDetailPage() {
             gap: 12px;
             padding: 40px 24px;
             text-align: center;
-            min-height: 50vh;
+            min-height: calc(50vh / var(--ui-zoom, 1));
           }
           .error-state-wrapper h2 {
             font-family: var(--font-serif);
@@ -647,7 +647,7 @@ export default function GuruDetailPage() {
         .about-page-wrapper {
           display: flex;
           flex-direction: column;
-          min-height: 100vh;
+          min-height: calc(100vh / var(--ui-zoom, 1));
           background: transparent;
         }
 

@@ -189,7 +189,7 @@ function BlogLayoutInner({ children }: { children: React.ReactNode }) {
           position: sticky;
           top: 94px;
           align-self: flex-start;
-          max-height: calc(100vh - 110px);
+          max-height: calc(calc(100vh / var(--ui-zoom, 1)) - 110px);
           overflow-y: auto;
           overflow-x: hidden;
           scrollbar-width: none;
@@ -207,7 +207,7 @@ function BlogLayoutInner({ children }: { children: React.ReactNode }) {
           position: sticky;
           top: 94px;
           align-self: flex-start;
-          max-height: calc(100vh - 110px);
+          max-height: calc(calc(100vh / var(--ui-zoom, 1)) - 110px);
           overflow-y: auto;
           overflow-x: hidden;
           scrollbar-width: none;

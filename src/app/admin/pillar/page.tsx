@@ -386,7 +386,7 @@ export default function AdminPillarPage() {
       {/* Create & Edit Modal */}
       {isModalOpen && (
         <div className="admin-modal-backdrop" style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.5)", zIndex: 1050, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
-          <div className="admin-modal-card" style={{ background: "#fff", borderRadius: "16px", width: "100%", maxWidth: "800px", maxHeight: "90vh", display: "flex", flexDirection: "column", boxShadow: "0 10px 25px rgba(0,0,0,0.15)", overflow: "hidden" }}>
+          <div className="admin-modal-card" style={{ background: "#fff", borderRadius: "16px", width: "100%", maxWidth: "800px", maxHeight: "calc(90vh / var(--ui-zoom, 1))", display: "flex", flexDirection: "column", boxShadow: "0 10px 25px rgba(0,0,0,0.15)", overflow: "hidden" }}>
             
             {/* Modal Header */}
             <div style={{ padding: "16px 24px", borderBottom: "1px solid #dee2e6", display: "flex", justifyContent: "space-between", alignItems: "center", background: "#f8f9fa" }}>

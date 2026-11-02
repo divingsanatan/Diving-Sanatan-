@@ -867,7 +867,7 @@ export default function Home() {
           padding-top: 45px;
           padding-bottom: 50px;
           width: 100%;
-          min-height: calc(100vh - 70px);
+          min-height: calc(calc(100vh / var(--ui-zoom, 1)) - 70px);
           overflow-y: auto;
         }
         #section-landing::-webkit-scrollbar {
@@ -1829,7 +1829,7 @@ export default function Home() {
         .homepage-wrapper {
           display: flex;
           flex-direction: column;
-          height: 100vh;
+          height: calc(100vh / var(--ui-zoom, 1));
           overflow: hidden;
           position: relative;
           background: #ffffff;
@@ -1856,7 +1856,7 @@ export default function Home() {
         }
         .homepage-wrapper.step-report-active #section-report {
           height: auto;
-          min-height: 100vh;
+          min-height: calc(100vh / var(--ui-zoom, 1));
         }
 
 
@@ -2314,7 +2314,7 @@ export default function Home() {
         /* 4. Report Viewport styles */
         .report-view {
           height: auto;
-          min-height: 100vh;
+          min-height: calc(100vh / var(--ui-zoom, 1));
           background: radial-gradient(circle at top left, rgba(236, 72, 153, 0.03) 0%, transparent 50%),
                       radial-gradient(circle at bottom right, rgba(16, 185, 129, 0.03) 0%, transparent 60%),
                       #ffffff;

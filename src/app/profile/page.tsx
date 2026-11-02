@@ -1377,7 +1377,7 @@ export default function UserProfilePage() {
 
       <style jsx>{`
         .profile-page-wrapper {
-          min-height: 100vh;
+          min-height: calc(100vh / var(--ui-zoom, 1));
           display: flex;
           flex-direction: column;
           background: transparent;

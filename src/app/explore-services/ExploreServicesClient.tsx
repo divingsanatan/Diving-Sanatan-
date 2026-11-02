@@ -501,7 +501,7 @@ export default function ExploreServicesClient() {
 
       <style jsx>{`
         .explore-services-page {
-          min-height: 100vh;
+          min-height: calc(100vh / var(--ui-zoom, 1));
           background: #faf8fc;
           display: flex;
           flex-direction: column;
@@ -1064,7 +1064,7 @@ export default function ExploreServicesClient() {
           background: #ffffff;
           width: 100%;
           max-width: 680px;
-          max-height: 90vh;
+          max-height: calc(90vh / var(--ui-zoom, 1));
           border-radius: 28px;
           overflow-y: auto;
           position: relative;

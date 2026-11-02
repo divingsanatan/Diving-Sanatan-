@@ -815,7 +815,7 @@ export default function AdminServicesPage() {
         .modal-content-wrapper {
           width: 100%;
           max-width: 620px;
-          max-height: 90vh;
+          max-height: calc(90vh / var(--ui-zoom, 1));
           border-radius: 20px;
           box-shadow: 0 20px 50px rgba(0,0,0,0.15);
           animation: scaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -826,7 +826,7 @@ export default function AdminServicesPage() {
           position: relative !important;
           display: flex;
           flex-direction: column;
-          max-height: 90vh;
+          max-height: calc(90vh / var(--ui-zoom, 1));
         }
         .modal-title-bar {
           padding: 32px 32px 0;

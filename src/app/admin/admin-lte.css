@@ -30,8 +30,8 @@
   overflow-x: hidden !important;
   position: sticky !important;
   top: 0 !important;
-  height: 100vh !important;
-  max-height: 100vh !important;
+  height: calc(100vh / var(--ui-zoom, 1)) !important;
+  max-height: calc(100vh / var(--ui-zoom, 1)) !important;
 }
 
 .admin-lte-theme .sidebar-brand {
@@ -196,7 +196,7 @@
 
 .admin-lte-theme.admin-layout-wrapper {
   display: flex !important;
-  min-height: 100vh !important;
+  min-height: calc(100vh / var(--ui-zoom, 1)) !important;
   flex-direction: row !important;
 }
 

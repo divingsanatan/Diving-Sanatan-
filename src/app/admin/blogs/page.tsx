@@ -1515,7 +1515,7 @@ export default function AdminBlogsPage() {
         .modal-content-wrapper {
           width: 100%;
           max-width: 680px;
-          max-height: 90vh;
+          max-height: calc(90vh / var(--ui-zoom, 1));
           overflow-y: auto;
           border-radius: 20px;
           box-shadow: 0 20px 50px rgba(0,0,0,0.15);

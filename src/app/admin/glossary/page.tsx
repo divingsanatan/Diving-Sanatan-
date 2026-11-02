@@ -979,7 +979,7 @@ export default function AdminGlossaryPage() {
         .modal-content-wrapper {
           width: 100%;
           max-width: 580px;
-          max-height: 90vh;
+          max-height: calc(90vh / var(--ui-zoom, 1));
           border-radius: 20px;
           overflow: hidden;
         }
@@ -987,7 +987,7 @@ export default function AdminGlossaryPage() {
           padding: 0 !important;
           display: flex;
           flex-direction: column;
-          max-height: 90vh;
+          max-height: calc(90vh / var(--ui-zoom, 1));
         }
         .modal-title-bar {
           padding: 28px 28px 0;

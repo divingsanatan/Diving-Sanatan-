@@ -1,21 +1,17 @@
-NEW FOOTER - install steps
+DESKTOP SCALE (makes 100% browser zoom look like 90%)
 
-1. Copy the "src" and "supabase" folders from this zip into the root of your
-   project (Diving-Sanatan-), choosing "merge / replace" when asked.
-   This replaces src/components/layout/Footer.tsx and adds the new files.
+1. Copy the "src" folder from this zip into the root of your project
+   (Diving-Sanatan-), choosing "merge / replace" when asked.
+   25 files are replaced. They were taken from your current GitHub main,
+   so if you edited any of them since, use desktop-scale.patch instead.
 
-2. Delete these three old, unused files from your project:
-     src/components/Footer.tsx
-     src/components/Footer.module.css
-     FOOTER-INSTALL.md
+2. Commit, push, and let your host redeploy.
 
-3. Database: the newsletter_subscribers table is ALREADY created on your
-   Supabase project. The migration file is included only to keep your repo in sync.
+To tune or turn it off, open src/app/globals.css, go to the very bottom and
+change the number in:   --ui-zoom: 0.9;
+   1    = off (back to normal)
+   0.85 = even smaller
+   0.95 = slightly smaller
 
-4. Commit and push to GitHub, then let your host redeploy.
-
-5. Test: open the live site, enter an email in the footer, and check that a
-   row appears in the newsletter_subscribers table in Supabase.
-
-Edit footer links, email and social handles at the top of
-src/components/layout/Footer.tsx.
+It only applies to desktop screens (1200px+ wide with a mouse). Phones and
+tablets are not changed.

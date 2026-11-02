@@ -134,7 +134,7 @@ export default function AdminLoginPage() {
           background: #e9ecef;
           display: flex;
           flex-direction: column;
-          height: 100vh;
+          height: calc(100vh / var(--ui-zoom, 1));
           justify-content: center;
           width: 100vw;
           font-family: 'Source Sans Pro', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;

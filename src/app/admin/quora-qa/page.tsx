@@ -933,7 +933,7 @@ export default function QuoraQAAdmin() {
               <button style={{ border: "none", background: "none", fontSize: "1.2rem", cursor: "pointer" }} onClick={() => setShowAnsModal(false)}>✕</button>
             </div>
             
-            <div style={{ padding: "20px", maxHeight: "80vh", overflowY: "auto" }}>
+            <div style={{ padding: "20px", maxHeight: "calc(80vh / var(--ui-zoom, 1))", overflowY: "auto" }}>
               <form onSubmit={handleAnsSubmit}>
                 
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "10px" }}>

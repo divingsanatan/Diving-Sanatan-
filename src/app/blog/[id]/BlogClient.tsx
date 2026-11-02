@@ -2875,7 +2875,7 @@ export default function BlogDetailsPage() {
           border: 1px solid var(--gold-border) !important;
           box-shadow: 0 20px 60px rgba(124, 58, 237, 0.12) !important;
           position: relative;
-          max-height: 90vh;
+          max-height: calc(90vh / var(--ui-zoom, 1));
           overflow-y: auto;
           animation: scaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
