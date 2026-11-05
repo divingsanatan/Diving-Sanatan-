@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/utils/supabaseServer";
 import { hashPassword } from "@/utils/auth";
+import { signAdminToken } from "@/utils/adminToken";
 
 export async function POST(req: NextRequest) {
   try {
@@ -69,10 +70,18 @@ export async function POST(req: NextRequest) {
     // Remove password before returning profile
     const { password: _, ...safeProfile } = profile;
 
+    // Staff get a signed token so protected admin APIs (e.g. the shop) can verify them.
+    const token = signAdminToken({
+      id: String(safeProfile.id ?? ""),
+      role: String(safeProfile.role ?? ""),
+      email: String(safeProfile.email ?? ""),
+    });
+
     return NextResponse.json({
       success: true,
       message: "Login successful!",
-      data: safeProfile
+      data: safeProfile,
+      ...(token ? { token } : {})
     });
 
   } catch (error: any) {

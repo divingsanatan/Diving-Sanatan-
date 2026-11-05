@@ -50,6 +50,7 @@ const NAV: NavItem[] = [
     matches: ["/explore-services", "/search", "/booking", "/checkout"],
   },
   { label: "Gurus", href: "/gurus", icon: Users },
+  { label: "Shop", href: "/shop", icon: ShoppingBag },
   { label: "About", href: "/about", icon: Info },
   { label: "Blog", href: "/blog", icon: BookOpen },
 ];

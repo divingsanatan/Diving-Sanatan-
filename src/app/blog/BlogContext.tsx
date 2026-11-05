@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, Suspense } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Blog } from "@/types/database";
 
@@ -16,29 +16,53 @@ interface BlogContextType {
 
 const BlogContext = createContext<BlogContextType | undefined>(undefined);
 
-export function BlogProvider({ children }: { children: React.ReactNode }) {
-  const [searchQuery, setSearchQueryState] = useState("");
-  const [activeCategory, setActiveCategoryState] = useState("all");
-  const [activeBlog, setActiveBlog] = useState<Blog | null>(null);
-  const pathname = usePathname();
-  const router = useRouter();
+/**
+ * Reads ?category= / ?search= from the URL.
+ * useSearchParams() must live in its own <Suspense> leaf: calling it in the provider itself
+ * forced EVERY page below it to render only in the browser (no server HTML, wrong 404 status).
+ * The two effects keep their original order: clear the search on navigation, then sync from URL.
+ */
+function UrlSync({
+  pathname,
+  clearSearch,
+  setCategory,
+  setSearch,
+}: {
+  pathname: string;
+  clearSearch: () => void;
+  setCategory: (c: string) => void;
+  setSearch: (q: string) => void;
+}) {
   const searchParams = useSearchParams();
 
   // Clear search when navigating between pages
   useEffect(() => {
-    setSearchQueryState("");
-  }, [pathname]);
+    clearSearch();
+  }, [pathname, clearSearch]);
 
   // Sync category from URL on /blog main page
   useEffect(() => {
     if (pathname === "/blog") {
       const urlCategory = searchParams.get("category");
       const urlSearch = searchParams.get("search");
-      if (urlCategory) setActiveCategoryState(urlCategory);
-      else setActiveCategoryState("all");
-      if (urlSearch) setSearchQueryState(urlSearch);
+      if (urlCategory) setCategory(urlCategory);
+      else setCategory("all");
+      if (urlSearch) setSearch(urlSearch);
     }
-  }, [pathname, searchParams]);
+  }, [pathname, searchParams, setCategory, setSearch]);
+
+  return null;
+}
+
+export function BlogProvider({ children }: { children: React.ReactNode }) {
+  const [searchQuery, setSearchQueryState] = useState("");
+  const [activeCategory, setActiveCategoryState] = useState("all");
+  const [activeBlog, setActiveBlog] = useState<Blog | null>(null);
+  const pathname = usePathname();
+  const router = useRouter();
+  const clearSearch = useCallback(() => setSearchQueryState(""), []);
+  const setCategoryFromUrl = useCallback((c: string) => setActiveCategoryState(c), []);
+  const setSearchFromUrl = useCallback((q: string) => setSearchQueryState(q), []);
 
   // Search always updates in-place on the current page (no redirect)
   const setSearchQuery = useCallback((query: string) => {
@@ -101,6 +125,9 @@ export function BlogProvider({ children }: { children: React.ReactNode }) {
         setActiveBlog,
       }}
     >
+      <Suspense fallback={null}>
+        <UrlSync pathname={pathname} clearSearch={clearSearch} setCategory={setCategoryFromUrl} setSearch={setSearchFromUrl} />
+      </Suspense>
       {children}
     </BlogContext.Provider>
   );

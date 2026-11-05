@@ -14,6 +14,7 @@ const LINK_GROUPS: { title: string; links: FooterLink[] }[] = [
     title: "Explore",
     links: [
       { label: "Healing services", href: "/explore-services" },
+      { label: "Shop", href: "/shop" },
       { label: "Our gurus", href: "/gurus" },
       { label: "Client reviews", href: "/reviews" },
       { label: "About us", href: "/about" },

@@ -19,6 +19,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.9,
     },
     {
+      url: `${baseUrl}/shop`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.85,
+    },
+    {
       url: `${baseUrl}/booking`,
       lastModified: new Date(),
       changeFrequency: "weekly",
@@ -58,10 +64,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   try {
     // Dynamic blog articles, services, and comparison pages from Supabase
-    const [blogsRes, servRes, compRes] = await Promise.all([
+    const [blogsRes, servRes, compRes, shopRes] = await Promise.all([
       supabaseServer.from("blogs").select("id, date").order("date", { ascending: false }),
       supabaseServer.from("services").select("id, name"),
-      supabaseServer.from("comparison_pages").select("slug")
+      supabaseServer.from("comparison_pages").select("slug"),
+      // Published products that haven't been marked "noindex"
+      supabaseServer
+        .from("shop_products")
+        .select("slug, updated_at, images")
+        .eq("status", "published")
+        .eq("noindex", false)
     ]);
 
     const blogRoutes: MetadataRoute.Sitemap = (blogsRes.data || []).map((blog) => ({
@@ -85,7 +97,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.65,
     }));
 
-    return [...staticRoutes, ...blogRoutes, ...serviceRoutes, ...compRoutes];
+    const shopRoutes: MetadataRoute.Sitemap = (shopRes.data || []).map((prod) => ({
+      url: `${baseUrl}/shop/${prod.slug}`,
+      lastModified: prod.updated_at ? new Date(prod.updated_at) : new Date(),
+      changeFrequency: "weekly",
+      priority: 0.8,
+      images: (Array.isArray(prod.images) ? prod.images : [])
+        .map((img: { url?: string }) => img?.url)
+        .filter((u: unknown): u is string => typeof u === "string" && /^https?:\/\//.test(u))
+        .slice(0, 5),
+    }));
+
+    return [...staticRoutes, ...blogRoutes, ...serviceRoutes, ...compRoutes, ...shopRoutes];
   } catch (error) {
     console.error("Error generating dynamic sitemap routes:", error);
   }

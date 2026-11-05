@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
+  ShoppingBag,
   LayoutDashboard,
   Calendar,
   Briefcase,
@@ -110,6 +111,7 @@ export default function AdminLayout({
     try {
       window.sessionStorage.removeItem("divingsanatan_admin_auth");
       window.sessionStorage.removeItem("divingsanatan_admin_user");
+      window.sessionStorage.removeItem("divingsanatan_admin_token");
       window.localStorage.removeItem("divingsanatan_user_session");
     } catch (e) {
       console.error("Error clearing admin session on logout:", e);
@@ -127,6 +129,8 @@ export default function AdminLayout({
         return "Bookings Scheduler";
       case "/admin/services":
         return "Services & Offerings";
+      case "/admin/shop":
+        return "Shop & Products";
       case "/admin/practitioners":
         return "Practitioners Registry";
       case "/admin/categories":
@@ -168,6 +172,8 @@ export default function AdminLayout({
         return "Bookings";
       case "/admin/services":
         return "Services";
+      case "/admin/shop":
+        return "Shop";
       case "/admin/practitioners":
         return "Practitioners";
       case "/admin/categories":
@@ -288,6 +294,15 @@ export default function AdminLayout({
           >
             <Briefcase size={16} />
             <span>Services</span>
+          </Link>
+          <Link
+            href="/admin/shop"
+            title="Shop"
+            className={`sidebar-link ${pathname === "/admin/shop" ? "active" : ""}`}
+            onClick={() => setSidebarOpen(false)}
+          >
+            <ShoppingBag size={16} />
+            <span>Shop</span>
           </Link>
           <Link
             href="/admin/quiz-questions"
