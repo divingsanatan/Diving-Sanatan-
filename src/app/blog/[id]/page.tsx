@@ -79,7 +79,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         title: blog.title,
         description: shortDesc,
         type: "article",
-        url: `https://divingsanatan.com/blog/${blog.slug || id}`,
+        url: `https://divingsanatan.online/blog/${blog.slug || id}`,
         authors: [blog.author || "Diving Sanatan Team"]
       }
     };

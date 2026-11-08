@@ -22,6 +22,8 @@ import {
 import { sanitizeHtml } from "@/utils/sanitizeHtml";
 import { ProductCard } from "../ProductCard";
 import ProductGallery from "../ProductGallery";
+import ProductActions from "../ProductActions";
+import ShopCartLink from "../ShopCartLink";
 import styles from "../shop.module.css";
 
 export const revalidate = 60;
@@ -97,6 +99,7 @@ export default async function ProductPage({ params }: Props) {
           <Link href="/shop">Shop</Link>
           <span aria-hidden="true">/</span>
           <span aria-current="page">{product.name}</span>
+          <span style={{ marginLeft: "auto" }}><ShopCartLink /></span>
         </nav>
 
         <article className={styles.product}>
@@ -130,27 +133,37 @@ export default async function ProductPage({ params }: Props) {
                 ` · Only ${product.stockQuantity} left`}
             </span>
 
-            <div className={styles.ctaRow}>
-              {soldOut ? (
-                <Link href={enquiryHref} className={styles.ghost}>
-                  <MessageCircle size={18} aria-hidden="true" /> Ask about availability
-                </Link>
-              ) : product.buyUrl ? (
-                <a href={product.buyUrl} target="_blank" rel="noopener noreferrer" className={styles.buy}>
-                  {product.stockStatus === "preorder" ? "Pre-order now" : "Buy now"} <ArrowRight size={18} aria-hidden="true" />
-                </a>
-              ) : (
-                <Link href={enquiryHref} className={styles.buy}>
-                  Enquire to order <ArrowRight size={18} aria-hidden="true" />
-                </Link>
-              )}
-              {!soldOut && product.buyUrl && (
-                <Link href={enquiryHref} className={styles.ghost}>
-                  <MessageCircle size={18} aria-hidden="true" /> Ask a question
-                </Link>
-              )}
-            </div>
-            {product.buyUrl && !soldOut && <p className={styles.note}>You will complete your purchase on a secure external page.</p>}
+            {product.price > 0 && !soldOut ? (
+              <>
+                <ProductActions
+                  productId={product.id}
+                  maxQty={product.stockQuantity}
+                  preorder={product.stockStatus === "preorder"}
+                />
+                <div className={styles.ctaRow}>
+                  {product.buyUrl && (
+                    <a href={product.buyUrl} target="_blank" rel="noopener noreferrer" className={styles.ghost}>
+                      Buy on partner site <ArrowRight size={18} aria-hidden="true" />
+                    </a>
+                  )}
+                  <Link href={enquiryHref} className={styles.ghost}>
+                    <MessageCircle size={18} aria-hidden="true" /> Ask a question
+                  </Link>
+                </div>
+              </>
+            ) : (
+              <div className={styles.ctaRow}>
+                {soldOut ? (
+                  <Link href={enquiryHref} className={styles.ghost}>
+                    <MessageCircle size={18} aria-hidden="true" /> Ask about availability
+                  </Link>
+                ) : (
+                  <Link href={enquiryHref} className={styles.buy}>
+                    Enquire to order <ArrowRight size={18} aria-hidden="true" />
+                  </Link>
+                )}
+              </div>
+            )}
 
             {product.highlights.length > 0 && (
               <ul className={styles.highlights}>

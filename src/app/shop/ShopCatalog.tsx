@@ -4,6 +4,7 @@ import React, { useMemo, useState } from "react";
 import { Search } from "lucide-react";
 import type { ShopProduct } from "@/lib/shopShared";
 import { ProductCard } from "./ProductCard";
+import ShopCartLink from "./ShopCartLink";
 import styles from "./shop.module.css";
 
 type SortKey = "featured" | "newest" | "price-asc" | "price-desc" | "name";
@@ -68,6 +69,7 @@ export default function ShopCatalog({ products }: { products: ShopProduct[] }) {
             onChange={(e) => setQuery(e.target.value)}
           />
         </div>
+        <ShopCartLink />
         <label>
           <span className="sr-only" style={{ position: "absolute", left: -9999 }}>Sort products</span>
           <select className={styles.sort} value={sort} onChange={(e) => setSort(e.target.value as SortKey)}>

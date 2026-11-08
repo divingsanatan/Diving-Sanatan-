@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { Suspense, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 
-export default function UserProfilePage() {
+function UserProfileContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -18,7 +18,7 @@ export default function UserProfilePage() {
   const [authMethodSelection, setAuthMethodSelection] = useState<"none" | "email">("none");
 
   // Google User Auth states
-  const [googleUser, setGoogleUser] = useState<{ email: string; name: string } | null>(null);
+  const [googleUser, setGoogleUser] = useState<{ email: string; name: string; accessToken?: string } | null>(null);
   const [isGoogleSignUpStep2, setIsGoogleSignUpStep2] = useState(false);
   const [signUpStep, setSignUpStep] = useState<number>(1);
 
@@ -232,7 +232,7 @@ export default function UserProfilePage() {
                 });
                 const userInfo = await userInfoRes.json();
                 if (userInfo.email) {
-                  handleGoogleAuthSuccess(userInfo.email, userInfo.name || userInfo.given_name || "Google User");
+                  handleGoogleAuthSuccess(userInfo.email, userInfo.name || userInfo.given_name || "Google User", tokenResponse.access_token);
                 } else {
                   setLoginError("Could not retrieve email from Google account.");
                 }
@@ -253,7 +253,7 @@ export default function UserProfilePage() {
   };
 
   // Process successful Google sign-in (either login directly or redirect to Step 2)
-  const handleGoogleAuthSuccess = async (email: string, name: string) => {
+  const handleGoogleAuthSuccess = async (email: string, name: string, accessToken?: string) => {
     setLoginError("");
     setSignupError("");
 
@@ -261,7 +261,7 @@ export default function UserProfilePage() {
       const res = await fetch("/api/auth/google", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, name, action: "login" })
+        body: JSON.stringify({ email, name, accessToken, action: "login" })
       });
       const json = await res.json();
 
@@ -283,7 +283,7 @@ export default function UserProfilePage() {
           }
         } else {
           // User does not exist, redirect to Step 2 details registration
-          setGoogleUser({ email, name });
+          setGoogleUser({ email, name, accessToken });
           setIsGoogleSignUpStep2(true);
           setAuthMode("signup");
         }
@@ -321,6 +321,7 @@ export default function UserProfilePage() {
         body: JSON.stringify({
           email: googleUser.email,
           name: googleUser.name,
+          accessToken: googleUser.accessToken,
           phone: signupPhone,
           gender: signupGender,
           dob: signupDob,
@@ -492,6 +493,7 @@ export default function UserProfilePage() {
   // Handle Logout
   const handleLogout = () => {
     window.localStorage.removeItem("divingsanatan_user_session");
+    fetch("/api/auth/logout", { method: "POST", keepalive: true }).catch(() => {});
     setSessionUser(null);
     setProfileData(null);
     setLoginEmail("");
@@ -2438,5 +2440,14 @@ export default function UserProfilePage() {
         }
       `}</style>
     </div>
+  );
+}
+
+export default function UserProfilePage() {
+  // useSearchParams() needs its own Suspense boundary (this lets the site drop its global loading wrapper)
+  return (
+    <Suspense fallback={null}>
+      <UserProfileContent />
+    </Suspense>
   );
 }

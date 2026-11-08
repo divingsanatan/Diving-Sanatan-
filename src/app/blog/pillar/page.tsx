@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Pillar Guides & Holistic Healing Paths | Diving Sanatan",
     description: "Explore our in-depth pillar guides covering chakra clearing, aura balancing, mindfulness meditation, and spiritual growth.",
-    url: "https://divingsanatan.com/blog/pillar",
+    url: "https://divingsanatan.online/blog/pillar",
     type: "website"
   }
 };

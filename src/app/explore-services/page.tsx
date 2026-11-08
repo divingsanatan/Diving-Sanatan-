@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Explore All Spiritual & Energy Services | Diving Sanatan",
     description: "Discover and book expert-led healing services: Chakra Balancing, Aura Scanning, Reiki Energy restoration, Sound Healing, and Guided Spiritual Programs.",
-    url: "https://divingsanatan.com/explore-services",
+    url: "https://divingsanatan.online/explore-services",
     type: "website",
   }
 };

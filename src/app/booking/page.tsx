@@ -320,12 +320,10 @@ function BookingContent() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           serviceId: selectedService.id,
-          serviceName: selectedService.name,
           practitionerId: activePrac.id,
           practitionerName: activePrac.name,
           date: `2026-06-${selectedDate.toString().padStart(2, "0")}`,
           timeSlot: selectedTimeSlot,
-          price: selectedService.price,
           clientName,
           clientEmail,
           clientPhone,
@@ -362,7 +360,6 @@ function BookingContent() {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              amount: selectedService.price,
               bookingId: json.data.id,
               notes: {
                 customerName: clientName,

@@ -227,7 +227,7 @@ export default function AdminPractitionersPage() {
         });
         const json = await res.json();
         if (json.success) {
-          alert("Healer updated successfully!");
+          alert("Healer updated successfully!" + (json.temporaryPassword ? `\n\nTemporary password for the new healer account (shown once, please share it securely):\n${json.temporaryPassword}` : ""));
           handleCancelEdit();
           loadPractitioners();
           loadUserAccounts();
@@ -243,7 +243,7 @@ export default function AdminPractitionersPage() {
         });
         const json = await res.json();
         if (json.success) {
-          alert("Healer registered successfully!");
+          alert("Healer registered successfully!" + (json.temporaryPassword ? `\n\nTemporary password for the new healer account (shown once, please share it securely):\n${json.temporaryPassword}` : ""));
           handleCancelEdit();
           loadPractitioners();
           loadUserAccounts();
@@ -663,7 +663,7 @@ export default function AdminPractitionersPage() {
                           <input
                             type="password"
                             className="form-control"
-                            placeholder="Defaults to 'Healer@123' if empty"
+                            placeholder="Leave empty to auto-generate a secure password"
                             value={newAccountPassword}
                             onChange={(e) => setNewAccountPassword(e.target.value)}
                           />

@@ -204,7 +204,10 @@ export const Header: React.FC = () => {
     setUser(null);
     setMenuOpen(false);
     setMobileOpen(false);
-    window.location.assign("/");
+    // Clear the server-side login cookie too, then go home
+    fetch("/api/auth/logout", { method: "POST" })
+      .catch(() => {})
+      .finally(() => window.location.assign("/"));
   }, []);
 
   const isStaff = !!user?.role && STAFF_ROLES.includes(user.role);

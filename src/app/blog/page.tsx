@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Spiritual Healing, Energy & Mindfulness Blog | Diving Sanatan",
     description: "Explore wisdom, practices, and real stories to elevate your healing journey. Read our articles on chakras, meditation, and energy medicine.",
-    url: "https://divingsanatan.com/blog",
+    url: "https://divingsanatan.online/blog",
     type: "website",
   }
 };

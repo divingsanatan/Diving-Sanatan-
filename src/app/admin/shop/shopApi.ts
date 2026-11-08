@@ -1,7 +1,5 @@
 import type { ShopProduct } from "@/lib/shopShared";
 
-const TOKEN_KEY = "divingsanatan_admin_token";
-
 export class ApiError extends Error {
   status: number;
   code?: string;
@@ -12,20 +10,11 @@ export class ApiError extends Error {
   }
 }
 
-export const getAdminToken = (): string => {
-  try {
-    return window.sessionStorage.getItem(TOKEN_KEY) || "";
-  } catch {
-    return "";
-  }
-};
-
 async function call<T>(url: string, init: RequestInit = {}): Promise<T> {
   const headers = new Headers(init.headers);
-  headers.set("Authorization", `Bearer ${getAdminToken()}`);
   if (init.body && !(init.body instanceof FormData)) headers.set("Content-Type", "application/json");
 
-  const res = await fetch(url, { ...init, headers });
+  const res = await fetch(url, { ...init, headers, credentials: "same-origin" });
   const json = await res.json().catch(() => ({}));
   if (!res.ok || !json.success) {
     throw new ApiError(json.error || `Request failed (${res.status})`, res.status, json.code);

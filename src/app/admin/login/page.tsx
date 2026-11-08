@@ -18,6 +18,7 @@ export default function AdminLoginPage() {
       window.sessionStorage.removeItem("divingsanatan_admin_auth");
       window.sessionStorage.removeItem("divingsanatan_admin_user");
       window.localStorage.removeItem("divingsanatan_user_session");
+      fetch("/api/auth/logout", { method: "POST", keepalive: true }).catch(() => {});
       return;
     }
 
@@ -55,8 +56,6 @@ export default function AdminLoginPage() {
         if (["admin", "super_admin", "guru", "subadmin"].includes(json.data.role)) {
           window.sessionStorage.setItem("divingsanatan_admin_auth", "true");
           window.sessionStorage.setItem("divingsanatan_admin_user", JSON.stringify(json.data));
-          if (json.token) window.sessionStorage.setItem("divingsanatan_admin_token", json.token);
-          else window.sessionStorage.removeItem("divingsanatan_admin_token");
           window.localStorage.setItem("divingsanatan_user_session", JSON.stringify(json.data));
           setError("");
           router.push("/admin");

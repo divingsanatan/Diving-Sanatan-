@@ -8,7 +8,6 @@ import {
   blankProduct,
   createProduct,
   deleteProduct,
-  getAdminToken,
   listProducts,
   updateProduct,
 } from "./shopApi";
@@ -54,9 +53,6 @@ export default function AdminShopPage() {
   const fetchProducts = useCallback(async (): Promise<
     { kind: "ok"; data: ShopProduct[] } | { kind: "auth"; message: string } | { kind: "error"; message: string }
   > => {
-    if (!getAdminToken()) {
-      return { kind: "auth", message: "Please sign out and sign in again to manage the shop. This adds a secure session token." };
-    }
     try {
       return { kind: "ok", data: await listProducts() };
     } catch (e) {

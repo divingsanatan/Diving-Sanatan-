@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Contact Our Healers & Guides | Diving Sanatan",
     description: "Get in touch with the practitioners at Diving Sanatan. Contact us for healing retreats, personal consultation times, and program inquiries.",
-    url: "https://divingsanatan.com/contact",
+    url: "https://divingsanatan.online/contact",
     type: "website",
   }
 };

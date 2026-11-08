@@ -174,7 +174,18 @@ export default function CheckoutPage() {
   // 2. Fetch all bookings for order history sidebar
   const fetchOrderHistory = async () => {
     try {
-      const res = await fetch("/api/bookings");
+      // Only ever request YOUR OWN bookings; the server refuses anyone else's.
+      let email = "";
+      try {
+        email = JSON.parse(window.localStorage.getItem("divingsanatan_user_session") || "{}")?.email || "";
+      } catch {
+        email = "";
+      }
+      if (!email) {
+        setOrderHistory([]);
+        return;
+      }
+      const res = await fetch(`/api/bookings?email=${encodeURIComponent(email)}`);
       const json = await res.json();
       if (json.success) {
         setOrderHistory(json.data);
@@ -270,7 +281,8 @@ export default function CheckoutPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          amount: totalCost,
+          // The server works out the price itself from your database.
+          serviceIds: selections.map((x) => x.id),
           bookingId: bookingId || "",
           notes: {
             customerName: cardholderName,
@@ -401,39 +413,9 @@ export default function CheckoutPage() {
       return;
     }
 
-    if (paymentOption === "razorpay") {
-      await handleRazorpayPayment();
-      return;
-    }
-
-    // Fallback Card / Simulated Option
-    setProcessing(true);
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
-    try {
-      if (bookingId) {
-        await fetch("/api/bookings", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            id: bookingId,
-            status: "confirmed",
-            paymentStatus: "paid",
-          }),
-        });
-      }
-
-      window.localStorage.removeItem("divingsanatan_selections");
-      window.localStorage.removeItem("active_booking_id");
-      setSelections([]);
-      setSuccess(true);
-      fetchOrderHistory();
-    } catch (err) {
-      console.error("Payment registration failure:", err);
-      alert("Payment processed, but failed to sync database session.");
-    } finally {
-      setProcessing(false);
-    }
+    // All paid checkouts go through Razorpay. A booking is only marked paid after the
+    // server has verified the payment with Razorpay.
+    await handleRazorpayPayment();
   };
 
   return (

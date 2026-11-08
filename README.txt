@@ -1,4 +1,4 @@
->>> THIS IS PART 1 OF 2 <<<
+>>> THIS IS PART 2 OF 2 <<<
 >>> Upload BOTH parts into your project before the site is redeployed. <<<
 >>> (If GitHub shows a failed deploy after the first part, that is normal. It fixes itself once both parts are uploaded.) <<<
 

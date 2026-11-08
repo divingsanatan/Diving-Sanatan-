@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
+  Package,
   ShoppingBag,
   LayoutDashboard,
   Calendar,
@@ -111,8 +112,8 @@ export default function AdminLayout({
     try {
       window.sessionStorage.removeItem("divingsanatan_admin_auth");
       window.sessionStorage.removeItem("divingsanatan_admin_user");
-      window.sessionStorage.removeItem("divingsanatan_admin_token");
       window.localStorage.removeItem("divingsanatan_user_session");
+      fetch("/api/auth/logout", { method: "POST", keepalive: true }).catch(() => {});
     } catch (e) {
       console.error("Error clearing admin session on logout:", e);
     }
@@ -131,6 +132,8 @@ export default function AdminLayout({
         return "Services & Offerings";
       case "/admin/shop":
         return "Shop & Products";
+      case "/admin/shop/orders":
+        return "Shop Orders";
       case "/admin/practitioners":
         return "Practitioners Registry";
       case "/admin/categories":
@@ -174,6 +177,8 @@ export default function AdminLayout({
         return "Services";
       case "/admin/shop":
         return "Shop";
+      case "/admin/shop/orders":
+        return "Orders";
       case "/admin/practitioners":
         return "Practitioners";
       case "/admin/categories":
@@ -303,6 +308,15 @@ export default function AdminLayout({
           >
             <ShoppingBag size={16} />
             <span>Shop</span>
+          </Link>
+          <Link
+            href="/admin/shop/orders"
+            title="Shop Orders"
+            className={`sidebar-link ${pathname === "/admin/shop/orders" ? "active" : ""}`}
+            onClick={() => setSidebarOpen(false)}
+          >
+            <Package size={16} />
+            <span>Shop Orders</span>
           </Link>
           <Link
             href="/admin/quiz-questions"

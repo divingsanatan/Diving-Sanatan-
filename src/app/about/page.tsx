@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Our Sanctuary & Healers | About Diving Sanatan",
     description: "Learn about the mission, values, and master healers at Diving Sanatan. Bridging ancient wisdom with modern holistic wellness.",
-    url: "https://divingsanatan.com/about",
+    url: "https://divingsanatan.online/about",
     type: "website",
   }
 };

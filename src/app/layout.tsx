@@ -60,7 +60,7 @@ export const metadata: Metadata = {
     type: "website",
     siteName: "Diving Sanatan",
   },
-  metadataBase: new URL("https://divingsanatan.com"),
+  metadataBase: new URL("https://divingsanatan.online"),
   other: {
     "google-adsense-account": "ca-pub-4820128927673407",
   },
