@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { ArrowRight, ArrowUp, Mail } from "lucide-react";
+import { ArrowUp, Mail } from "lucide-react";
 import { Logo } from "./Logo";
 import styles from "./Footer.module.css";
 
@@ -102,82 +102,44 @@ export const Footer: React.FC = () => {
 
   return (
     <footer className={styles.footer}>
-      <div className={styles.glow} aria-hidden="true" />
-
       <div className={styles.inner}>
-        {/* Call-to-action band */}
-        <div className={styles.cta}>
-          <div>
-            <p className={styles.ctaTitle}>Not sure where to start?</p>
-            <p className={styles.ctaText}>
-              Tell us what is weighing on you and we will guide you to the right healer.
-            </p>
-          </div>
-          <Link href="/explore-services" className={styles.ctaButton}>
-            Find guidance <ArrowRight size={18} aria-hidden="true" />
-          </Link>
+        {/* Divider with a small star, echoing the logo */}
+        <div className={styles.divider} aria-hidden="true">
+          <span className={styles.line} />
+          <svg viewBox="0 0 24 24" width="18" height="18" className={styles.star}>
+            <path d="M12 1.5l2.6 7.9 7.9 2.6-7.9 2.6L12 22.5l-2.6-7.9L1.5 12l7.9-2.6z" fill="currentColor" />
+          </svg>
+          <span className={styles.line} />
         </div>
 
         <div className={styles.grid}>
-          {/* Brand + newsletter */}
+          {/* Brand */}
           <div className={styles.brand}>
             <Link href="/" className={styles.brandRow} aria-label="Diving Sanatan home">
-              <Logo size={32} />
-              <span className={styles.brandName}>Diving Sanatan</span>
+              <Logo size={34} />
+              <span className={styles.brandName}>DIVING SANATAN</span>
             </Link>
             <p className={styles.tagline} lang="hi">सनातन की गहराई में</p>
             <p className={styles.desc}>
-              Healing, meditation and energy alignment guided by certified practitioners and
-              the timeless wisdom of Sanatan Dharma.
+              Healing, meditation and energy alignment guided by certified practitioners and the
+              timeless wisdom of Sanatan Dharma.
             </p>
-
-            <form onSubmit={handleSubscribe} className={styles.form} noValidate>
-              <label htmlFor="footer-email" className={styles.formLabel}>
-                Get weekly guidance in your inbox
-              </label>
-              <div className={styles.formRow}>
-                <input
-                  id="footer-email"
-                  type="email"
-                  inputMode="email"
-                  autoComplete="email"
-                  placeholder="you@example.com"
-                  className={styles.input}
-                  value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                    if (status === "error") setStatus("idle");
-                  }}
-                  required
-                  disabled={status === "loading"}
-                  aria-describedby="footer-newsletter-status"
-                />
-                {/* Honeypot: hidden from people and assistive tech */}
-                <input
-                  type="text"
-                  name="website"
-                  tabIndex={-1}
-                  autoComplete="off"
-                  aria-hidden="true"
-                  className={styles.honeypot}
-                  value={website}
-                  onChange={(e) => setWebsite(e.target.value)}
-                />
-                <button type="submit" className={styles.submit} disabled={status === "loading"}>
-                  {status === "loading" ? "Joining…" : "Join"}
-                </button>
-              </div>
-              <p
-                id="footer-newsletter-status"
-                role="status"
-                aria-live="polite"
-                className={`${styles.status} ${
-                  status === "success" ? styles.statusOk : status === "error" ? styles.statusErr : ""
-                }`}
-              >
-                {message}
-              </p>
-            </form>
+            <div className={styles.socials}>
+              {SOCIALS.map((s) => (
+                <a
+                  key={s.label}
+                  href={s.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.social}
+                  aria-label={`Diving Sanatan on ${s.label}`}
+                >
+                  <svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor" aria-hidden="true">
+                    <path d={s.path} />
+                  </svg>
+                </a>
+              ))}
+            </div>
           </div>
 
           {/* Link columns */}
@@ -199,35 +161,71 @@ export const Footer: React.FC = () => {
           </nav>
         </div>
 
+        {/* Newsletter */}
+        <div className={styles.news}>
+          <div className={styles.newsText}>
+            <h2 className={styles.newsTitle}>Weekly guidance, gently delivered</h2>
+            <p className={styles.newsSub}>Insights rooted in Sanatan wisdom, sent to your inbox. No spam, unsubscribe anytime.</p>
+          </div>
+          <form onSubmit={handleSubscribe} className={styles.form} noValidate>
+            <label htmlFor="footer-email" className={styles.srOnly}>
+              Email address
+            </label>
+            <div className={styles.formRow}>
+              <input
+                id="footer-email"
+                type="email"
+                inputMode="email"
+                autoComplete="email"
+                placeholder="Your email address"
+                className={styles.input}
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (status === "error") setStatus("idle");
+                }}
+                required
+                disabled={status === "loading"}
+                aria-describedby="footer-newsletter-status"
+              />
+              {/* Honeypot: hidden from people and assistive tech */}
+              <input
+                type="text"
+                name="website"
+                tabIndex={-1}
+                autoComplete="off"
+                aria-hidden="true"
+                className={styles.honeypot}
+                value={website}
+                onChange={(e) => setWebsite(e.target.value)}
+              />
+              <button type="submit" className={styles.submit} disabled={status === "loading"}>
+                {status === "loading" ? "Joining…" : "Subscribe"}
+              </button>
+            </div>
+            <p
+              id="footer-newsletter-status"
+              role="status"
+              aria-live="polite"
+              className={`${styles.status} ${
+                status === "success" ? styles.statusOk : status === "error" ? styles.statusErr : ""
+              }`}
+            >
+              {message}
+            </p>
+          </form>
+        </div>
+
         {/* Bottom bar */}
         <div className={styles.bottom}>
-          <p className={styles.legal}>
-            &copy; {new Date().getFullYear()} Diving Sanatan. All rights reserved.
-          </p>
-
+          <p className={styles.legal}>&copy; {new Date().getFullYear()} Diving Sanatan. All rights reserved.</p>
           <div className={styles.bottomRight}>
             <a href={`mailto:${CONTACT_EMAIL}`} className={styles.mail}>
-              <Mail size={16} aria-hidden="true" />
+              <Mail size={15} aria-hidden="true" />
               {CONTACT_EMAIL}
             </a>
-            <div className={styles.socials}>
-              {SOCIALS.map((s) => (
-                <a
-                  key={s.label}
-                  href={s.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={styles.social}
-                  aria-label={`Diving Sanatan on ${s.label}`}
-                >
-                  <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
-                    <path d={s.path} />
-                  </svg>
-                </a>
-              ))}
-            </div>
             <button type="button" onClick={scrollToTop} className={styles.top} aria-label="Back to top">
-              <ArrowUp size={18} aria-hidden="true" />
+              <ArrowUp size={17} aria-hidden="true" />
             </button>
           </div>
         </div>
