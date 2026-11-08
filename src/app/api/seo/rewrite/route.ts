@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateBlogRewriteSuggestion } from "@/lib/seo/agents/blogRewriteAgent";
+import { requireStaff } from "@/utils/authSession";
 
 export async function POST(req: NextRequest) {
+  const auth = requireStaff(req);
+  if (!auth.ok) return auth.response;
   try {
     const body = await req.json();
     const { blogId } = body;

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/utils/supabaseServer";
 import { GlossaryTerm } from "@/types/database";
+import { requireStaff } from "@/utils/authSession";
 
 function mapGlossaryTerm(row: Record<string, unknown>): GlossaryTerm {
   const illustration = row.illustration as string | null;
@@ -36,6 +37,8 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const auth = requireStaff(req);
+  if (!auth.ok) return auth.response;
   try {
     const body = await req.json();
     const { word, phonetic, category, definition, illustration } = body;
@@ -74,6 +77,8 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
+  const auth = requireStaff(req);
+  if (!auth.ok) return auth.response;
   try {
     const body = await req.json();
     const { id, word, phonetic, category, definition, illustration } = body;
@@ -114,6 +119,8 @@ export async function PUT(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  const auth = requireStaff(req);
+  if (!auth.ok) return auth.response;
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");

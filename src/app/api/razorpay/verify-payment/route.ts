@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import crypto from "crypto";
 import { supabaseServer } from "@/utils/supabaseServer";
+import { fetchRzpOrder, orderNote, validPaymentSignature } from "@/lib/razorpayServer";
 
 export async function POST(req: NextRequest) {
   try {
@@ -19,27 +19,32 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const keySecret = process.env.RAZORPAY_KEY_SECRET || "";
-    if (!keySecret) {
-      return NextResponse.json(
-        { success: false, error: "Razorpay secret key is not configured" },
-        { status: 500 }
-      );
-    }
-
-    // Verify HMAC-SHA256 signature
-    const expectedSignature = crypto
-      .createHmac("sha256", keySecret)
-      .update(`${razorpay_order_id}|${razorpay_payment_id}`)
-      .digest("hex");
-
-    const isSignatureValid = expectedSignature === razorpay_signature;
-
-    if (!isSignatureValid) {
+    // 1. The signature proves Razorpay really processed THIS payment for THIS order.
+    if (!validPaymentSignature(razorpay_order_id, razorpay_payment_id, razorpay_signature)) {
       return NextResponse.json(
         { success: false, error: "Invalid Razorpay payment signature" },
         { status: 400 }
       );
+    }
+
+    // 2. Ask Razorpay for the order itself and confirm it belongs to this booking and was for the right amount.
+    let order;
+    try {
+      order = await fetchRzpOrder(razorpay_order_id);
+    } catch {
+      return NextResponse.json({ success: false, error: "Could not confirm the payment with Razorpay." }, { status: 502 });
+    }
+
+    if (bookingId) {
+      const { data: bk } = await supabaseServer
+        .from("bookings")
+        .select("id, price, status")
+        .eq("id", bookingId)
+        .maybeSingle();
+      if (!bk) return NextResponse.json({ success: false, error: "Booking not found." }, { status: 404 });
+      if (orderNote(order, "bookingId") !== String(bookingId) || Number(order.amount) !== Math.round(Number(bk.price) * 100)) {
+        return NextResponse.json({ success: false, error: "This payment does not match the booking." }, { status: 400 });
+      }
     }
 
     // If bookingId is passed, update booking status in database and send admin notification email

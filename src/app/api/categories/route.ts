@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/utils/supabaseServer";
 import { getOrSetServerCache, invalidateServerCache } from "@/utils/serverCache";
+import { requireStaff } from "@/utils/authSession";
 
 /**
  * GET Handler - Retrieves all categories from Supabase
@@ -32,6 +33,8 @@ export async function GET() {
  * POST Handler - Creates a new category (Admin restricted)
  */
 export async function POST(req: NextRequest) {
+  const auth = requireStaff(req);
+  if (!auth.ok) return auth.response;
   try {
     const body = await req.json();
     const { name } = body;
@@ -66,6 +69,8 @@ export async function POST(req: NextRequest) {
  * DELETE Handler - Removes a category
  */
 export async function DELETE(req: NextRequest) {
+  const auth = requireStaff(req);
+  if (!auth.ok) return auth.response;
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");

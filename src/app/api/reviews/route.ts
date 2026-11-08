@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/utils/supabaseServer";
 import { Review } from "@/types/database";
+import { requireStaff } from "@/utils/authSession";
 
 function mapReviewToCamelCase(r: any): Review {
   return {
@@ -116,6 +117,8 @@ export async function POST(req: NextRequest) {
  * DELETE Handler - Removes a review from Supabase
  */
 export async function DELETE(req: NextRequest) {
+  const auth = requireStaff(req);
+  if (!auth.ok) return auth.response;
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");

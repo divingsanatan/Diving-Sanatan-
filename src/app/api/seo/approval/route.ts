@@ -2,8 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/utils/supabaseServer";
 import { applyApprovedChange } from "@/lib/seo/implementationAgent";
 import { getDb, saveDb } from "@/utils/db";
+import { requireStaff } from "@/utils/authSession";
 
 export async function GET(req: NextRequest) {
+  const auth = requireStaff(req);
+  if (!auth.ok) return auth.response;
   try {
     const { searchParams } = new URL(req.url);
     const statusFilter = searchParams.get("status") || "pending";
@@ -40,6 +43,8 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const auth = requireStaff(req);
+  if (!auth.ok) return auth.response;
   try {
     const body = await req.json();
     const { changeId, action, rejectionReason, approvedBy = "admin" } = body;

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/utils/supabaseServer";
-import { requireAdmin } from "@/utils/adminToken";
+import { requireStaff } from "@/utils/authSession";
 import { parseProductInput } from "@/lib/shopServer";
 import { revalidateShop } from "@/lib/shopRevalidate";
 import { mapProductRow } from "@/lib/shopShared";
@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 /** List every product (all statuses) for the admin screen. */
 export async function GET(req: NextRequest) {
-  const auth = requireAdmin(req);
+  const auth = requireStaff(req);
   if (!auth.ok) return auth.response;
 
   const { data, error } = await supabaseServer
@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
 
 /** Create a product. */
 export async function POST(req: NextRequest) {
-  const auth = requireAdmin(req);
+  const auth = requireStaff(req);
   if (!auth.ok) return auth.response;
 
   const body = await req.json().catch(() => null);

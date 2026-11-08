@@ -71,19 +71,21 @@ export async function GET(req: NextRequest) {
   }
 }
 
-import crypto from "crypto";
+import { requirePanel } from "@/utils/authSession";
+import { hashPassword, randomPassword } from "@/utils/auth";
 
-function hashPassword(password: string) {
-  return crypto.createHash("sha256").update(password).digest("hex");
-}
 
 /**
  * POST Handler - Creates a new practitioner (Admin restricted)
  */
 export async function POST(req: NextRequest) {
+  const auth = requirePanel(req);
+  if (!auth.ok) return auth.response;
+  const role = auth.user.role; // verified session role (never trust the request body)
+  let generatedPassword = "";
   try {
     const body = await req.json();
-    let { user_id, email, name, specialty, bio, image, video_url, certifications, expertise, social_links, role, approval_status, create_account, new_account_password } = body;
+    let { user_id, email, name, specialty, bio, image, video_url, certifications, expertise, social_links, role: _clientRole, approval_status, create_account, new_account_password } = body;
 
     if (!name || !specialty || !bio) {
       return NextResponse.json({ success: false, error: "Missing required practitioner fields" }, { status: 400 });
@@ -105,7 +107,7 @@ export async function POST(req: NextRequest) {
         await supabaseServer.from("user_profiles").update({ role: "healer" }).eq("id", existingUser.id);
       } else {
         const newUserId = "usr-" + Date.now() + Math.random().toString(36).substring(2, 7);
-        const hashedPassword = hashPassword(new_account_password || "Healer@123");
+        const hashedPassword = hashPassword(new_account_password || (generatedPassword = randomPassword()));
         const newUser = {
           id: newUserId,
           email: emailLower,
@@ -217,7 +219,7 @@ export async function POST(req: NextRequest) {
         if (db && db.practitioners) {
           db.practitioners.push(newPracDb);
           saveDb(db);
-          return NextResponse.json({ success: true, data: mapPractitionerToCamelCase(newPracDb) }, { status: 201 });
+          return NextResponse.json({ success: true, data: mapPractitionerToCamelCase(newPracDb), temporaryPassword: generatedPassword || undefined }, { status: 201 });
         }
       } catch (e) {}
       return NextResponse.json({ success: false, error: error.message }, { status: 500 });
@@ -232,7 +234,7 @@ export async function POST(req: NextRequest) {
     }
 
     invalidateServerCache("practitioner_");
-    return NextResponse.json({ success: true, data: mapPractitionerToCamelCase(data || newPracDb) }, { status: 201 });
+    return NextResponse.json({ success: true, data: mapPractitionerToCamelCase(data || newPracDb), temporaryPassword: generatedPassword || undefined }, { status: 201 });
   } catch (error: any) {
     console.error("Failed to create practitioner:", error);
     return NextResponse.json({ success: false, error: error.message || "Failed to create practitioner" }, { status: 500 });
@@ -243,9 +245,13 @@ export async function POST(req: NextRequest) {
  * PUT Handler - Updates practitioner info
  */
 export async function PUT(req: NextRequest) {
+  const auth = requirePanel(req);
+  if (!auth.ok) return auth.response;
+  const role = auth.user.role; // verified session role (never trust the request body)
+  let generatedPassword = "";
   try {
     const body = await req.json();
-    let { id, user_id, email, name, specialty, bio, image, video_url, certifications, expertise, social_links, role, approval_status, create_account, new_account_password } = body;
+    let { id, user_id, email, name, specialty, bio, image, video_url, certifications, expertise, social_links, role: _clientRole, approval_status, create_account, new_account_password } = body;
 
     if (!id) {
       return NextResponse.json({ success: false, error: "Practitioner ID is required" }, { status: 400 });
@@ -265,7 +271,7 @@ export async function PUT(req: NextRequest) {
         await supabaseServer.from("user_profiles").update({ role: "healer" }).eq("id", existingUser.id);
       } else {
         const newUserId = "usr-" + Date.now() + Math.random().toString(36).substring(2, 7);
-        const hashedPassword = hashPassword(new_account_password || "Healer@123");
+        const hashedPassword = hashPassword(new_account_password || (generatedPassword = randomPassword()));
         const newUser = {
           id: newUserId,
           email: emailLower,
@@ -342,7 +348,7 @@ export async function PUT(req: NextRequest) {
           if (idx !== -1) {
             db.practitioners[idx] = { ...db.practitioners[idx], ...updates };
             saveDb(db);
-            return NextResponse.json({ success: true, data: mapPractitionerToCamelCase(db.practitioners[idx]) });
+            return NextResponse.json({ success: true, data: mapPractitionerToCamelCase(db.practitioners[idx]), temporaryPassword: generatedPassword || undefined });
           }
         }
       } catch (e) {}
@@ -360,7 +366,7 @@ export async function PUT(req: NextRequest) {
     }
 
     invalidateServerCache("practitioner_");
-    return NextResponse.json({ success: true, data: mapPractitionerToCamelCase(data || { id, ...updates }) });
+    return NextResponse.json({ success: true, data: mapPractitionerToCamelCase(data || { id, ...updates }), temporaryPassword: generatedPassword || undefined });
   } catch (error: any) {
     console.error("Failed to update practitioner:", error);
     return NextResponse.json({ success: false, error: error.message || "Failed to update practitioner" }, { status: 500 });
@@ -371,6 +377,8 @@ export async function PUT(req: NextRequest) {
  * DELETE Handler - Removes a practitioner
  */
 export async function DELETE(req: NextRequest) {
+  const auth = requirePanel(req);
+  if (!auth.ok) return auth.response;
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");

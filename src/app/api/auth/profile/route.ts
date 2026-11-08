@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/utils/supabaseServer";
+import { STAFF_ROLES, requireUser } from "@/utils/authSession";
 
 export async function GET(req: NextRequest) {
+  const auth = requireUser(req);
+  if (!auth.ok) return auth.response;
+
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
@@ -11,6 +15,9 @@ export async function GET(req: NextRequest) {
         { success: false, error: "Profile ID is required" },
         { status: 400 }
       );
+    }
+    if (id !== auth.user.id && !STAFF_ROLES.includes(auth.user.role)) {
+      return NextResponse.json({ success: false, error: "You can only view your own profile." }, { status: 403 });
     }
 
     const { data: profile, error: profileError } = await supabaseServer

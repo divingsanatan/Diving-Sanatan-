@@ -1,9 +1,12 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/utils/supabaseServer";
 import { getDb } from "@/utils/db";
+import { requireStaff } from "@/utils/authSession";
 
 // GET /api/seo/dashboard/distribution — return the 20 most recent distribution_log entries
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const auth = requireStaff(req);
+  if (!auth.ok) return auth.response;
   try {
     let logs: any[] = [];
 

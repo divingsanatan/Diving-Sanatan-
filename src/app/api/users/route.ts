@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/utils/supabaseServer";
-import crypto from "crypto";
+import { requireStaff } from "@/utils/authSession";
+import { hashPassword } from "@/utils/auth";
 
 export const dynamic = "force-dynamic";
 
-function hashPassword(password: string) {
-  return crypto.createHash("sha256").update(password).digest("hex");
-}
 
 async function syncPractitionerForUser(userId: string, userEmail: string, userName: string, userRole: string) {
   if (userRole !== "healer" && userRole !== "guru") return;
@@ -79,6 +77,8 @@ async function syncPractitionerForUser(userId: string, userEmail: string, userNa
 }
 
 export async function GET(req: NextRequest) {
+  const auth = requireStaff(req);
+  if (!auth.ok) return auth.response;
   try {
     const { data: users, error } = await supabaseServer
       .from("user_profiles")
@@ -96,6 +96,8 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const auth = requireStaff(req);
+  if (!auth.ok) return auth.response;
   try {
     const body = await req.json();
     const { email, password, role, name, phone, gender, dob, category } = body;
@@ -174,6 +176,8 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
+  const auth = requireStaff(req);
+  if (!auth.ok) return auth.response;
   try {
     const body = await req.json();
     const { id, email, password, role, name, phone, gender, dob, category } = body;
@@ -233,6 +237,8 @@ export async function PUT(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  const auth = requireStaff(req);
+  if (!auth.ok) return auth.response;
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");

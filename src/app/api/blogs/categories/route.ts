@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/utils/supabaseServer";
+import { requirePanel } from "@/utils/authSession";
 
 function mapBlogCategory(row: Record<string, unknown>) {
   return {
@@ -38,6 +39,8 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const auth = requirePanel(req);
+  if (!auth.ok) return auth.response;
   try {
     const body = await req.json();
     const { name, approval_status } = body;
@@ -70,6 +73,8 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
+  const auth = requirePanel(req);
+  if (!auth.ok) return auth.response;
   try {
     const body = await req.json();
     const { id, name, approval_status } = body;
@@ -124,6 +129,8 @@ export async function PUT(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  const auth = requirePanel(req);
+  if (!auth.ok) return auth.response;
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");

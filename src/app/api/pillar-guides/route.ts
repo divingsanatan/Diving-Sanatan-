@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/utils/supabaseServer";
 import { invalidateServerCache } from "@/utils/serverCache";
 import { slugify } from "@/utils/slugify";
+import { requirePanel } from "@/utils/authSession";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -127,6 +128,8 @@ export async function GET(req: NextRequest) {
  * POST Handler - Creates a new pillar guide directly in Supabase database
  */
 export async function POST(req: NextRequest) {
+  const auth = requirePanel(req);
+  if (!auth.ok) return auth.response;
   try {
     const body = await req.json();
     const { title, description, category, image, articles } = body;
@@ -227,6 +230,8 @@ export async function POST(req: NextRequest) {
  * PUT Handler - Updates an existing pillar guide directly in Supabase database
  */
 export async function PUT(req: NextRequest) {
+  const auth = requirePanel(req);
+  if (!auth.ok) return auth.response;
   try {
     const body = await req.json();
     const { id, title, description, category, image, articles } = body;
@@ -326,6 +331,8 @@ export async function PUT(req: NextRequest) {
  * DELETE Handler - Deletes a pillar guide directly from Supabase database
  */
 export async function DELETE(req: NextRequest) {
+  const auth = requirePanel(req);
+  if (!auth.ok) return auth.response;
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");

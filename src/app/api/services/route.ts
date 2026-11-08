@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/utils/supabaseServer";
 import { Service } from "@/types/database";
 import { getOrSetServerCache, invalidateServerCache } from "@/utils/serverCache";
+import { requirePanel } from "@/utils/authSession";
 
 async function runSupabaseQuery<T extends { error: { message?: string } | null }>(
   operation: () => Promise<T>,
@@ -197,9 +198,12 @@ export async function GET(req: NextRequest) {
  * POST Handler - Creates a new service (Admin restricted)
  */
 export async function POST(req: NextRequest) {
+  const auth = requirePanel(req);
+  if (!auth.ok) return auth.response;
+  const role = auth.user.role; // verified session role (never trust the request body)
   try {
     const body = await req.json();
-    const { name, price, duration, practitioner, description, categoryIds, image, video_url, benefits, process, role, approval_status } = body;
+    const { name, price, duration, practitioner, description, categoryIds, image, video_url, benefits, process, role: _clientRole, approval_status } = body;
     
     if (!name || !price || !duration || !practitioner || !description) {
       return NextResponse.json({ success: false, error: "Missing required service details" }, { status: 400 });
@@ -277,9 +281,12 @@ export async function POST(req: NextRequest) {
  * PUT Handler - Updates an existing service (Admin restricted)
  */
 export async function PUT(req: NextRequest) {
+  const auth = requirePanel(req);
+  if (!auth.ok) return auth.response;
+  const role = auth.user.role; // verified session role (never trust the request body)
   try {
     const body = await req.json();
-    const { id, name, price, duration, practitioner, description, categoryIds, image, video_url, benefits, process, role, approval_status } = body;
+    const { id, name, price, duration, practitioner, description, categoryIds, image, video_url, benefits, process, role: _clientRole, approval_status } = body;
     
     if (!id) {
       return NextResponse.json({ success: false, error: "Service ID is required for updating" }, { status: 400 });
@@ -408,6 +415,8 @@ export async function PUT(req: NextRequest) {
  * DELETE Handler - Removes a service from catalog
  */
 export async function DELETE(req: NextRequest) {
+  const auth = requirePanel(req);
+  if (!auth.ok) return auth.response;
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");

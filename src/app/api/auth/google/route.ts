@@ -1,19 +1,38 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/utils/supabaseServer";
+import { attachSession } from "@/utils/authSession";
+import { googleDevBypass, verifyGoogleAccessToken } from "@/utils/googleVerify";
+import { allow, clientIp } from "@/utils/rateLimit";
+
+// Responds, and signs the person in with a server-verified session cookie when a profile is returned.
+function reply(payload: any, status = 200) {
+  const res = NextResponse.json(payload, { status });
+  const d = payload?.data;
+  if (d?.id) attachSession(res, { id: String(d.id), role: String(d.role || "user"), email: String(d.email || ""), name: d.name });
+  return res;
+}
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { email, name, phone, gender, dob, action } = body;
+    const { phone, gender, dob, action, accessToken } = body;
+    let { name } = body;
 
-    if (!email) {
-      return NextResponse.json(
-        { success: false, error: "Email is required" },
-        { status: 400 }
-      );
+    if (!allow(`google:${clientIp(req)}`, 30, 15 * 60 * 1000)) {
+      return NextResponse.json({ success: false, error: "Too many attempts. Please wait a few minutes." }, { status: 429 });
     }
 
-    const emailLower = email.toLowerCase().trim();
+    // The email comes from GOOGLE, never from the request body.
+    let emailLower = "";
+    if (googleDevBypass()) {
+      if (!body.email) return NextResponse.json({ success: false, error: "Email is required" }, { status: 400 });
+      emailLower = String(body.email).toLowerCase().trim();
+    } else {
+      const verified = await verifyGoogleAccessToken(String(accessToken || ""));
+      if (!verified.ok) return NextResponse.json({ success: false, error: verified.error }, { status: 401 });
+      emailLower = verified.email;
+      if (!name) name = verified.name;
+    }
 
     // 1. Check if user profile exists in user_profiles under this email
     const { data: profile, error: fetchError } = await supabaseServer
@@ -34,7 +53,7 @@ export async function POST(req: NextRequest) {
       if (profile) {
         // Remove password from response if it exists
         const { password: _, ...safeProfile } = profile;
-        return NextResponse.json({
+        return reply({
           success: true,
           exists: true,
           data: safeProfile
@@ -75,7 +94,7 @@ export async function POST(req: NextRequest) {
           }
 
           const { password: _, ...safeProfile } = updatedProfile;
-          return NextResponse.json({
+          return reply({
             success: true,
             exists: true,
             message: "Wellness profile successfully claimed and synced!",
@@ -84,7 +103,7 @@ export async function POST(req: NextRequest) {
         }
 
         const { password: _, ...safeProfile } = profile;
-        return NextResponse.json({
+        return reply({
           success: true,
           exists: true,
           message: "Profile already exists and is fully synced.",
@@ -124,12 +143,12 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      return NextResponse.json({
+      return reply({
         success: true,
         exists: true,
         message: "Registration completed successfully!",
         data: insertedProfile
-      }, { status: 201 });
+      }, 201);
     }
 
     return NextResponse.json(

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/utils/supabaseServer";
 import { Keyword } from "@/types/database";
+import { requireStaff } from "@/utils/authSession";
 
 // Helper to map Supabase database objects to Keyword models
 function mapKeywordRelations(k: any): Keyword {
@@ -30,6 +31,8 @@ function mapKeywordRelations(k: any): Keyword {
  * GET Handler - Retrieves keywords with categories and chakras
  */
 export async function GET(req: NextRequest) {
+  const auth = requireStaff(req);
+  if (!auth.ok) return auth.response;
   try {
     const { data: keywords, error } = await supabaseServer
       .from("keywords")
@@ -62,6 +65,8 @@ export async function GET(req: NextRequest) {
  * POST Handler - Creates a new keyword and maps relations
  */
 export async function POST(req: NextRequest) {
+  const auth = requireStaff(req);
+  if (!auth.ok) return auth.response;
   try {
     const body = await req.json();
     const { word, categoryIds, chakras, customCss, publishDate } = body;
@@ -150,6 +155,8 @@ export async function POST(req: NextRequest) {
  * PUT Handler - Updates a keyword and resets relations
  */
 export async function PUT(req: NextRequest) {
+  const auth = requireStaff(req);
+  if (!auth.ok) return auth.response;
   try {
     const body = await req.json();
     const { id, word, categoryIds, chakras, customCss, publishDate } = body;
@@ -208,6 +215,8 @@ export async function PUT(req: NextRequest) {
  * DELETE Handler - Removes keyword
  */
 export async function DELETE(req: NextRequest) {
+  const auth = requireStaff(req);
+  if (!auth.ok) return auth.response;
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");

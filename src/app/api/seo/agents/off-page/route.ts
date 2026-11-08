@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { runOffPageAgent } from "@/lib/seo/agents/offPageAgent";
+import { requireStaff } from "@/utils/authSession";
 
-export async function POST() {
+export async function POST(req: NextRequest) {
+  const auth = requireStaff(req);
+  if (!auth.ok) return auth.response;
   try {
     const result = await runOffPageAgent();
     if (!result.success) {
@@ -13,6 +16,8 @@ export async function POST() {
   }
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const auth = requireStaff(req);
+  if (!auth.ok) return auth.response;
   return NextResponse.json({ message: "Off-page & Backlink Agent endpoint active." });
 }

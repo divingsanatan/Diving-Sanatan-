@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/utils/supabaseServer";
 import { hashPassword } from "@/utils/auth";
+import { STAFF_ROLES, requireUser } from "@/utils/authSession";
 
 export async function POST(req: NextRequest) {
+  // Must be signed in, and may only change YOUR OWN profile (staff may change any).
+  const auth = requireUser(req);
+  if (!auth.ok) return auth.response;
+
   try {
     const body = await req.json();
     const { profile_id, name, phone, gender, dob, password } = body;
@@ -12,6 +17,12 @@ export async function POST(req: NextRequest) {
         { success: false, error: "Profile ID is required" },
         { status: 400 }
       );
+    }
+    if (String(profile_id) !== auth.user.id && !STAFF_ROLES.includes(auth.user.role)) {
+      return NextResponse.json({ success: false, error: "You can only update your own profile." }, { status: 403 });
+    }
+    if (password && String(password).length < 8) {
+      return NextResponse.json({ success: false, error: "Password must be at least 8 characters." }, { status: 400 });
     }
 
     const updates: any = {};

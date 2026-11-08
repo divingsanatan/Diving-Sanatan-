@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/utils/supabaseServer";
+import { requirePanel } from "@/utils/authSession";
 
 /**
  * GET Handler - Retrieves all expertise options from Supabase
@@ -25,6 +26,8 @@ export async function GET() {
  * POST Handler - Creates a new expertise option (Admin restricted)
  */
 export async function POST(req: NextRequest) {
+  const auth = requirePanel(req);
+  if (!auth.ok) return auth.response;
   try {
     const body = await req.json();
     const { name } = body;

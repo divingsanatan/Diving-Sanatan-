@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/utils/supabaseServer";
+import { requireStaff } from "@/utils/authSession";
 
 const PROFILE_SELECT = `
   id,
@@ -36,6 +37,8 @@ function stripPassword<T extends { password?: string | null }>(profile: T) {
  * GET Handler - Retrieves all user profiles (leads + registered users)
  */
 export async function GET(req: NextRequest) {
+  const auth = requireStaff(req);
+  if (!auth.ok) return auth.response;
   try {
     const { data: profiles, error: profileError } = await supabaseServer
       .from("user_profiles")
@@ -161,6 +164,8 @@ export async function POST(req: NextRequest) {
  * DELETE Handler - Remove a user profile and cascade answers
  */
 export async function DELETE(req: NextRequest) {
+  const auth = requireStaff(req);
+  if (!auth.ok) return auth.response;
   try {
     const id = req.nextUrl.searchParams.get("id");
     if (!id) {

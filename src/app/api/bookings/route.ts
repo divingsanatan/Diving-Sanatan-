@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/utils/supabaseServer";
 import { Booking } from "@/types/database";
+import { PANEL_ROLES, getSession } from "@/utils/authSession";
+import { allow, clientIp } from "@/utils/rateLimit";
 
 function mapBookingToCamelCase(b: any): Booking {
   const rawPaymentStatus = b.payment_status || b.paymentStatus;
@@ -25,11 +27,34 @@ function mapBookingToCamelCase(b: any): Booking {
   };
 }
 
+/** What anyone may see: that a slot is taken. No names, contacts, prices or notes. */
+function toPublicAvailability(b: Booking) {
+  return {
+    id: b.id,
+    serviceId: b.serviceId,
+    serviceName: b.serviceName,
+    practitionerId: b.practitionerId,
+    practitionerName: b.practitionerName,
+    date: b.date,
+    timeSlot: b.timeSlot,
+    status: b.status,
+  };
+}
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const email = searchParams.get("email");
     const emailLower = email ? email.toLowerCase().trim() : null;
+
+    // Who is asking? Panel users see everything; a member sees only their own bookings; everyone else sees availability only.
+    const session = getSession(req);
+    const isPanel = !!session && PANEL_ROLES.includes(session.role);
+    const isOwner = !!session && !!emailLower && session.email === emailLower;
+    if (emailLower && !isPanel && !isOwner) {
+      return NextResponse.json({ success: false, error: "Please sign in to see your bookings." }, { status: 403 });
+    }
+    const fullAccess = isPanel || isOwner;
 
     let mappedBookings: Booking[] = [];
 
@@ -84,7 +109,10 @@ export async function GET(req: NextRequest) {
       console.warn("Local DB fetch bookings warning:", dbErr);
     }
 
-    return NextResponse.json({ success: true, data: mappedBookings });
+    return NextResponse.json({
+      success: true,
+      data: fullAccess ? mappedBookings : mappedBookings.map(toPublicAvailability),
+    });
   } catch (error) {
     return NextResponse.json({ success: false, error: "Failed to read bookings database" }, { status: 500 });
   }
@@ -97,13 +125,25 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { 
-      serviceId, serviceName, practitionerId, practitionerName,
-      date, timeSlot, price, clientName, clientEmail, clientPhone, notes 
+      serviceId, practitionerId, practitionerName,
+      date, timeSlot, clientName, clientEmail, clientPhone, notes 
     } = body;
-    
-    if (!serviceId || !serviceName || !practitionerId || !practitionerName || !date || !timeSlot || (price === undefined || price === null) || !clientName || !clientEmail || !clientPhone) {
+
+    if (!allow(`booking:${clientIp(req)}`, 20, 60 * 60 * 1000)) {
+      return NextResponse.json({ success: false, error: "Too many booking requests. Please try again later." }, { status: 429 });
+    }
+
+    if (!serviceId || !practitionerId || !practitionerName || !date || !timeSlot || !clientName || !clientEmail || !clientPhone) {
       return NextResponse.json({ success: false, error: "Missing required booking details" }, { status: 400 });
     }
+
+    // The service name and PRICE always come from your database, never from the browser.
+    const { data: service } = await supabaseServer.from("services").select("id, name, price").eq("id", serviceId).maybeSingle();
+    if (!service) {
+      return NextResponse.json({ success: false, error: "That service is no longer available." }, { status: 400 });
+    }
+    const serviceName = service.name;
+    const price = Number(service.price);
     
     const newBookingDb = {
       id: `bk-${Math.random().toString(36).substring(2, 9)}`,
@@ -148,6 +188,32 @@ export async function PATCH(req: NextRequest) {
     
     if (!id) {
       return NextResponse.json({ success: false, error: "Booking ID is required for updating" }, { status: 400 });
+    }
+    if (status !== undefined && !["pending", "confirmed", "cancelled", "completed"].includes(status)) {
+      return NextResponse.json({ success: false, error: "Invalid booking status." }, { status: 400 });
+    }
+    if (paymentStatus !== undefined && !["unpaid", "paid", "refunded"].includes(paymentStatus)) {
+      return NextResponse.json({ success: false, error: "Invalid payment status." }, { status: 400 });
+    }
+
+    // Permissions: panel users may change anything. Everyone else may only
+    //  (a) cancel their OWN booking while signed in, or
+    //  (b) confirm a booking that costs nothing. Paid status can never be set from the browser.
+    const session = getSession(req);
+    if (!(session && PANEL_ROLES.includes(session.role))) {
+      const { data: existing } = await supabaseServer
+        .from("bookings")
+        .select("id, price, client_email")
+        .eq("id", id)
+        .maybeSingle();
+      if (!existing) return NextResponse.json({ success: false, error: "Booking not found." }, { status: 404 });
+
+      const ownsIt = !!session && String(existing.client_email || "").toLowerCase() === session.email;
+      const cancelOwn = ownsIt && status === "cancelled" && paymentStatus === undefined;
+      const freeConfirm = Number(existing.price) === 0 && (status === "confirmed" || paymentStatus === "paid");
+      if (!cancelOwn && !freeConfirm) {
+        return NextResponse.json({ success: false, error: "You do not have permission to change this booking." }, { status: 403 });
+      }
     }
     
     const updates: any = {};

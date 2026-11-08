@@ -139,3 +139,54 @@ Booking Details:
     return { success: true, emailSent: false, simulated: true };
   }
 }
+
+const esc = (s: unknown) =>
+  String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string));
+
+export interface ShopOrderNotification {
+  orderNumber: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  address: string;
+  items: { name: string; qty: number; price: number }[];
+  total: number;
+  paid: boolean;
+  notes?: string;
+}
+
+/** Tells the owner about a new shop order (paid online, or waiting for manual payment). */
+export async function sendAdminShopOrderNotification(o: ShopOrderNotification) {
+  const adminEmail = process.env.ADMIN_EMAIL || "admin@divingsanatan.com";
+  const smtpUser = process.env.SMTP_USER || "";
+  const smtpPass = process.env.SMTP_PASS || "";
+  const subject = `${o.paid ? "🛍️ New PAID shop order" : "🕓 New shop order (payment pending)"} ${o.orderNumber} - ₹${o.total}`;
+  const rows = o.items
+    .map((i) => `<tr><td style="padding:6px 0">${esc(i.name)} × ${i.qty}</td><td style="padding:6px 0;text-align:right">₹${i.price * i.qty}</td></tr>`)
+    .join("");
+  const html = `<div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;padding:24px;color:#1e1b4b">
+    <h2 style="color:#4c1d95">${o.paid ? "New paid order" : "New order awaiting payment"} ${esc(o.orderNumber)}</h2>
+    <table style="width:100%;border-collapse:collapse">${rows}<tr><td style="padding-top:10px"><strong>Total</strong></td><td style="text-align:right;padding-top:10px"><strong>₹${o.total}</strong></td></tr></table>
+    <h3>Customer</h3><p>${esc(o.customerName)}<br>${esc(o.customerEmail)}<br>${esc(o.customerPhone)}</p>
+    <h3>Ship to</h3><p>${esc(o.address)}</p>
+    ${o.notes ? `<h3>Notes</h3><p>${esc(o.notes)}</p>` : ""}
+    <p style="color:#64748b;font-size:12px">Manage this order in Admin &gt; Shop &gt; Orders.</p></div>`;
+
+  if (!(smtpUser && smtpPass)) {
+    console.log(`[SHOP ORDER] ${subject} (email not configured)`);
+    return { success: true, emailSent: false };
+  }
+  try {
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || "smtp.gmail.com",
+      port: Number(process.env.SMTP_PORT) || 587,
+      secure: process.env.SMTP_SECURE === "true",
+      auth: { user: smtpUser, pass: smtpPass },
+    });
+    await transporter.sendMail({ from: `"Diving Sanatan Shop" <${smtpUser}>`, to: adminEmail, subject, html });
+    return { success: true, emailSent: true };
+  } catch (err) {
+    console.error("[EMAIL ERROR] shop order notification:", err instanceof Error ? err.message : err);
+    return { success: false };
+  }
+}

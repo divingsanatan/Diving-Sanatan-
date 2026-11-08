@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/utils/supabaseServer";
 import { getDb, saveDb } from "@/utils/db";
+import { requireStaff } from "@/utils/authSession";
 
 /**
  * GET - Returns latest keyword ranking tracking data & historical position changes
  */
 export async function GET(req: NextRequest) {
+  const auth = requireStaff(req);
+  if (!auth.ok) return auth.response;
   try {
     let rankings: any[] = [];
 
@@ -42,6 +45,8 @@ export async function GET(req: NextRequest) {
  * POST - Adds a new keyword to track ranking positions
  */
 export async function POST(req: NextRequest) {
+  const auth = requireStaff(req);
+  if (!auth.ok) return auth.response;
   try {
     const body = await req.json();
     const { keyword, url, searchEngine = "google", location = "US" } = body;

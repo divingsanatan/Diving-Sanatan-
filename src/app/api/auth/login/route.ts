@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/utils/supabaseServer";
-import { hashPassword } from "@/utils/auth";
-import { signAdminToken } from "@/utils/adminToken";
+import { hashPassword, needsRehash, verifyPassword } from "@/utils/auth";
+import { attachSession } from "@/utils/authSession";
+import { allow, clientIp } from "@/utils/rateLimit";
 
 export async function POST(req: NextRequest) {
   try {
@@ -16,8 +17,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const emailLower = email.toLowerCase().trim();
-    const hashedPassword = hashPassword(password);
+    const emailLower = String(email).toLowerCase().trim();
+
+    // Slow down password guessing: 10 attempts per 15 minutes per address + visitor
+    if (!allow(`login:${emailLower}:${clientIp(req)}`, 10, 15 * 60 * 1000)) {
+      return NextResponse.json(
+        { success: false, error: "Too many attempts. Please wait a few minutes and try again." },
+        { status: 429 }
+      );
+    }
 
     let profile: any = null;
 
@@ -60,7 +68,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Validate password hash
-    if (profile.password !== hashedPassword) {
+    if (!verifyPassword(String(password), profile.password)) {
       return NextResponse.json(
         { success: false, error: "Invalid email or password." },
         { status: 400 }
@@ -70,20 +78,22 @@ export async function POST(req: NextRequest) {
     // Remove password before returning profile
     const { password: _, ...safeProfile } = profile;
 
-    // Staff get a signed token so protected admin APIs (e.g. the shop) can verify them.
-    const token = signAdminToken({
-      id: String(safeProfile.id ?? ""),
-      role: String(safeProfile.role ?? ""),
-      email: String(safeProfile.email ?? ""),
-    });
+    // Quietly upgrade old unsalted hashes to a modern salted one
+    if (needsRehash(profile.password)) {
+      try {
+        await supabaseServer.from("user_profiles").update({ password: hashPassword(String(password)) }).eq("id", profile.id);
+      } catch (e) {
+        console.warn("Password hash upgrade skipped:", e);
+      }
+    }
 
-    return NextResponse.json({
+    const res = NextResponse.json({
       success: true,
       message: "Login successful!",
-      data: safeProfile,
-      ...(token ? { token } : {})
+      data: safeProfile
     });
-
+    attachSession(res, { id: String(profile.id), role: String(profile.role || "user"), email: emailLower, name: profile.name });
+    return res;
   } catch (error: any) {
     console.error("Login error:", error);
     return NextResponse.json(

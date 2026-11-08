@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { runOnPageAgent } from "@/lib/seo/agents/onPageAgent";
 import { supabaseServer } from "@/utils/supabaseServer";
+import { requireStaff } from "@/utils/authSession";
 
 export async function POST(req: NextRequest) {
+  const auth = requireStaff(req);
+  if (!auth.ok) return auth.response;
   try {
     const body = await req.json().catch(() => ({}));
     const { url, blogId } = body;

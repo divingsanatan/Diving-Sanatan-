@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/utils/supabaseServer";
-import { requireAdmin } from "@/utils/adminToken";
+import { requireStaff } from "@/utils/authSession";
 import { parseProductInput } from "@/lib/shopServer";
 import { revalidateShop } from "@/lib/shopRevalidate";
 import { mapProductRow } from "@/lib/shopShared";
@@ -12,7 +12,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** Update a product. If a published product's slug changes, a 301 redirect is created. */
 export async function PUT(req: NextRequest, ctx: Ctx) {
-  const auth = requireAdmin(req);
+  const auth = requireStaff(req);
   if (!auth.ok) return auth.response;
 
   const { id } = await ctx.params;
@@ -74,7 +74,7 @@ export async function PUT(req: NextRequest, ctx: Ctx) {
 }
 
 export async function DELETE(req: NextRequest, ctx: Ctx) {
-  const auth = requireAdmin(req);
+  const auth = requireStaff(req);
   if (!auth.ok) return auth.response;
 
   const { id } = await ctx.params;

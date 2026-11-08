@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/utils/supabaseServer";
 import { slugify } from "@/utils/slugify";
 import { invalidateServerCache } from "@/utils/serverCache";
+import { requirePanel } from "@/utils/authSession";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -129,10 +130,13 @@ export async function GET(req: NextRequest) {
  * POST Handler - Creates a new blog post directly in Supabase database
  */
 export async function POST(req: NextRequest) {
+  const auth = requirePanel(req);
+  if (!auth.ok) return auth.response;
+  const role = auth.user.role; // verified session role (never trust the request body)
   try {
     const body = await req.json();
     const {
-      title, slug, category, author, content, date, readTime, image, images, videos, section, is_show_featured_page, role, approval_status,
+      title, slug, category, author, content, date, readTime, image, images, videos, section, is_show_featured_page, role: _clientRole, approval_status,
       meta_title, meta_description, focus_keyword, canonical_url, robots_directive,
       author_bio, reviewed_by, tldr, content_type, content_format, schema_type, faq_pairs,
       featured_image_alt, og_image_override, video_embed_url, video_transcript, tags, pillar_cluster, pinned_related_articles, status
@@ -250,10 +254,13 @@ export async function POST(req: NextRequest) {
  * PUT Handler - Updates a blog post directly in Supabase database
  */
 export async function PUT(req: NextRequest) {
+  const auth = requirePanel(req);
+  if (!auth.ok) return auth.response;
+  const role = auth.user.role; // verified session role (never trust the request body)
   try {
     const body = await req.json();
     const {
-      id, slug, title, category, author, content, date, readTime, image, images, videos, section, is_show_featured_page, role, approval_status,
+      id, slug, title, category, author, content, date, readTime, image, images, videos, section, is_show_featured_page, role: _clientRole, approval_status,
       meta_title, meta_description, focus_keyword, canonical_url, robots_directive,
       author_bio, reviewed_by, tldr, content_type, content_format, schema_type, faq_pairs,
       featured_image_alt, og_image_override, video_embed_url, video_transcript, tags, pillar_cluster, pinned_related_articles, status
@@ -383,6 +390,8 @@ export async function PUT(req: NextRequest) {
  * DELETE Handler - Removes a blog post directly from Supabase database matched strictly by ID
  */
 export async function DELETE(req: NextRequest) {
+  const auth = requirePanel(req);
+  if (!auth.ok) return auth.response;
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");

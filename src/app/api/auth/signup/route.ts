@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/utils/supabaseServer";
 import { hashPassword } from "@/utils/auth";
+import { attachSession } from "@/utils/authSession";
+import { allow, clientIp } from "@/utils/rateLimit";
 
 export async function POST(req: NextRequest) {
   try {
@@ -13,6 +15,13 @@ export async function POST(req: NextRequest) {
         { success: false, error: "All profile details and a password are required" },
         { status: 400 }
       );
+    }
+
+    if (!allow(`signup:${clientIp(req)}`, 10, 60 * 60 * 1000)) {
+      return NextResponse.json({ success: false, error: "Too many sign-ups from this connection. Please try later." }, { status: 429 });
+    }
+    if (String(password).length < 8) {
+      return NextResponse.json({ success: false, error: "Password must be at least 8 characters." }, { status: 400 });
     }
 
     const emailLower = email.toLowerCase().trim();
@@ -33,6 +42,13 @@ export async function POST(req: NextRequest) {
     }
 
     if (existingProfile) {
+      // Only plain member/lead profiles can be claimed. Staff, gurus and healers can never be taken over this way.
+      if (existingProfile.role && existingProfile.role !== "user") {
+        return NextResponse.json(
+          { success: false, error: "This account cannot be registered here. Please contact support." },
+          { status: 403 }
+        );
+      }
       // If profile exists and already has a password, they should use Login
       if (existingProfile.password) {
         return NextResponse.json(
@@ -65,12 +81,14 @@ export async function POST(req: NextRequest) {
       // Remove password before returning
       const { password: _, ...safeProfile } = updatedProfile;
 
-      return NextResponse.json({
+      const claimed = NextResponse.json({
         success: true,
         message: "Existing wellness profile successfully claimed and synced!",
         data: safeProfile,
         synced: true
       });
+      attachSession(claimed, { id: String(safeProfile.id), role: "user", email: emailLower, name: safeProfile.name });
+      return claimed;
     }
 
     // 2. Profile does not exist, create a new one
@@ -102,12 +120,14 @@ export async function POST(req: NextRequest) {
     // Remove password before returning
     const { password: _, ...safeProfile } = insertedProfile;
 
-    return NextResponse.json({
+    const created = NextResponse.json({
       success: true,
       message: "Registration completed successfully!",
       data: safeProfile,
       synced: false
     }, { status: 201 });
+    attachSession(created, { id: String(safeProfile.id), role: "user", email: emailLower, name: safeProfile.name });
+    return created;
 
   } catch (error: any) {
     console.error("Signup error:", error);

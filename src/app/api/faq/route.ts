@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/utils/supabaseServer";
 import { FAQItem } from "@/types/database";
 import { getOrSetServerCache, invalidateServerCache } from "@/utils/serverCache";
+import { requireStaff } from "@/utils/authSession";
 
 function mapFAQItem(row: Record<string, unknown>): FAQItem {
   return {
@@ -38,6 +39,8 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const auth = requireStaff(req);
+  if (!auth.ok) return auth.response;
   try {
     const body = await req.json();
     const { question, answer, verified, isPublished } = body;
@@ -76,6 +79,8 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
+  const auth = requireStaff(req);
+  if (!auth.ok) return auth.response;
   try {
     const body = await req.json();
     const { id, question, answer, verified, isPublished } = body;
@@ -116,6 +121,8 @@ export async function PUT(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  const auth = requireStaff(req);
+  if (!auth.ok) return auth.response;
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");

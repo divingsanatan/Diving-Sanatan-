@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/utils/supabaseServer";
 import { getDb, saveDb, TeamMember } from "@/utils/db";
+import { requireStaff } from "@/utils/authSession";
 
 /**
  * GET Handler - Retrieves team members
@@ -60,6 +61,8 @@ export async function GET(req: NextRequest) {
  * POST Handler - Creates a new team member
  */
 export async function POST(req: NextRequest) {
+  const auth = requireStaff(req);
+  if (!auth.ok) return auth.response;
   try {
     const body = await req.json();
     const { name, role, image, bio, order_index } = body;
@@ -110,6 +113,8 @@ export async function POST(req: NextRequest) {
  * PUT Handler - Updates a team member
  */
 export async function PUT(req: NextRequest) {
+  const auth = requireStaff(req);
+  if (!auth.ok) return auth.response;
   try {
     const body = await req.json();
     const { id, name, role, image, bio, order_index } = body;
@@ -156,6 +161,8 @@ export async function PUT(req: NextRequest) {
  * DELETE Handler - Removes a team member
  */
 export async function DELETE(req: NextRequest) {
+  const auth = requireStaff(req);
+  if (!auth.ok) return auth.response;
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");

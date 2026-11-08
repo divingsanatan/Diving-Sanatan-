@@ -1,63 +1,80 @@
 import { NextRequest, NextResponse } from "next/server";
-import Razorpay from "razorpay";
+import { supabaseServer } from "@/utils/supabaseServer";
+import { createRzpOrder, razorpayKeys } from "@/lib/razorpayServer";
+import { allow, clientIp } from "@/utils/rateLimit";
 
+/**
+ * Creates a Razorpay order. The AMOUNT IS ALWAYS CALCULATED HERE from your database
+ * (the booking's saved price, or the selected services' prices). A price sent by the
+ * browser is ignored, so it can no longer be tampered with.
+ */
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const { amount, currency = "INR", bookingId, notes = {} } = body;
-
-    if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
-      return NextResponse.json(
-        { success: false, error: "Valid payment amount is required" },
-        { status: 400 }
-      );
+    if (!allow(`rzp-order:${clientIp(req)}`, 30, 15 * 60 * 1000)) {
+      return NextResponse.json({ success: false, error: "Too many payment attempts. Please wait a few minutes." }, { status: 429 });
     }
 
-    const keyId = process.env.RAZORPAY_KEY_ID || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "";
-    const keySecret = process.env.RAZORPAY_KEY_SECRET || "";
+    const body = await req.json().catch(() => ({}));
+    const bookingId = typeof body.bookingId === "string" ? body.bookingId.trim() : "";
+    const serviceIds: string[] = Array.isArray(body.serviceIds)
+      ? Array.from(new Set(body.serviceIds.filter((x: unknown) => typeof x === "string" && x)))
+      : [];
+    const clientNotes = (body.notes && typeof body.notes === "object" ? body.notes : {}) as Record<string, unknown>;
 
-    if (!keyId || !keySecret) {
-      return NextResponse.json(
-        { success: false, error: "Razorpay credentials are missing in environment variables" },
-        { status: 500 }
-      );
+    const keys = razorpayKeys();
+    if (!keys) {
+      return NextResponse.json({ success: false, error: "Online payments are not configured yet." }, { status: 500 });
     }
 
-    const instance = new Razorpay({
-      key_id: keyId,
-      key_secret: keySecret,
-    });
+    let amount = 0;
+    if (bookingId) {
+      const { data: booking, error } = await supabaseServer
+        .from("bookings")
+        .select("id, price, payment_status, status")
+        .eq("id", bookingId)
+        .maybeSingle();
+      if (error || !booking) return NextResponse.json({ success: false, error: "Booking not found." }, { status: 404 });
+      if (booking.payment_status === "paid") {
+        return NextResponse.json({ success: false, error: "This booking has already been paid." }, { status: 409 });
+      }
+      if (booking.status === "cancelled") {
+        return NextResponse.json({ success: false, error: "This booking was cancelled." }, { status: 409 });
+      }
+      amount = Number(booking.price);
+    } else if (serviceIds.length > 0 && serviceIds.length <= 20) {
+      const { data: rows, error } = await supabaseServer.from("services").select("id, price").in("id", serviceIds);
+      if (error || !rows || rows.length !== serviceIds.length) {
+        return NextResponse.json({ success: false, error: "One of the selected services no longer exists." }, { status: 400 });
+      }
+      amount = rows.reduce((sum: number, r: { price: number }) => sum + Number(r.price), 0);
+    } else {
+      return NextResponse.json({ success: false, error: "Nothing to pay for." }, { status: 400 });
+    }
 
-    // Amount in paise (1 INR = 100 paise)
-    const amountInPaise = Math.round(Number(amount) * 100);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      return NextResponse.json({ success: false, error: "There is nothing to pay for this booking." }, { status: 400 });
+    }
 
-    const options = {
-      amount: amountInPaise,
-      currency: currency.toUpperCase(),
-      receipt: bookingId ? `rcpt_${bookingId}` : `rcpt_${Date.now()}`,
+    const clip = (v: unknown) => (typeof v === "string" ? v.slice(0, 100) : "");
+    const order = await createRzpOrder({
+      amountPaise: Math.round(amount * 100),
+      currency: "INR",
+      receipt: bookingId ? `rcpt_${bookingId}`.slice(0, 40) : `rcpt_${Date.now()}`,
       notes: {
-        bookingId: bookingId || "",
-        ...notes,
+        bookingId,
+        customerName: clip(clientNotes.customerName),
+        customerEmail: clip(clientNotes.customerEmail),
+        customerPhone: clip(clientNotes.customerPhone),
       },
-    };
-
-    const order = await instance.orders.create(options);
+    });
 
     return NextResponse.json({
       success: true,
-      order: {
-        id: order.id,
-        amount: order.amount,
-        currency: order.currency,
-        receipt: order.receipt,
-      },
-      keyId,
+      order: { id: order.id, amount: order.amount, currency: order.currency, receipt: order.receipt },
+      keyId: keys.keyId,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Razorpay Create Order Error:", error);
-    return NextResponse.json(
-      { success: false, error: error?.message || "Failed to create Razorpay payment order" },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: "Could not start the payment. Please try again." }, { status: 500 });
   }
 }

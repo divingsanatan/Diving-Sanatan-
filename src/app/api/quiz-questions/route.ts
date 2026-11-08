@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/utils/supabaseServer";
+import { requireStaff } from "@/utils/authSession";
 
 /**
  * GET Handler - Retrieves all quiz questions, optionally filtered by category
@@ -31,6 +32,8 @@ export async function GET(req: NextRequest) {
  * POST Handler - Creates a new quiz question
  */
 export async function POST(req: NextRequest) {
+  const auth = requireStaff(req);
+  if (!auth.ok) return auth.response;
   try {
     const body = await req.json();
     const { category, question_text, question_type, options } = body;
@@ -64,6 +67,8 @@ export async function POST(req: NextRequest) {
  * PUT Handler - Updates an existing quiz question
  */
 export async function PUT(req: NextRequest) {
+  const auth = requireStaff(req);
+  if (!auth.ok) return auth.response;
   try {
     const body = await req.json();
     const { id, category, question_text, question_type, options } = body;
@@ -94,6 +99,8 @@ export async function PUT(req: NextRequest) {
  * DELETE Handler - Deletes a quiz question
  */
 export async function DELETE(req: NextRequest) {
+  const auth = requireStaff(req);
+  if (!auth.ok) return auth.response;
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");

@@ -1,70 +1,60 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/utils/supabaseServer";
-import path from "path";
+import { requirePanel } from "@/utils/authSession";
+import { sniffMedia } from "@/utils/fileSniff";
 
+const MAX_IMAGE = 8 * 1024 * 1024;
+const MAX_VIDEO = 60 * 1024 * 1024;
+const BUCKET = "uploads";
+
+/**
+ * Admin-panel uploads. Only signed-in panel users, and only real images or videos
+ * (checked by content, not by file name). Everything else is refused.
+ */
 export async function POST(req: NextRequest) {
+  const auth = requirePanel(req);
+  if (!auth.ok) return auth.response;
+
   try {
     const formData = await req.formData();
-    const file = formData.get("file") as File;
-    
-    if (!file) {
+    const file = formData.get("file");
+    if (!(file instanceof File)) {
       return NextResponse.json({ success: false, error: "No file provided" }, { status: 400 });
     }
-    
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    
-    const bucketName = "uploads";
-    
-    // 1. Ensure the bucket exists or create it
-    const { data: buckets, error: listError } = await supabaseServer.storage.listBuckets();
-    if (listError) {
-      console.error("Error listing buckets:", listError);
+    if (file.size > MAX_VIDEO) {
+      return NextResponse.json({ success: false, error: "File is too large." }, { status: 413 });
     }
-    
-    const bucketExists = buckets?.some(b => b.name === bucketName);
-    if (!bucketExists) {
-      const { error: createError } = await supabaseServer.storage.createBucket(bucketName, {
-        public: true,
-      });
-      if (createError) {
-        console.error("Error creating bucket:", createError);
-      }
+
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const kind = sniffMedia(buffer);
+    if (!kind) {
+      return NextResponse.json(
+        { success: false, error: "Only images (JPG, PNG, WebP, GIF, AVIF) and videos (MP4, MOV, WebM) are allowed." },
+        { status: 415 }
+      );
     }
-    
-    // 2. Generate a unique filename to avoid overwrites
-    const originalExt = path.extname(file.name) || ".bin";
-    const filename = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}${originalExt}`;
-    
-    // 3. Upload to Supabase Storage
-    const { data: uploadData, error: uploadError } = await supabaseServer.storage
-      .from(bucketName)
-      .upload(filename, buffer, {
-        contentType: file.type || "application/octet-stream",
-        upsert: true
-      });
-      
-    if (uploadError) {
-      console.error("Supabase Storage upload error:", uploadError);
-      return NextResponse.json({ success: false, error: uploadError.message }, { status: 500 });
+    if (kind.kind === "image" && buffer.length > MAX_IMAGE) {
+      return NextResponse.json({ success: false, error: "Image is larger than 8 MB." }, { status: 413 });
     }
-    
-    // 4. Get the public URL of the uploaded file
-    const { data: urlData } = supabaseServer.storage
-      .from(bucketName)
-      .getPublicUrl(filename);
-      
-    if (!urlData || !urlData.publicUrl) {
+
+    const filename = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}.${kind.ext}`;
+    let { error } = await supabaseServer.storage.from(BUCKET).upload(filename, buffer, { contentType: kind.mime, upsert: false });
+    if (error && /bucket/i.test(error.message) && /not found/i.test(error.message)) {
+      await supabaseServer.storage.createBucket(BUCKET, { public: true });
+      ({ error } = await supabaseServer.storage.from(BUCKET).upload(filename, buffer, { contentType: kind.mime, upsert: false }));
+    }
+    if (error) {
+      console.error("Supabase Storage upload error:", error.message);
+      return NextResponse.json({ success: false, error: "Upload failed." }, { status: 500 });
+    }
+
+    const { data } = supabaseServer.storage.from(BUCKET).getPublicUrl(filename);
+    if (!data?.publicUrl) {
       return NextResponse.json({ success: false, error: "Failed to generate public URL" }, { status: 500 });
     }
-    
-    return NextResponse.json({
-      success: true,
-      url: urlData.publicUrl
-    });
-  } catch (error: any) {
-    console.error("Supabase file upload error:", error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: true, url: data.publicUrl });
+  } catch (error) {
+    console.error("File upload error:", error);
+    return NextResponse.json({ success: false, error: "Upload failed." }, { status: 500 });
   }
 }
-
