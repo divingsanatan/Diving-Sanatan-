@@ -5,10 +5,16 @@ export async function GET() {
   const baseUrl = "https://divingsanatan.online";
 
   try {
-    const [blogsRes, servicesRes] = await Promise.all([
+    const [blogsRes, servicesRes, glossRes] = await Promise.all([
       supabaseServer.from("blogs").select("id, slug, title, tldr").limit(50),
-      supabaseServer.from("services").select("id, name, description").limit(20)
+      supabaseServer.from("services").select("id, name, description").limit(20),
+      supabaseServer.from("glossary_terms").select("slug, word, short_answer, definition").eq("status", "published").eq("noindex", false).order("word", { ascending: true }).limit(300)
     ]);
+
+    const glossaryList = (glossRes.data || []).map((t: { slug: string; word: string; short_answer?: string; definition?: string }) => {
+      const plain = String(t.short_answer || t.definition || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+      return `- [${t.word}](${baseUrl}/blog/glossary/${t.slug}): ${plain.substring(0, 140)}${plain.length > 140 ? "…" : ""}`;
+    }).join("\n");
 
     const blogList = (blogsRes.data || []).map(b => 
       `- [${b.title}](${baseUrl}/blog/${b.slug || b.id}): ${b.tldr || "Article on energy healing and mindfulness"}`
@@ -34,6 +40,10 @@ ${serviceList || "- Chakra Balancing & Alignment\n- Sound Bath Healing\n- Usui R
 
 ## Articles & Spiritual Guides
 ${blogList || "- Guides on Chakra Blocks, Energy Cleansing, and Meditation Practices"}
+
+## Glossary of Sanatan Dharma, Chakra & Healing Terms
+- [Full glossary](${baseUrl}/blog/glossary): Plain-language definitions of spiritual and energy-healing terms.
+${glossaryList}
 
 ## Contact & Location
 - Website: ${baseUrl}

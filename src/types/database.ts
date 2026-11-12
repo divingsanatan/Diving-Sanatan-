@@ -158,6 +158,8 @@ export interface GlossaryTerm {
   definition: string;
   illustration?: GlossaryIllustration;
   createdAt?: string;
+  slug?: string;
+  status?: "draft" | "published";
 }
 
 export interface GlossaryCategory {
