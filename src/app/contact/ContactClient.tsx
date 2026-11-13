@@ -251,13 +251,13 @@ export default function ContactPage() {
           width: 100%;
         }
         .contact-title {
-          font-size: 2.8rem;
+          font-size: var(--fs-5xl);
           color: #4c1d95;
           margin-bottom: 12px;
           text-align: center;
         }
         .contact-subtitle {
-          font-size: 1.05rem;
+          font-size: var(--fs-base);
           color: hsl(var(--text-muted));
           text-align: center;
           max-width: 650px;
@@ -281,11 +281,11 @@ export default function ContactPage() {
         }
         .card-heading {
           font-family: var(--font-serif);
-          font-size: 1.4rem;
+          font-size: var(--fs-2xl);
           color: #4c1d95;
         }
         .card-desc {
-          font-size: 0.9rem;
+          font-size: var(--fs-sm);
           line-height: 1.6;
         }
         .info-items-list {
@@ -300,13 +300,13 @@ export default function ContactPage() {
           align-items: flex-start;
         }
         .info-icon {
-          font-size: 1.4rem;
+          font-size: var(--fs-2xl);
         }
         .info-texts {
           display: flex;
           flex-direction: column;
           gap: 4px;
-          font-size: 0.88rem;
+          font-size: var(--fs-sm);
         }
         .info-texts strong {
           color: hsl(var(--text-cream));
@@ -325,7 +325,7 @@ export default function ContactPage() {
           display: flex;
           align-items: center;
           gap: 8px;
-          font-size: 0.88rem;
+          font-size: var(--fs-sm);
           color: hsl(var(--text-muted));
           text-decoration: none;
           transition: color 0.2s, padding-left 0.15s;
@@ -346,14 +346,14 @@ export default function ContactPage() {
         }
         .inline-error-msg {
           color: #ef4444;
-          font-size: 0.75rem;
+          font-size: var(--fs-2xs);
           margin-top: 4px;
           font-weight: 600;
           text-align: left;
           display: block;
         }
         .form-group label {
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           color: hsl(var(--text-muted));
           text-transform: uppercase;
           letter-spacing: 0.05em;
@@ -372,14 +372,14 @@ export default function ContactPage() {
           gap: 16px;
         }
         .sparkle {
-          font-size: 2.5rem;
+          font-size: var(--fs-4xl);
         }
         .contact-success h4 {
-          font-size: 1.4rem;
+          font-size: var(--fs-2xl);
           color: #4c1d95;
         }
         .contact-success p {
-          font-size: 0.9rem;
+          font-size: var(--fs-sm);
           margin-bottom: 8px;
         }
         .mock-map-canvas {
@@ -431,7 +431,7 @@ export default function ContactPage() {
         .ping-label {
           margin-top: 12px;
           font-family: var(--font-serif);
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           font-weight: 600;
           color: #4c1d95;
           letter-spacing: 0.05em;

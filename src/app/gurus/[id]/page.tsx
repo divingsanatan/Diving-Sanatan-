@@ -243,7 +243,7 @@ export default function GuruDetailPage() {
             align-items: center;
             gap: 16px;
             color: hsl(var(--text-muted));
-            font-size: 1.1rem;
+            font-size: var(--fs-lg);
             min-height: calc(50vh / var(--ui-zoom, 1));
           }
           .spinner {
@@ -292,7 +292,7 @@ export default function GuruDetailPage() {
           .error-state-wrapper h2 {
             font-family: var(--font-serif);
             color: #ef4444;
-            font-size: 1.8rem;
+            font-size: var(--fs-3xl);
           }
           .error-state-wrapper p {
             color: hsl(var(--text-muted));
@@ -687,7 +687,7 @@ export default function GuruDetailPage() {
           display: flex;
           align-items: center;
           gap: 8px;
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
           color: hsl(var(--text-muted));
           font-weight: 500;
         }
@@ -793,14 +793,14 @@ export default function GuruDetailPage() {
 
         .anara-name {
           font-family: var(--font-serif);
-          font-size: 1.35rem;
+          font-size: var(--fs-xl);
           color: #4c1d95;
           line-height: 1.2;
           font-weight: 700;
         }
 
         .anara-title {
-          font-size: 0.95rem;
+          font-size: var(--fs-md);
           color: #0d9488;
           font-weight: 600;
           letter-spacing: 0.05em;
@@ -809,7 +809,7 @@ export default function GuruDetailPage() {
         }
 
         .anara-meta {
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
           color: hsl(var(--text-muted));
           font-weight: 500;
         }
@@ -824,7 +824,7 @@ export default function GuruDetailPage() {
         .tag-badge {
           background: rgba(168, 85, 247, 0.08);
           color: #6d28d9;
-          font-size: 0.78rem;
+          font-size: var(--fs-2xs);
           padding: 4px 10px;
           border-radius: 8px;
           font-weight: 600;
@@ -848,7 +848,7 @@ export default function GuruDetailPage() {
           padding: 12px 16px;
           border-radius: 12px;
           font-weight: 700;
-          font-size: 0.82rem;
+          font-size: var(--fs-xs);
           letter-spacing: 0.08em;
           box-shadow: 0 4px 14px rgba(76, 29, 149, 0.2);
           text-decoration: none !important;
@@ -872,7 +872,7 @@ export default function GuruDetailPage() {
           padding: 11px 16px;
           border-radius: 12px;
           font-weight: 700;
-          font-size: 0.82rem;
+          font-size: var(--fs-xs);
           letter-spacing: 0.08em;
           border: 1.5px solid #4c1d95;
           text-decoration: none !important;
@@ -893,7 +893,7 @@ export default function GuruDetailPage() {
           gap: 6px;
           width: 100%;
           color: #7c3aed !important;
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           font-weight: 600;
           margin-top: 4px;
           padding: 8px 0;
@@ -910,7 +910,7 @@ export default function GuruDetailPage() {
 
         .anara-actions :global(a.btn-back-list)::before {
           content: "←";
-          font-size: 0.9rem;
+          font-size: var(--fs-sm);
         }
 
         .error-return-btn {
@@ -965,16 +965,16 @@ export default function GuruDetailPage() {
         .testimonial-name {
           font-weight: 700;
           color: #4c1d95;
-          font-size: 0.92rem;
+          font-size: var(--fs-md);
         }
 
         .testimonial-stars {
           color: #d4af37;
-          font-size: 0.75rem;
+          font-size: var(--fs-2xs);
         }
 
         .testimonial-service-tag {
-          font-size: 0.72rem;
+          font-size: var(--fs-2xs);
           background: rgba(13, 148, 136, 0.08);
           color: #0d9488;
           padding: 2px 6px;
@@ -983,7 +983,7 @@ export default function GuruDetailPage() {
         }
 
         .testimonial-comment {
-          font-size: 0.82rem;
+          font-size: var(--fs-xs);
           color: hsl(var(--text-cream));
           line-height: 1.5;
           font-style: italic;
@@ -991,7 +991,7 @@ export default function GuruDetailPage() {
         }
 
         .testimonial-date {
-          font-size: 0.7rem;
+          font-size: var(--fs-2xs);
           color: hsl(var(--text-muted));
         }
 
@@ -1009,21 +1009,21 @@ export default function GuruDetailPage() {
 
         .insight-cert-title {
           font-family: var(--font-sans);
-          font-size: 0.95rem;
+          font-size: var(--fs-md);
           color: #4c1d95;
           font-weight: 700;
           line-height: 1.35;
         }
 
         .insight-cert-desc {
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           color: hsl(var(--text-muted));
           line-height: 1.4;
           margin: 2px 0 0 0;
         }
 
         .insight-read-link-styled {
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           color: #7c3aed;
           font-weight: 600;
           margin-top: 4px;
@@ -1077,7 +1077,7 @@ export default function GuruDetailPage() {
 
         .main-title {
           font-family: var(--font-serif);
-          font-size: 2.1rem;
+          font-size: var(--fs-4xl);
           color: #4c1d95;
           line-height: 1.15;
           margin-bottom: 4px;
@@ -1090,7 +1090,7 @@ export default function GuruDetailPage() {
         }
 
         .bio-paragraphs p {
-          font-size: 0.95rem;
+          font-size: var(--fs-md);
           line-height: 1.65;
           color: hsl(var(--text-cream));
         }
@@ -1118,7 +1118,7 @@ export default function GuruDetailPage() {
           cursor: pointer;
           padding: 0;
           margin-left: 6px;
-          font-size: 0.95rem;
+          font-size: var(--fs-md);
           text-decoration: underline;
           display: inline;
           transition: var(--transition-fast);
@@ -1170,7 +1170,7 @@ export default function GuruDetailPage() {
 
         .video-title {
           font-weight: 600;
-          font-size: 0.95rem;
+          font-size: var(--fs-md);
           letter-spacing: 0.02em;
         }
 
@@ -1240,7 +1240,7 @@ export default function GuruDetailPage() {
         }
 
         .ad-label {
-          font-size: 0.72rem;
+          font-size: var(--fs-2xs);
           text-transform: uppercase;
           color: hsl(var(--text-muted));
           letter-spacing: 0.05em;
@@ -1268,7 +1268,7 @@ export default function GuruDetailPage() {
           align-items: center;
           justify-content: center;
           font-weight: 800;
-          font-size: 1.25rem;
+          font-size: var(--fs-xl);
           box-shadow: 0 2px 8px rgba(66, 133, 244, 0.3);
         }
 
@@ -1281,13 +1281,13 @@ export default function GuruDetailPage() {
 
         .ad-text-content h4 {
           font-family: var(--font-sans);
-          font-size: 0.95rem;
+          font-size: var(--fs-md);
           color: #334155;
           font-weight: 700;
         }
 
         .ad-text-content p {
-          font-size: 0.82rem;
+          font-size: var(--fs-xs);
           color: #64748b;
           line-height: 1.4;
         }
@@ -1298,7 +1298,7 @@ export default function GuruDetailPage() {
           color: #334155 !important;
           padding: 8px 16px;
           border-radius: 10px;
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           font-weight: 700;
           box-shadow: 0 2px 6px rgba(0,0,0,0.02);
           transition: var(--transition-fast);
@@ -1320,7 +1320,7 @@ export default function GuruDetailPage() {
 
         .sidebar-heading {
           font-family: var(--font-serif);
-          font-size: 1.1rem;
+          font-size: var(--fs-lg);
           letter-spacing: 0.05em;
           color: #4c1d95;
           border-bottom: 1.5px solid rgba(168, 85, 247, 0.1);
@@ -1396,18 +1396,18 @@ export default function GuruDetailPage() {
           align-items: center;
           justify-content: center;
           font-weight: 800;
-          font-size: 1.1rem;
+          font-size: var(--fs-lg);
         }
 
         .ad-box-content h5 {
           font-family: var(--font-sans);
-          font-size: 0.95rem;
+          font-size: var(--fs-md);
           color: #334155;
           font-weight: 700;
         }
 
         .ad-box-content p {
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           color: #64748b;
           line-height: 1.4;
           max-width: 200px;
@@ -1416,7 +1416,7 @@ export default function GuruDetailPage() {
         .ad-box-btn {
           background: #334155;
           color: white !important;
-          font-size: 0.78rem;
+          font-size: var(--fs-2xs);
           font-weight: 700;
           padding: 8px 20px;
           border-radius: 8px;
@@ -1476,7 +1476,7 @@ export default function GuruDetailPage() {
           align-items: center;
           justify-content: center;
           cursor: pointer;
-          font-size: 0.7rem;
+          font-size: var(--fs-2xs);
           box-shadow: 0 2px 6px rgba(0,0,0,0.03);
           transition: var(--transition-fast);
         }
@@ -1548,7 +1548,7 @@ export default function GuruDetailPage() {
           background: #4c1d95;
           color: white;
           border: none;
-          font-size: 1.5rem;
+          font-size: var(--fs-2xl);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -1597,7 +1597,7 @@ export default function GuruDetailPage() {
           }
 
           .main-title {
-            font-size: 2.2rem;
+            font-size: var(--fs-4xl);
             text-align: center;
           }
 

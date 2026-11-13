@@ -135,7 +135,7 @@ export default function GurusPage() {
 
         .section-label {
           font-family: var(--font-serif);
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
           text-transform: uppercase;
           letter-spacing: 0.2em;
           color: #7c3aed;
@@ -144,13 +144,13 @@ export default function GurusPage() {
 
         .team-title {
           font-family: var(--font-serif);
-          font-size: 3rem;
+          font-size: var(--fs-5xl);
           line-height: 1.15;
           margin: 4px 0 12px;
         }
 
         .team-subtitle {
-          font-size: 1.1rem;
+          font-size: var(--fs-lg);
           color: hsl(var(--text-muted));
           max-width: 700px;
           line-height: 1.6;
@@ -227,7 +227,7 @@ export default function GurusPage() {
           font-family: var(--font-serif);
           font-weight: 700;
           color: #4c1d95;
-          font-size: 2rem;
+          font-size: var(--fs-3xl);
           position: relative;
           z-index: 2;
           box-shadow: 0 8px 24px rgba(168, 85, 247, 0.1);
@@ -255,13 +255,13 @@ export default function GurusPage() {
 
         .prac-name {
           font-family: var(--font-serif);
-          font-size: 1.5rem;
+          font-size: var(--fs-2xl);
           color: #4c1d95;
           margin-bottom: 6px;
         }
 
         .prac-specialty {
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
           color: #0d9488;
           font-weight: 600;
           text-transform: uppercase;
@@ -278,12 +278,12 @@ export default function GurusPage() {
 
         .stars {
           color: #d4af37;
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
           letter-spacing: 2px;
         }
 
         .rating-score {
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           color: hsl(var(--text-muted));
         }
 
@@ -296,7 +296,7 @@ export default function GurusPage() {
         }
 
         .expertise-badge {
-          font-size: 0.72rem;
+          font-size: var(--fs-2xs);
           background: rgba(168, 85, 247, 0.05);
           border: 1px solid rgba(168, 85, 247, 0.15);
           color: #6d28d9;
@@ -307,7 +307,7 @@ export default function GurusPage() {
         }
 
         .expertise-badge-more {
-          font-size: 0.72rem;
+          font-size: var(--fs-2xs);
           background: rgba(124, 58, 237, 0.1);
           border: 1px solid rgba(124, 58, 237, 0.2);
           color: #4c1d95;
@@ -317,7 +317,7 @@ export default function GurusPage() {
         }
 
         .prac-bio-preview {
-          font-size: 0.9rem;
+          font-size: var(--fs-sm);
           line-height: 1.6;
           color: #475569;
           margin-bottom: 28px;
@@ -330,7 +330,7 @@ export default function GurusPage() {
 
         .view-profile-btn {
           font-family: var(--font-serif);
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           color: #7c3aed;
           text-transform: uppercase;
           letter-spacing: 0.1em;
@@ -418,7 +418,7 @@ export default function GurusPage() {
 
         @media (max-width: 640px) {
           .team-title {
-            font-size: 2.2rem;
+            font-size: var(--fs-4xl);
           }
           .team-grid {
             grid-template-columns: 1fr;

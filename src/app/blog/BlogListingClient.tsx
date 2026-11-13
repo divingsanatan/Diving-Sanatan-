@@ -420,19 +420,19 @@ export default function BlogListingPage() {
         }
         .welcome-heading {
           font-family: var(--font-sans);
-          font-size: 1.6rem;
+          font-size: var(--fs-2xl);
           color: #111827;
           font-weight: 800;
           margin: 0;
           line-height: 1.2;
         }
         .welcome-subheading {
-          font-size: 0.82rem;
+          font-size: var(--fs-xs);
           color: #6b7280;
           margin: 4px 0 0;
         }
         .loading-text {
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
           color: #6b7280;
         }
 
@@ -470,7 +470,7 @@ export default function BlogListingPage() {
         }
         .banner-tagline {
           font-family: var(--font-sans);
-          font-size: 0.72rem;
+          font-size: var(--fs-2xs);
           font-weight: 800;
           color: #7c3aed;
           letter-spacing: 0.08em;
@@ -478,7 +478,7 @@ export default function BlogListingPage() {
         }
         .banner-main-title {
           font-family: var(--font-serif);
-          font-size: 1.85rem;
+          font-size: var(--fs-3xl);
           color: #111827;
           font-weight: 700;
           line-height: 1.2;
@@ -490,7 +490,7 @@ export default function BlogListingPage() {
           background: #4c1d95;
           color: #ffffff;
           border: none;
-          font-size: 0.76rem;
+          font-size: var(--fs-2xs);
           font-weight: 700;
           cursor: pointer;
           transition: background 0.2s ease;
@@ -551,13 +551,13 @@ export default function BlogListingPage() {
         }
         .section-title {
           font-family: var(--font-serif);
-          font-size: 1.25rem;
+          font-size: var(--fs-xl);
           color: #111827;
           font-weight: 700 !important;
           margin: 0;
         }
         :global(.blog-services-view-all-link) {
-          font-size: 0.78rem;
+          font-size: var(--fs-2xs);
           font-weight: 700;
           color: #7c3aed;
           text-decoration: none;
@@ -649,7 +649,7 @@ export default function BlogListingPage() {
         }
         .service-card-name {
           font-family: var(--font-sans);
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           font-weight: 700;
           color: #1f2937;
           margin: 0;
@@ -659,7 +659,7 @@ export default function BlogListingPage() {
           width: 100%;
         }
         .service-card-tagline {
-          font-size: 0.68rem;
+          font-size: var(--fs-2xs);
           color: #6b7280;
           margin-top: 4px;
           white-space: nowrap;
@@ -680,7 +680,7 @@ export default function BlogListingPage() {
           gap: 10px;
         }
         .results-count {
-          font-size: 0.76rem;
+          font-size: var(--fs-2xs);
           color: #6b7280;
         }
         .empty-results-box {
@@ -690,7 +690,7 @@ export default function BlogListingPage() {
           border-radius: 16px;
           border: 1px solid rgba(168, 85, 247, 0.1);
           color: #6b7280;
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
         }
 
         /* Infinite Scroll Sentinel */
@@ -710,7 +710,7 @@ export default function BlogListingPage() {
           background: #faf5ff;
           border: 1px solid rgba(168, 85, 247, 0.15);
           color: #7c3aed;
-          font-size: 0.82rem;
+          font-size: var(--fs-xs);
           font-weight: 600;
         }
         .loader-lotus-spin {
@@ -726,7 +726,7 @@ export default function BlogListingPage() {
           display: flex;
           align-items: center;
           gap: 8px;
-          font-size: 0.82rem;
+          font-size: var(--fs-xs);
           color: #6b7280;
           padding: 8px 16px;
           background: #ffffff;
@@ -742,7 +742,7 @@ export default function BlogListingPage() {
             margin-bottom: 4px;
           }
           .welcome-heading {
-            font-size: 1.4rem;
+            font-size: var(--fs-2xl);
           }
           .blog-hero-banner {
             padding: 40px 20px;
@@ -755,7 +755,7 @@ export default function BlogListingPage() {
             max-width: 100%;
           }
           .banner-main-title {
-            font-size: 1.5rem;
+            font-size: var(--fs-2xl);
           }
           .banner-image-panel {
             display: none;
@@ -784,7 +784,7 @@ export default function BlogListingPage() {
           }
           .pagination-arrow-btn {
             padding: 8px 12px;
-            font-size: 0.75rem;
+            font-size: var(--fs-2xs);
           }
           .pagination-numbers {
             gap: 4px;
@@ -792,23 +792,23 @@ export default function BlogListingPage() {
           .pagination-number-btn {
             width: 30px;
             height: 30px;
-            font-size: 0.75rem;
+            font-size: var(--fs-2xs);
           }
         }
 
         @media (max-width: 480px) {
           .welcome-heading {
-            font-size: 1.25rem;
+            font-size: var(--fs-xl);
           }
           .welcome-subheading {
-            font-size: 0.78rem;
+            font-size: var(--fs-2xs);
           }
           .blog-hero-banner {
             padding: 30px 16px;
             border-radius: 16px;
           }
           .banner-main-title {
-            font-size: 1.3rem;
+            font-size: var(--fs-xl);
           }
           .banner-explore-btn {
             width: 100%;
@@ -826,7 +826,8 @@ export default function BlogListingPage() {
           width: 100%;
           box-sizing: border-box;
           overflow: hidden;
-              .blog-item-card {
+        }
+        .blog-item-card {
           background: #ffffff;
           border: 1px solid transparent;
           border-radius: 20px;
@@ -859,7 +860,7 @@ export default function BlogListingPage() {
           background: rgba(255, 255, 255, 0.95);
           backdrop-filter: blur(4px);
           color: #581c87;
-          font-size: 0.65rem;
+          font-size: var(--fs-2xs);
           font-weight: 700;
           padding: 4px 10px;
           border-radius: 6px;
@@ -874,7 +875,7 @@ export default function BlogListingPage() {
           background: rgba(255, 255, 255, 0.95);
           backdrop-filter: blur(4px);
           color: #4b5563;
-          font-size: 0.65rem;
+          font-size: var(--fs-2xs);
           font-weight: 600;
           padding: 4px 10px;
           border-radius: 6px;
@@ -905,7 +906,7 @@ export default function BlogListingPage() {
         }
         .blog-card-title {
           font-family: var(--font-sans);
-          font-size: 1.15rem;
+          font-size: var(--fs-lg);
           color: #111827;
           font-weight: 700 !important;
           margin: 0;
@@ -920,7 +921,7 @@ export default function BlogListingPage() {
           color: #7c3aed;
         }
         .blog-card-desc {
-          font-size: 0.82rem;
+          font-size: var(--fs-xs);
           color: #6b7280;
           line-height: 1.5;
           margin: 0;
@@ -947,7 +948,7 @@ export default function BlogListingPage() {
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 0.75rem;
+          font-size: var(--fs-2xs);
           font-weight: 700;
         }
         .author-details {
@@ -955,7 +956,7 @@ export default function BlogListingPage() {
           align-items: center;
           gap: 6px;
           color: #6b7280;
-          font-size: 0.72rem;
+          font-size: var(--fs-2xs);
         }
         .author-name {
           color: #4b5563;
@@ -968,7 +969,7 @@ export default function BlogListingPage() {
           color: #9ca3af;
         }
         .blog-view-action {
-          font-size: 0.72rem;
+          font-size: var(--fs-2xs);
           font-weight: 700;
           color: #7c3aed;
           display: flex;
@@ -1012,7 +1013,7 @@ export default function BlogListingPage() {
             box-sizing: border-box;
           }
           .blog-card-title {
-            font-size: 1.05rem;
+            font-size: var(--fs-base);
           }
           .blog-card-desc {
             -webkit-line-clamp: 2;

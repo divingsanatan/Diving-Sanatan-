@@ -543,7 +543,7 @@ export default function ExploreServicesClient() {
           background: rgba(255, 255, 255, 0.12);
           backdrop-filter: blur(10px);
           border: 1px solid rgba(255, 255, 255, 0.2);
-          font-size: 0.72rem;
+          font-size: var(--fs-2xs);
           font-weight: 700;
           letter-spacing: 0.08em;
           color: #f3e8ff;
@@ -553,7 +553,7 @@ export default function ExploreServicesClient() {
         }
         .hero-main-title {
           font-family: var(--font-serif);
-          font-size: 2.75rem;
+          font-size: var(--fs-5xl);
           font-weight: 700;
           line-height: 1.25;
           max-width: 900px;
@@ -565,7 +565,7 @@ export default function ExploreServicesClient() {
           -webkit-text-fill-color: transparent;
         }
         .hero-subtitle {
-          font-size: 1.05rem;
+          font-size: var(--fs-base);
           color: #cbd5e1;
           max-width: 750px;
           line-height: 1.6;
@@ -598,7 +598,7 @@ export default function ExploreServicesClient() {
           width: 100%;
           border: none;
           outline: none;
-          font-size: 0.95rem;
+          font-size: var(--fs-md);
           color: #1e1b4b;
           padding: 12px 0;
           background: transparent;
@@ -630,7 +630,7 @@ export default function ExploreServicesClient() {
           background: transparent;
           border: none;
           color: #ffffff;
-          font-size: 0.88rem;
+          font-size: var(--fs-sm);
           font-weight: 600;
           outline: none;
           cursor: pointer;
@@ -659,7 +659,7 @@ export default function ExploreServicesClient() {
           background: rgba(255, 255, 255, 0.1);
           border: 1px solid rgba(255, 255, 255, 0.18);
           color: #f3e8ff;
-          font-size: 0.82rem;
+          font-size: var(--fs-xs);
           font-weight: 600;
           cursor: pointer;
           transition: all 0.25s ease;
@@ -697,13 +697,13 @@ export default function ExploreServicesClient() {
         }
         .catalog-title {
           font-family: var(--font-serif);
-          font-size: 1.8rem;
+          font-size: var(--fs-3xl);
           color: #1e1b4b;
           margin: 0;
           font-weight: 700;
         }
         .meta-count {
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
           color: #64748b;
           font-weight: 500;
         }
@@ -735,7 +735,7 @@ export default function ExploreServicesClient() {
           border: 1px solid rgba(124, 58, 237, 0.2);
           color: #4c1d95;
           font-weight: 600;
-          font-size: 0.88rem;
+          font-size: var(--fs-sm);
           cursor: pointer;
           transition: all 0.2s ease;
           box-shadow: 0 2px 8px rgba(0,0,0,0.04);
@@ -764,7 +764,7 @@ export default function ExploreServicesClient() {
           background: #ffffff;
           color: #1e1b4b;
           font-weight: 600;
-          font-size: 0.9rem;
+          font-size: var(--fs-sm);
           cursor: pointer;
           transition: all 0.2s ease;
         }
@@ -831,7 +831,7 @@ export default function ExploreServicesClient() {
           gap: 5px;
           padding: 6px 12px;
           border-radius: 99px;
-          font-size: 0.75rem;
+          font-size: var(--fs-2xs);
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 0.04em;
@@ -848,7 +848,7 @@ export default function ExploreServicesClient() {
         .badge-pill.price-pill {
           background: #ffffff;
           color: #7c3aed;
-          font-size: 0.95rem;
+          font-size: var(--fs-md);
           font-family: var(--font-serif);
           box-shadow: 0 4px 14px rgba(0,0,0,0.2);
         }
@@ -861,7 +861,7 @@ export default function ExploreServicesClient() {
           align-items: center;
           gap: 8px;
           color: #f1f5f9;
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           font-weight: 600;
           z-index: 2;
           background: rgba(0, 0, 0, 0.45);
@@ -888,7 +888,7 @@ export default function ExploreServicesClient() {
         }
         .card-title {
           font-family: var(--font-serif);
-          font-size: 1.35rem;
+          font-size: var(--fs-xl);
           color: #1e1b4b;
           margin: 0;
           font-weight: 700;
@@ -902,13 +902,13 @@ export default function ExploreServicesClient() {
           color: #a16207;
           padding: 4px 10px;
           border-radius: 99px;
-          font-size: 0.78rem;
+          font-size: var(--fs-2xs);
           font-weight: 700;
           flex-shrink: 0;
         }
         .star-icon { color: #eab308; }
         .card-description {
-          font-size: 0.9rem;
+          font-size: var(--fs-sm);
           color: #475569;
           line-height: 1.6;
           margin: 0;
@@ -925,7 +925,7 @@ export default function ExploreServicesClient() {
           gap: 8px;
         }
         .highlights-title {
-          font-size: 0.78rem;
+          font-size: var(--fs-2xs);
           font-weight: 700;
           color: #6d28d9;
           text-transform: uppercase;
@@ -944,7 +944,7 @@ export default function ExploreServicesClient() {
           display: flex;
           align-items: center;
           gap: 8px;
-          font-size: 0.82rem;
+          font-size: var(--fs-xs);
           color: #334155;
         }
         .check-icon {
@@ -966,7 +966,7 @@ export default function ExploreServicesClient() {
           gap: 6px;
           padding: 12px 14px;
           border-radius: 12px;
-          font-size: 0.82rem;
+          font-size: var(--fs-xs);
           font-weight: 700;
           cursor: pointer;
           transition: all 0.2s ease;
@@ -993,7 +993,7 @@ export default function ExploreServicesClient() {
           background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
           color: #ffffff;
           font-weight: 700;
-          font-size: 0.88rem;
+          font-size: var(--fs-sm);
           border: none;
           cursor: pointer;
           box-shadow: 0 4px 14px rgba(124, 58, 237, 0.25);
@@ -1117,14 +1117,14 @@ export default function ExploreServicesClient() {
           z-index: 2;
         }
         .modal-category-tag {
-          font-size: 0.72rem;
+          font-size: var(--fs-2xs);
           font-weight: 800;
           letter-spacing: 0.08em;
           color: #c084fc;
         }
         .modal-title-box h2 {
           font-family: var(--font-serif);
-          font-size: 1.6rem;
+          font-size: var(--fs-2xl);
           margin: 4px 0 0;
         }
         .modal-body {
@@ -1145,18 +1145,18 @@ export default function ExploreServicesClient() {
           background: #f1f5f9;
           padding: 8px 14px;
           border-radius: 10px;
-          font-size: 0.82rem;
+          font-size: var(--fs-xs);
           font-weight: 600;
           color: #334155;
         }
         .modal-section h3 {
-          font-size: 0.95rem;
+          font-size: var(--fs-md);
           font-weight: 700;
           color: #1e1b4b;
           margin: 0 0 8px;
         }
         .modal-section p {
-          font-size: 0.9rem;
+          font-size: var(--fs-sm);
           color: #475569;
           line-height: 1.6;
           margin: 0;
@@ -1173,7 +1173,7 @@ export default function ExploreServicesClient() {
           display: flex;
           align-items: center;
           gap: 10px;
-          font-size: 0.88rem;
+          font-size: var(--fs-sm);
           color: #334155;
         }
         .modal-footer-actions {
@@ -1190,7 +1190,7 @@ export default function ExploreServicesClient() {
           background: #faf5ff;
           color: #6d28d9;
           font-weight: 700;
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
           cursor: pointer;
         }
         .modal-book-btn {
@@ -1204,7 +1204,7 @@ export default function ExploreServicesClient() {
           background: #7c3aed;
           color: #ffffff;
           font-weight: 700;
-          font-size: 0.9rem;
+          font-size: var(--fs-sm);
           border: none;
           cursor: pointer;
         }
@@ -1234,13 +1234,13 @@ export default function ExploreServicesClient() {
           flex-direction: column;
         }
         .drawer-count {
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           color: #64748b;
           font-weight: 600;
         }
         .drawer-total {
           font-family: var(--font-serif);
-          font-size: 1.3rem;
+          font-size: var(--fs-xl);
           font-weight: 700;
           color: #7c3aed;
         }

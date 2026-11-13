@@ -161,7 +161,7 @@ export default function ComparisonSlugPage() {
           padding: 8px 0 0;
         }
         .page-title {
-          font-size: 2.4rem;
+          font-size: var(--fs-4xl);
           color: #5D327C;
           margin-bottom: 8px;
           font-weight: 700;
@@ -169,7 +169,7 @@ export default function ComparisonSlugPage() {
           letter-spacing: -0.01em;
         }
         .page-subtitle {
-          font-size: 1rem;
+          font-size: var(--fs-base);
           color: hsl(var(--text-muted));
           max-width: 650px;
           margin: 0;
@@ -201,7 +201,7 @@ export default function ComparisonSlugPage() {
         }
         .header-features {
           font-family: var(--font-serif);
-          font-size: 1.1rem;
+          font-size: var(--fs-lg);
           color: #5D327C;
           font-weight: 700;
         }
@@ -213,12 +213,12 @@ export default function ComparisonSlugPage() {
         }
         .modality-title {
           font-family: var(--font-serif);
-          font-size: 1.35rem;
+          font-size: var(--fs-xl);
           color: #5D327C;
           font-weight: 700;
         }
         .modality-price {
-          font-size: 0.78rem;
+          font-size: var(--fs-2xs);
           color: #2D8A5B;
           font-weight: 700;
           text-transform: uppercase;
@@ -226,11 +226,11 @@ export default function ComparisonSlugPage() {
         }
         .row-label {
           font-weight: 700;
-          font-size: 0.9rem;
+          font-size: var(--fs-sm);
           color: hsl(var(--text-muted));
         }
         .value-card p {
-          font-size: 0.92rem;
+          font-size: var(--fs-md);
           color: hsl(var(--text-cream));
           line-height: 1.55;
           margin: 0;
@@ -239,7 +239,7 @@ export default function ComparisonSlugPage() {
           text-align: center;
           padding: 32px;
           color: hsl(var(--text-muted));
-          font-size: 0.95rem;
+          font-size: var(--fs-md);
         }
         .booking-cta-grid {
           display: grid;
@@ -257,7 +257,7 @@ export default function ComparisonSlugPage() {
         }
         .cta-card h4 {
           font-family: var(--font-serif);
-          font-size: 1.2rem;
+          font-size: var(--fs-xl);
           color: #5D327C;
         }
         @media (max-width: 768px) {
@@ -275,7 +275,7 @@ export default function ComparisonSlugPage() {
           .booking-cta-grid {
             grid-template-columns: 1fr;
           }
-          .page-title { font-size: 1.8rem; }
+          .page-title { font-size: var(--fs-3xl); }
         }
       `}</style>
     </div>

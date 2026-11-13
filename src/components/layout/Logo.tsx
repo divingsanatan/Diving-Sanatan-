@@ -58,14 +58,14 @@ export const Logo: React.FC<LogoProps> = ({
         }
         .ds-logo-title {
           font-family: var(--font-serif);
-          font-size: 1.35rem;
+          font-size: var(--fs-xl);
           font-weight: 700;
           letter-spacing: 0.1em;
           color: ${textColor};
         }
         .ds-logo-subtitle {
           font-family: var(--font-sans);
-          font-size: 0.65rem;
+          font-size: var(--fs-2xs);
           font-weight: 600;
           letter-spacing: 0.05em;
           text-transform: uppercase;
@@ -74,10 +74,10 @@ export const Logo: React.FC<LogoProps> = ({
         }
         @media (max-width: 768px) {
           .ds-logo-title {
-            font-size: 1.1rem;
+            font-size: var(--fs-lg);
           }
           .ds-logo-subtitle {
-            font-size: 0.55rem;
+            font-size: var(--fs-2xs);
           }
         }
       `}</style>

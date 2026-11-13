@@ -908,7 +908,7 @@ export default function Home() {
         }
         #section-landing .hero-title-sub {
           font-family: var(--font-serif);
-          font-size: 2.1rem;
+          font-size: var(--fs-4xl);
           color: #4b1a8a;
           font-weight: 500;
           margin-bottom: 6px;
@@ -917,7 +917,7 @@ export default function Home() {
         }
         #section-landing .hero-title-main {
           font-family: var(--font-serif);
-          font-size: 3.4rem;
+          font-size: var(--fs-display);
           color: #2e1065;
           font-weight: 600;
           display: block;
@@ -950,7 +950,7 @@ export default function Home() {
           opacity: 0.6;
         }
         #section-landing .hero-subtitle {
-          font-size: 1.1rem;
+          font-size: var(--fs-lg);
           color: #4b5563;
           margin-bottom: 24px;
           text-align: center;
@@ -1001,7 +1001,7 @@ export default function Home() {
           transform: scale(1.1) rotate(2deg);
         }
         #section-landing .grid-item-text {
-          font-size: 0.82rem;
+          font-size: var(--fs-xs);
           font-weight: 500;
           text-align: center;
           font-family: var(--font-sans);
@@ -1048,7 +1048,7 @@ export default function Home() {
         }
         #section-landing .search-input-suggestion {
           font-family: var(--font-sans);
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           color: #6b7280;
           margin-top: 0;
           line-height: 1.2;
@@ -1089,7 +1089,7 @@ export default function Home() {
           border: none !important;
           outline: none !important;
           color: #1f2937;
-          font-size: 1.05rem;
+          font-size: var(--fs-base);
           font-family: var(--font-sans);
           padding: 0 !important;
           margin: 0 !important;
@@ -1103,7 +1103,7 @@ export default function Home() {
           gap: 0;
         }
         #section-landing .search-input.has-text {
-          font-size: 1.15rem;
+          font-size: var(--fs-lg);
           line-height: 1.5 !important;
         }
         #section-landing .search-input::placeholder {
@@ -1116,7 +1116,7 @@ export default function Home() {
           outline: none;
           padding: 14px 36px;
           border-radius: 99px;
-          font-size: 1.05rem;
+          font-size: var(--fs-base);
           font-weight: 600;
           display: flex;
           align-items: center;
@@ -1142,14 +1142,14 @@ export default function Home() {
           width: 100%;
         }
         .bottom-callout-text-small {
-          font-size: 1.25rem;
+          font-size: var(--fs-xl);
           color: #6d28d9;
           font-family: var(--font-serif);
           font-style: italic;
           font-weight: 500;
         }
         .bottom-callout-text-large {
-          font-size: 1.95rem;
+          font-size: var(--fs-3xl);
           color: #1e1b4b;
           font-family: var(--font-serif);
           font-weight: 600;
@@ -1200,13 +1200,13 @@ export default function Home() {
         }
         .highlight-title {
           font-family: var(--font-sans);
-          font-size: 0.95rem;
+          font-size: var(--fs-md);
           font-weight: 700;
           color: #1e1b4b;
         }
         .highlight-desc {
           font-family: var(--font-sans);
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           color: #6b7280;
           line-height: 1.3;
         }
@@ -1234,13 +1234,13 @@ export default function Home() {
             background-position: center;
           }
           #section-landing .hero-title-sub {
-            font-size: 1.5rem !important;
+            font-size: var(--fs-2xl);
           }
           #section-landing .hero-title-main {
-            font-size: 2.2rem !important;
+            font-size: var(--fs-4xl);
           }
           #section-landing .hero-subtitle {
-            font-size: 0.95rem !important;
+            font-size: var(--fs-md);
             margin-bottom: 24px !important;
           }
           #section-landing .landing-grid {
@@ -1252,10 +1252,10 @@ export default function Home() {
             border-radius: 20px !important;
           }
           .bottom-callout-text-small {
-            font-size: 1.05rem !important;
+            font-size: var(--fs-base);
           }
           .bottom-callout-text-large {
-            font-size: 1.45rem !important;
+            font-size: var(--fs-2xl);
           }
         }
 
@@ -1275,7 +1275,7 @@ export default function Home() {
           }
           #section-landing .search-input {
             text-align: center !important;
-            font-size: 1rem !important;
+            font-size: var(--fs-base);
           }
           #section-landing .search-input-suggestion {
             text-align: center !important;
@@ -1284,7 +1284,7 @@ export default function Home() {
             width: 100% !important;
             justify-content: center !important;
             padding: 12px !important;
-            font-size: 0.95rem !important;
+            font-size: var(--fs-md);
           }
         }
 
@@ -1307,7 +1307,7 @@ export default function Home() {
 
         .inline-error-msg {
           color: #ef4444;
-          font-size: 0.75rem;
+          font-size: var(--fs-2xs);
           margin-top: 4px;
           font-weight: 600;
           text-align: left;
@@ -1320,7 +1320,7 @@ export default function Home() {
           color: #065f46;
           padding: 12px;
           border-radius: 14px;
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
           font-weight: 700;
           margin-bottom: 16px;
           text-align: center;
@@ -1352,7 +1352,7 @@ export default function Home() {
         .scanner-status {
           margin-top: 24px;
           color: hsl(var(--text-muted));
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
           letter-spacing: 0.05em;
           text-transform: uppercase;
           display: flex;
@@ -1400,7 +1400,7 @@ export default function Home() {
         .report-paragraph {
           line-height: 1.6;
           color: hsl(var(--text-cream));
-          font-size: 0.95rem;
+          font-size: var(--fs-md);
         }
 
         .alignment-step-card {
@@ -1420,13 +1420,13 @@ export default function Home() {
           font-weight: 700;
           margin: 0;
           text-transform: uppercase;
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           letter-spacing: 0.05em;
         }
 
         .alignment-step-title {
           color: hsl(var(--text-cream));
-          font-size: 1.2rem;
+          font-size: var(--fs-xl);
           text-align: center;
           margin: 0;
           font-family: var(--font-serif);
@@ -1434,7 +1434,7 @@ export default function Home() {
 
         .alignment-step-desc {
           color: hsl(var(--text-muted));
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
           text-align: center;
           margin: 0 0 10px;
           line-height: 1.4;
@@ -1443,7 +1443,7 @@ export default function Home() {
         .book-free-session-btn {
           width: 100%;
           padding: 14px 28px;
-          font-size: 0.95rem;
+          font-size: var(--fs-md);
           font-weight: 600;
           letter-spacing: 0.02em;
         }
@@ -1489,7 +1489,7 @@ export default function Home() {
 
         .visualizer-heading {
           font-family: var(--font-serif);
-          font-size: 1.5rem;
+          font-size: var(--fs-2xl);
           color: #4c1d95;
           text-align: center;
           margin-bottom: 10px;
@@ -1542,18 +1542,18 @@ export default function Home() {
 
         .chakra-name-sanskrit {
           font-family: var(--font-serif);
-          font-size: 0.95rem;
+          font-size: var(--fs-md);
           font-weight: 700;
           color: #4c1d95;
         }
 
         .chakra-name-english {
-          font-size: 0.72rem;
+          font-size: var(--fs-2xs);
           color: hsl(var(--text-muted));
         }
 
         .chakra-score-val {
-          font-size: 0.95rem;
+          font-size: var(--fs-md);
           font-weight: 800;
           margin-top: 2px;
         }
@@ -1586,7 +1586,7 @@ export default function Home() {
           background: rgba(16, 185, 129, 0.08);
           color: #059669;
           border: 1px solid rgba(16, 185, 129, 0.2);
-          font-size: 0.75rem;
+          font-size: var(--fs-2xs);
           font-weight: 700;
           padding: 4px 12px;
           border-radius: 6px;
@@ -1596,24 +1596,24 @@ export default function Home() {
         }
 
         .report-title {
-          font-size: 2.2rem;
+          font-size: var(--fs-4xl);
           line-height: 1.2;
         }
 
         .report-owner {
-          font-size: 0.95rem;
+          font-size: var(--fs-md);
           color: hsl(var(--text-muted));
         }
 
         .summary-heading, .analysis-heading {
           font-family: var(--font-serif);
-          font-size: 1.15rem;
+          font-size: var(--fs-lg);
           color: #4c1d95;
           margin-bottom: 10px;
         }
 
         .soul-report-summary p {
-          font-size: 0.98rem;
+          font-size: var(--fs-base);
           line-height: 1.7;
           color: #334155;
         }
@@ -1639,7 +1639,7 @@ export default function Home() {
         }
 
         .status-marker {
-          font-size: 0.7rem;
+          font-size: var(--fs-2xs);
           font-weight: 700;
           text-transform: uppercase;
           background: rgba(239, 68, 68, 0.08);
@@ -1664,12 +1664,12 @@ export default function Home() {
         }
 
         .point-info strong {
-          font-size: 0.92rem;
+          font-size: var(--fs-md);
           color: #1e1b4b;
         }
 
         .point-info p {
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           line-height: 1.5;
         }
 
@@ -1680,7 +1680,7 @@ export default function Home() {
           color: hsl(var(--text-muted));
           padding: 12px 24px;
           border-radius: 12px;
-          font-size: 0.88rem;
+          font-size: var(--fs-sm);
           font-weight: 600;
           cursor: pointer;
           transition: var(--transition-fast);
@@ -1713,13 +1713,13 @@ export default function Home() {
 
         .bottom-section-title {
           font-family: var(--font-serif);
-          font-size: 1.8rem;
+          font-size: var(--fs-3xl);
           color: #4c1d95;
           margin-bottom: 6px;
         }
 
         .bottom-section-subtitle {
-          font-size: 0.95rem;
+          font-size: var(--fs-md);
           color: hsl(var(--text-muted));
         }
 
@@ -1740,12 +1740,12 @@ export default function Home() {
 
         .consult-title {
           font-family: var(--font-serif);
-          font-size: 1.4rem;
+          font-size: var(--fs-2xl);
           color: #4c1d95;
         }
 
         .consult-desc {
-          font-size: 0.9rem;
+          font-size: var(--fs-sm);
           line-height: 1.6;
           color: hsl(var(--text-muted));
         }
@@ -1758,7 +1758,7 @@ export default function Home() {
 
         .recommend-services-title {
           font-family: var(--font-serif);
-          font-size: 1.25rem;
+          font-size: var(--fs-xl);
           color: #4c1d95;
         }
 
@@ -1787,7 +1787,7 @@ export default function Home() {
           background: rgba(16, 185, 129, 0.08);
           border: 1px solid rgba(16, 185, 129, 0.2);
           color: #065f46;
-          font-size: 0.72rem;
+          font-size: var(--fs-2xs);
           font-weight: 700;
           padding: 3px 8px;
           border-radius: 4px;
@@ -1798,17 +1798,17 @@ export default function Home() {
           font-family: var(--font-serif);
           color: #db2777;
           font-weight: 700;
-          font-size: 1.15rem;
+          font-size: var(--fs-lg);
         }
 
         .recommend-card-title {
-          font-size: 1.15rem;
+          font-size: var(--fs-lg);
           color: #1e1b4b;
           margin-bottom: 6px;
         }
 
         .recommend-card-desc {
-          font-size: 0.82rem;
+          font-size: var(--fs-xs);
           line-height: 1.5;
           margin-bottom: 12px;
           flex: 1;
@@ -1883,7 +1883,7 @@ export default function Home() {
           right: -30px;
           background: linear-gradient(90deg, #db2777, #7c3aed);
           color: #ffffff;
-          font-size: 0.65rem;
+          font-size: var(--fs-2xs);
           font-weight: 800;
           text-transform: uppercase;
           letter-spacing: 0.12em;
@@ -1926,7 +1926,7 @@ export default function Home() {
           border: 1px solid var(--border-glass);
           color: #7c3aed;
           font-weight: 600;
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
           padding: 8px 16px;
           border-radius: 99px;
           cursor: pointer;
@@ -2011,7 +2011,7 @@ export default function Home() {
         }
         .node-label {
           font-family: var(--font-sans);
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           font-weight: 700;
           color: #475569;
           white-space: nowrap;
@@ -2093,14 +2093,14 @@ export default function Home() {
           background: rgba(168, 85, 247, 0.08);
           color: #7c3aed;
           border: 1px solid rgba(168, 85, 247, 0.2);
-          font-size: 0.75rem;
+          font-size: var(--fs-2xs);
           font-weight: 700;
           padding: 4px 10px;
           border-radius: 6px;
           text-transform: uppercase;
         }
         .progress-label {
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
           color: hsl(var(--text-muted));
         }
         .progress-bar-container {
@@ -2118,7 +2118,7 @@ export default function Home() {
           transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .quiz-question-text {
-          font-size: 1.6rem;
+          font-size: var(--fs-2xl);
           font-family: var(--font-sans);
           font-weight: 700;
           color: #1e1b4b;
@@ -2137,7 +2137,7 @@ export default function Home() {
           border: 1.5px solid var(--border-glass);
           border-radius: 14px;
           color: #334155;
-          font-size: 0.95rem;
+          font-size: var(--fs-md);
           font-weight: 600;
           text-align: left;
           cursor: pointer;
@@ -2181,7 +2181,7 @@ export default function Home() {
           outline: none;
           color: #1e293b;
           font-family: inherit;
-          font-size: 1rem;
+          font-size: var(--fs-base);
           resize: none;
           transition: var(--transition-smooth);
         }
@@ -2201,7 +2201,7 @@ export default function Home() {
           padding: 12px 24px;
           border-radius: 12px;
           font-weight: 700;
-          font-size: 0.88rem;
+          font-size: var(--fs-sm);
           cursor: pointer;
           transition: var(--transition-smooth);
         }
@@ -2220,13 +2220,13 @@ export default function Home() {
           gap: 20px;
         }
         .profile-title {
-          font-size: 1.8rem;
+          font-size: var(--fs-3xl);
           font-weight: 700;
           text-align: center;
           margin-bottom: 4px;
         }
         .profile-subtitle {
-          font-size: 0.92rem;
+          font-size: var(--fs-md);
           color: hsl(var(--text-muted));
           text-align: center;
           margin-bottom: 12px;
@@ -2250,7 +2250,7 @@ export default function Home() {
           text-align: left;
         }
         .form-group label {
-          font-size: 0.82rem;
+          font-size: var(--fs-xs);
           font-weight: 700;
           color: #334155;
           text-transform: uppercase;
@@ -2264,7 +2264,7 @@ export default function Home() {
           background: rgba(255, 255, 255, 0.6);
           color: #1e293b;
           font-family: inherit;
-          font-size: 0.95rem;
+          font-size: var(--fs-md);
           outline: none;
           transition: var(--transition-fast);
         }
@@ -2287,7 +2287,7 @@ export default function Home() {
         /* Soul Report CTA Button */
         .soul-report-btn {
           width: 100% !important;
-          font-size: 1rem !important;
+          font-size: var(--fs-base);
           font-family: var(--font-serif) !important;
           letter-spacing: 0.12em !important;
           padding: 18px 36px !important;
@@ -2328,13 +2328,13 @@ export default function Home() {
           text-align: center;
         }
         .section-title {
-          font-size: 2.1rem;
+          font-size: var(--fs-4xl);
           color: #4c1d95;
           margin-bottom: 12px;
         }
         .section-desc {
           color: hsl(var(--text-muted));
-          font-size: 0.95rem;
+          font-size: var(--fs-md);
         }
         .services-grid {
           display: grid;
@@ -2360,7 +2360,7 @@ export default function Home() {
           background: rgba(16, 185, 129, 0.08);
           border: 1px solid rgba(16, 185, 129, 0.2);
           color: #065f46;
-          font-size: 0.75rem;
+          font-size: var(--fs-2xs);
           font-weight: 600;
           padding: 4px 10px;
           border-radius: 6px;
@@ -2370,22 +2370,22 @@ export default function Home() {
           font-family: var(--font-serif);
           color: #db2777;
           font-weight: 700;
-          font-size: 1.2rem;
+          font-size: var(--fs-xl);
         }
         .card-service-title {
-          font-size: 1.35rem;
+          font-size: var(--fs-xl);
           margin-bottom: 4px;
           color: hsl(var(--text-cream));
         }
         .card-service-desc {
-          font-size: 0.88rem;
+          font-size: var(--fs-sm);
           flex: 1;
           margin-bottom: 12px;
         }
         .card-practitioner-row {
           display: flex;
           justify-content: space-between;
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
           border-top: 1px solid rgba(0,0,0,0.05);
           padding-top: 16px;
           color: hsl(var(--text-muted));
@@ -2410,7 +2410,7 @@ export default function Home() {
           border: none;
           color: hsl(var(--text-muted));
           font-family: var(--font-serif);
-          font-size: 0.95rem;
+          font-size: var(--fs-md);
           font-weight: 600;
           padding: 8px 20px;
           cursor: pointer;
@@ -2442,13 +2442,13 @@ export default function Home() {
           border-bottom: 1px solid rgba(0,0,0,0.06);
         }
         .philosophy-symbol {
-          font-size: 2rem;
+          font-size: var(--fs-3xl);
           color: #db2777;
           margin-bottom: 16px;
         }
         .philosophy-quote {
           font-family: var(--font-serif);
-          font-size: 1.6rem;
+          font-size: var(--fs-2xl);
           font-style: italic;
           max-width: 800px;
           margin: 0 auto 16px;
@@ -2456,7 +2456,7 @@ export default function Home() {
           line-height: 1.5;
         }
         .philosophy-author {
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
           text-transform: uppercase;
           letter-spacing: 0.12em;
           color: hsl(var(--text-muted));
@@ -2478,7 +2478,7 @@ export default function Home() {
         }
         @media (max-width: 768px) {
           .philosophy-quote {
-            font-size: 1.25rem;
+            font-size: var(--fs-xl);
           }
           .category-tabs {
             flex-wrap: wrap;

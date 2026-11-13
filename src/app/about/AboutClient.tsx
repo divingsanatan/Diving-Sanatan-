@@ -991,7 +991,7 @@ export default function AboutClient() {
 
         .about-sidebar-heading {
           font-family: var(--font-sans);
-          font-size: 1.15rem;
+          font-size: var(--fs-lg);
           color: #111827;
           font-weight: 700 !important;
           margin: 0;
@@ -1027,7 +1027,7 @@ export default function AboutClient() {
           outline: none;
           padding: 10px 0;
           font-family: var(--font-sans);
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
           color: #111827;
         }
 
@@ -1036,7 +1036,7 @@ export default function AboutClient() {
           border: none;
           color: hsl(var(--text-muted));
           cursor: pointer;
-          font-size: 0.75rem;
+          font-size: var(--fs-2xs);
           padding: 2px 4px;
           border-radius: 50%;
           display: flex;
@@ -1141,7 +1141,7 @@ export default function AboutClient() {
         }
 
         .about-item-name {
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
           font-weight: 500;
           color: #4b5563;
           font-family: var(--font-sans);
@@ -1169,21 +1169,21 @@ export default function AboutClient() {
         .about-quote-card h3 {
           font-style: italic;
           font-weight: 500 !important;
-          font-size: 0.95rem;
+          font-size: var(--fs-md);
           line-height: 1.5;
           color: #3b0764;
           font-family: var(--font-serif) !important;
         }
 
         .about-quote-card p {
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           color: #6b4d8a;
           line-height: 1.6;
           margin: 0;
         }
 
         .about-quote-lotus {
-          font-size: 36px;
+          font-size: var(--fs-4xl);
           color: #d4b8e8;
           line-height: 1;
         }
@@ -1191,7 +1191,7 @@ export default function AboutClient() {
         /* keep legacy .lotus for section headers */
         .lotus {
           color: #7c3aed;
-          font-size: 20px;
+          font-size: var(--fs-xl);
         }
 
         /* ===== Main Column ===== */
@@ -1224,25 +1224,24 @@ export default function AboutClient() {
 
         .story-content h2 {
           text-transform: uppercase;
-          letter-spacing: 2px;
+          letter-spacing: 0.14em;
           color: #7c3aed;
-          font-size: 12px;
+          font-size: var(--fs-xs);
           font-weight: 700;
           margin-bottom: 14px;
         }
 
         .story-content h1 {
           color: #2d1b4e;
-          font-size: 34px;
+          font-size: var(--fs-4xl);
           font-weight: 700;
           line-height: 1.25;
           margin-bottom: 18px;
-          font-family: var(--font-serif) !important;
         }
 
         .story-content p {
           color: #5b4d7a;
-          font-size: 14px;
+          font-size: var(--fs-sm);
           margin-bottom: 24px;
           line-height: 1.7;
         }
@@ -1253,7 +1252,7 @@ export default function AboutClient() {
           padding: 12px 26px;
           border-radius: 8px;
           font-weight: 600;
-          font-size: 14px;
+          font-size: var(--fs-sm);
           width: fit-content;
           transition: all 0.3s ease;
           box-shadow: 0 4px 15px rgba(74, 43, 110, 0.15);
@@ -1279,7 +1278,7 @@ export default function AboutClient() {
           bottom: 16px;
           left: 16px;
           color: rgba(255,255,255,0.75);
-          font-size: 40px;
+          font-size: var(--fs-4xl);
           line-height: 1;
         }
 
@@ -1298,7 +1297,7 @@ export default function AboutClient() {
           gap: 10px;
           margin-bottom: 12px;
           color: #4a2b6e;
-          font-size: 20px;
+          font-size: var(--fs-xl);
           font-weight: 700;
           font-family: var(--font-serif) !important;
         }
@@ -1408,7 +1407,7 @@ export default function AboutClient() {
         }
         .featured-card-title {
           font-family: var(--font-serif);
-          font-size: 1.05rem;
+          font-size: var(--fs-base);
           color: #1e1b4b;
           font-weight: 700 !important;
           line-height: 1.25;
@@ -1420,7 +1419,7 @@ export default function AboutClient() {
           min-height: calc(1.25em * 2);
         }
         .featured-card-desc {
-          font-size: 0.78rem;
+          font-size: var(--fs-2xs);
           line-height: 1.45;
           color: #6b7280;
           display: -webkit-box;
@@ -1436,7 +1435,7 @@ export default function AboutClient() {
           border: 1px solid rgba(168, 85, 247, 0.2);
           border-radius: 99px;
           color: #7c3aed;
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           font-weight: 700;
           cursor: pointer;
           display: flex;
@@ -1562,13 +1561,13 @@ export default function AboutClient() {
           color: #7c3aed;
           margin: -24px auto 10px;
           border: 2px solid white;
-          font-size: 16px;
+          font-size: var(--fs-base);
           box-shadow: 0 4px 10px rgba(124, 58, 237, 0.1);
         }
 
         .card h4 {
           color: #2d1b4e;
-          font-size: 14px;
+          font-size: var(--fs-sm);
           font-weight: 700;
           margin-bottom: 6px;
           font-family: var(--font-serif) !important;
@@ -1576,7 +1575,7 @@ export default function AboutClient() {
 
         .card p {
           color: #6b4d8a;
-          font-size: 12px;
+          font-size: var(--fs-2xs);
           line-height: 1.5;
         }
 
@@ -1629,7 +1628,7 @@ export default function AboutClient() {
 
         .healer-card h4 {
           color: #2d1b4e !important;
-          font-size: 0.92rem !important;
+          font-size: var(--fs-md);
           font-weight: 700 !important;
           margin: 0 0 4px 0 !important;
           font-family: var(--font-serif) !important;
@@ -1642,7 +1641,7 @@ export default function AboutClient() {
 
         .healer-card .role {
           color: #5b4d7a !important;
-          font-size: 0.78rem !important;
+          font-size: var(--fs-2xs);
           margin: 0 0 6px 0 !important;
           font-weight: 500 !important;
           line-height: 1.3 !important;
@@ -1655,7 +1654,7 @@ export default function AboutClient() {
 
         .healer-card .exp {
           color: #7c3aed !important;
-          font-size: 0.72rem !important;
+          font-size: var(--fs-2xs);
           font-weight: 600 !important;
           background: #f3e8ff !important;
           padding: 3px 10px !important;
@@ -1681,7 +1680,7 @@ export default function AboutClient() {
           justify-content: center;
           color: #4a2b6e;
           box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-          font-size: 20px;
+          font-size: var(--fs-xl);
           z-index: 10;
           cursor: pointer;
           transition: all 0.25s ease;
@@ -1772,7 +1771,7 @@ export default function AboutClient() {
 
         .media-logo-placeholder {
           font-family: var(--font-serif) !important;
-          font-size: 18px;
+          font-size: var(--fs-lg);
           font-weight: 700;
           color: #7c3aed;
           margin-bottom: 12px;
@@ -1781,7 +1780,7 @@ export default function AboutClient() {
 
         .media-item h5 {
           color: #2d1b4e;
-          font-size: 14px;
+          font-size: var(--fs-sm);
           font-weight: 700;
           margin-bottom: 8px;
           font-family: var(--font-serif) !important;
@@ -1789,7 +1788,7 @@ export default function AboutClient() {
 
         .media-item p {
           color: #6b4d8a;
-          font-size: 12px;
+          font-size: var(--fs-2xs);
           line-height: 1.6;
         }
 
@@ -1813,7 +1812,7 @@ export default function AboutClient() {
           align-items: center;
           gap: 10px;
           color: #4a2b6e;
-          font-size: 17px;
+          font-size: var(--fs-lg);
           font-weight: 700;
           margin-bottom: 16px;
           font-family: var(--font-serif) !important;
@@ -1821,7 +1820,7 @@ export default function AboutClient() {
 
         .panel p {
           color: #5b4d7a;
-          font-size: 13px;
+          font-size: var(--fs-xs);
           line-height: 1.6;
         }
 
@@ -1846,20 +1845,20 @@ export default function AboutClient() {
           align-items: center;
           justify-content: center;
           color: #7c3aed;
-          font-size: 15px;
+          font-size: var(--fs-md);
           box-shadow: 0 2px 8px rgba(124, 58, 237, 0.08);
         }
 
         .value h5 {
           color: #2d1b4e;
-          font-size: 13px;
+          font-size: var(--fs-xs);
           font-weight: 700;
           margin-bottom: 3px;
           font-family: var(--font-serif) !important;
         }
 
         .value p {
-          font-size: 11.5px;
+          font-size: var(--fs-2xs);
           line-height: 1.4;
         }
 
@@ -1887,14 +1886,14 @@ export default function AboutClient() {
 
         .impact-num {
           color: #7c3aed;
-          font-size: 22px;
+          font-size: var(--fs-2xl);
           font-weight: 700;
           margin-bottom: 4px;
         }
 
         .impact-label {
           color: #5b4d7a;
-          font-size: 11px;
+          font-size: var(--fs-2xs);
           font-weight: 500;
         }
 
@@ -1915,7 +1914,7 @@ export default function AboutClient() {
           align-items: center;
           justify-content: center;
           border: 1px solid #ede0ff;
-          font-size: 10px;
+          font-size: var(--fs-2xs);
           color: #7c3aed;
           text-align: center;
           font-weight: 700;
@@ -1937,7 +1936,7 @@ export default function AboutClient() {
           padding: 11px;
           border-radius: 8px;
           font-weight: 600;
-          font-size: 13px;
+          font-size: var(--fs-xs);
           transition: all 0.3s ease;
         }
 
@@ -1958,23 +1957,23 @@ export default function AboutClient() {
 
         .testimonial .quote-mark {
           color: #d4b8e8;
-          font-size: 40px;
+          font-size: var(--fs-4xl);
           line-height: 1;
-          font-family: serif;
+          font-family: var(--font-heading);
           margin-bottom: -10px;
         }
 
         .testimonial p {
           color: #4a2b6e;
           font-style: italic;
-          font-size: 13.5px;
+          font-size: var(--fs-sm);
           margin: 6px 0 12px;
           line-height: 1.6;
         }
 
         .testimonial .author {
           color: #7c3aed;
-          font-size: 12px;
+          font-size: var(--fs-2xs);
           font-weight: 600;
         }
 
@@ -2014,7 +2013,7 @@ export default function AboutClient() {
           position: absolute;
           right: 20px;
           top: 20px;
-          font-size: 28px;
+          font-size: var(--fs-3xl);
           color: #6b4d8a;
           cursor: pointer;
           background: none;
@@ -2029,7 +2028,7 @@ export default function AboutClient() {
 
         .modal-content h3 {
           color: #4a2b6e;
-          font-size: 22px;
+          font-size: var(--fs-2xl);
           font-weight: 700;
           margin-bottom: 20px;
           font-family: var(--font-serif) !important;
@@ -2040,7 +2039,7 @@ export default function AboutClient() {
         .modal-body-scroll {
           overflow-y: auto;
           padding-right: 8px;
-          font-size: 14px;
+          font-size: var(--fs-sm);
           color: #5b4d7a;
           line-height: 1.7;
         }
@@ -2079,13 +2078,13 @@ export default function AboutClient() {
         .timeline-item .year {
           font-weight: 700;
           color: #7c3aed;
-          font-size: 13px;
+          font-size: var(--fs-xs);
         }
 
         .timeline-item p {
           margin-top: 2px;
           margin-bottom: 0;
-          font-size: 12.5px;
+          font-size: var(--fs-xs);
           color: #6b4d8a;
         }
 
@@ -2115,7 +2114,7 @@ export default function AboutClient() {
           background: #ede0ff;
           color: #4a2b6e;
           font-weight: 700;
-          font-size: 11px;
+          font-size: var(--fs-2xs);
           padding: 6px 12px;
           border-radius: 6px;
           min-width: 90px;
@@ -2124,14 +2123,14 @@ export default function AboutClient() {
 
         .certs-detail-list h5 {
           color: #2d1b4e;
-          font-size: 14px;
+          font-size: var(--fs-sm);
           font-weight: 700;
           margin-bottom: 4px;
           font-family: var(--font-serif) !important;
         }
 
         .certs-detail-list p {
-          font-size: 12px;
+          font-size: var(--fs-2xs);
           margin-bottom: 0;
           line-height: 1.5;
         }
@@ -2184,7 +2183,7 @@ export default function AboutClient() {
           padding: 30px;
           text-align: center;
           color: #6b4d8a;
-          font-size: 14px;
+          font-size: var(--fs-sm);
           width: 100%;
         }
 
@@ -2257,11 +2256,10 @@ export default function AboutClient() {
             gap: 16px !important;
           }
           .story-content h1 {
-            font-size: 1.4rem !important;
             margin-bottom: 12px !important;
           }
           .story-content p {
-            font-size: 0.85rem !important;
+            font-size: var(--fs-sm);
             margin-bottom: 16px !important;
           }
           .section {

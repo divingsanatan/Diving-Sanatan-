@@ -173,13 +173,13 @@ export const BlogRightSidebar: React.FC = () => {
           }
           .featured-title {
             font-family: var(--font-sans);
-            font-size: 0.95rem;
+            font-size: var(--fs-md);
             font-weight: 700;
             color: #1e1b4b;
             margin: 0;
           }
           .featured-desc {
-            font-size: 0.76rem;
+            font-size: var(--fs-2xs);
             color: #4b5563;
             line-height: 1.45;
             margin: 0;
@@ -190,7 +190,7 @@ export const BlogRightSidebar: React.FC = () => {
             color: #7c3aed;
             border: 1px solid rgba(124, 58, 237, 0.2);
             padding: 10px;
-            font-size: 0.8rem;
+            font-size: var(--fs-xs);
             font-weight: 700;
             border-radius: 12px;
             cursor: pointer;
@@ -256,13 +256,13 @@ export const BlogRightSidebar: React.FC = () => {
           }
           .stat-num-val {
             font-family: var(--font-sans);
-            font-size: 0.95rem;
+            font-size: var(--fs-md);
             font-weight: 750;
             color: #1e1b4b;
             line-height: 1.1;
           }
           .stat-label-text {
-            font-size: 0.65rem;
+            font-size: var(--fs-2xs);
             color: #6b7280;
             white-space: nowrap;
             overflow: hidden;
@@ -285,7 +285,7 @@ export const BlogRightSidebar: React.FC = () => {
           }
           .consultation-title {
             font-family: var(--font-serif);
-            font-size: 1.1rem;
+            font-size: var(--fs-lg);
             font-weight: 700;
             color: #ffffff;
             margin: 0;
@@ -294,7 +294,7 @@ export const BlogRightSidebar: React.FC = () => {
             z-index: 2;
           }
           .consultation-desc {
-            font-size: 0.78rem;
+            font-size: var(--fs-2xs);
             color: rgba(255, 255, 255, 0.9);
             line-height: 1.5;
             margin: 0;
@@ -308,7 +308,7 @@ export const BlogRightSidebar: React.FC = () => {
             padding: 12px;
             border-radius: 12px;
             font-weight: 750;
-            font-size: 0.82rem;
+            font-size: var(--fs-xs);
             cursor: pointer;
             transition: all 0.2s ease;
             position: relative;
@@ -606,7 +606,7 @@ export const BlogRightSidebar: React.FC = () => {
           }
           .sidebar-heading {
             font-family: var(--font-sans);
-            font-size: 1.05rem;
+            font-size: var(--fs-base);
             color: #111827;
             font-weight: 700 !important;
             margin: 0;
@@ -623,7 +623,7 @@ export const BlogRightSidebar: React.FC = () => {
             display: flex;
             align-items: flex-start;
             gap: 8px;
-            font-size: 0.85rem;
+            font-size: var(--fs-sm);
             color: #4b5563;
             line-height: 1.4;
           }
@@ -639,7 +639,7 @@ export const BlogRightSidebar: React.FC = () => {
           }
           .quote-icon {
             font-family: var(--font-serif);
-            font-size: 3.5rem;
+            font-size: var(--fs-display);
             color: rgba(168, 85, 247, 0.2);
             line-height: 1;
             position: absolute;
@@ -649,7 +649,7 @@ export const BlogRightSidebar: React.FC = () => {
           .sidebar-quote-text {
             font-family: var(--font-serif);
             font-style: italic;
-            font-size: 0.95rem;
+            font-size: var(--fs-md);
             color: #581c87;
             margin: 0;
             line-height: 1.5;
@@ -718,7 +718,7 @@ export const BlogRightSidebar: React.FC = () => {
           }
           .video-info h5 {
             font-family: var(--font-sans);
-            font-size: 0.8rem;
+            font-size: var(--fs-xs);
             font-weight: 600;
             color: #1f2937;
             margin: 0;
@@ -732,7 +732,7 @@ export const BlogRightSidebar: React.FC = () => {
             color: #7c3aed;
           }
           .video-info span {
-            font-size: 0.7rem;
+            font-size: var(--fs-2xs);
             color: #6b7280;
           }
           .view-all-sidebar-btn {
@@ -741,7 +741,7 @@ export const BlogRightSidebar: React.FC = () => {
             background: rgba(124, 58, 237, 0.05);
             border: 1px solid rgba(124, 58, 237, 0.15);
             color: #7c3aed;
-            font-size: 0.78rem;
+            font-size: var(--fs-2xs);
             font-weight: 700;
             text-align: center;
             border-radius: 10px;
@@ -787,13 +787,13 @@ export const BlogRightSidebar: React.FC = () => {
           }
           .cta-title {
             font-family: var(--font-serif);
-            font-size: 1.15rem;
+            font-size: var(--fs-lg);
             font-weight: 700;
             color: #ffffff;
             margin: 0;
           }
           .cta-desc {
-            font-size: 0.8rem;
+            font-size: var(--fs-xs);
             color: rgba(255, 255, 255, 0.85);
             line-height: 1.5;
             margin: 0;
@@ -804,7 +804,7 @@ export const BlogRightSidebar: React.FC = () => {
             padding: 12px;
             border-radius: 10px;
             font-weight: 700;
-            font-size: 0.82rem;
+            font-size: var(--fs-xs);
             text-decoration: none;
             transition: all 0.2s ease;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
@@ -976,7 +976,7 @@ export const BlogRightSidebar: React.FC = () => {
         }
         .sidebar-heading {
           font-family: var(--font-sans);
-          font-size: 1.05rem;
+          font-size: var(--fs-base);
           color: #111827;
           font-weight: 700 !important;
           margin: 0;
@@ -1006,7 +1006,7 @@ export const BlogRightSidebar: React.FC = () => {
         }
         .author-name-text {
           font-family: var(--font-sans);
-          font-size: 1rem;
+          font-size: var(--fs-base);
           font-weight: 700;
           color: #1e1b4b;
           margin: 0;
@@ -1024,7 +1024,7 @@ export const BlogRightSidebar: React.FC = () => {
           color: #7c3aed;
         }
         .author-specialty-badge {
-          font-size: 0.72rem;
+          font-size: var(--fs-2xs);
           font-weight: 600;
           color: #0d9488;
           background: rgba(13, 148, 136, 0.08);
@@ -1033,7 +1033,7 @@ export const BlogRightSidebar: React.FC = () => {
           text-transform: capitalize;
         }
         .author-bio-desc {
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           color: #475569;
           line-height: 1.5;
           margin: 4px 0 8px;
@@ -1043,7 +1043,7 @@ export const BlogRightSidebar: React.FC = () => {
           padding: 10px;
           background: #7c3aed;
           color: #ffffff;
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           font-weight: 700;
           text-align: center;
           border-radius: 10px;
@@ -1080,7 +1080,7 @@ export const BlogRightSidebar: React.FC = () => {
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 0.7rem;
+          font-size: var(--fs-2xs);
           font-weight: 700;
           flex-shrink: 0;
         }
@@ -1106,7 +1106,7 @@ export const BlogRightSidebar: React.FC = () => {
         }
         .mv-info h5 {
           font-family: var(--font-sans);
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           font-weight: 600;
           color: #1f2937;
           margin: 0;
@@ -1120,7 +1120,7 @@ export const BlogRightSidebar: React.FC = () => {
           color: #7c3aed;
         }
         .mv-info span {
-          font-size: 0.7rem;
+          font-size: var(--fs-2xs);
           color: #6b7280;
         }
 
@@ -1163,7 +1163,7 @@ export const BlogRightSidebar: React.FC = () => {
         }
         .related-meta-info h5 {
           font-family: var(--font-sans);
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           font-weight: 600;
           color: #1f2937;
           margin: 0;
@@ -1177,7 +1177,7 @@ export const BlogRightSidebar: React.FC = () => {
           color: #7c3aed;
         }
         .related-meta-info span {
-          font-size: 0.7rem;
+          font-size: var(--fs-2xs);
           color: #6b7280;
         }
 
@@ -1194,13 +1194,13 @@ export const BlogRightSidebar: React.FC = () => {
         }
         .cta-title {
           font-family: var(--font-serif);
-          font-size: 1.15rem;
+          font-size: var(--fs-lg);
           font-weight: 700;
           color: #ffffff;
           margin: 0;
         }
         .cta-desc {
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           color: rgba(255, 255, 255, 0.85);
           line-height: 1.5;
           margin: 0;
@@ -1211,7 +1211,7 @@ export const BlogRightSidebar: React.FC = () => {
           padding: 12px;
           border-radius: 10px;
           font-weight: 700;
-          font-size: 0.82rem;
+          font-size: var(--fs-xs);
           text-decoration: none;
           transition: all 0.2s ease;
           box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);

@@ -15,12 +15,12 @@
 .indexTitle {
   margin: 0 0 4px;
   font-family: var(--font-serif);
-  font-size: 1.6rem;
+  font-size: var(--fs-2xl);
   color: #2e1065;
 }
 .indexSub {
   margin: 0 0 22px;
-  font-size: 0.92rem;
+  font-size: var(--fs-md);
   color: var(--text-muted, #66707a);
 }
 .letterGroup {
@@ -32,7 +32,7 @@
 }
 .letter {
   font-family: var(--font-serif);
-  font-size: 1.7rem;
+  font-size: var(--fs-3xl);
   font-weight: 700;
   color: #7c3aed;
   line-height: 1;
@@ -47,7 +47,7 @@
   border-radius: 9999px;
   background: #f5f3ff;
   color: #5b21b6;
-  font-size: 0.86rem;
+  font-size: var(--fs-sm);
   font-weight: 600;
   text-decoration: none;
   transition: background 0.2s ease, color 0.2s ease;
@@ -66,7 +66,7 @@
   flex-wrap: wrap;
   gap: 8px;
   margin-bottom: 18px;
-  font-size: 0.84rem;
+  font-size: var(--fs-xs);
   color: var(--text-muted, #66707a);
 }
 .crumbs a {
@@ -82,7 +82,7 @@
   border-radius: 9999px;
   background: #ede9fe;
   color: #5b21b6;
-  font-size: 0.76rem;
+  font-size: var(--fs-2xs);
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -97,18 +97,18 @@
   color: #1e1b4b;
 }
 .phonetic {
-  font-size: 1.05rem;
+  font-size: var(--fs-base);
   color: #7c3aed;
   font-style: italic;
 }
 .altNames {
   margin: 10px 0 0;
-  font-size: 0.92rem;
+  font-size: var(--fs-md);
   color: var(--text-muted, #66707a);
 }
 .meta {
   margin: 14px 0 0;
-  font-size: 0.82rem;
+  font-size: var(--fs-xs);
   color: #94a3b8;
 }
 
@@ -122,7 +122,7 @@
 }
 .answerLabel {
   margin: 0 0 8px;
-  font-size: 0.74rem;
+  font-size: var(--fs-2xs);
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -130,7 +130,7 @@
 }
 .answerText {
   margin: 0;
-  font-size: 1.12rem;
+  font-size: var(--fs-lg);
   line-height: 1.7;
   color: #1e1b4b;
 }
@@ -141,7 +141,7 @@
 .h2 {
   margin: 0 0 14px;
   font-family: var(--font-serif);
-  font-size: 1.7rem;
+  font-size: var(--fs-3xl);
   font-weight: 600;
   color: #2e1065;
 }
@@ -168,7 +168,7 @@
   background: #ede9fe url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236d28d9' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E") center / 10px no-repeat;
 }
 .prose {
-  font-size: 1.04rem;
+  font-size: var(--fs-base);
   line-height: 1.85;
   color: var(--text-main, #2b2f33);
 }
@@ -183,10 +183,10 @@
   color: #2e1065;
 }
 .prose h2 {
-  font-size: 1.5rem;
+  font-size: var(--fs-2xl);
 }
 .prose h3 {
-  font-size: 1.25rem;
+  font-size: var(--fs-xl);
 }
 .prose ul,
 .prose ol {
@@ -241,7 +241,7 @@
 .faq summary::after {
   content: "+";
   color: #7c3aed;
-  font-size: 1.3rem;
+  font-size: var(--fs-xl);
   line-height: 1;
 }
 .faq details[open] summary::after {
@@ -277,13 +277,13 @@
   display: block;
   margin-bottom: 4px;
   font-family: var(--font-serif);
-  font-size: 1.2rem;
+  font-size: var(--fs-xl);
   font-weight: 600;
   color: #4c1d95;
 }
 .relatedText {
   margin: 0;
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
   line-height: 1.55;
   color: var(--text-muted, #66707a);
   display: -webkit-box;
@@ -314,12 +314,12 @@
 .ctaTitle {
   margin: 0 0 4px;
   font-family: var(--font-serif);
-  font-size: 1.4rem;
+  font-size: var(--fs-2xl);
   color: #4c1d95;
 }
 .ctaText {
   margin: 0;
-  font-size: 0.93rem;
+  font-size: var(--fs-md);
   color: var(--text-muted, #66707a);
 }
 .ctaBtn {
@@ -328,7 +328,7 @@
   background: linear-gradient(135deg, #e11d48 0%, #7c3aed 100%);
   color: #fff;
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: var(--fs-md);
   text-decoration: none;
   box-shadow: 0 8px 20px rgba(124, 58, 237, 0.25);
 }
@@ -337,7 +337,7 @@
   justify-content: space-between;
   gap: 16px;
   margin-top: 28px;
-  font-size: 0.92rem;
+  font-size: var(--fs-md);
 }
 .pager a {
   color: #6d28d9;

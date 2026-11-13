@@ -236,7 +236,7 @@ function BlogLayoutInner({ children }: { children: React.ReactNode }) {
         }
         .sidebar-heading-small {
           font-family: var(--font-sans);
-          font-size: 1.15rem;
+          font-size: var(--fs-lg);
           color: #111827;
           font-weight: 700 !important;
           margin: 0;
@@ -268,7 +268,7 @@ function BlogLayoutInner({ children }: { children: React.ReactNode }) {
           outline: none;
           padding: 10px 0;
           font-family: var(--font-sans);
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
           color: #111827;
         }
         .search-clear-btn {
@@ -276,7 +276,7 @@ function BlogLayoutInner({ children }: { children: React.ReactNode }) {
           border: none;
           color: hsl(var(--text-muted));
           cursor: pointer;
-          font-size: 0.75rem;
+          font-size: var(--fs-2xs);
           padding: 2px 4px;
           border-radius: 50%;
           display: flex;
@@ -325,7 +325,7 @@ function BlogLayoutInner({ children }: { children: React.ReactNode }) {
             border-radius: 12px;
             cursor: pointer;
             font-family: var(--font-sans);
-            font-size: 0.92rem;
+            font-size: var(--fs-md);
             font-weight: 700;
             color: #6b21a8;
             transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);

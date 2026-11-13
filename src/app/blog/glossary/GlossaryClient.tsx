@@ -269,7 +269,7 @@ export default function GlossaryClient({ initialTerms }: { initialTerms?: Glossa
         .term-link { color: inherit; text-decoration: none; }
         .term-link:hover { color: #6d28d9; }
         .term-readmore {
-          display: inline-block; margin-top: 10px; font-size: 0.88rem; font-weight: 600;
+          display: inline-block; margin-top: 10px; font-size: var(--fs-sm); font-weight: 600;
           color: #6d28d9; text-decoration: none;
         }
         .term-readmore:hover { text-decoration: underline; }
@@ -287,7 +287,7 @@ export default function GlossaryClient({ initialTerms }: { initialTerms?: Glossa
         }
         .glossary-title {
           font-family: var(--font-serif);
-          font-size: 2.3rem;
+          font-size: var(--fs-4xl);
           color: #1e1b4b;
           font-weight: 750 !important;
           line-height: 1.2 !important;
@@ -295,7 +295,7 @@ export default function GlossaryClient({ initialTerms }: { initialTerms?: Glossa
         }
         .glossary-subtitle {
           font-family: var(--font-sans);
-          font-size: 0.92rem;
+          font-size: var(--fs-md);
           color: #6b7280;
           line-height: 1.5;
           max-width: 650px;
@@ -327,7 +327,7 @@ export default function GlossaryClient({ initialTerms }: { initialTerms?: Glossa
           background: rgba(124, 58, 237, 0.07);
           border: 1px solid rgba(124, 58, 237, 0.2);
           color: #7c3aed;
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           font-weight: 600;
           padding: 5px 12px;
           border-radius: 20px;
@@ -352,7 +352,7 @@ export default function GlossaryClient({ initialTerms }: { initialTerms?: Glossa
         }
         .letter-btn {
           font-family: var(--font-sans);
-          font-size: 0.82rem;
+          font-size: var(--fs-xs);
           font-weight: 600;
           color: #4b5563;
           width: 34px;
@@ -418,19 +418,19 @@ export default function GlossaryClient({ initialTerms }: { initialTerms?: Glossa
         }
         .term-word {
           font-family: var(--font-serif);
-          font-size: 1.8rem;
+          font-size: var(--fs-3xl);
           color: #4c1d95;
           margin: 0;
         }
         .term-phonetic {
-          font-size: 0.9rem;
+          font-size: var(--fs-sm);
           color: hsl(var(--text-muted));
           font-family: var(--font-sans);
           font-style: italic;
         }
         .term-category-badge {
           font-family: var(--font-sans);
-          font-size: 0.72rem;
+          font-size: var(--fs-2xs);
           font-weight: 700;
           color: #0d9488;
           background: rgba(13, 148, 136, 0.06);
@@ -443,7 +443,7 @@ export default function GlossaryClient({ initialTerms }: { initialTerms?: Glossa
         }
         .term-definition-text {
           font-family: var(--font-sans);
-          font-size: 0.88rem;
+          font-size: var(--fs-sm);
           line-height: 1.6;
           color: hsl(var(--text-cream));
         }
@@ -478,7 +478,7 @@ export default function GlossaryClient({ initialTerms }: { initialTerms?: Glossa
           border: 1px solid rgba(168, 85, 247, 0.15);
           color: #7c3aed;
           font-family: var(--font-sans);
-          font-size: 0.82rem;
+          font-size: var(--fs-xs);
           font-weight: 600;
         }
         .loader-lotus-spin {
@@ -495,7 +495,7 @@ export default function GlossaryClient({ initialTerms }: { initialTerms?: Glossa
           align-items: center;
           gap: 8px;
           font-family: var(--font-sans);
-          font-size: 0.82rem;
+          font-size: var(--fs-xs);
           color: #6b7280;
           padding: 8px 16px;
           background: #ffffff;
@@ -513,13 +513,13 @@ export default function GlossaryClient({ initialTerms }: { initialTerms?: Glossa
             gap: 20px;
           }
           .glossary-title {
-            font-size: 1.8rem;
+            font-size: var(--fs-3xl);
           }
           .term-word {
-            font-size: 1.4rem;
+            font-size: var(--fs-2xl);
           }
           .term-definition-text {
-            font-size: 0.88rem;
+            font-size: var(--fs-sm);
             line-height: 1.6;
           }
         }
@@ -527,7 +527,7 @@ export default function GlossaryClient({ initialTerms }: { initialTerms?: Glossa
           .letter-btn {
             width: 30px;
             height: 30px;
-            font-size: 0.75rem;
+            font-size: var(--fs-2xs);
             border-radius: 8px;
           }
         }

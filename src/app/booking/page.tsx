@@ -805,7 +805,7 @@ function BookingContent() {
           width: 100%;
         }
         .booking-header-title {
-          font-size: 1.8rem;
+          font-size: var(--fs-3xl);
           color: #4c1d95;
           margin-bottom: 8px;
         }
@@ -855,14 +855,14 @@ function BookingContent() {
           background: rgba(16, 185, 129, 0.08);
           border: 1px solid rgba(16, 185, 129, 0.2);
           color: #065f46;
-          font-size: 0.7rem;
+          font-size: var(--fs-2xs);
           font-weight: 700;
           padding: 4px 10px;
           border-radius: 6px;
           text-transform: uppercase;
         }
         .service-rating-pill {
-          font-size: 0.82rem;
+          font-size: var(--fs-xs);
           font-weight: 700;
           color: #b45309;
         }
@@ -874,7 +874,7 @@ function BookingContent() {
           word-break: break-word;
         }
         .service-practitioner-line {
-          font-size: 0.9rem;
+          font-size: var(--fs-sm);
           color: hsl(var(--text-muted));
         }
         .service-rich-description {
@@ -883,7 +883,7 @@ function BookingContent() {
           gap: 12px;
         }
         .service-rich-description p {
-          font-size: 0.95rem;
+          font-size: var(--fs-md);
           line-height: 1.75;
           color: #334155;
         }
@@ -894,7 +894,7 @@ function BookingContent() {
           gap: 6px;
         }
         .service-benefits-list li {
-          font-size: 0.88rem;
+          font-size: var(--fs-sm);
           color: #475569;
           line-height: 1.5;
         }
@@ -905,7 +905,7 @@ function BookingContent() {
           margin-top: 8px;
         }
         .video-section-label {
-          font-size: 0.75rem;
+          font-size: var(--fs-2xs);
           font-weight: 700;
           color: hsl(var(--text-muted));
           text-transform: uppercase;
@@ -945,7 +945,7 @@ function BookingContent() {
           border: 1.5px dashed rgba(124, 58, 237, 0.2);
           border-radius: 16px;
           color: hsl(var(--text-muted));
-          font-size: 0.88rem;
+          font-size: var(--fs-sm);
         }
         .video-placeholder-icon {
           width: 48px;
@@ -956,7 +956,7 @@ function BookingContent() {
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 1.1rem;
+          font-size: var(--fs-lg);
         }
         .booking-controls-col {
           display: flex;
@@ -964,7 +964,7 @@ function BookingContent() {
         }
         .form-column-title {
           font-family: var(--font-serif);
-          font-size: 1.15rem;
+          font-size: var(--fs-lg);
           color: #4c1d95;
         }
         .selector-group {
@@ -973,7 +973,7 @@ function BookingContent() {
           gap: 8px;
         }
         .selector-group label, .form-group label {
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           color: hsl(var(--text-muted));
           text-transform: uppercase;
           letter-spacing: 0.05em;
@@ -995,17 +995,17 @@ function BookingContent() {
           gap: 4px;
         }
         .prac-name-label {
-          font-size: 0.7rem;
+          font-size: var(--fs-2xs);
           text-transform: uppercase;
           color: hsl(var(--text-muted));
           letter-spacing: 0.05em;
         }
         .prac-name {
-          font-size: 1.15rem;
+          font-size: var(--fs-lg);
           color: #4c1d95;
         }
         .prac-spec {
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           color: hsl(var(--text-muted));
         }
         .view-bio-trigger-btn {
@@ -1015,7 +1015,7 @@ function BookingContent() {
           padding: 8px 14px;
           border-radius: 8px;
           cursor: pointer;
-          font-size: 0.75rem;
+          font-size: var(--fs-2xs);
           font-weight: 600;
           text-transform: uppercase;
           transition: var(--transition-fast);
@@ -1032,7 +1032,7 @@ function BookingContent() {
         }
         .month-year-label {
           font-family: var(--font-serif);
-          font-size: 1.25rem;
+          font-size: var(--fs-xl);
           color: #4c1d95;
           font-weight: 700;
         }
@@ -1043,7 +1043,7 @@ function BookingContent() {
           border-radius: 8px;
         }
         .calendar-tab {
-          font-size: 0.75rem;
+          font-size: var(--fs-2xs);
           padding: 4px 12px;
           border-radius: 6px;
           color: hsl(var(--text-muted));
@@ -1061,7 +1061,7 @@ function BookingContent() {
           margin-bottom: 8px;
         }
         .calendar-day-header {
-          font-size: 0.75rem;
+          font-size: var(--fs-2xs);
           color: hsl(var(--text-muted));
           font-weight: 600;
           text-transform: uppercase;
@@ -1082,7 +1082,7 @@ function BookingContent() {
           align-items: center;
           justify-content: center;
           border-radius: 8px;
-          font-size: 0.88rem;
+          font-size: var(--fs-sm);
           box-sizing: border-box;
           min-width: 0;
         }
@@ -1113,7 +1113,7 @@ function BookingContent() {
           padding-top: 20px;
         }
         .slots-title {
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           color: hsl(var(--text-muted));
           text-transform: uppercase;
           letter-spacing: 0.05em;
@@ -1136,7 +1136,7 @@ function BookingContent() {
           color: hsl(var(--text-cream));
           padding: 8px 0;
           border-radius: 8px;
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           cursor: pointer;
           transition: var(--transition-fast);
         }
@@ -1161,7 +1161,7 @@ function BookingContent() {
         }
         .inline-error-msg {
           color: #ef4444;
-          font-size: 0.75rem;
+          font-size: var(--fs-2xs);
           margin-top: 4px;
           font-weight: 600;
           text-align: left;
@@ -1182,7 +1182,7 @@ function BookingContent() {
         }
         .summary-title {
           font-family: var(--font-serif);
-          font-size: 0.95rem;
+          font-size: var(--fs-md);
           color: #4c1d95;
           text-transform: uppercase;
           letter-spacing: 0.05em;
@@ -1199,7 +1199,7 @@ function BookingContent() {
           justify-content: space-between;
           align-items: flex-start;
           gap: 12px;
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
         }
         .summary-row strong {
           text-align: right;
@@ -1217,11 +1217,11 @@ function BookingContent() {
         .summary-price {
           font-family: var(--font-serif);
           color: #db2777;
-          font-size: 1.1rem;
+          font-size: var(--fs-lg);
         }
         .error-message {
           color: #ef4444;
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
         }
         .bio-modal-overlay {
           position: fixed;
@@ -1254,7 +1254,7 @@ function BookingContent() {
           background: transparent;
           border: none;
           color: hsl(var(--text-muted));
-          font-size: 1.8rem;
+          font-size: var(--fs-3xl);
           cursor: pointer;
         }
         .close-modal-btn:hover {
@@ -1262,14 +1262,14 @@ function BookingContent() {
         }
         .modal-title {
           color: #4c1d95;
-          font-size: 1.5rem;
+          font-size: var(--fs-2xl);
         }
         .modal-spec {
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
           color: hsl(var(--text-muted));
         }
         .modal-prac-name {
-          font-size: 1.2rem;
+          font-size: var(--fs-xl);
           color: hsl(var(--text-cream));
         }
         .modal-stars-row {
@@ -1280,14 +1280,14 @@ function BookingContent() {
         }
         .modal-stars {
           color: #d97706;
-          font-size: 0.95rem;
+          font-size: var(--fs-md);
         }
         .modal-rating-score {
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           color: hsl(var(--text-muted));
         }
         .modal-desc-bio {
-          font-size: 0.88rem;
+          font-size: var(--fs-sm);
           line-height: 1.7;
         }
         .client-details-header-row {
@@ -1304,7 +1304,7 @@ function BookingContent() {
           background: rgba(16, 185, 129, 0.1);
           border: 1px solid rgba(16, 185, 129, 0.3);
           color: #059669;
-          font-size: 0.75rem;
+          font-size: var(--fs-2xs);
           font-weight: 700;
           padding: 4px 10px;
           border-radius: 99px;
@@ -1318,7 +1318,7 @@ function BookingContent() {
           border-radius: 50%;
           background: #10b981;
           color: #ffffff;
-          font-size: 0.65rem;
+          font-size: var(--fs-2xs);
           font-weight: bold;
         }
         .sync-account-banner {
@@ -1333,7 +1333,7 @@ function BookingContent() {
           gap: 10px;
         }
         .sync-banner-text {
-          font-size: 0.82rem;
+          font-size: var(--fs-xs);
           color: #4c1d95;
           font-weight: 500;
           line-height: 1.4;
@@ -1343,7 +1343,7 @@ function BookingContent() {
           border: 1px solid rgba(124, 58, 237, 0.25);
           color: #7c3aed;
           font-weight: 600;
-          font-size: 0.75rem;
+          font-size: var(--fs-2xs);
           padding: 4px 10px;
           border-radius: 8px;
           cursor: pointer;
@@ -1378,7 +1378,7 @@ function BookingContent() {
             gap: 20px;
           }
           .booking-header-title {
-            font-size: 1.45rem;
+            font-size: var(--fs-2xl);
           }
           .service-hero-image {
             height: 210px;
@@ -1408,7 +1408,7 @@ function BookingContent() {
             align-self: flex-end;
           }
           .glass-input, .text-area-input, select.glass-input {
-            font-size: 16px !important; /* Prevents auto-zoom on mobile iOS */
+            font-size: var(--fs-base); /* Prevents auto-zoom on mobile iOS */
           }
         }
         @media (max-width: 480px) {
@@ -1432,25 +1432,25 @@ function BookingContent() {
             gap: 8px;
           }
           .month-year-label {
-            font-size: 1.1rem;
+            font-size: var(--fs-lg);
           }
           .calendar-dates-grid {
             gap: 3px;
           }
           .calendar-date-cell {
             height: 34px !important;
-            font-size: 0.8rem !important;
+            font-size: var(--fs-xs);
             border-radius: 6px;
           }
           .calendar-day-header {
-            font-size: 0.65rem !important;
+            font-size: var(--fs-2xs);
           }
           .slots-grid {
             grid-template-columns: repeat(3, 1fr) !important;
             gap: 6px !important;
           }
           .slot-btn {
-            font-size: 0.75rem !important;
+            font-size: var(--fs-2xs);
             padding: 7px 0 !important;
           }
           .bio-modal-card {
@@ -1459,7 +1459,7 @@ function BookingContent() {
             border-radius: 18px;
           }
           .bio-modal-header .modal-title {
-            font-size: 1.3rem;
+            font-size: var(--fs-xl);
           }
         }
         @media (max-width: 360px) {
@@ -1468,7 +1468,7 @@ function BookingContent() {
           }
           .calendar-date-cell {
             height: 30px !important;
-            font-size: 0.75rem !important;
+            font-size: var(--fs-2xs);
           }
         }
       `}</style>

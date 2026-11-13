@@ -220,7 +220,7 @@ export const PortalNav: React.FC = () => {
         }
         .trigger-label {
           font-family: var(--font-serif);
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           font-weight: 700;
           letter-spacing: 0.06em;
           text-transform: uppercase;
@@ -288,13 +288,13 @@ export const PortalNav: React.FC = () => {
         }
         .panel-title {
           font-family: var(--font-serif);
-          font-size: 1rem;
+          font-size: var(--fs-base);
           font-weight: 700;
           color: #4c1d95;
           margin: 0;
         }
         .panel-subtitle {
-          font-size: 0.68rem;
+          font-size: var(--fs-2xs);
           color: hsl(var(--text-muted));
           line-height: 1.3;
           margin: 0;
@@ -380,7 +380,7 @@ export const PortalNav: React.FC = () => {
         }
         .panel-link-name {
           font-family: var(--font-serif);
-          font-size: 0.82rem;
+          font-size: var(--fs-xs);
           font-weight: 600;
           color: #4c1d95;
           flex: 1;
@@ -408,7 +408,7 @@ export const PortalNav: React.FC = () => {
         }
         .panel-brand {
           font-family: var(--font-serif);
-          font-size: 0.62rem;
+          font-size: var(--fs-2xs);
           font-weight: 700;
           letter-spacing: 0.1em;
           text-transform: uppercase;

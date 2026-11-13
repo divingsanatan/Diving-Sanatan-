@@ -491,7 +491,7 @@ export default function VideoBlogDetailPage() {
           display: flex;
           align-items: center;
           gap: 8px;
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
           color: #64748b;
           font-family: var(--font-family);
         }
@@ -535,7 +535,7 @@ export default function VideoBlogDetailPage() {
         .category-badge {
           background: #7c3aed;
           color: #ffffff;
-          font-size: 0.75rem;
+          font-size: var(--fs-2xs);
           font-weight: 700;
           padding: 4px 12px;
           border-radius: 20px;
@@ -544,14 +544,14 @@ export default function VideoBlogDetailPage() {
         .duration-badge {
           background: #f3e8ff;
           color: #6b21a8;
-          font-size: 0.78rem;
+          font-size: var(--fs-2xs);
           font-weight: 700;
           padding: 4px 12px;
           border-radius: 20px;
         }
         .video-detail-title {
           font-family: var(--font-serif);
-          font-size: 2.2rem;
+          font-size: var(--fs-4xl);
           color: #2e1065;
           margin: 0;
           font-weight: 800;
@@ -561,7 +561,7 @@ export default function VideoBlogDetailPage() {
           display: flex;
           align-items: center;
           gap: 12px;
-          font-size: 0.88rem;
+          font-size: var(--fs-sm);
           color: #64748b;
         }
         .author-box {
@@ -575,7 +575,7 @@ export default function VideoBlogDetailPage() {
           border-radius: 50%;
           background: #7c3aed;
           color: #ffffff;
-          font-size: 0.82rem;
+          font-size: var(--fs-xs);
           font-weight: 700;
           display: flex;
           align-items: center;
@@ -625,7 +625,7 @@ export default function VideoBlogDetailPage() {
           border: none;
         }
         .timestamp-note {
-          font-size: 0.82rem;
+          font-size: var(--fs-xs);
           color: #6b21a8;
           background: #f5f3ff;
           padding: 8px 14px;
@@ -653,13 +653,13 @@ export default function VideoBlogDetailPage() {
           border-bottom: 1px solid rgba(0, 0, 0, 0.08);
         }
         .transcript-heading {
-          font-size: 1.1rem;
+          font-size: var(--fs-lg);
           color: #4c1d95;
           margin: 0;
           font-weight: 700;
         }
         .lines-count {
-          font-size: 0.78rem;
+          font-size: var(--fs-2xs);
           color: #7c3aed;
           font-weight: 600;
         }
@@ -701,11 +701,11 @@ export default function VideoBlogDetailPage() {
           font-family: monospace;
           color: #7c3aed;
           font-weight: 700;
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
           flex-shrink: 0;
         }
         .line-text {
-          font-size: 0.88rem;
+          font-size: var(--fs-sm);
           color: #334155;
           line-height: 1.45;
         }
@@ -722,14 +722,14 @@ export default function VideoBlogDetailPage() {
         }
         .section-title {
           font-family: var(--font-serif);
-          font-size: 1.35rem;
+          font-size: var(--fs-xl);
           color: #3b0764;
           margin: 0;
           font-weight: 750;
         }
         .video-content-body {
           font-family: var(--font-family);
-          font-size: 1rem;
+          font-size: var(--fs-base);
           color: #334155;
           line-height: 1.75;
         }
@@ -750,7 +750,7 @@ export default function VideoBlogDetailPage() {
           gap: 8px;
           padding: 8px 18px;
           border-radius: 30px;
-          font-size: 0.88rem;
+          font-size: var(--fs-sm);
           font-weight: 700;
           cursor: pointer;
           border: 1px solid rgba(168, 85, 247, 0.2);
@@ -789,7 +789,7 @@ export default function VideoBlogDetailPage() {
           border-radius: 14px;
           border: 1px solid rgba(168, 85, 247, 0.2);
           font-family: inherit;
-          font-size: 0.92rem;
+          font-size: var(--fs-md);
           outline: none;
           resize: vertical;
         }
@@ -803,7 +803,7 @@ export default function VideoBlogDetailPage() {
           align-items: center;
         }
         .login-hint {
-          font-size: 0.82rem;
+          font-size: var(--fs-xs);
           color: #64748b;
         }
         .comments-list {
@@ -824,7 +824,7 @@ export default function VideoBlogDetailPage() {
           border-radius: 50%;
           background: #6b21a8;
           color: #ffffff;
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
           font-weight: 700;
           display: flex;
           align-items: center;
@@ -839,7 +839,7 @@ export default function VideoBlogDetailPage() {
         .comment-meta {
           display: flex;
           gap: 8px;
-          font-size: 0.82rem;
+          font-size: var(--fs-xs);
         }
         .comment-author {
           font-weight: 700;
@@ -849,12 +849,12 @@ export default function VideoBlogDetailPage() {
           color: #94a3b8;
         }
         .comment-text {
-          font-size: 0.9rem;
+          font-size: var(--fs-sm);
           color: #334155;
           margin: 0;
         }
         .no-comments-msg {
-          font-size: 0.88rem;
+          font-size: var(--fs-sm);
           color: #64748b;
           font-style: italic;
           margin: 0;
@@ -902,7 +902,7 @@ export default function VideoBlogDetailPage() {
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 0.9rem;
+          font-size: var(--fs-sm);
         }
         .related-body {
           padding: 12px;
@@ -911,7 +911,7 @@ export default function VideoBlogDetailPage() {
           gap: 4px;
         }
         .related-cat {
-          font-size: 0.72rem;
+          font-size: var(--fs-2xs);
           color: #7c3aed;
           font-weight: 700;
           text-transform: uppercase;
@@ -920,7 +920,7 @@ export default function VideoBlogDetailPage() {
           text-decoration: none;
         }
         .related-title {
-          font-size: 0.92rem;
+          font-size: var(--fs-md);
           color: #1e1b4b;
           margin: 0;
           font-weight: 700;

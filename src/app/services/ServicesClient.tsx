@@ -866,14 +866,14 @@ export default function ServicesPage() {
         /* Sidebar Headings */
         .sidebar-heading {
           font-family: var(--font-sans);
-          font-size: 1.15rem;
+          font-size: var(--fs-lg);
           color: #111827;
           font-weight: 700 !important;
           margin-bottom: 16px;
         }
         .sidebar-heading-small {
           font-family: var(--font-sans);
-          font-size: 1.15rem;
+          font-size: var(--fs-lg);
           color: #111827;
           font-weight: 700 !important;
         }
@@ -925,7 +925,7 @@ export default function ServicesPage() {
           outline: none;
           padding: 10px 0;
           font-family: var(--font-sans);
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
           color: #111827;
         }
 
@@ -1031,7 +1031,7 @@ export default function ServicesPage() {
         }
 
         .item-name {
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
           font-weight: 500;
           color: #4b5563;
           font-family: var(--font-sans);
@@ -1076,13 +1076,13 @@ export default function ServicesPage() {
         }
         .reason-text h5 {
           font-family: var(--font-sans) !important;
-          font-size: 0.82rem !important;
+          font-size: var(--fs-xs);
           font-weight: 700 !important;
           color: #1e1b4b;
           margin-bottom: 2px;
         }
         .reason-text p {
-          font-size: 0.7rem;
+          font-size: var(--fs-2xs);
           line-height: 1.35;
           color: #6b7280;
         }
@@ -1119,7 +1119,7 @@ export default function ServicesPage() {
         }
         .banner-lbl {
           font-family: var(--font-sans);
-          font-size: 0.72rem;
+          font-size: var(--fs-2xs);
           font-weight: 700;
           letter-spacing: 0.1em;
           color: #7c3aed;
@@ -1127,13 +1127,13 @@ export default function ServicesPage() {
         }
         .banner-title {
           font-family: var(--font-serif);
-          font-size: 2.2rem;
+          font-size: var(--fs-4xl);
           color: #111827;
           font-weight: 600 !important;
           line-height: 1.15;
         }
         .banner-desc {
-          font-size: 0.84rem;
+          font-size: var(--fs-xs);
           line-height: 1.5;
           color: #6b7280;
         }
@@ -1148,7 +1148,7 @@ export default function ServicesPage() {
           color: #ffffff;
           border: none;
           font-family: var(--font-serif);
-          font-size: 0.9rem;
+          font-size: var(--fs-sm);
           font-weight: 700;
           padding: 10px 20px;
           border-radius: 20px;
@@ -1211,13 +1211,13 @@ export default function ServicesPage() {
         }
         .section-title {
           font-family: var(--font-serif);
-          font-size: 1.4rem;
+          font-size: var(--fs-2xl);
           color: #111827;
           font-weight: 600 !important;
         }
         .view-all-header-btn {
           margin-left: auto;
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           font-weight: 700;
           color: #7c3aed;
           background: rgba(124, 58, 237, 0.08);
@@ -1340,7 +1340,7 @@ export default function ServicesPage() {
         }
         .featured-card-title {
           font-family: var(--font-serif);
-          font-size: 1.05rem;
+          font-size: var(--fs-base);
           color: #1e1b4b;
           font-weight: 700 !important;
           line-height: 1.25;
@@ -1351,7 +1351,7 @@ export default function ServicesPage() {
           min-height: calc(1.25em * 2);
         }
         .featured-card-desc {
-          font-size: 0.78rem;
+          font-size: var(--fs-2xs);
           line-height: 1.45;
           color: #6b7280;
           display: -webkit-box;
@@ -1366,7 +1366,7 @@ export default function ServicesPage() {
           border: 1px solid rgba(168, 85, 247, 0.2);
           border-radius: 99px;
           color: #7c3aed;
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           font-weight: 700;
           cursor: pointer;
           display: flex;
@@ -1440,7 +1440,7 @@ export default function ServicesPage() {
           top: 20px;
           right: 20px;
           z-index: 10;
-          font-size: 0.62rem;
+          font-size: var(--fs-2xs);
           font-weight: 800;
           text-transform: uppercase;
           padding: 3px 8px;
@@ -1475,7 +1475,7 @@ export default function ServicesPage() {
         }
         .program-title {
           font-family: var(--font-serif);
-          font-size: 1.05rem;
+          font-size: var(--fs-base);
           color: #4c1d95;
           font-weight: 700 !important;
           line-height: 1.25;
@@ -1486,7 +1486,7 @@ export default function ServicesPage() {
           min-height: calc(1.25em * 2);
         }
         .program-desc {
-          font-size: 0.72rem;
+          font-size: var(--fs-2xs);
           line-height: 1.4;
           color: #6b7280;
           flex: 1;
@@ -1500,7 +1500,7 @@ export default function ServicesPage() {
           display: flex;
           align-items: center;
           gap: 6px;
-          font-size: 0.7rem;
+          font-size: var(--fs-2xs);
           color: #6b7280;
           font-weight: 600;
         }
@@ -1508,7 +1508,7 @@ export default function ServicesPage() {
           display: inline-flex;
           align-items: center;
           gap: 4px;
-          font-size: 0.72rem;
+          font-size: var(--fs-2xs);
           color: #6b7280;
         }
         .details-icon {
@@ -1521,7 +1521,7 @@ export default function ServicesPage() {
           border: 1px solid rgba(168, 85, 247, 0.2);
           border-radius: 99px;
           color: #7c3aed;
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           font-weight: 700;
           cursor: pointer;
           display: flex;
@@ -1576,12 +1576,12 @@ export default function ServicesPage() {
         }
         .flow-step h5 {
           font-family: var(--font-sans) !important;
-          font-size: 0.8rem !important;
+          font-size: var(--fs-xs);
           font-weight: 700 !important;
           color: #1e1b4b;
         }
         .flow-step p {
-          font-size: 0.7rem;
+          font-size: var(--fs-2xs);
           line-height: 1.35;
           color: #6b7280;
         }
@@ -1645,7 +1645,7 @@ export default function ServicesPage() {
         }
         .benefit-item h5 {
           font-family: var(--font-sans) !important;
-          font-size: 0.74rem !important;
+          font-size: var(--fs-2xs);
           font-weight: 700 !important;
           color: #1e1b4b;
           line-height: 1.2;
@@ -1658,7 +1658,7 @@ export default function ServicesPage() {
           border-radius: 20px;
           color: #7c3aed;
           font-family: var(--font-sans);
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           font-weight: 600;
           cursor: pointer;
           transition: var(--transition-fast);
@@ -1681,7 +1681,7 @@ export default function ServicesPage() {
         }
         .quote-mark {
           font-family: var(--font-serif);
-          font-size: 4.5rem;
+          font-size: var(--fs-display);
           color: rgba(168, 85, 247, 0.18);
           position: absolute;
           top: -24px;
@@ -1689,7 +1689,7 @@ export default function ServicesPage() {
           line-height: 1;
         }
         .testimonial-comment {
-          font-size: 0.78rem;
+          font-size: var(--fs-2xs);
           line-height: 1.45;
           color: #4b5563;
           font-style: italic;
@@ -1715,12 +1715,12 @@ export default function ServicesPage() {
         }
         .author-details h5 {
           font-family: var(--font-sans) !important;
-          font-size: 0.78rem !important;
+          font-size: var(--fs-2xs);
           font-weight: 700 !important;
           color: #1e1b4b;
         }
         .author-details span {
-          font-size: 0.68rem;
+          font-size: var(--fs-2xs);
           color: #9ca3af;
         }
         .testimonial-dots {
@@ -1766,13 +1766,13 @@ export default function ServicesPage() {
         }
         .callout-content h4 {
           font-family: var(--font-serif);
-          font-size: 1.15rem;
+          font-size: var(--fs-lg);
           color: #3b0764;
           font-weight: 600 !important;
           line-height: 1.3;
         }
         .callout-content p {
-          font-size: 0.76rem;
+          font-size: var(--fs-2xs);
           line-height: 1.35;
           color: #4b5563;
         }
@@ -1784,7 +1784,7 @@ export default function ServicesPage() {
           border: none;
           border-radius: 20px;
           font-family: var(--font-serif);
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
           font-weight: 700;
           cursor: pointer;
           transition: var(--transition-fast);
@@ -1794,14 +1794,14 @@ export default function ServicesPage() {
           background: #4c1d95;
         }
         .or-divider {
-          font-size: 0.7rem;
+          font-size: var(--fs-2xs);
           color: #6b7280;
         }
         .callout-chat-row {
           display: flex;
           align-items: center;
           gap: 6px;
-          font-size: 0.76rem;
+          font-size: var(--fs-2xs);
           font-weight: 700;
           color: #4b5563;
         }
@@ -1859,7 +1859,7 @@ export default function ServicesPage() {
         }
         .cart-drawer-title {
           font-family: var(--font-serif);
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
           color: #4c1d95;
           letter-spacing: 0.08em;
         }
@@ -1873,7 +1873,7 @@ export default function ServicesPage() {
           background: rgba(168, 85, 247, 0.05);
           border: 1px solid rgba(168, 85, 247, 0.25);
           color: #6d28d9;
-          font-size: 0.75rem;
+          font-size: var(--fs-2xs);
           font-weight: 600;
           padding: 6px 12px;
           border-radius: 99px;
@@ -1886,7 +1886,7 @@ export default function ServicesPage() {
           background: transparent;
           border: none;
           color: rgba(0,0,0,0.4);
-          font-size: 1rem;
+          font-size: var(--fs-base);
           cursor: pointer;
           line-height: 1;
         }
@@ -1904,13 +1904,13 @@ export default function ServicesPage() {
           align-items: flex-end;
         }
         .cart-summary-label {
-          font-size: 0.75rem;
+          font-size: var(--fs-2xs);
           color: #6b7280;
           text-transform: uppercase;
         }
         .cart-summary-val {
           font-family: var(--font-serif);
-          font-size: 1.5rem;
+          font-size: var(--fs-2xl);
           font-weight: 700;
           color: #db2777;
         }
@@ -1924,7 +1924,7 @@ export default function ServicesPage() {
           color: #6b7280;
           padding: 12px 18px;
           border-radius: 10px;
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           cursor: pointer;
           font-weight: 600;
           transition: var(--transition-fast);
@@ -1939,7 +1939,7 @@ export default function ServicesPage() {
           border: 1px solid var(--btn-gold-border);
           font-family: var(--font-serif);
           font-weight: 700;
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           text-transform: uppercase;
           letter-spacing: 0.05em;
           padding: 12px 24px;
@@ -2021,7 +2021,7 @@ export default function ServicesPage() {
             border-radius: 12px;
             cursor: pointer;
             font-family: var(--font-sans);
-            font-size: 0.92rem;
+            font-size: var(--fs-md);
             font-weight: 700;
             color: #6b21a8;
             transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);

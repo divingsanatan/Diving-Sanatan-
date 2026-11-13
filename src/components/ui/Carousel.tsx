@@ -143,13 +143,13 @@ export const Carousel: React.FC<CarouselProps> = ({ children, title, viewAllHref
         }
         .carousel-title {
           font-family: var(--font-serif);
-          font-size: 1.6rem;
+          font-size: var(--fs-2xl);
           color: #4c1d95;
           font-weight: 700;
           margin: 0;
         }
         :global(.carousel-view-all-link) {
-          font-size: 0.82rem;
+          font-size: var(--fs-xs);
           font-weight: 700;
           color: #7c3aed;
           text-decoration: none;
@@ -224,7 +224,7 @@ export const Carousel: React.FC<CarouselProps> = ({ children, title, viewAllHref
             padding: 0;
           }
           .carousel-title {
-            font-size: 1.35rem;
+            font-size: var(--fs-xl);
           }
         }
       `}</style>

@@ -208,14 +208,14 @@ export default function CaseStudiesPage() {
           padding: 8px 0 0;
         }
         .page-title {
-          font-size: 2.4rem;
+          font-size: var(--fs-4xl);
           color: #4c1d95;
           margin-bottom: 8px;
           font-weight: 700;
           letter-spacing: -0.01em;
         }
         .page-subtitle {
-          font-size: 1rem;
+          font-size: var(--fs-base);
           color: hsl(var(--text-muted));
           max-width: 650px;
           margin: 0;
@@ -238,7 +238,7 @@ export default function CaseStudiesPage() {
           border: 1px solid transparent;
           color: hsl(var(--text-muted));
           font-family: var(--font-serif);
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
           font-weight: 600;
           padding: 6px 14px;
           border-radius: 30px;
@@ -269,7 +269,7 @@ export default function CaseStudiesPage() {
           align-items: stretch;
         }
         .card-section-title {
-          font-size: 1.3rem;
+          font-size: var(--fs-xl);
           color: #4c1d95;
           margin-bottom: 20px;
           border-bottom: 1px solid rgba(0, 0, 0, 0.05);
@@ -289,14 +289,14 @@ export default function CaseStudiesPage() {
           gap: 4px;
         }
         .label {
-          font-size: 0.72rem;
+          font-size: var(--fs-2xs);
           font-weight: 600;
           color: hsl(var(--text-muted));
           text-transform: uppercase;
           letter-spacing: 0.05em;
         }
         .value {
-          font-size: 0.98rem;
+          font-size: var(--fs-base);
           color: hsl(var(--text-cream));
           font-weight: 500;
         }
@@ -319,7 +319,7 @@ export default function CaseStudiesPage() {
           gap: 12px;
         }
         .scan-label {
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 0.05em;
@@ -346,7 +346,7 @@ export default function CaseStudiesPage() {
           background: radial-gradient(circle at center, rgba(16, 185, 129, 0.05) 0%, rgba(16, 185, 129, 0) 70%);
         }
         .scan-desc {
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           color: hsl(var(--text-muted));
           text-align: center;
           line-height: 1.4;
@@ -380,7 +380,7 @@ export default function CaseStudiesPage() {
           align-items: center;
           justify-content: center;
           font-weight: 700;
-          font-size: 0.9rem;
+          font-size: var(--fs-sm);
           flex-shrink: 0;
         }
         .healer-row .chat-avatar {
@@ -412,7 +412,7 @@ export default function CaseStudiesPage() {
           text-align: right;
         }
         .speaker-label {
-          font-size: 0.7rem;
+          font-size: var(--fs-2xs);
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 0.05em;
@@ -421,7 +421,7 @@ export default function CaseStudiesPage() {
         .seeker-row .speaker-label { color: #0f766e; }
         
         .bubble-text {
-          font-size: 0.92rem;
+          font-size: var(--fs-md);
           line-height: 1.5;
           color: hsl(var(--text-cream));
           margin: 0;

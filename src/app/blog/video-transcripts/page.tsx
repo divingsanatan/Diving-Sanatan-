@@ -236,7 +236,7 @@ export default function VideoTranscriptsPage() {
       {/* Page Title & Subtitle */}
       <div className="transcripts-header">
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <span style={{ fontSize: "1.8rem" }}>🎥</span>
+          <span style={{ fontSize: "var(--fs-3xl)" }}>🎥</span>
           <h1 className="page-title">Video Blogs & Transcripts</h1>
         </div>
         <p className="page-subtitle">
@@ -404,7 +404,7 @@ export default function VideoTranscriptsPage() {
         }
         .transcripts-page .page-title {
           font-family: var(--font-serif);
-          font-size: 2.2rem;
+          font-size: var(--fs-4xl);
           color: #3b0764;
           margin: 0;
           font-weight: 800;
@@ -413,7 +413,7 @@ export default function VideoTranscriptsPage() {
         }
         .transcripts-page .page-subtitle {
           font-family: var(--font-family);
-          font-size: 1rem;
+          font-size: var(--fs-base);
           color: #64748b;
           max-width: 720px;
           margin: 8px 0 0;
@@ -508,7 +508,7 @@ export default function VideoTranscriptsPage() {
         }
         .transcripts-page .play-icon {
           color: #ffffff;
-          font-size: 1.15rem;
+          font-size: var(--fs-lg);
           margin-left: 3px;
           line-height: 1;
         }
@@ -519,7 +519,7 @@ export default function VideoTranscriptsPage() {
           background: rgba(255, 255, 255, 0.95);
           backdrop-filter: blur(4px);
           color: #6b21a8;
-          font-size: 0.72rem;
+          font-size: var(--fs-2xs);
           font-weight: 800;
           padding: 5px 12px;
           border-radius: 12px;
@@ -535,7 +535,7 @@ export default function VideoTranscriptsPage() {
           background: rgba(255, 255, 255, 0.95);
           backdrop-filter: blur(4px);
           color: #475569;
-          font-size: 0.75rem;
+          font-size: var(--fs-2xs);
           font-weight: 700;
           padding: 5px 12px;
           border-radius: 12px;
@@ -562,7 +562,7 @@ export default function VideoTranscriptsPage() {
           text-decoration: none;
         }
         .transcripts-page .card-post-title {
-          font-size: 1.35rem;
+          font-size: var(--fs-xl);
           color: #3b0764;
           margin: 0;
           font-weight: 800;
@@ -575,7 +575,7 @@ export default function VideoTranscriptsPage() {
           color: #7c3aed;
         }
         .transcripts-page .card-post-desc {
-          font-size: 0.92rem;
+          font-size: var(--fs-md);
           color: #64748b;
           margin: 0;
           line-height: 1.55;
@@ -614,23 +614,23 @@ export default function VideoTranscriptsPage() {
           border-radius: 50%;
           background: #f3e8ff;
           color: #7c3aed;
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           font-weight: 800;
           display: flex;
           align-items: center;
           justify-content: center;
         }
         .transcripts-page .author-fullname {
-          font-size: 0.88rem;
+          font-size: var(--fs-sm);
           color: #475569;
           font-weight: 600;
         }
         .transcripts-page .metadata-dot {
           color: #cbd5e1;
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
         }
         .transcripts-page .publish-date-text {
-          font-size: 0.88rem;
+          font-size: var(--fs-sm);
           color: #94a3b8;
         }
 
@@ -645,7 +645,7 @@ export default function VideoTranscriptsPage() {
           border: 1px solid rgba(124, 58, 237, 0.15);
           padding: 7px 16px;
           border-radius: 20px;
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           font-weight: 700;
           cursor: pointer;
           transition: all 0.2s ease;
@@ -655,7 +655,7 @@ export default function VideoTranscriptsPage() {
           background: #e9d5ff;
         }
         .transcripts-page .read-article-link {
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
           color: #4c1d95;
           font-weight: 700;
           text-decoration: none;
@@ -675,7 +675,7 @@ export default function VideoTranscriptsPage() {
             height: 180px;
           }
           .transcripts-page .card-post-title {
-            font-size: 1.2rem;
+            font-size: var(--fs-xl);
           }
         }
 
@@ -685,10 +685,10 @@ export default function VideoTranscriptsPage() {
             border-radius: 16px;
           }
           .transcripts-page .page-title {
-            font-size: 1.6rem;
+            font-size: var(--fs-2xl);
           }
           .transcripts-page .page-subtitle {
-            font-size: 0.88rem;
+            font-size: var(--fs-sm);
           }
           .transcripts-page .reference-style-card {
             flex-direction: column;
@@ -720,7 +720,7 @@ export default function VideoTranscriptsPage() {
             height: 185px;
           }
           .transcripts-page .card-post-title {
-            font-size: 1.15rem;
+            font-size: var(--fs-lg);
           }
           .transcripts-page .card-footer-row {
             flex-direction: column;
@@ -762,7 +762,7 @@ export default function VideoTranscriptsPage() {
           background: #f5f3ff;
           border: 1px solid rgba(124, 58, 237, 0.2);
           color: #7c3aed;
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
           font-weight: 700;
         }
         .transcripts-page .loader-lotus-spin {
@@ -775,7 +775,7 @@ export default function VideoTranscriptsPage() {
           100% { transform: rotate(360deg); }
         }
         .transcripts-page .end-of-list-badge {
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
           color: #64748b;
           padding: 8px 18px;
           background: #ffffff;
@@ -821,7 +821,7 @@ export default function VideoTranscriptsPage() {
           width: 34px;
           height: 34px;
           border-radius: 50%;
-          font-size: 1rem;
+          font-size: var(--fs-base);
           font-weight: 700;
           cursor: pointer;
           z-index: 10;
@@ -873,20 +873,20 @@ export default function VideoTranscriptsPage() {
           gap: 10px;
         }
         .modal-video-info h2 {
-          font-size: 1.4rem;
+          font-size: var(--fs-2xl);
           color: #2e1065;
           margin: 0;
           font-weight: 800;
         }
         .modal-meta-row {
-          font-size: 0.82rem;
+          font-size: var(--fs-xs);
           color: #7c3aed;
           display: flex;
           gap: 8px;
           font-weight: 600;
         }
         .modal-video-desc {
-          font-size: 0.9rem;
+          font-size: var(--fs-sm);
           color: #475569;
           line-height: 1.5;
           margin: 0;
@@ -900,7 +900,7 @@ export default function VideoTranscriptsPage() {
           color: #ffffff;
           padding: 8px 18px;
           border-radius: 20px;
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
           font-weight: 700;
           text-decoration: none;
           transition: background 0.2s ease;
@@ -921,7 +921,7 @@ export default function VideoTranscriptsPage() {
           border: 1px solid rgba(168, 85, 247, 0.15);
         }
         .modal-transcript-title {
-          font-size: 1.15rem;
+          font-size: var(--fs-lg);
           color: #4c1d95;
           margin: 0;
           border-bottom: 1px solid rgba(124, 58, 237, 0.15);
@@ -966,11 +966,11 @@ export default function VideoTranscriptsPage() {
           font-family: monospace;
           color: #7c3aed;
           font-weight: 700;
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
           flex-shrink: 0;
         }
         .line-text {
-          font-size: 0.88rem;
+          font-size: var(--fs-sm);
           color: #334155;
           margin: 0;
           line-height: 1.45;

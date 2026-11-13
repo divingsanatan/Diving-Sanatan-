@@ -572,7 +572,7 @@ export default function CheckoutPage() {
           text-align: center;
         }
         .checkout-header-title {
-          font-size: 2rem;
+          font-size: var(--fs-3xl);
           color: #4c1d95;
           margin-bottom: 6px;
         }
@@ -603,24 +603,24 @@ export default function CheckoutPage() {
           gap: 12px;
         }
         .slip-icon {
-          font-size: 1.8rem;
+          font-size: var(--fs-3xl);
         }
         .slip-title {
           font-family: var(--font-serif);
-          font-size: 1.35rem;
+          font-size: var(--fs-xl);
           color: #4c1d95;
           margin: 0;
           font-weight: 700;
         }
         .slip-subtitle {
-          font-size: 0.82rem;
+          font-size: var(--fs-xs);
           color: #64748b;
           margin: 0;
         }
         .slip-badge {
           background: rgba(168, 85, 247, 0.1);
           color: #7c3aed;
-          font-size: 0.68rem;
+          font-size: var(--fs-2xs);
           font-weight: 800;
           padding: 4px 10px;
           border-radius: 20px;
@@ -656,25 +656,25 @@ export default function CheckoutPage() {
           gap: 3px;
         }
         .slip-item-category {
-          font-size: 0.68rem;
+          font-size: var(--fs-2xs);
           color: #6d28d9;
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 0.04em;
         }
         .slip-item-name {
-          font-size: 1.05rem;
+          font-size: var(--fs-base);
           font-weight: 700;
           color: #4c1d95;
           margin: 0;
         }
         .slip-item-sub {
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           color: #64748b;
           margin: 0;
         }
         .slip-item-duration {
-          font-size: 0.75rem;
+          font-size: var(--fs-2xs);
           color: #9333ea;
         }
         .slip-item-price-col {
@@ -683,13 +683,13 @@ export default function CheckoutPage() {
           align-items: flex-end;
         }
         .slip-price-label {
-          font-size: 0.7rem;
+          font-size: var(--fs-2xs);
           color: #64748b;
           text-transform: uppercase;
         }
         .slip-price-val {
           font-family: var(--font-serif);
-          font-size: 1.25rem;
+          font-size: var(--fs-xl);
           font-weight: 700;
           color: #db2777;
         }
@@ -699,7 +699,7 @@ export default function CheckoutPage() {
           gap: 8px;
         }
         .slip-field-label {
-          font-size: 0.82rem;
+          font-size: var(--fs-xs);
           font-weight: 700;
           color: #4c1d95;
           text-transform: uppercase;
@@ -710,7 +710,7 @@ export default function CheckoutPage() {
           border-radius: 12px;
           border: 1px solid rgba(124, 58, 237, 0.2);
           background: rgba(255, 255, 255, 0.95);
-          font-size: 0.95rem;
+          font-size: var(--fs-md);
           color: #1e1b4b;
           width: 100%;
         }
@@ -726,7 +726,7 @@ export default function CheckoutPage() {
         .slip-summary-line {
           display: flex;
           justify-content: space-between;
-          font-size: 0.88rem;
+          font-size: var(--fs-sm);
           color: #64748b;
         }
         .free-tag {
@@ -737,13 +737,13 @@ export default function CheckoutPage() {
           border-top: 1px dashed rgba(0, 0, 0, 0.1);
           padding-top: 12px;
           margin-top: 4px;
-          font-size: 1.1rem;
+          font-size: var(--fs-lg);
           font-weight: 800;
           color: #4c1d95;
         }
         .total-amount-highlight {
           font-family: var(--font-serif);
-          font-size: 1.45rem;
+          font-size: var(--fs-2xl);
           color: #db2777;
           font-weight: 800;
         }
@@ -765,7 +765,7 @@ export default function CheckoutPage() {
           flex-wrap: wrap;
         }
         .express-desc {
-          font-size: 0.88rem;
+          font-size: var(--fs-sm);
           color: #334155;
           line-height: 1.5;
           margin: 0;
@@ -773,7 +773,7 @@ export default function CheckoutPage() {
         .rzp-pill {
           background: rgba(124, 58, 237, 0.1);
           color: #6d28d9;
-          font-size: 0.72rem;
+          font-size: var(--fs-2xs);
           font-weight: 700;
           padding: 4px 10px;
           border-radius: 20px;
@@ -789,7 +789,7 @@ export default function CheckoutPage() {
           width: 100%;
           background: linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #db2777 100%);
           color: #ffffff;
-          font-size: 1.15rem;
+          font-size: var(--fs-lg);
           font-weight: 800;
           padding: 16px 24px;
           border-radius: 14px;
@@ -813,7 +813,7 @@ export default function CheckoutPage() {
         }
         .instant-pay-hint {
           text-align: center;
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           color: #64748b;
           margin-top: 12px;
           margin-bottom: 0;
@@ -835,7 +835,7 @@ export default function CheckoutPage() {
           color: hsl(var(--text-muted));
           padding: 10px 0;
           cursor: pointer;
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
           font-weight: 600;
           border-radius: 8px;
           transition: var(--transition-fast);
@@ -864,14 +864,14 @@ export default function CheckoutPage() {
         }
         .inline-error-msg {
           color: #ef4444;
-          font-size: 0.75rem;
+          font-size: var(--fs-2xs);
           margin-top: 4px;
           font-weight: 600;
           text-align: left;
           display: block;
         }
         .form-group label {
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           color: hsl(var(--text-muted));
           text-transform: uppercase;
           letter-spacing: 0.05em;
@@ -887,7 +887,7 @@ export default function CheckoutPage() {
           background: rgba(0,0,0,0.01);
           border: 1px dashed rgba(0,0,0,0.1);
           border-radius: 12px;
-          font-size: 0.9rem;
+          font-size: var(--fs-sm);
           color: hsl(var(--text-muted));
         }
         .selected-service-checkout-banner {
@@ -928,7 +928,7 @@ export default function CheckoutPage() {
         .banner-service-tag {
           background: rgba(124, 58, 237, 0.12);
           color: #6d28d9;
-          font-size: 0.7rem;
+          font-size: var(--fs-2xs);
           font-weight: 700;
           padding: 2px 8px;
           border-radius: 6px;
@@ -936,23 +936,23 @@ export default function CheckoutPage() {
           letter-spacing: 0.03em;
         }
         .banner-duration-tag {
-          font-size: 0.75rem;
+          font-size: var(--fs-2xs);
           color: hsl(var(--text-muted));
         }
         .banner-service-title {
-          font-size: 1.1rem;
+          font-size: var(--fs-lg);
           font-weight: 700;
           color: #4c1d95;
           margin: 0;
         }
         .banner-practitioner-text {
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           color: hsl(var(--text-muted));
           margin: 0;
         }
         .banner-service-price {
           font-family: var(--font-serif);
-          font-size: 1.4rem;
+          font-size: var(--fs-2xl);
           font-weight: 700;
           color: #db2777;
         }
@@ -983,28 +983,28 @@ export default function CheckoutPage() {
           gap: 2px;
         }
         .summary-item-name {
-          font-size: 0.92rem;
+          font-size: var(--fs-md);
           color: #4c1d95;
           font-weight: 700;
         }
         .summary-item-prac {
-          font-size: 0.78rem;
+          font-size: var(--fs-2xs);
           color: hsl(var(--text-muted));
         }
         .summary-item-duration {
-          font-size: 0.75rem;
+          font-size: var(--fs-2xs);
           color: #6d28d9;
         }
         .summary-item-price {
           font-family: var(--font-serif);
           color: #db2777;
           font-weight: 700;
-          font-size: 1.05rem;
+          font-size: var(--fs-base);
         }
         .summary-total-row {
           display: flex;
           justify-content: space-between;
-          font-size: 1.15rem;
+          font-size: var(--fs-lg);
           font-weight: 700;
           margin-top: 8px;
           border-top: 1px solid rgba(0,0,0,0.08);
@@ -1013,7 +1013,7 @@ export default function CheckoutPage() {
         .summary-total-val {
           font-family: var(--font-serif);
           color: #db2777;
-          font-size: 1.4rem;
+          font-size: var(--fs-2xl);
         }
         .history-sidebar-card {
           padding: 24px;
@@ -1044,12 +1044,12 @@ export default function CheckoutPage() {
           align-items: center;
         }
         .history-service-name {
-          font-size: 0.88rem;
+          font-size: var(--fs-sm);
           font-weight: 600;
           color: #4c1d95;
         }
         .history-status-badge {
-          font-size: 0.65rem;
+          font-size: var(--fs-2xs);
           font-weight: 700;
           padding: 2px 8px;
           border-radius: 4px;
@@ -1068,7 +1068,7 @@ export default function CheckoutPage() {
           display: flex;
           flex-direction: column;
           gap: 4px;
-          font-size: 0.75rem;
+          font-size: var(--fs-2xs);
           color: hsl(var(--text-muted));
         }
         .checkout-success-view {
@@ -1082,14 +1082,14 @@ export default function CheckoutPage() {
           margin: 0 auto;
         }
         .success-icon {
-          font-size: 3rem;
+          font-size: var(--fs-5xl);
         }
         .checkout-success-view h3 {
-          font-size: 2rem;
+          font-size: var(--fs-3xl);
           color: #4c1d95;
         }
         .success-instruction {
-          font-size: 0.9rem;
+          font-size: var(--fs-sm);
           color: hsl(var(--text-muted));
         }
         @media (max-width: 768px) {

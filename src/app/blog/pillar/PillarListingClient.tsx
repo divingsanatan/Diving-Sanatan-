@@ -411,14 +411,14 @@ export default function PillarListingClient() {
         }
         .banner-title {
           font-family: var(--font-sans);
-          font-size: 1.6rem;
+          font-size: var(--fs-2xl);
           color: #111827;
           font-weight: 800;
           margin: 0;
           line-height: 1.2;
         }
         .banner-desc {
-          font-size: 0.84rem;
+          font-size: var(--fs-xs);
           color: #6b7280;
           line-height: 1.6;
           margin: 0;
@@ -457,13 +457,13 @@ export default function PillarListingClient() {
         }
         .empty-title {
           font-family: var(--font-sans);
-          font-size: 1.05rem;
+          font-size: var(--fs-base);
           font-weight: 700;
           color: #1f2937;
           margin: 0;
         }
         .empty-desc {
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           margin: 0;
           max-width: 340px;
           line-height: 1.5;
@@ -519,7 +519,7 @@ export default function PillarListingClient() {
           align-items: center;
           justify-content: center;
           font-family: var(--font-sans);
-          font-size: 0.95rem;
+          font-size: var(--fs-md);
           font-weight: 850;
           flex-shrink: 0;
           border: 1px solid rgba(168, 85, 247, 0.08);
@@ -550,7 +550,7 @@ export default function PillarListingClient() {
         }
         .pillar-card-title {
           font-family: var(--font-sans);
-          font-size: 1.15rem;
+          font-size: var(--fs-lg);
           color: #111827;
           font-weight: 750 !important;
           margin: 0;
@@ -561,7 +561,7 @@ export default function PillarListingClient() {
           color: #7c3aed;
         }
         .pillar-card-teaser {
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           color: #6b7280;
           line-height: 1.45;
           margin: 0;
@@ -580,7 +580,7 @@ export default function PillarListingClient() {
         .articles-count-badge {
           background: #faf5ff;
           color: #7c3aed;
-          font-size: 0.72rem;
+          font-size: var(--fs-2xs);
           font-weight: 700;
           padding: 5px 12px;
           border-radius: 8px;
@@ -641,7 +641,7 @@ export default function PillarListingClient() {
           gap: 6px;
         }
         .no-sub-articles-text {
-          font-size: 0.78rem;
+          font-size: var(--fs-2xs);
           color: #9ca3af;
           font-style: italic;
           margin: 10px 0;
@@ -685,7 +685,7 @@ export default function PillarListingClient() {
           transform: scale(1.3);
         }
         .sub-article-title {
-          font-size: 0.86rem;
+          font-size: var(--fs-sm);
           font-weight: 500;
           color: #4b5563;
           line-height: 1.4;
@@ -714,7 +714,7 @@ export default function PillarListingClient() {
           border: 1px solid rgba(0, 0, 0, 0.02);
           padding: 4px 10px;
           border-radius: 20px;
-          font-size: 0.72rem;
+          font-size: var(--fs-2xs);
           color: #6b7280;
         }
         :global(.sub-article-item-row:hover) .read-time-pill {
@@ -765,7 +765,7 @@ export default function PillarListingClient() {
           border: 1px solid rgba(168, 85, 247, 0.2);
           color: #7c3aed;
           font-family: var(--font-sans);
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
           font-weight: 700;
           cursor: pointer;
           transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
@@ -799,7 +799,7 @@ export default function PillarListingClient() {
           align-items: center;
           gap: 8px;
           font-family: var(--font-sans);
-          font-size: 0.82rem;
+          font-size: var(--fs-xs);
           font-weight: 600;
           color: #6b7280;
           padding: 10px 20px;
@@ -838,20 +838,20 @@ export default function PillarListingClient() {
           .index-circle-badge {
             width: 28px;
             height: 28px;
-            font-size: 0.85rem;
+            font-size: var(--fs-sm);
           }
           .pillar-icon-wrapper {
             display: none;
           }
           .pillar-card-title {
-            font-size: 1.05rem;
+            font-size: var(--fs-base);
           }
           .trigger-right-badge-arrows {
             gap: 8px;
           }
           .articles-count-badge {
             padding: 4px 8px;
-            font-size: 0.65rem;
+            font-size: var(--fs-2xs);
           }
           .arrow-toggle-circle {
             width: 28px;
@@ -869,7 +869,7 @@ export default function PillarListingClient() {
           }
           .pagination-arrow-btn {
             padding: 8px 12px;
-            font-size: 0.75rem;
+            font-size: var(--fs-2xs);
           }
           .pagination-numbers {
             gap: 4px;
@@ -877,7 +877,7 @@ export default function PillarListingClient() {
           .pagination-number-btn {
             width: 30px;
             height: 30px;
-            font-size: 0.75rem;
+            font-size: var(--fs-2xs);
           }
         }
       `}</style>

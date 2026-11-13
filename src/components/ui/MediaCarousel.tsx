@@ -78,7 +78,7 @@ export const MediaCarousel: React.FC<MediaCarouselProps> = ({
         }
         .media-carousel-title {
           font-family: var(--font-serif);
-          font-size: 1.2rem;
+          font-size: var(--fs-xl);
           color: #4c1d95;
           margin-bottom: 16px;
         }
@@ -113,7 +113,7 @@ export const MediaCarousel: React.FC<MediaCarouselProps> = ({
           background: rgba(0, 0, 0, 0.55);
           backdrop-filter: blur(6px);
           color: #fff;
-          font-size: 0.75rem;
+          font-size: var(--fs-2xs);
           font-weight: 700;
           padding: 5px 12px;
           border-radius: 20px;
@@ -126,7 +126,7 @@ export const MediaCarousel: React.FC<MediaCarouselProps> = ({
           background: rgba(0, 0, 0, 0.45);
           backdrop-filter: blur(6px);
           color: rgba(255, 255, 255, 0.9);
-          font-size: 0.75rem;
+          font-size: var(--fs-2xs);
           font-weight: 600;
           padding: 5px 12px;
           border-radius: 20px;
@@ -143,7 +143,7 @@ export const MediaCarousel: React.FC<MediaCarouselProps> = ({
           background: rgba(0, 0, 0, 0.35);
           backdrop-filter: blur(8px);
           color: #fff;
-          font-size: 1.6rem;
+          font-size: var(--fs-2xl);
           line-height: 1;
           cursor: pointer;
           z-index: 10;

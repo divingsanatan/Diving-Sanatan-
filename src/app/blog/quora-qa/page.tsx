@@ -1117,7 +1117,7 @@ function QuoraQAInner() {
 
                     <div className="form-footer-row">
                       <div className="select-wrapper">
-                        <label htmlFor="ask-category-select" style={{ fontSize: '0.76rem', fontWeight: 700, color: '#5b21b6', textTransform: 'uppercase', letterSpacing: '0.02em', marginBottom: '2px' }}>Category</label>
+                        <label htmlFor="ask-category-select" style={{ fontSize: "var(--fs-2xs)", fontWeight: 700, color: '#5b21b6', textTransform: 'uppercase', letterSpacing: '0.02em', marginBottom: '2px' }}>Category</label>
                         <select 
                           id="ask-category-select"
                           className="category-dropdown"
@@ -1134,7 +1134,7 @@ function QuoraQAInner() {
                           type="button" 
                           className="btn-cancel-admin" 
                           onClick={() => setShowAskForm(false)}
-                          style={{ padding: '10px 16px', background: 'transparent', border: '1px solid rgba(168, 85, 247, 0.3)', color: '#7c3aed', borderRadius: '12px', cursor: 'pointer', fontWeight: 700, fontSize: '0.82rem', transition: 'background 0.2s ease' }}
+                          style={{ padding: '10px 16px', background: 'transparent', border: '1px solid rgba(168, 85, 247, 0.3)', color: '#7c3aed', borderRadius: '12px', cursor: 'pointer', fontWeight: 700, fontSize: "var(--fs-xs)", transition: 'background 0.2s ease' }}
                         >
                           Cancel
                         </button>
@@ -1973,7 +1973,7 @@ function QuoraQAInner() {
           <div className="login-modal-content glass-panel">
             <div className="modal-header">
               <div className="modal-title-with-subtitle">
-                <h3 className="modal-title" style={{ color: '#3b0764', fontFamily: 'var(--font-serif)', fontSize: '1.25rem', fontWeight: 700 }}>Edit Question Details</h3>
+                <h3 className="modal-title" style={{ color: '#3b0764', fontFamily: 'var(--font-serif)', fontSize: "var(--fs-xl)", fontWeight: 700 }}>Edit Question Details</h3>
                 <span className="modal-subtitle">Modify the question title, category, or description.</span>
               </div>
               <button className="close-btn" onClick={() => setShowEditQModal(false)}><X size={16} /></button>
@@ -2036,7 +2036,7 @@ function QuoraQAInner() {
           <div className="login-modal-content glass-panel" style={{ maxWidth: '520px' }}>
             <div className="modal-header">
               <div className="modal-title-with-subtitle">
-                <h3 className="modal-title" style={{ color: '#3b0764', fontFamily: 'var(--font-serif)', fontSize: '1.25rem', fontWeight: 700 }}>Provide Healer Answer</h3>
+                <h3 className="modal-title" style={{ color: '#3b0764', fontFamily: 'var(--font-serif)', fontSize: "var(--fs-xl)", fontWeight: 700 }}>Provide Healer Answer</h3>
                 <span className="modal-subtitle">Write an expert response with structured bullet recommendations.</span>
               </div>
               <button className="close-btn" onClick={() => setShowAnswerModal(false)}><X size={16} /></button>
@@ -2102,7 +2102,7 @@ function QuoraQAInner() {
                   onChange={(e) => setAnsBulletsStr(e.target.value)}
                   className="glass-input ask-textarea"
                 />
-                <small style={{ fontSize: '0.7rem', color: '#6b7280' }}>Separate items by new lines. Use colons for bold topics.</small>
+                <small style={{ fontSize: "var(--fs-2xs)", color: '#6b7280' }}>Separate items by new lines. Use colons for bold topics.</small>
               </div>
 
               <div className="input-group">
@@ -2162,13 +2162,13 @@ function QuoraQAInner() {
         }
         .page-main-title {
           font-family: var(--font-serif);
-          font-size: 1.8rem;
+          font-size: var(--fs-3xl);
           color: #3b0764;
           font-weight: 750 !important;
           margin-bottom: 6px;
         }
         .page-main-subtitle {
-          font-size: 0.88rem;
+          font-size: var(--fs-sm);
           color: #5b21b6;
         }
 
@@ -2191,7 +2191,7 @@ function QuoraQAInner() {
         }
         .form-title {
           font-family: var(--font-serif);
-          font-size: 1.15rem;
+          font-size: var(--fs-lg);
           color: #3b0764;
           font-weight: 750 !important;
         }
@@ -2204,20 +2204,20 @@ function QuoraQAInner() {
           gap: 6px;
         }
         .input-group label {
-          font-size: 0.76rem;
+          font-size: var(--fs-2xs);
           font-weight: 700;
           color: #5b21b6;
           text-transform: uppercase;
           letter-spacing: 0.02em;
         }
         .ask-input {
-          font-size: 0.88rem;
+          font-size: var(--fs-sm);
           padding: 10px 14px;
           border-radius: 10px;
           background: rgba(255, 255, 255, 0.5);
         }
         .ask-textarea {
-          font-size: 0.88rem;
+          font-size: var(--fs-sm);
           padding: 10px 14px;
           border-radius: 10px;
           resize: vertical;
@@ -2242,7 +2242,7 @@ function QuoraQAInner() {
           border: 1px solid rgba(124, 58, 237, 0.3);
           border-radius: 10px;
           padding: 8px 12px;
-          font-size: 0.82rem;
+          font-size: var(--fs-xs);
           font-family: var(--font-sans);
           outline: none;
           color: #4b5563;
@@ -2254,7 +2254,7 @@ function QuoraQAInner() {
           padding: 10px 24px;
           border-radius: 12px;
           font-weight: 700;
-          font-size: 0.82rem;
+          font-size: var(--fs-xs);
           cursor: pointer;
           transition: background-color 0.2s ease, transform 0.1s ease;
           box-shadow: 0 4px 10px rgba(88, 28, 135, 0.2);
@@ -2291,13 +2291,13 @@ function QuoraQAInner() {
         }
         .banner-title {
           font-family: var(--font-serif);
-          font-size: 1.05rem;
+          font-size: var(--fs-base);
           font-weight: 750 !important;
           color: #3b0764;
           margin: 0;
         }
         .banner-desc {
-          font-size: 0.78rem;
+          font-size: var(--fs-2xs);
           color: #6b7280;
           line-height: 1.4;
         }
@@ -2307,7 +2307,7 @@ function QuoraQAInner() {
           border: none;
           border-radius: 10px;
           padding: 8px 16px;
-          font-size: 0.78rem;
+          font-size: var(--fs-2xs);
           font-weight: 700;
           display: flex;
           align-items: center;
@@ -2329,7 +2329,7 @@ function QuoraQAInner() {
         }
         .listings-heading {
           font-family: var(--font-sans);
-          font-size: 1.05rem;
+          font-size: var(--fs-base);
           color: #111827;
           font-weight: 750 !important;
           border-bottom: 1.5px solid rgba(0,0,0,0.04);
@@ -2361,7 +2361,7 @@ function QuoraQAInner() {
         .category-tag-small {
           background: #faf5ff;
           color: #7c3aed;
-          font-size: 0.65rem;
+          font-size: var(--fs-2xs);
           font-weight: 800;
           padding: 4px 10px;
           border-radius: 9999px;
@@ -2369,12 +2369,12 @@ function QuoraQAInner() {
           text-transform: uppercase;
         }
         .asked-by-tag {
-          font-size: 0.72rem;
+          font-size: var(--fs-2xs);
           color: #6b7280;
         }
         .discussion-card-title {
           font-family: var(--font-serif);
-          font-size: 1.35rem;
+          font-size: var(--fs-xl);
           color: #3b0764;
           font-weight: 750 !important;
           margin: 0;
@@ -2385,7 +2385,7 @@ function QuoraQAInner() {
           color: #7c3aed;
         }
         .discussion-card-desc {
-          font-size: 0.88rem;
+          font-size: var(--fs-sm);
           color: #4b5563;
           line-height: 1.45;
           display: -webkit-box;
@@ -2404,7 +2404,7 @@ function QuoraQAInner() {
         .card-stats {
           display: flex;
           gap: 8px;
-          font-size: 0.72rem;
+          font-size: var(--fs-2xs);
           color: #9ca3af;
           font-weight: 500;
         }
@@ -2412,7 +2412,7 @@ function QuoraQAInner() {
           background: transparent;
           border: 1px solid rgba(168, 85, 247, 0.3);
           color: #7c3aed;
-          font-size: 0.76rem;
+          font-size: var(--fs-2xs);
           font-weight: 700;
           font-family: var(--font-sans);
           padding: 6px 14px;
@@ -2436,7 +2436,7 @@ function QuoraQAInner() {
           padding: 14px 24px;
           border-radius: 12px;
           font-weight: 600;
-          font-size: 0.88rem;
+          font-size: var(--fs-sm);
           box-shadow: 0 10px 30px rgba(76, 29, 149, 0.35);
           z-index: 1000;
           animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -2448,7 +2448,7 @@ function QuoraQAInner() {
           display: flex;
           align-items: center;
           gap: 8px;
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           color: #6b7280;
           font-weight: 500;
           margin-bottom: 8px;
@@ -2517,7 +2517,7 @@ function QuoraQAInner() {
         .category-tag {
           background: #f3e8ff;
           color: #6b21a8;
-          font-size: 0.72rem;
+          font-size: var(--fs-2xs);
           font-weight: 700;
           padding: 6px 12px;
           border-radius: 9999px;
@@ -2537,7 +2537,7 @@ function QuoraQAInner() {
         }
 
         .question-main-title {
-          font-size: 1.2rem;
+          font-size: var(--fs-xl);
           font-weight: 750 !important;
           color: #111827;
           line-height: 1.4 !important;
@@ -2545,7 +2545,7 @@ function QuoraQAInner() {
           font-family: var(--font-sans);
         }
         .question-desc-text {
-          font-size: 0.88rem;
+          font-size: var(--fs-sm);
           color: #4b5563;
           line-height: 1.5;
         }
@@ -2593,14 +2593,14 @@ function QuoraQAInner() {
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 0.95rem;
+          font-size: var(--fs-md);
           box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
         .author-meta-details {
           display: flex;
           align-items: center;
           gap: 6px;
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           color: #6b7280;
         }
         .author-name {
@@ -2618,7 +2618,7 @@ function QuoraQAInner() {
           color: #7c3aed;
           padding: 6px 16px;
           border-radius: 20px;
-          font-size: 0.78rem;
+          font-size: var(--fs-2xs);
           font-weight: 700;
           cursor: pointer;
           transition: all 0.2s ease;
@@ -2671,7 +2671,7 @@ function QuoraQAInner() {
           color: #ef4444;
         }
         .vote-count {
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
           font-weight: 700;
         }
 
@@ -2682,7 +2682,7 @@ function QuoraQAInner() {
           background: #ecfdf5;
           color: #065f46;
           font-weight: 700;
-          font-size: 0.78rem;
+          font-size: var(--fs-2xs);
           padding: 8px 14px;
           border-radius: 20px;
           border: 1px solid rgba(16, 185, 129, 0.15);
@@ -2698,7 +2698,7 @@ function QuoraQAInner() {
           align-items: center;
           gap: 6px;
           color: #6b7280;
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           font-weight: 600;
           cursor: pointer;
           transition: color 0.2s ease;
@@ -2739,7 +2739,7 @@ function QuoraQAInner() {
           align-items: center;
           gap: 6px;
           color: #8b5cf6;
-          font-size: 0.76rem;
+          font-size: var(--fs-2xs);
           font-weight: 800;
           text-transform: uppercase;
           letter-spacing: 0.05em;
@@ -2764,7 +2764,7 @@ function QuoraQAInner() {
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 1.2rem;
+          font-size: var(--fs-xl);
           overflow: hidden;
           border: 1px solid rgba(168, 85, 247, 0.2);
           box-shadow: 0 2px 6px rgba(168, 85, 247, 0.1);
@@ -2786,7 +2786,7 @@ function QuoraQAInner() {
         }
         .healer-name {
           font-family: var(--font-sans);
-          font-size: 0.88rem;
+          font-size: var(--fs-sm);
           font-weight: 750 !important;
           color: #111827;
         }
@@ -2794,7 +2794,7 @@ function QuoraQAInner() {
           background: #faf5ff;
           color: #a855f7;
           border: 1px solid rgba(168, 85, 247, 0.2);
-          font-size: 0.65rem;
+          font-size: var(--fs-2xs);
           font-weight: 750;
           padding: 2px 8px;
           border-radius: 4px;
@@ -2802,16 +2802,16 @@ function QuoraQAInner() {
           letter-spacing: 0.05em;
         }
         .healer-credentials {
-          font-size: 0.76rem;
+          font-size: var(--fs-2xs);
           color: #6b7280;
         }
         .healer-date {
-          font-size: 0.78rem;
+          font-size: var(--fs-2xs);
           color: #9ca3af;
         }
 
         .best-answer-body {
-          font-size: 0.88rem;
+          font-size: var(--fs-sm);
           color: #4b5563;
           line-height: 1.5;
           display: flex;
@@ -2852,14 +2852,14 @@ function QuoraQAInner() {
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 0.65rem;
+          font-size: var(--fs-2xs);
           box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
         .sat-2 { margin-left: -6px; }
         .sat-3 { margin-left: -6px; }
         
         .liked-text {
-          font-size: 0.78rem;
+          font-size: var(--fs-2xs);
           color: #6b7280;
           font-weight: 600;
         }
@@ -2877,7 +2877,7 @@ function QuoraQAInner() {
           background: transparent;
           border-radius: 12px;
           padding: 8px 16px;
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           font-weight: 600;
           color: #4b5563;
           cursor: pointer;
@@ -2917,7 +2917,7 @@ function QuoraQAInner() {
         }
         .comments-count-title {
           font-family: var(--font-serif);
-          font-size: 1.4rem;
+          font-size: var(--fs-2xl);
           color: #4c1d95;
           font-weight: 700 !important;
         }
@@ -2931,7 +2931,7 @@ function QuoraQAInner() {
           display: flex;
           align-items: center;
           gap: 6px;
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           color: #4b5563;
           font-family: var(--font-sans);
           cursor: pointer;
@@ -2962,7 +2962,7 @@ function QuoraQAInner() {
           width: 100%;
           text-align: left;
           padding: 8px 12px;
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           font-weight: 500;
           color: #4b5563;
           border-radius: 6px;
@@ -2990,7 +2990,7 @@ function QuoraQAInner() {
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 1.05rem;
+          font-size: var(--fs-base);
           flex-shrink: 0;
           box-shadow: 0 2px 6px rgba(0,0,0,0.05);
         }
@@ -3007,7 +3007,7 @@ function QuoraQAInner() {
           outline: none;
           resize: none;
           font-family: var(--font-sans);
-          font-size: 0.9rem;
+          font-size: var(--fs-sm);
           color: #1f2937;
           min-height: 24px;
         }
@@ -3048,7 +3048,7 @@ function QuoraQAInner() {
           background: #581c87;
           color: #ffffff;
           font-family: var(--font-sans);
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           font-weight: 700;
           padding: 8px 20px;
           border-radius: 10px;
@@ -3102,7 +3102,7 @@ function QuoraQAInner() {
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 0.9rem;
+          font-size: var(--fs-sm);
           box-shadow: inset 0 2px 4px rgba(0,0,0,0.03);
           border: 1px solid rgba(0,0,0,0.03);
         }
@@ -3117,17 +3117,17 @@ function QuoraQAInner() {
           gap: 6px;
         }
         .commenter-name {
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
           font-weight: 700;
           color: #1f2937;
         }
         .comment-date {
-          font-size: 0.72rem;
+          font-size: var(--fs-2xs);
           color: #9ca3af;
         }
 
         .comment-content-text {
-          font-size: 0.92rem;
+          font-size: var(--fs-md);
           color: #334155;
           line-height: 1.6;
         }
@@ -3141,7 +3141,7 @@ function QuoraQAInner() {
           border: none;
           background: transparent;
           font-family: var(--font-sans);
-          font-size: 0.76rem;
+          font-size: var(--fs-2xs);
           font-weight: 600;
           color: #9ca3af;
           cursor: pointer;
@@ -3183,7 +3183,7 @@ function QuoraQAInner() {
         .reply-healer-badge {
           background: #edd8fc;
           color: #7c3aed;
-          font-size: 0.62rem;
+          font-size: var(--fs-2xs);
           font-weight: 750;
           padding: 1px 6px;
           border-radius: 4px;
@@ -3196,7 +3196,7 @@ function QuoraQAInner() {
           background: transparent;
           color: #7c3aed;
           font-family: var(--font-sans);
-          font-size: 0.78rem;
+          font-size: var(--fs-2xs);
           font-weight: 700;
           cursor: pointer;
           display: flex;
@@ -3224,7 +3224,7 @@ function QuoraQAInner() {
           padding: 10px 24px;
           border-radius: 12px;
           font-family: var(--font-sans);
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           font-weight: 700;
           color: #7c3aed;
           cursor: pointer;
@@ -3275,13 +3275,13 @@ function QuoraQAInner() {
         }
         .banner-title {
           font-family: var(--font-serif);
-          font-size: 1.8rem;
+          font-size: var(--fs-3xl);
           font-weight: 700 !important;
           color: #f3e8ff;
           line-height: 1.25 !important;
         }
         .banner-subtitle {
-          font-size: 0.95rem;
+          font-size: var(--fs-md);
           color: #d8b4fe;
           line-height: 1.5;
         }
@@ -3291,7 +3291,7 @@ function QuoraQAInner() {
           background: #ffffff;
           color: #4c1d95;
           font-family: var(--font-sans);
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
           font-weight: 700;
           padding: 12px 24px;
           border-radius: 14px;
@@ -3362,7 +3362,7 @@ function QuoraQAInner() {
         }
         .right-card-title {
           font-family: var(--font-sans);
-          font-size: 1.02rem;
+          font-size: var(--fs-base);
           color: #111827;
           font-weight: 750 !important;
           margin: 0;
@@ -3383,7 +3383,7 @@ function QuoraQAInner() {
           padding: 12px;
           border-radius: 12px;
           font-weight: 700;
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           font-family: var(--font-sans);
           cursor: pointer;
           transition: all 0.2s ease;
@@ -3422,7 +3422,7 @@ function QuoraQAInner() {
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           border: 1px solid rgba(168, 85, 247, 0.1);
         }
         .stat-icon-circle {
@@ -3442,14 +3442,14 @@ function QuoraQAInner() {
           gap: 1px;
         }
         .stat-label {
-          font-size: 0.68rem;
+          font-size: var(--fs-2xs);
           color: #9ca3af;
           font-weight: 500;
           text-transform: uppercase;
           letter-spacing: 0.02em;
         }
         .stat-value {
-          font-size: 0.82rem;
+          font-size: var(--fs-xs);
           font-weight: 700;
           color: #4b5563;
         }
@@ -3470,7 +3470,7 @@ function QuoraQAInner() {
         }
         .quote-mark-icon-large {
           font-family: var(--font-serif);
-          font-size: 4rem;
+          font-size: var(--fs-display);
           line-height: 1;
           color: #c084fc;
           opacity: 0.3;
@@ -3479,7 +3479,7 @@ function QuoraQAInner() {
         }
         .spiritual-quote-text {
           font-family: var(--font-serif);
-          font-size: 1.15rem;
+          font-size: var(--fs-lg);
           font-style: italic;
           color: #3b0764;
           line-height: 1.45;
@@ -3498,7 +3498,7 @@ function QuoraQAInner() {
           height: 38px;
         }
         .quote-attribution {
-          font-size: 0.72rem;
+          font-size: var(--fs-2xs);
           color: #a855f7;
           font-weight: 700;
           text-transform: uppercase;
@@ -3531,7 +3531,7 @@ function QuoraQAInner() {
           align-items: center;
           justify-content: center;
           color: #6b21a8;
-          font-size: 0.65rem;
+          font-size: var(--fs-2xs);
           font-weight: 800;
           margin-top: 2px;
           flex-shrink: 0;
@@ -3542,7 +3542,7 @@ function QuoraQAInner() {
           gap: 2px;
         }
         .related-q-title {
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           font-weight: 700;
           color: #1f2937;
           line-height: 1.35;
@@ -3552,7 +3552,7 @@ function QuoraQAInner() {
           color: #7c3aed;
         }
         .related-q-answers-count {
-          font-size: 0.68rem;
+          font-size: var(--fs-2xs);
           color: #6b7280;
         }
         .right-card-action-btn {
@@ -3562,7 +3562,7 @@ function QuoraQAInner() {
           padding: 10px;
           border-radius: 10px;
           font-family: var(--font-sans);
-          font-size: 0.76rem;
+          font-size: var(--fs-2xs);
           font-weight: 700;
           color: #7c3aed;
           cursor: pointer;
@@ -3599,7 +3599,7 @@ function QuoraQAInner() {
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 0.9rem;
+          font-size: var(--fs-sm);
           box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
         }
         .contributor-info-details {
@@ -3613,7 +3613,7 @@ function QuoraQAInner() {
           gap: 6px;
         }
         .contributor-name {
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           font-weight: 700;
           color: #1f2937;
         }
@@ -3621,7 +3621,7 @@ function QuoraQAInner() {
           background: #faf5ff;
           color: #a855f7;
           border: 1px solid rgba(168, 85, 247, 0.25);
-          font-size: 0.58rem;
+          font-size: var(--fs-2xs);
           font-weight: 750;
           padding: 1px 5px;
           border-radius: 3px;
@@ -3632,7 +3632,7 @@ function QuoraQAInner() {
           background: #f3f4f6;
           color: #4b5563;
           border: 1px solid rgba(0,0,0,0.06);
-          font-size: 0.58rem;
+          font-size: var(--fs-2xs);
           font-weight: 750;
           padding: 1px 5px;
           border-radius: 3px;
@@ -3640,13 +3640,13 @@ function QuoraQAInner() {
           letter-spacing: 0.05em;
         }
         .contributor-points {
-          font-size: 0.7rem;
+          font-size: var(--fs-2xs);
           color: #6b7280;
         }
 
         /* Share Card styling */
         .share-card-subtitle {
-          font-size: 0.76rem;
+          font-size: var(--fs-2xs);
           color: #6b7280;
           margin-top: -6px;
         }
@@ -3686,7 +3686,7 @@ function QuoraQAInner() {
           padding: 10px;
           border-radius: 10px;
           font-family: var(--font-sans);
-          font-size: 0.76rem;
+          font-size: var(--fs-2xs);
           font-weight: 700;
           color: #4b5563;
           cursor: pointer;
@@ -3734,14 +3734,14 @@ function QuoraQAInner() {
         }
         .modal-title {
           font-family: var(--font-serif);
-          font-size: 1.35rem;
+          font-size: var(--fs-xl);
           font-weight: 700 !important;
           color: #2e0854;
         }
         .close-btn {
           border: none;
           background: transparent;
-          font-size: 1rem;
+          font-size: var(--fs-base);
           cursor: pointer;
           color: #9ca3af;
           width: 24px;
@@ -3771,7 +3771,7 @@ function QuoraQAInner() {
           padding: 10px 16px;
           background: #f9fafb;
           border-bottom: 1px solid rgba(0,0,0,0.05);
-          font-size: 0.72rem;
+          font-size: var(--fs-2xs);
           font-weight: 700;
           color: #6b7280;
           text-transform: uppercase;
@@ -3786,7 +3786,7 @@ function QuoraQAInner() {
           grid-template-columns: 50px 1fr 100px 70px;
           padding: 12px 16px;
           border-bottom: 1px solid rgba(0,0,0,0.03);
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           align-items: center;
           color: #4b5563;
         }
@@ -3803,7 +3803,7 @@ function QuoraQAInner() {
           gap: 8px;
         }
         .user-avatar-emoji {
-          font-size: 1.05rem;
+          font-size: var(--fs-base);
         }
         .user-name {
           font-weight: 600;
@@ -3839,7 +3839,7 @@ function QuoraQAInner() {
           gap: 4px;
         }
         .modal-subtitle {
-          font-size: 0.78rem;
+          font-size: var(--fs-2xs);
           color: #6b7280;
           line-height: 1.3;
         }
@@ -3849,7 +3849,7 @@ function QuoraQAInner() {
           gap: 16px;
         }
         .login-input {
-          font-size: 0.88rem;
+          font-size: var(--fs-sm);
           padding: 12px 14px;
           border-radius: 10px;
         }
@@ -3861,7 +3861,7 @@ function QuoraQAInner() {
           padding: 12px;
           border-radius: 12px;
           font-weight: 700;
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
           cursor: pointer;
           transition: all 0.2s ease;
           box-shadow: 0 4px 12px rgba(88, 28, 135, 0.25);
@@ -3874,7 +3874,7 @@ function QuoraQAInner() {
           border: none;
           background: transparent;
           color: #7c3aed;
-          font-size: 0.78rem;
+          font-size: var(--fs-2xs);
           font-weight: 700;
           cursor: pointer;
           text-decoration: underline;
@@ -3912,10 +3912,10 @@ function QuoraQAInner() {
             padding: 20px !important;
           }
           .question-main-title {
-            font-size: 1.15rem !important;
+            font-size: var(--fs-lg);
           }
           .question-desc-text {
-            font-size: 0.85rem !important;
+            font-size: var(--fs-sm);
           }
           .q-title-section {
             flex-direction: column-reverse;
@@ -3986,7 +3986,7 @@ function QuoraQAInner() {
           100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); }
         }
         .admin-status-text {
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
         }
         .admin-logout-trigger-btn {
           background: rgba(255, 255, 255, 0.2);
@@ -3994,7 +3994,7 @@ function QuoraQAInner() {
           color: #ffffff;
           padding: 6px 14px;
           border-radius: 8px;
-          font-size: 0.78rem;
+          font-size: var(--fs-2xs);
           font-weight: 700;
           cursor: pointer;
           transition: all 0.2s ease;
@@ -4028,7 +4028,7 @@ function QuoraQAInner() {
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 0.82rem;
+          font-size: var(--fs-xs);
           cursor: pointer;
           transition: all 0.2s ease;
         }
@@ -4058,7 +4058,7 @@ function QuoraQAInner() {
           gap: 6px;
           padding: 6px 14px;
           border-radius: 8px;
-          font-size: 0.78rem;
+          font-size: var(--fs-2xs);
           font-weight: 700;
           cursor: pointer;
           background: rgba(255,255,255,0.7);
@@ -4108,12 +4108,12 @@ function QuoraQAInner() {
         }
         .no-answer-title {
           font-family: var(--font-serif);
-          font-size: 1rem;
+          font-size: var(--fs-base);
           color: #4b5563;
           font-weight: 700;
         }
         .no-answer-desc {
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           color: #6b7280;
         }
         .provide-answer-btn {
@@ -4122,7 +4122,7 @@ function QuoraQAInner() {
           border: none;
           padding: 10px 20px;
           border-radius: 12px;
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           font-weight: 700;
           cursor: pointer;
           transition: all 0.2s ease;
@@ -4141,7 +4141,7 @@ function QuoraQAInner() {
           padding: 12px;
           border-radius: 12px;
           font-weight: 700;
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
           cursor: pointer;
           transition: all 0.2s ease;
         }

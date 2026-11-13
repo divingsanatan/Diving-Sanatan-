@@ -76,7 +76,7 @@ export default function ServiceDetailPage() {
             align-items: center;
             gap: 16px;
             color: hsl(var(--text-muted));
-            font-size: 1.1rem;
+            font-size: var(--fs-lg);
             min-height: calc(50vh / var(--ui-zoom, 1));
           }
           .spinner {
@@ -122,7 +122,7 @@ export default function ServiceDetailPage() {
           .error-state-wrapper h2 {
             font-family: var(--font-serif);
             color: #ef4444;
-            font-size: 1.8rem;
+            font-size: var(--fs-3xl);
           }
           .error-state-wrapper p {
             color: hsl(var(--text-muted));
@@ -425,7 +425,7 @@ export default function ServiceDetailPage() {
           display: flex;
           align-items: center;
           gap: 8px;
-          font-size: 0.82rem;
+          font-size: var(--fs-xs);
           color: hsl(var(--text-muted));
         }
         .breadcrumb-link {
@@ -468,7 +468,7 @@ export default function ServiceDetailPage() {
           background: rgba(16, 185, 129, 0.08);
           border: 1px solid rgba(16, 185, 129, 0.2);
           color: #065f46;
-          font-size: 0.72rem;
+          font-size: var(--fs-2xs);
           font-weight: 700;
           padding: 4px 10px;
           border-radius: 6px;
@@ -476,18 +476,18 @@ export default function ServiceDetailPage() {
           letter-spacing: 0.05em;
         }
         .rating-tag {
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
           font-weight: 700;
           color: #b45309;
         }
         .service-page-title {
           font-family: var(--font-serif);
-          font-size: 2.2rem;
+          font-size: var(--fs-4xl);
           color: #4c1d95;
           line-height: 1.15;
         }
         .service-practitioner-subline {
-          font-size: 0.95rem;
+          font-size: var(--fs-md);
           color: hsl(var(--text-muted));
         }
         .service-media-viewport {
@@ -517,7 +517,7 @@ export default function ServiceDetailPage() {
           color: #ffffff;
           padding: 6px 14px;
           border-radius: 8px;
-          font-size: 0.75rem;
+          font-size: var(--fs-2xs);
           font-weight: 600;
         }
         .hero-image-placeholder-wrapper {
@@ -545,7 +545,7 @@ export default function ServiceDetailPage() {
           background: transparent;
           border: none;
           color: hsl(var(--text-muted));
-          font-size: 0.95rem;
+          font-size: var(--fs-md);
           font-weight: 600;
           cursor: pointer;
           position: relative;
@@ -579,7 +579,7 @@ export default function ServiceDetailPage() {
           to { opacity: 1; transform: translateY(0); }
         }
         .tab-paragraph-text {
-          font-size: 0.98rem;
+          font-size: var(--fs-base);
           line-height: 1.75;
           color: #334155;
         }
@@ -597,24 +597,24 @@ export default function ServiceDetailPage() {
           align-items: center;
         }
         .spec-icon {
-          font-size: 1.6rem;
+          font-size: var(--fs-2xl);
           display: flex;
           align-items: center;
         }
         .spec-bullet-item strong {
           display: block;
-          font-size: 0.82rem;
+          font-size: var(--fs-xs);
           color: #1e1b4b;
         }
         .spec-bullet-item span {
-          font-size: 0.76rem;
+          font-size: var(--fs-2xs);
           color: hsl(var(--text-muted));
         }
 
         /* Somatic Benefits style */
         .pane-section-title {
           font-family: var(--font-serif);
-          font-size: 1.2rem;
+          font-size: var(--fs-xl);
           color: #4c1d95;
           margin-bottom: 16px;
         }
@@ -637,12 +637,12 @@ export default function ServiceDetailPage() {
           font-weight: 700;
         }
         .benefit-text {
-          font-size: 0.88rem;
+          font-size: var(--fs-sm);
           color: #1e293b;
           line-height: 1.4;
         }
         .empty-benefits-label {
-          font-size: 0.95rem;
+          font-size: var(--fs-md);
           color: hsl(var(--text-muted));
           line-height: 1.6;
         }
@@ -681,7 +681,7 @@ export default function ServiceDetailPage() {
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 0.78rem;
+          font-size: var(--fs-2xs);
           font-weight: 700;
           box-shadow: 0 0 10px rgba(124, 58, 237, 0.25);
           flex-shrink: 0;
@@ -693,12 +693,12 @@ export default function ServiceDetailPage() {
           gap: 4px;
         }
         .timeline-step-info h5 {
-          font-size: 0.92rem;
+          font-size: var(--fs-md);
           font-weight: 700;
           color: #1e1b4b;
         }
         .timeline-step-info p {
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
           color: hsl(var(--text-muted));
           line-height: 1.5;
         }
@@ -706,7 +706,7 @@ export default function ServiceDetailPage() {
         /* Practitioner profile card */
         .section-minor-heading {
           font-family: var(--font-serif);
-          font-size: 1.3rem;
+          font-size: var(--fs-xl);
           color: #4c1d95;
           margin-bottom: 16px;
         }
@@ -734,7 +734,7 @@ export default function ServiceDetailPage() {
           gap: 8px;
         }
         .prac-text-bio h5 {
-          font-size: 1.15rem;
+          font-size: var(--fs-lg);
           color: #1e1b4b;
           font-weight: 700;
         }
@@ -742,19 +742,19 @@ export default function ServiceDetailPage() {
           background: rgba(124, 58, 237, 0.08);
           border: 1px solid rgba(124, 58, 237, 0.2);
           color: #6d28d9;
-          font-size: 0.72rem;
+          font-size: var(--fs-2xs);
           font-weight: 600;
           padding: 2px 8px;
           border-radius: 4px;
           width: max-content;
         }
         .prac-bio-summary {
-          font-size: 0.88rem;
+          font-size: var(--fs-sm);
           line-height: 1.5;
           color: #334155;
         }
         .prac-rating-stats {
-          font-size: 0.78rem;
+          font-size: var(--fs-2xs);
           color: hsl(var(--text-muted));
           display: flex;
           align-items: center;
@@ -784,28 +784,28 @@ export default function ServiceDetailPage() {
           margin-bottom: 8px;
         }
         .reviewer-name {
-          font-size: 0.9rem;
+          font-size: var(--fs-sm);
           font-weight: 700;
           color: #1e1b4b;
           margin-right: 12px;
         }
         .review-stars {
           color: #d97706;
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           letter-spacing: 1.5px;
         }
         .review-date-badge {
           background: rgba(34, 197, 94, 0.08);
           border: 1px solid rgba(34, 197, 94, 0.15);
           color: #166534;
-          font-size: 0.65rem;
+          font-size: var(--fs-2xs);
           font-weight: 700;
           padding: 2px 8px;
           border-radius: 4px;
           text-transform: uppercase;
         }
         .review-comment-body {
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
           font-style: italic;
           color: hsl(var(--text-muted));
           line-height: 1.5;
@@ -823,7 +823,7 @@ export default function ServiceDetailPage() {
           gap: 20px;
         }
         .booking-card-header-lbl {
-          font-size: 0.72rem;
+          font-size: var(--fs-2xs);
           font-weight: 700;
           color: hsl(var(--text-muted));
           text-transform: uppercase;
@@ -833,7 +833,7 @@ export default function ServiceDetailPage() {
         }
         .booking-card-title {
           font-family: var(--font-serif);
-          font-size: 1.45rem;
+          font-size: var(--fs-2xl);
           color: #4c1d95;
           margin-top: -6px;
         }
@@ -855,12 +855,12 @@ export default function ServiceDetailPage() {
           border-right: 1px solid rgba(0,0,0,0.05);
         }
         .booking-stat-cell .stat-label {
-          font-size: 0.68rem;
+          font-size: var(--fs-2xs);
           color: hsl(var(--text-muted));
           text-transform: uppercase;
         }
         .booking-stat-cell .stat-val {
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
           font-weight: 700;
           color: #1e1b4b;
         }
@@ -870,18 +870,18 @@ export default function ServiceDetailPage() {
           gap: 2px;
         }
         .price-tag-lbl {
-          font-size: 0.72rem;
+          font-size: var(--fs-2xs);
           color: hsl(var(--text-muted));
           text-transform: uppercase;
         }
         .price-tag-val {
           font-family: var(--font-serif);
-          font-size: 2.1rem;
+          font-size: var(--fs-4xl);
           color: #db2777;
           font-weight: 800;
         }
         .tax-notice {
-          font-size: 0.72rem;
+          font-size: var(--fs-2xs);
           color: rgba(0,0,0,0.4);
         }
         .guarantees-subtext {
@@ -892,7 +892,7 @@ export default function ServiceDetailPage() {
           padding-top: 14px;
         }
         .guarantees-subtext p {
-          font-size: 0.75rem;
+          font-size: var(--fs-2xs);
           color: hsl(var(--text-muted));
           font-weight: 500;
         }

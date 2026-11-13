@@ -278,13 +278,13 @@ export default function ReviewsPage() {
           width: 100%;
         }
         .reviews-title {
-          font-size: 2.8rem;
+          font-size: var(--fs-5xl);
           color: #4c1d95;
           margin-bottom: 12px;
           text-align: center;
         }
         .reviews-subtitle {
-          font-size: 1.05rem;
+          font-size: var(--fs-base);
           color: hsl(var(--text-muted));
           text-align: center;
           max-width: 650px;
@@ -305,7 +305,7 @@ export default function ReviewsPage() {
           align-items: center;
         }
         .stat-label {
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
           color: hsl(var(--text-muted));
           text-transform: uppercase;
           letter-spacing: 0.05em;
@@ -313,16 +313,16 @@ export default function ReviewsPage() {
         }
         .stat-value {
           font-family: var(--font-serif);
-          font-size: 2.5rem;
+          font-size: var(--fs-4xl);
           color: #4c1d95;
         }
         .stat-stars {
           color: #d97706;
-          font-size: 1.2rem;
+          font-size: var(--fs-xl);
           letter-spacing: 2px;
         }
         .stat-desc {
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
           color: hsl(var(--text-muted));
         }
         .reviews-grid {
@@ -342,12 +342,12 @@ export default function ReviewsPage() {
         }
         .column-title {
           font-family: var(--font-serif);
-          font-size: 1.4rem;
+          font-size: var(--fs-2xl);
           color: #4c1d95;
         }
         .small-select {
           padding: 8px 12px;
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           width: 180px;
         }
         .reviews-vertical-list {
@@ -367,17 +367,17 @@ export default function ReviewsPage() {
           align-items: center;
         }
         .reviewer-name {
-          font-size: 1.05rem;
+          font-size: var(--fs-base);
           font-weight: 600;
           color: hsl(var(--text-cream));
         }
         .review-stars {
           color: #d97706;
-          font-size: 0.88rem;
+          font-size: var(--fs-sm);
           letter-spacing: 1px;
         }
         .review-comment {
-          font-size: 0.92rem;
+          font-size: var(--fs-md);
           line-height: 1.6;
           font-style: italic;
           color: hsl(var(--text-cream) / 0.9);
@@ -385,7 +385,7 @@ export default function ReviewsPage() {
         .review-card-footer {
           display: flex;
           justify-content: space-between;
-          font-size: 0.78rem;
+          font-size: var(--fs-2xs);
           color: hsl(var(--text-muted));
           border-top: 1px solid rgba(0,0,0,0.05);
           padding-top: 12px;
@@ -397,7 +397,7 @@ export default function ReviewsPage() {
           margin-bottom: 20px;
         }
         .form-group label {
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           color: hsl(var(--text-muted));
           text-transform: uppercase;
           letter-spacing: 0.05em;
@@ -408,7 +408,7 @@ export default function ReviewsPage() {
           resize: none;
         }
         .form-feedback-msg {
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
           color: #0d9488;
           margin-bottom: 8px;
           text-align: center;

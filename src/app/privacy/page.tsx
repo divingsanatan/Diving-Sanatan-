@@ -84,13 +84,13 @@ export default function PrivacyPage() {
           width: 100%;
         }
         .privacy-title {
-          font-size: 2.8rem;
+          font-size: var(--fs-5xl);
           color: #4c1d95;
           margin-bottom: 8px;
           text-align: center;
         }
         .privacy-subtitle {
-          font-size: 0.95rem;
+          font-size: var(--fs-md);
           color: hsl(var(--text-muted));
           text-align: center;
         }
@@ -107,13 +107,13 @@ export default function PrivacyPage() {
         }
         .policy-heading {
           font-family: var(--font-serif);
-          font-size: 1.25rem;
+          font-size: var(--fs-xl);
           color: #4c1d95;
           border-bottom: 1px solid rgba(0,0,0,0.06);
           padding-bottom: 8px;
         }
         .policy-text {
-          font-size: 0.92rem;
+          font-size: var(--fs-md);
           line-height: 1.7;
           color: hsl(var(--text-cream));
         }
@@ -123,7 +123,7 @@ export default function PrivacyPage() {
           display: flex;
           flex-direction: column;
           gap: 8px;
-          font-size: 0.9rem;
+          font-size: var(--fs-sm);
           color: hsl(var(--text-muted));
         }
         @media (max-width: 640px) {

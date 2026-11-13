@@ -772,7 +772,7 @@ export default function FAQPage() {
           background: #faf5ff;
           border: 1px solid rgba(168, 85, 247, 0.15);
           color: #7c3aed;
-          font-size: 0.82rem;
+          font-size: var(--fs-xs);
           font-weight: 600;
         }
         .faq-loader-spin {
@@ -788,7 +788,7 @@ export default function FAQPage() {
           display: flex;
           align-items: center;
           gap: 8px;
-          font-size: 0.82rem;
+          font-size: var(--fs-xs);
           color: #6b7280;
           padding: 8px 18px;
           background: #ffffff;
@@ -818,7 +818,7 @@ export default function FAQPage() {
           display: flex;
           align-items: center;
           gap: 8px;
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           color: #9ca3af;
           margin-bottom: 16px;
         }
@@ -852,7 +852,7 @@ export default function FAQPage() {
         .faq-badge {
           display: inline-block;
           font-family: var(--font-sans);
-          font-size: 0.72rem;
+          font-size: var(--fs-2xs);
           font-weight: 700;
           color: #7c3aed;
           background: #f5f3ff;
@@ -864,14 +864,14 @@ export default function FAQPage() {
         }
         .hero-title {
           font-family: var(--font-serif);
-          font-size: 2.3rem;
+          font-size: var(--fs-4xl);
           color: #1e1b4b;
           font-weight: 750 !important;
           line-height: 1.2 !important;
           margin-bottom: 12px;
         }
         .hero-desc {
-          font-size: 0.92rem;
+          font-size: var(--fs-md);
           color: #6b7280;
           line-height: 1.5;
           max-width: 480px;
@@ -916,7 +916,7 @@ export default function FAQPage() {
           outline: none;
           padding: 8px 0;
           font-family: var(--font-sans);
-          font-size: 0.9rem;
+          font-size: var(--fs-sm);
           color: #1f2937;
         }
         .page-search-input::placeholder {
@@ -926,7 +926,7 @@ export default function FAQPage() {
           border: none;
           background: transparent;
           color: #9ca3af;
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           cursor: pointer;
           padding: 4px;
           transition: color 0.2s;
@@ -947,7 +947,7 @@ export default function FAQPage() {
           border: 1px solid rgba(168, 85, 247, 0.15);
           color: #4b5563;
           font-family: var(--font-sans);
-          font-size: 0.82rem;
+          font-size: var(--fs-xs);
           font-weight: 600;
           padding: 6px 14px;
           border-radius: 30px;
@@ -989,7 +989,7 @@ export default function FAQPage() {
         }
         .section-title {
           font-family: var(--font-serif);
-          font-size: 1.45rem;
+          font-size: var(--fs-2xl);
           font-weight: 700 !important;
           color: #1e1b4b;
           margin: 0;
@@ -1057,7 +1057,7 @@ export default function FAQPage() {
         }
         .question-title-text {
           font-family: var(--font-sans);
-          font-size: 0.95rem;
+          font-size: var(--fs-md);
           font-weight: 600;
           color: #1e1b4b;
           line-height: 1.4;
@@ -1102,7 +1102,7 @@ export default function FAQPage() {
         }
         .faq-answer-paragraph {
           font-family: var(--font-sans);
-          font-size: 0.88rem;
+          font-size: var(--fs-sm);
           line-height: 1.6;
           color: #4b5563;
           margin: 0 0 16px;
@@ -1134,7 +1134,7 @@ export default function FAQPage() {
           gap: 4px;
           background: #f3f4f6;
           color: #4b5563;
-          font-size: 0.72rem;
+          font-size: var(--fs-2xs);
           font-weight: 500;
           padding: 3px 8px;
           border-radius: 6px;
@@ -1149,7 +1149,7 @@ export default function FAQPage() {
           background: rgba(16, 185, 129, 0.05);
           border: 1px solid rgba(16, 185, 129, 0.15);
           color: #065f46;
-          font-size: 0.72rem;
+          font-size: var(--fs-2xs);
           font-weight: 600;
           padding: 3px 8px;
           border-radius: 6px;
@@ -1177,13 +1177,13 @@ export default function FAQPage() {
         }
         .empty-title {
           font-family: var(--font-serif);
-          font-size: 1.25rem;
+          font-size: var(--fs-xl);
           font-weight: 750 !important;
           color: #1e1b4b;
           margin: 0;
         }
         .empty-desc {
-          font-size: 0.82rem;
+          font-size: var(--fs-xs);
           color: #6b7280;
           max-width: 320px;
           line-height: 1.4;
@@ -1242,13 +1242,13 @@ export default function FAQPage() {
         }
         .grid-card-title {
           font-family: var(--font-sans);
-          font-size: 0.88rem;
+          font-size: var(--fs-sm);
           font-weight: 700;
           color: #1f2937;
           margin: 0;
         }
         .grid-card-count {
-          font-size: 0.75rem;
+          font-size: var(--fs-2xs);
           color: #6b7280;
         }
 
@@ -1267,7 +1267,7 @@ export default function FAQPage() {
           border: 1px solid rgba(168, 85, 247, 0.15);
           color: #7c3aed;
           font-family: var(--font-sans);
-          font-size: 0.82rem;
+          font-size: var(--fs-xs);
           font-weight: 700;
           padding: 8px 16px;
           border-radius: 30px;
@@ -1314,7 +1314,7 @@ export default function FAQPage() {
         }
         .cta-title {
           font-family: var(--font-serif);
-          font-size: 1.75rem;
+          font-size: var(--fs-3xl);
           color: #ffffff;
           font-weight: 750 !important;
           margin: 0;
@@ -1322,7 +1322,7 @@ export default function FAQPage() {
         }
         .cta-desc {
           color: #d8b4fe;
-          font-size: 0.9rem;
+          font-size: var(--fs-sm);
           line-height: 1.4;
           margin: 0;
         }
@@ -1339,7 +1339,7 @@ export default function FAQPage() {
           padding: 10px 18px;
           border-radius: 12px;
           font-weight: 700;
-          font-size: 0.82rem;
+          font-size: var(--fs-xs);
           font-family: var(--font-sans);
           cursor: pointer;
           display: flex;
@@ -1362,7 +1362,7 @@ export default function FAQPage() {
           padding: 10px 18px;
           border-radius: 12px;
           font-weight: 700;
-          font-size: 0.82rem;
+          font-size: var(--fs-xs);
           font-family: var(--font-sans);
           cursor: pointer;
           transition: border-color 0.2s, background-color 0.2s;
@@ -1395,7 +1395,7 @@ export default function FAQPage() {
 
         .widget-title {
           font-family: var(--font-sans);
-          font-size: 0.95rem;
+          font-size: var(--fs-md);
           font-weight: 700;
           color: #1e1b4b;
           margin: 0 0 16px;
@@ -1421,7 +1421,7 @@ export default function FAQPage() {
         }
         .widget-nav-list li {
           font-family: var(--font-sans);
-          font-size: 0.82rem;
+          font-size: var(--fs-xs);
           font-weight: 600;
           color: #4b5563;
           cursor: pointer;
@@ -1459,7 +1459,7 @@ export default function FAQPage() {
         }
         .quote-text {
           font-family: var(--font-serif);
-          font-size: 1.1rem;
+          font-size: var(--fs-lg);
           font-style: italic;
           line-height: 1.5;
           color: #3b0764;
@@ -1467,7 +1467,7 @@ export default function FAQPage() {
           z-index: 1;
         }
         .quote-author {
-          font-size: 0.76rem;
+          font-size: var(--fs-2xs);
           font-weight: 700;
           color: #7c3aed;
           text-transform: uppercase;
@@ -1506,7 +1506,7 @@ export default function FAQPage() {
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 0.72rem;
+          font-size: var(--fs-2xs);
           font-weight: 700;
           flex-shrink: 0;
           margin-top: 2px;
@@ -1519,7 +1519,7 @@ export default function FAQPage() {
         }
         .trending-question {
           font-family: var(--font-sans);
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           font-weight: 600;
           color: #1f2937;
           line-height: 1.35;
@@ -1533,7 +1533,7 @@ export default function FAQPage() {
           color: #7c3aed;
         }
         .trending-tag {
-          font-size: 0.7rem;
+          font-size: var(--fs-2xs);
           color: #6b7280;
         }
         .trending-view-all-btn {
@@ -1542,7 +1542,7 @@ export default function FAQPage() {
           border: 1px solid rgba(124, 58, 237, 0.35);
           color: #7c3aed;
           font-family: var(--font-sans);
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           font-weight: 700;
           padding: 8px;
           border-radius: 10px;
@@ -1565,7 +1565,7 @@ export default function FAQPage() {
         }
         .help-widget .widget-title {
           font-family: var(--font-serif);
-          font-size: 1.15rem;
+          font-size: var(--fs-lg);
           font-weight: 750 !important;
           color: #1e1b4b;
           margin: 0;
@@ -1588,7 +1588,7 @@ export default function FAQPage() {
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 1.1rem;
+          font-size: var(--fs-lg);
           background: #f3e8ff;
           flex-shrink: 0;
         }
@@ -1606,7 +1606,7 @@ export default function FAQPage() {
         }
 
         .help-desc {
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           color: #6b7280;
           line-height: 1.45;
           margin: 0;
@@ -1619,7 +1619,7 @@ export default function FAQPage() {
           padding: 10px 16px;
           border-radius: 12px;
           font-weight: 700;
-          font-size: 0.82rem;
+          font-size: var(--fs-xs);
           font-family: var(--font-sans);
           cursor: pointer;
           display: flex;
@@ -1658,7 +1658,7 @@ export default function FAQPage() {
           border: 1px solid rgba(168, 85, 247, 0.15);
           color: #4c1d95;
           font-family: var(--font-sans);
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
           font-weight: 700;
           padding: 8px 16px;
           border-radius: 12px;
@@ -1723,7 +1723,7 @@ export default function FAQPage() {
             margin-top: 10px;
           }
           .hero-title {
-            font-size: 1.8rem;
+            font-size: var(--fs-3xl);
           }
           .accordion-content-inner {
             padding: 0 16px 16px 16px;

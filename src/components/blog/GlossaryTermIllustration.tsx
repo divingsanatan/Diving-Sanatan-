@@ -39,7 +39,7 @@ export function GlossaryTermIllustration({ illustration }: GlossaryTermIllustrat
             padding-left: 24px;
           }
           .graphic-label {
-            font-size: 0.7rem;
+            font-size: var(--fs-2xs);
             font-weight: 600;
             color: hsl(var(--text-muted));
             text-transform: uppercase;
@@ -105,7 +105,7 @@ export function GlossaryTermIllustration({ illustration }: GlossaryTermIllustrat
             padding-left: 24px;
           }
           .graphic-label {
-            font-size: 0.7rem;
+            font-size: var(--fs-2xs);
             font-weight: 600;
             color: hsl(var(--text-muted));
             text-transform: uppercase;
@@ -154,7 +154,7 @@ export function GlossaryTermIllustration({ illustration }: GlossaryTermIllustrat
             padding-left: 24px;
           }
           .graphic-label {
-            font-size: 0.7rem;
+            font-size: var(--fs-2xs);
             font-weight: 600;
             color: hsl(var(--text-muted));
             text-transform: uppercase;

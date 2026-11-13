@@ -81,18 +81,18 @@ export default function ComparisonIndexPage() {
       <style jsx>{`
         .comparison-index { display: flex; flex-direction: column; gap: 32px; }
         .comp-header { text-align: left; }
-        .page-title { font-size: 2.4rem; color: #4c1d95; margin-bottom: 8px; font-family: var(--font-serif); }
-        .page-subtitle { font-size: 1rem; color: hsl(var(--text-muted)); max-width: 600px; margin: 0; }
+        .page-title { font-size: var(--fs-4xl); color: #4c1d95; margin-bottom: 8px; font-family: var(--font-serif); }
+        .page-subtitle { font-size: var(--fs-base); color: hsl(var(--text-muted)); max-width: 600px; margin: 0; }
         .comparison-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; }
         :global(.comparison-card-link) { text-decoration: none; }
         :global(.comparison-card) { padding: 28px !important; display: flex; flex-direction: column; gap: 12px; transition: var(--transition-smooth); cursor: pointer; height: 100%; }
         :global(.comparison-card:hover) { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(124, 58, 237, 0.1); }
-        :global(.comparison-card h3) { font-family: var(--font-serif); color: #4c1d95; font-size: 1.25rem; }
-        :global(.comparison-card p) { font-size: 0.88rem; color: hsl(var(--text-muted)); line-height: 1.5; flex: 1; }
+        :global(.comparison-card h3) { font-family: var(--font-serif); color: #4c1d95; font-size: var(--fs-xl); }
+        :global(.comparison-card p) { font-size: var(--fs-sm); color: hsl(var(--text-muted)); line-height: 1.5; flex: 1; }
         .modality-pills { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-        .modality-pills span { font-size: 0.78rem; font-weight: 600; padding: 4px 10px; border-radius: 99px; background: rgba(168, 85, 247, 0.08); color: #6d28d9; }
+        .modality-pills span { font-size: var(--fs-2xs); font-weight: 600; padding: 4px 10px; border-radius: 99px; background: rgba(168, 85, 247, 0.08); color: #6d28d9; }
         .vs { background: transparent !important; color: hsl(var(--text-muted)) !important; font-weight: 400 !important; padding: 0 !important; }
-        .view-link { font-size: 0.85rem; font-weight: 700; color: #7c3aed; margin-top: 4px; }
+        .view-link { font-size: var(--fs-sm); font-weight: 700; color: #7c3aed; margin-top: 4px; }
       `}</style>
     </div>
   );

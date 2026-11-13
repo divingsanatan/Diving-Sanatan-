@@ -144,18 +144,18 @@ export const ServicesCartCarousel: React.FC<ServicesCartCarouselProps> = ({
           gap: 8px;
         }
         .carousel-service-header h4 {
-          font-size: 0.95rem;
+          font-size: var(--fs-md);
           color: #4c1d95;
           line-height: 1.3;
         }
         .carousel-service-price {
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
           font-weight: 700;
           color: #db2777;
           white-space: nowrap;
         }
         .carousel-service-desc {
-          font-size: 0.78rem;
+          font-size: var(--fs-2xs);
           color: hsl(var(--text-muted));
           line-height: 1.45;
           flex: 1;
@@ -169,7 +169,7 @@ export const ServicesCartCarousel: React.FC<ServicesCartCarouselProps> = ({
           flex: 1;
           padding: 8px 6px;
           border-radius: 8px;
-          font-size: 0.72rem;
+          font-size: var(--fs-2xs);
           font-weight: 700;
           cursor: pointer;
           transition: var(--transition-fast);
@@ -231,7 +231,7 @@ export const ServicesCartCarousel: React.FC<ServicesCartCarouselProps> = ({
         }
         .cart-drawer-title {
           font-family: var(--font-serif);
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
           color: #4c1d95;
           letter-spacing: 0.08em;
         }
@@ -245,7 +245,7 @@ export const ServicesCartCarousel: React.FC<ServicesCartCarouselProps> = ({
           background: rgba(168, 85, 247, 0.05);
           border: 1px solid rgba(168, 85, 247, 0.25);
           color: #6d28d9;
-          font-size: 0.75rem;
+          font-size: var(--fs-2xs);
           font-weight: 600;
           padding: 6px 12px;
           border-radius: 99px;
@@ -258,7 +258,7 @@ export const ServicesCartCarousel: React.FC<ServicesCartCarouselProps> = ({
           background: transparent;
           border: none;
           color: rgba(0,0,0,0.4);
-          font-size: 1rem;
+          font-size: var(--fs-base);
           cursor: pointer;
           line-height: 1;
         }
@@ -276,13 +276,13 @@ export const ServicesCartCarousel: React.FC<ServicesCartCarouselProps> = ({
           align-items: flex-end;
         }
         .cart-summary-label {
-          font-size: 0.75rem;
+          font-size: var(--fs-2xs);
           color: hsl(var(--text-muted));
           text-transform: uppercase;
         }
         .cart-summary-val {
           font-family: var(--font-serif);
-          font-size: 1.5rem;
+          font-size: var(--fs-2xl);
           font-weight: 700;
           color: #db2777;
         }
@@ -296,7 +296,7 @@ export const ServicesCartCarousel: React.FC<ServicesCartCarouselProps> = ({
           color: hsl(var(--text-muted));
           padding: 12px 18px;
           border-radius: 10px;
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           cursor: pointer;
           font-weight: 600;
           transition: var(--transition-fast);
@@ -311,7 +311,7 @@ export const ServicesCartCarousel: React.FC<ServicesCartCarouselProps> = ({
           border: 1px solid var(--btn-gold-border);
           font-family: var(--font-serif);
           font-weight: 700;
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           padding: 12px 22px;
           border-radius: 10px;
           cursor: pointer;

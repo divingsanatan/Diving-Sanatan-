@@ -43,7 +43,7 @@
 }
 .brandText {
   font-family: var(--font-serif);
-  font-size: 1.2rem;
+  font-size: var(--fs-xl);
   font-weight: 700;
   letter-spacing: 0.14em;
   color: #6d28d9;
@@ -65,7 +65,7 @@
   padding: 8px 20px;
   border-radius: 9999px;
   font-family: var(--font-sans);
-  font-size: 0.92rem;
+  font-size: var(--fs-md);
   font-weight: 600;
   color: #475569;
   text-decoration: none;
@@ -94,7 +94,7 @@
   background: linear-gradient(135deg, #e11d48 0%, #7c3aed 100%);
   color: #fff;
   font-family: var(--font-sans);
-  font-size: 0.88rem;
+  font-size: var(--fs-sm);
   font-weight: 700;
   text-decoration: none;
   white-space: nowrap;
@@ -112,7 +112,7 @@
   border: 1.5px solid rgba(124, 58, 237, 0.35);
   color: #6d28d9;
   font-family: var(--font-sans);
-  font-size: 0.88rem;
+  font-size: var(--fs-sm);
   font-weight: 600;
   text-decoration: none;
   white-space: nowrap;
@@ -152,7 +152,7 @@
   border-radius: 9999px;
   background: #e11d48;
   color: #fff;
-  font-size: 0.68rem;
+  font-size: var(--fs-2xs);
   font-weight: 700;
   line-height: 18px;
   text-align: center;
@@ -173,7 +173,7 @@
   background: #fff;
   color: #334155;
   font-family: var(--font-sans);
-  font-size: 0.88rem;
+  font-size: var(--fs-sm);
   font-weight: 600;
   cursor: pointer;
   box-shadow: none;
@@ -212,12 +212,12 @@
 .avatar {
   width: 32px;
   height: 32px;
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
 }
 .avatarLg {
   width: 46px;
   height: 46px;
-  font-size: 1.05rem;
+  font-size: var(--fs-base);
 }
 .avatarImg {
   width: 100%;
@@ -267,11 +267,11 @@
   border-bottom: 1px solid rgba(43, 47, 51, 0.08);
 }
 .menuHead strong {
-  font-size: 0.95rem;
+  font-size: var(--fs-md);
   color: #1e293b;
 }
 .menuHead span {
-  font-size: 0.8rem;
+  font-size: var(--fs-xs);
   color: #64748b;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -289,7 +289,7 @@
   background: transparent;
   color: #334155;
   font-family: var(--font-sans);
-  font-size: 0.9rem;
+  font-size: var(--fs-sm);
   font-weight: 500;
   text-align: left;
   text-decoration: none;
@@ -386,11 +386,11 @@
   flex: 1;
 }
 .drawerUserText strong {
-  font-size: 1rem;
+  font-size: var(--fs-base);
   color: #1e293b;
 }
 .drawerUserText span {
-  font-size: 0.82rem;
+  font-size: var(--fs-xs);
   color: #64748b;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -408,12 +408,12 @@
 .drawerGuest p {
   margin: 0;
   font-family: var(--font-serif);
-  font-size: 1.35rem;
+  font-size: var(--fs-xl);
   font-weight: 600;
   color: #4c1d95;
 }
 .drawerGuest span {
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
   color: #64748b;
 }
 .drawerSignIn {
@@ -423,7 +423,7 @@
   border-radius: 9999px;
   background: #6d28d9;
   color: #fff;
-  font-size: 0.9rem;
+  font-size: var(--fs-sm);
   font-weight: 600;
   text-decoration: none;
 }
@@ -441,7 +441,7 @@
   border-radius: 14px;
   color: #334155;
   font-family: var(--font-sans);
-  font-size: 1.02rem;
+  font-size: var(--fs-base);
   font-weight: 600;
   text-decoration: none;
   transition: background 0.2s ease, color 0.2s ease;
@@ -476,7 +476,7 @@
   border-radius: 9999px;
   background: linear-gradient(135deg, #e11d48 0%, #7c3aed 100%);
   color: #fff;
-  font-size: 1rem;
+  font-size: var(--fs-base);
   font-weight: 700;
   text-decoration: none;
   box-shadow: 0 8px 20px rgba(124, 58, 237, 0.28);
@@ -492,7 +492,7 @@
   background: transparent;
   color: #e11d48;
   font-family: var(--font-sans);
-  font-size: 0.95rem;
+  font-size: var(--fs-md);
   font-weight: 600;
   cursor: pointer;
   box-shadow: none;
@@ -546,13 +546,13 @@
     display: inline-flex;
   }
   .brandText {
-    font-size: 1.05rem;
+    font-size: var(--fs-base);
     letter-spacing: 0.12em;
   }
 }
 @media (max-width: 380px) {
   .brandText {
-    font-size: 0.92rem;
+    font-size: var(--fs-md);
     letter-spacing: 0.08em;
   }
 }

@@ -46,7 +46,7 @@
 }
 .brandName {
   font-family: var(--font-serif);
-  font-size: 1.35rem;
+  font-size: var(--fs-xl);
   font-weight: 700;
   letter-spacing: 0.14em;
   color: #6d28d9;
@@ -54,13 +54,13 @@
 }
 .tagline {
   margin: 18px 0 8px;
-  font-size: 1.15rem;
+  font-size: var(--fs-lg);
   color: #be185d;
 }
 .desc {
   margin: 0 0 22px;
   max-width: 360px;
-  font-size: 0.93rem;
+  font-size: var(--fs-md);
   line-height: 1.75;
   color: var(--text-muted, #66707a);
 }
@@ -96,7 +96,7 @@
 .heading {
   margin: 0 0 18px;
   font-family: var(--font-sans);
-  font-size: 0.76rem;
+  font-size: var(--fs-2xs);
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -113,7 +113,7 @@
 .link {
   display: inline-block;
   color: var(--text-main, #2b2f33);
-  font-size: 0.94rem;
+  font-size: var(--fs-md);
   text-decoration: none;
   transition: color 0.2s ease, transform 0.2s ease;
 }
@@ -137,14 +137,14 @@
 .newsTitle {
   margin: 0 0 6px;
   font-family: var(--font-serif);
-  font-size: 1.55rem;
+  font-size: var(--fs-2xl);
   font-weight: 600;
   line-height: 1.25;
   color: #3b1a8a;
 }
 .newsSub {
   margin: 0;
-  font-size: 0.9rem;
+  font-size: var(--fs-sm);
   line-height: 1.6;
   color: var(--text-muted, #66707a);
 }
@@ -174,7 +174,7 @@
   outline: none;
   box-shadow: none;
   color: var(--text-main, #2b2f33);
-  font-size: 0.93rem;
+  font-size: var(--fs-md);
   font-family: inherit;
 }
 .input::placeholder {
@@ -194,7 +194,7 @@
   background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
   color: #fff;
   font-weight: 700;
-  font-size: 0.88rem;
+  font-size: var(--fs-sm);
   font-family: inherit;
   cursor: pointer;
   box-shadow: none;
@@ -211,7 +211,7 @@
 .status {
   min-height: 1.4em;
   margin: 10px 0 0 8px;
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
 }
 .statusOk {
   color: #15803d;
@@ -237,7 +237,7 @@
 }
 .legal {
   margin: 0;
-  font-size: 0.83rem;
+  font-size: var(--fs-xs);
   color: var(--text-muted, #66707a);
 }
 .bottomRight {
@@ -249,7 +249,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
   color: var(--text-muted, #66707a);
   text-decoration: none;
   transition: color 0.2s ease;

@@ -1396,7 +1396,7 @@ function UserProfileContent() {
           text-align: center;
           color: #7c3aed;
           font-family: var(--font-serif);
-          font-size: 1.4rem;
+          font-size: var(--fs-2xl);
         }
 
         /* Auth View Styling */
@@ -1411,13 +1411,13 @@ function UserProfileContent() {
           text-align: center;
         }
         .auth-intro-title {
-          font-size: 2.5rem;
+          font-size: var(--fs-4xl);
           color: #4c1d95;
           margin-bottom: 8px;
         }
         .auth-intro-subtitle {
           color: #475569;
-          font-size: 1.05rem;
+          font-size: var(--fs-base);
           line-height: 1.6;
         }
         .auth-form-card {
@@ -1438,7 +1438,7 @@ function UserProfileContent() {
           background: transparent;
           border: none;
           padding: 12px;
-          font-size: 0.9rem;
+          font-size: var(--fs-sm);
           font-weight: 600;
           color: #475569;
           border-radius: 10px;
@@ -1456,12 +1456,12 @@ function UserProfileContent() {
           gap: 20px;
         }
         .auth-section-title {
-          font-size: 1.5rem;
+          font-size: var(--fs-2xl);
           color: #1e1b4b;
           font-weight: 700;
         }
         .auth-section-desc {
-          font-size: 0.88rem;
+          font-size: var(--fs-sm);
           color: #64748b;
           margin-top: -12px;
           margin-bottom: 8px;
@@ -1472,7 +1472,7 @@ function UserProfileContent() {
           gap: 8px;
         }
         .input-group label {
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           text-transform: uppercase;
           font-weight: 700;
           color: #475569;
@@ -1486,13 +1486,13 @@ function UserProfileContent() {
         .auth-submit-btn {
           margin-top: 10px;
           padding: 14px !important;
-          font-size: 0.95rem !important;
+          font-size: var(--fs-md);
           border-radius: 12px !important;
         }
         .alert-message {
           padding: 12px 16px;
           border-radius: 10px;
-          font-size: 0.9rem;
+          font-size: var(--fs-sm);
           font-weight: 600;
         }
         .alert-message.error {
@@ -1529,7 +1529,7 @@ function UserProfileContent() {
           align-items: center;
           justify-content: center;
           font-family: var(--font-serif);
-          font-size: 2.2rem;
+          font-size: var(--fs-4xl);
           color: #4c1d95;
           font-weight: 700;
           border: 2px solid var(--gold-border);
@@ -1537,12 +1537,12 @@ function UserProfileContent() {
           margin-bottom: 16px;
         }
         .user-sidebar-name {
-          font-size: 1.4rem;
+          font-size: var(--fs-2xl);
           color: #1e1b4b;
           margin-bottom: 4px;
         }
         .user-sidebar-email {
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
           color: #64748b;
           margin-bottom: 24px;
         }
@@ -1558,7 +1558,7 @@ function UserProfileContent() {
           border: none;
           padding: 12px 16px;
           text-align: left;
-          font-size: 0.9rem;
+          font-size: var(--fs-sm);
           font-weight: 600;
           color: #475569;
           border-radius: 10px;
@@ -1589,7 +1589,7 @@ function UserProfileContent() {
           color: #dc2626;
           padding: 10px;
           border-radius: 10px;
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
           font-weight: 600;
           cursor: pointer;
           transition: all 0.2s ease;
@@ -1605,13 +1605,13 @@ function UserProfileContent() {
           margin-bottom: 24px;
         }
         .dash-card-title {
-          font-size: 1.6rem;
+          font-size: var(--fs-2xl);
           color: #4c1d95;
           margin-bottom: 8px;
         }
         .dash-card-desc {
           color: #64748b;
-          font-size: 0.9rem;
+          font-size: var(--fs-sm);
           line-height: 1.5;
           margin-bottom: 24px;
         }
@@ -1630,7 +1630,7 @@ function UserProfileContent() {
           cursor: not-allowed;
         }
         .locked-tip {
-          font-size: 0.72rem;
+          font-size: var(--fs-2xs);
           color: #94a3b8;
           margin-top: -4px;
         }
@@ -1650,7 +1650,7 @@ function UserProfileContent() {
           background: rgba(168, 85, 247, 0.08);
           border: 1px solid rgba(168, 85, 247, 0.2);
           color: #6d28d9;
-          font-size: 0.7rem;
+          font-size: var(--fs-2xs);
           font-weight: 700;
           padding: 4px 10px;
           border-radius: 6px;
@@ -1669,14 +1669,14 @@ function UserProfileContent() {
           gap: 4px;
         }
         .meta-label {
-          font-size: 0.72rem;
+          font-size: var(--fs-2xs);
           color: #94a3b8;
           text-transform: uppercase;
           font-weight: 600;
           letter-spacing: 0.03em;
         }
         .meta-value {
-          font-size: 1rem;
+          font-size: var(--fs-base);
           color: #334155;
         }
         .meta-value.text-highlight {
@@ -1688,7 +1688,7 @@ function UserProfileContent() {
           margin: 24px 0;
         }
         .report-sub-title {
-          font-size: 1.15rem;
+          font-size: var(--fs-lg);
           color: #1e1b4b;
           margin-bottom: 16px;
           font-weight: 700;
@@ -1703,7 +1703,7 @@ function UserProfileContent() {
           border-radius: 16px;
         }
         .report-text-paragraph {
-          font-size: 0.98rem;
+          font-size: var(--fs-base);
           line-height: 1.8;
           color: #334155 !important;
         }
@@ -1716,7 +1716,7 @@ function UserProfileContent() {
           gap: 12px;
         }
         .pending-indicator-icon {
-          font-size: 2.5rem;
+          font-size: var(--fs-4xl);
           animation: spin 3s infinite linear;
           color: #a855f7;
         }
@@ -1724,12 +1724,12 @@ function UserProfileContent() {
           100% { transform: rotate(360deg); }
         }
         .pending-report-view h4 {
-          font-size: 1.25rem;
+          font-size: var(--fs-xl);
           color: #4c1d95;
         }
         .pending-report-view p {
           max-width: 480px;
-          font-size: 0.88rem;
+          font-size: var(--fs-sm);
           color: #64748b;
           line-height: 1.6;
         }
@@ -1755,12 +1755,12 @@ function UserProfileContent() {
           border-radius: 50%;
         }
         .chakra-node-name {
-          font-size: 0.98rem;
+          font-size: var(--fs-base);
           font-weight: 700;
           color: #1e1b4b;
         }
         .chakra-node-percentage {
-          font-size: 0.82rem;
+          font-size: var(--fs-xs);
           font-weight: 700;
           color: #6d28d9;
           background: rgba(168, 85, 247, 0.06);
@@ -1782,7 +1782,7 @@ function UserProfileContent() {
           transition: width 1s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .chakra-node-meaning {
-          font-size: 0.82rem;
+          font-size: var(--fs-xs);
           color: #64748b;
           line-height: 1.5;
           margin: 0 !important;
@@ -1801,7 +1801,7 @@ function UserProfileContent() {
             padding: 24px 16px;
           }
           .auth-intro-title {
-            font-size: 1.8rem;
+            font-size: var(--fs-3xl);
           }
           .auth-form-card {
             padding: 20px !important;
@@ -1842,13 +1842,13 @@ function UserProfileContent() {
         }
         .choice-title {
           font-family: var(--font-serif);
-          font-size: 1.85rem;
+          font-size: var(--fs-3xl);
           font-weight: 700;
           color: #1e1b4b;
           margin-bottom: 8px;
         }
         .choice-subtitle {
-          font-size: 0.95rem;
+          font-size: var(--fs-md);
           color: #475569;
           margin-bottom: 32px;
           line-height: 1.5;
@@ -1871,7 +1871,7 @@ function UserProfileContent() {
           color: #334155;
           padding: 14px 20px;
           border-radius: 12px;
-          font-size: 0.95rem;
+          font-size: var(--fs-md);
           font-weight: 600;
           cursor: pointer;
           transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
@@ -1910,7 +1910,7 @@ function UserProfileContent() {
           background: #e2e8f0;
         }
         .divider-text {
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
           color: #94a3b8;
           font-weight: 500;
           text-transform: lowercase;
@@ -1924,7 +1924,7 @@ function UserProfileContent() {
           background: transparent;
           border: none;
           color: #64748b;
-          font-size: 0.9rem;
+          font-size: var(--fs-sm);
           font-weight: 600;
           cursor: pointer;
           padding: 6px 12px;
@@ -1952,7 +1952,7 @@ function UserProfileContent() {
 
         /* Auth Footer Text Toggle */
         .auth-footer-text {
-          font-size: 0.9rem;
+          font-size: var(--fs-sm);
           color: #64748b;
           margin-top: 16px;
           text-align: center;
@@ -2012,13 +2012,13 @@ function UserProfileContent() {
           margin-bottom: 16px;
         }
         .mock-google-header h2 {
-          font-size: 1.35rem;
+          font-size: var(--fs-xl);
           color: #202124;
           font-weight: 500;
           margin: 0 0 8px 0;
         }
         .mock-google-header p {
-          font-size: 0.9rem;
+          font-size: var(--fs-sm);
           color: #5f6368;
           margin: 0;
         }
@@ -2055,7 +2055,7 @@ function UserProfileContent() {
           background: #e8f0fe;
           color: #1a73e8;
           font-weight: 600;
-          font-size: 0.9rem;
+          font-size: var(--fs-sm);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -2070,16 +2070,16 @@ function UserProfileContent() {
           flex-direction: column;
         }
         .mock-account-name {
-          font-size: 0.9rem;
+          font-size: var(--fs-sm);
           font-weight: 600;
           color: #3c4043;
         }
         .mock-account-email {
-          font-size: 0.78rem;
+          font-size: var(--fs-2xs);
           color: #5f6368;
         }
         .mock-google-footer {
-          font-size: 0.72rem;
+          font-size: var(--fs-2xs);
           color: #70757a;
           line-height: 1.4;
           display: flex;
@@ -2102,7 +2102,7 @@ function UserProfileContent() {
           padding: 8px 24px;
           border-radius: 4px;
           font-weight: 500;
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
           cursor: pointer;
           transition: background 0.2s ease;
         }
@@ -2124,7 +2124,7 @@ function UserProfileContent() {
           padding: 10px 12px;
           border: 1px solid #dadce0;
           border-radius: 6px;
-          font-size: 0.9rem;
+          font-size: var(--fs-sm);
           outline: none;
           background: #ffffff;
           color: #334155;
@@ -2145,7 +2145,7 @@ function UserProfileContent() {
           border: none;
           padding: 8px 16px;
           border-radius: 4px;
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
           font-weight: 500;
           cursor: pointer;
         }
@@ -2158,7 +2158,7 @@ function UserProfileContent() {
           color: #5f6368;
           padding: 8px 16px;
           border-radius: 4px;
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
           font-weight: 500;
           cursor: pointer;
         }
@@ -2190,7 +2190,7 @@ function UserProfileContent() {
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 1.25rem;
+          font-size: var(--fs-xl);
           flex-shrink: 0;
         }
         .stat-icon.purple { background: rgba(168, 85, 247, 0.12); }
@@ -2199,8 +2199,8 @@ function UserProfileContent() {
         .stat-icon.blue { background: rgba(59, 130, 246, 0.12); }
 
         .stat-info { display: flex; flex-direction: column; }
-        .stat-num { font-size: 1.25rem; font-weight: 800; color: #1e1b4b; line-height: 1.2; }
-        .stat-title { font-size: 0.72rem; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; }
+        .stat-num { font-size: var(--fs-xl); font-weight: 800; color: #1e1b4b; line-height: 1.2; }
+        .stat-title { font-size: var(--fs-2xs); color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; }
 
         /* Bookings View Styling */
         .bookings-header-flex {
@@ -2221,7 +2221,7 @@ function UserProfileContent() {
           border: 1px solid rgba(0, 0, 0, 0.08);
           padding: 8px 16px;
           border-radius: 99px;
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
           font-weight: 600;
           color: #64748b;
           cursor: pointer;
@@ -2262,13 +2262,13 @@ function UserProfileContent() {
           margin-bottom: 16px;
         }
         .booking-service-title {
-          font-size: 1.25rem;
+          font-size: var(--fs-xl);
           color: #1e1b4b;
           font-weight: 700;
           margin: 0 0 4px 0;
         }
         .booking-practitioner {
-          font-size: 0.88rem;
+          font-size: var(--fs-sm);
           color: #6d28d9;
           font-weight: 600;
         }
@@ -2281,7 +2281,7 @@ function UserProfileContent() {
         .status-badge {
           padding: 4px 12px;
           border-radius: 99px;
-          font-size: 0.75rem;
+          font-size: var(--fs-2xs);
           font-weight: 700;
           text-transform: uppercase;
         }
@@ -2292,7 +2292,7 @@ function UserProfileContent() {
         .payment-badge {
           padding: 4px 12px;
           border-radius: 99px;
-          font-size: 0.75rem;
+          font-size: var(--fs-2xs);
           font-weight: 700;
         }
         .payment-badge.paid { background: rgba(16, 185, 129, 0.12); color: #047857; }
@@ -2309,17 +2309,17 @@ function UserProfileContent() {
           margin-bottom: 16px;
         }
         .b-detail-item { display: flex; flex-direction: column; gap: 4px; }
-        .b-label { font-size: 0.72rem; color: #94a3b8; text-transform: uppercase; font-weight: 700; }
-        .b-val { font-size: 0.92rem; font-weight: 600; color: #334155; }
+        .b-label { font-size: var(--fs-2xs); color: #94a3b8; text-transform: uppercase; font-weight: 700; }
+        .b-val { font-size: var(--fs-md); font-weight: 600; color: #334155; }
         .b-val.gold-text { color: #b45309; font-weight: 800; }
-        .b-val.code-val { font-family: monospace; font-size: 0.85rem; color: #64748b; }
+        .b-val.code-val { font-family: monospace; font-size: var(--fs-sm); color: #64748b; }
 
         .booking-notes-box {
           background: rgba(243, 232, 255, 0.4);
           border: 1px solid rgba(168, 85, 247, 0.12);
           padding: 12px 16px;
           border-radius: 10px;
-          font-size: 0.88rem;
+          font-size: var(--fs-sm);
           color: #475569;
           margin-bottom: 16px;
         }
@@ -2336,7 +2336,7 @@ function UserProfileContent() {
           background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(16, 185, 129, 0.15) 100%);
           border: 1px solid rgba(34, 197, 94, 0.3);
           color: #15803d;
-          font-size: 0.82rem;
+          font-size: var(--fs-xs);
           font-weight: 700;
           padding: 8px 16px;
           border-radius: 99px;
@@ -2354,7 +2354,7 @@ function UserProfileContent() {
           color: #dc2626;
           padding: 8px 16px;
           border-radius: 10px;
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
           font-weight: 600;
           cursor: pointer;
           transition: all 0.2s ease;
@@ -2364,7 +2364,7 @@ function UserProfileContent() {
           background: transparent;
           border: 1px solid rgba(124, 58, 237, 0.2);
           color: #7c3aed;
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
           font-weight: 600;
           cursor: pointer;
           padding: 8px 16px;
@@ -2383,14 +2383,14 @@ function UserProfileContent() {
           flex-direction: column;
           align-items: center;
         }
-        .empty-calendar-icon { font-size: 3rem; margin-bottom: 12px; }
-        .empty-bookings-card h3 { font-size: 1.3rem; color: #1e1b4b; margin-bottom: 6px; }
-        .empty-bookings-card p { color: #64748b; font-size: 0.9rem; }
+        .empty-calendar-icon { font-size: var(--fs-5xl); margin-bottom: 12px; }
+        .empty-bookings-card h3 { font-size: var(--fs-xl); color: #1e1b4b; margin-bottom: 6px; }
+        .empty-bookings-card p { color: #64748b; font-size: var(--fs-sm); }
 
         .nav-badge-count {
           background: #7c3aed;
           color: #ffffff;
-          font-size: 0.72rem;
+          font-size: var(--fs-2xs);
           font-weight: 700;
           padding: 2px 8px;
           border-radius: 99px;
@@ -2412,8 +2412,8 @@ function UserProfileContent() {
           flex-direction: column;
           gap: 4px;
         }
-        .quiz-q { font-size: 0.78rem; font-weight: 700; color: #7c3aed; text-transform: uppercase; }
-        .quiz-a { font-size: 0.95rem; color: #334155; font-weight: 600; }
+        .quiz-q { font-size: var(--fs-2xs); font-weight: 700; color: #7c3aed; text-transform: uppercase; }
+        .quiz-a { font-size: var(--fs-md); color: #334155; font-weight: 600; }
 
         @media (max-width: 900px) {
           .profile-stats-grid {

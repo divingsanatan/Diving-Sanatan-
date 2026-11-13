@@ -280,7 +280,7 @@ export const BlogSidebar: React.FC = () => {
             </svg>
             <span className="inspiration-label" style={{ color: "#7c3aed" }}>About Our Blogs</span>
           </div>
-          <p className="inspiration-quote" style={{ fontFamily: "var(--font-sans)", fontSize: "0.8rem", color: "#475569", fontStyle: "normal", fontWeight: 400, marginTop: 4 }}>
+          <p className="inspiration-quote" style={{ fontFamily: "var(--font-sans)", fontSize: "var(--fs-xs)", color: "#475569", fontStyle: "normal", fontWeight: 400, marginTop: 4 }}>
             Our pillar blogs are comprehensive guides that cover essential aspects of holistic healing. Each pillar covers essential topics with in-depth sub-articles.
           </p>
           <div className="inspiration-lotus-wrapper" style={{ marginTop: 12 }}>
@@ -430,7 +430,7 @@ export const BlogSidebar: React.FC = () => {
         }
         .item-name,
         .child-item-name {
-          font-size: 0.85rem;
+          font-size: var(--fs-sm);
           font-weight: 500;
           color: #4b5563;
           font-family: var(--font-sans);
@@ -482,7 +482,7 @@ export const BlogSidebar: React.FC = () => {
         }
         .inspiration-label {
           font-family: var(--font-sans);
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           font-weight: 700;
           color: #7c3aed;
           text-transform: uppercase;
@@ -490,7 +490,7 @@ export const BlogSidebar: React.FC = () => {
         }
         .inspiration-quote {
           font-family: var(--font-serif);
-          font-size: 0.95rem;
+          font-size: var(--fs-md);
           color: #3b0764;
           line-height: 1.5;
           margin: 0;
@@ -537,7 +537,7 @@ export const BlogSidebar: React.FC = () => {
         }
         .q-promo-title {
           font-family: var(--font-serif);
-          font-size: 1.2rem;
+          font-size: var(--fs-xl);
           font-weight: 750 !important;
           color: #2e0854;
           margin: 0;
@@ -545,7 +545,7 @@ export const BlogSidebar: React.FC = () => {
         }
         .q-promo-desc {
           font-family: var(--font-sans);
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           color: #5b21b6;
           line-height: 1.4;
           margin: 0;
@@ -559,7 +559,7 @@ export const BlogSidebar: React.FC = () => {
           padding: 10px 16px;
           border-radius: 12px;
           font-weight: 700;
-          font-size: 0.82rem;
+          font-size: var(--fs-xs);
           font-family: var(--font-sans);
           cursor: pointer;
           transition: background-color 0.2s ease, transform 0.1s ease;
@@ -593,7 +593,7 @@ export const BlogSidebar: React.FC = () => {
         }
         .faq-inspiration-title {
           font-family: var(--font-serif);
-          font-size: 1.25rem;
+          font-size: var(--fs-xl);
           font-weight: 750 !important;
           color: #4c1d95;
           margin: 0;
@@ -602,7 +602,7 @@ export const BlogSidebar: React.FC = () => {
         }
         .faq-inspiration-desc {
           font-family: var(--font-sans);
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           color: #7c3aed;
           line-height: 1.4;
           margin: 0;
@@ -633,7 +633,7 @@ export const BlogSidebar: React.FC = () => {
           padding: 10px 16px;
           border-radius: 12px;
           font-weight: 700;
-          font-size: 0.82rem;
+          font-size: var(--fs-xs);
           font-family: var(--font-sans);
           cursor: pointer;
           transition: background-color 0.2s ease, transform 0.1s ease;
@@ -652,7 +652,7 @@ export const BlogSidebar: React.FC = () => {
         }
         .wisdom-title {
           font-family: var(--font-sans);
-          font-size: 1.1rem;
+          font-size: var(--fs-lg);
           font-weight: 750;
           color: #5b21b6;
           margin: 0;
@@ -660,7 +660,7 @@ export const BlogSidebar: React.FC = () => {
         }
         .wisdom-desc {
           font-family: var(--font-sans);
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           color: #6b21a8;
           line-height: 1.45;
           margin: 0;
@@ -679,7 +679,7 @@ export const BlogSidebar: React.FC = () => {
           padding: 10px 16px;
           border-radius: 12px;
           font-weight: 700;
-          font-size: 0.82rem;
+          font-size: var(--fs-xs);
           font-family: var(--font-sans);
           cursor: pointer;
           transition: background-color 0.2s ease, transform 0.1s ease;

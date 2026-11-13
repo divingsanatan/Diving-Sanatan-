@@ -275,7 +275,7 @@ export function BlogFloatingSearchBar() {
           border: none !important;
           outline: none !important;
           color: #1f2937;
-          font-size: 0.98rem;
+          font-size: var(--fs-base);
           font-family: var(--font-sans, system-ui, sans-serif);
           font-weight: 500;
           padding: 0 !important;
@@ -290,7 +290,7 @@ export function BlogFloatingSearchBar() {
 
         .floating-input-suggestion {
           font-family: var(--font-sans, system-ui, sans-serif);
-          font-size: 0.78rem;
+          font-size: var(--fs-2xs);
           color: #6b7280;
           margin-top: 1px;
           line-height: 1.2;
@@ -332,7 +332,7 @@ export function BlogFloatingSearchBar() {
 
         .floating-shortcut-badge {
           font-family: var(--font-sans, system-ui, sans-serif);
-          font-size: 0.72rem;
+          font-size: var(--fs-2xs);
           font-weight: 600;
           color: #7c3aed;
           background: rgba(168, 85, 247, 0.08);
@@ -355,7 +355,7 @@ export function BlogFloatingSearchBar() {
           align-items: center;
           justify-content: center;
           cursor: pointer;
-          font-size: 0.72rem;
+          font-size: var(--fs-2xs);
           transition: all 0.2s ease;
           flex-shrink: 0;
         }
@@ -372,7 +372,7 @@ export function BlogFloatingSearchBar() {
           border-radius: 9999px;
           padding: 10px 22px;
           font-family: var(--font-sans, system-ui, sans-serif);
-          font-size: 0.9rem;
+          font-size: var(--fs-sm);
           font-weight: 600;
           cursor: pointer;
           box-shadow: 0 4px 14px rgba(124, 58, 237, 0.25);
@@ -418,7 +418,7 @@ export function BlogFloatingSearchBar() {
         }
 
         .dropdown-section-title {
-          font-size: 0.75rem;
+          font-size: var(--fs-2xs);
           text-transform: uppercase;
           letter-spacing: 0.06em;
           color: #7c3aed;
@@ -438,7 +438,7 @@ export function BlogFloatingSearchBar() {
           color: #5b21b6;
           border-radius: 9999px;
           padding: 6px 14px;
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           font-weight: 600;
           cursor: pointer;
           transition: all 0.2s ease;
@@ -457,7 +457,7 @@ export function BlogFloatingSearchBar() {
           margin-top: 14px;
           padding-top: 10px;
           border-top: 1px solid rgba(168, 85, 247, 0.1);
-          font-size: 0.8rem;
+          font-size: var(--fs-xs);
           color: #6b7280;
         }
 
@@ -466,7 +466,7 @@ export function BlogFloatingSearchBar() {
           border: 1px solid #d1d5db;
           border-radius: 4px;
           padding: 2px 5px;
-          font-size: 0.72rem;
+          font-size: var(--fs-2xs);
           font-family: monospace;
           color: #374151;
         }
@@ -486,7 +486,7 @@ export function BlogFloatingSearchBar() {
           }
           .floating-submit-btn {
             padding: 8px 14px;
-            font-size: 0.82rem;
+            font-size: var(--fs-xs);
           }
           .floating-submit-btn span {
             display: none;

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import { Cormorant_Garamond, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
@@ -19,6 +19,13 @@ const jakarta = Plus_Jakarta_Sans({
   display: "swap",
   variable: "--font-jakarta",
 });
+
+// Pinch-zoom stays enabled (accessibility). Inputs are kept at 16px on phones in
+// globals.css so iOS does not auto-zoom on focus.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+};
 
 export const metadata: Metadata = {
   title: {
@@ -74,7 +81,6 @@ export default function RootLayout({
   return (
     <html lang="en" data-theme="light" className={`${cormorant.variable} ${jakarta.variable}`} suppressHydrationWarning>
       <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
         <meta name="google-adsense-account" content="ca-pub-4820128927673407" />
         {/* Organization Schema */}
         <script

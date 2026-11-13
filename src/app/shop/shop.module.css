@@ -15,7 +15,7 @@
   padding: 28px 0 8px;
 }
 .eyebrow {
-  font-size: 0.78rem;
+  font-size: var(--fs-2xs);
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -32,7 +32,7 @@
 .subtitle {
   max-width: 620px;
   margin: 0 auto;
-  font-size: 1rem;
+  font-size: var(--fs-base);
   line-height: 1.7;
   color: #64748b;
 }
@@ -58,7 +58,7 @@
   background: #fff;
   color: #1e293b;
   font-family: inherit;
-  font-size: 0.95rem;
+  font-size: var(--fs-md);
   outline: none;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
@@ -81,7 +81,7 @@
   background: #fff;
   color: #334155;
   font-family: inherit;
-  font-size: 0.9rem;
+  font-size: var(--fs-sm);
   cursor: pointer;
 }
 .chips {
@@ -97,7 +97,7 @@
   background: #fff;
   color: #475569;
   font-family: inherit;
-  font-size: 0.88rem;
+  font-size: var(--fs-sm);
   font-weight: 600;
   cursor: pointer;
   box-shadow: none;
@@ -115,7 +115,7 @@
 }
 .count {
   margin: 14px 2px 18px;
-  font-size: 0.88rem;
+  font-size: var(--fs-sm);
   color: #64748b;
 }
 
@@ -179,7 +179,7 @@
 .badge {
   padding: 4px 10px;
   border-radius: 9999px;
-  font-size: 0.72rem;
+  font-size: var(--fs-2xs);
   font-weight: 700;
   letter-spacing: 0.02em;
   background: #fff;
@@ -201,7 +201,7 @@
   padding: 16px 18px 20px;
 }
 .cardCat {
-  font-size: 0.74rem;
+  font-size: var(--fs-2xs);
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -210,14 +210,14 @@
 .cardName {
   margin: 0;
   font-family: var(--font-serif);
-  font-size: 1.2rem;
+  font-size: var(--fs-xl);
   font-weight: 600;
   line-height: 1.3;
   color: #1e1b4b;
 }
 .cardShort {
   margin: 0;
-  font-size: 0.86rem;
+  font-size: var(--fs-sm);
   line-height: 1.55;
   color: #64748b;
   display: -webkit-box;
@@ -232,12 +232,12 @@
   margin-top: 6px;
 }
 .price {
-  font-size: 1.15rem;
+  font-size: var(--fs-lg);
   font-weight: 700;
   color: #6d28d9;
 }
 .was {
-  font-size: 0.9rem;
+  font-size: var(--fs-sm);
   color: #94a3b8;
   text-decoration: line-through;
 }
@@ -253,7 +253,7 @@
 .emptyTitle {
   margin: 0 0 6px;
   font-family: var(--font-serif);
-  font-size: 1.5rem;
+  font-size: var(--fs-2xl);
   color: #4c1d95;
 }
 
@@ -264,7 +264,7 @@
   gap: 8px;
   align-items: center;
   margin-bottom: 22px;
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
   color: #64748b;
 }
 .crumbs a {
@@ -339,7 +339,7 @@
   gap: 16px;
 }
 .infoCat {
-  font-size: 0.78rem;
+  font-size: var(--fs-2xs);
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -361,12 +361,12 @@
   gap: 12px;
 }
 .bigPriceNow {
-  font-size: 2rem;
+  font-size: var(--fs-3xl);
   font-weight: 700;
   color: #6d28d9;
 }
 .bigPriceWas {
-  font-size: 1.1rem;
+  font-size: var(--fs-lg);
   color: #94a3b8;
   text-decoration: line-through;
 }
@@ -375,12 +375,12 @@
   border-radius: 9999px;
   background: #fff1f2;
   color: #e11d48;
-  font-size: 0.8rem;
+  font-size: var(--fs-xs);
   font-weight: 700;
 }
 .lead {
   margin: 0;
-  font-size: 1.02rem;
+  font-size: var(--fs-base);
   line-height: 1.75;
   color: #475569;
 }
@@ -388,7 +388,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.9rem;
+  font-size: var(--fs-sm);
   font-weight: 600;
 }
 .dot {
@@ -418,7 +418,7 @@
   padding: 14px 28px;
   border-radius: 9999px;
   font-family: inherit;
-  font-size: 1rem;
+  font-size: var(--fs-base);
   font-weight: 700;
   text-decoration: none;
   cursor: pointer;
@@ -449,7 +449,7 @@
 }
 .note {
   margin: 0;
-  font-size: 0.82rem;
+  font-size: var(--fs-xs);
   color: #94a3b8;
 }
 .highlights {
@@ -462,7 +462,7 @@
 .highlights li {
   position: relative;
   padding-left: 28px;
-  font-size: 0.95rem;
+  font-size: var(--fs-md);
   line-height: 1.55;
   color: #334155;
 }
@@ -487,7 +487,7 @@
   border-radius: 9999px;
   background: #f5f3ff;
   color: #6d28d9;
-  font-size: 0.78rem;
+  font-size: var(--fs-2xs);
   font-weight: 600;
 }
 
@@ -497,13 +497,13 @@
 .sectionTitle {
   margin: 0 0 18px;
   font-family: var(--font-serif);
-  font-size: 1.7rem;
+  font-size: var(--fs-3xl);
   font-weight: 600;
   color: #2e1065;
 }
 .prose {
   max-width: 760px;
-  font-size: 1.02rem;
+  font-size: var(--fs-base);
   line-height: 1.85;
   color: #334155;
 }
@@ -540,7 +540,7 @@
   width: 100%;
   max-width: 760px;
   border-collapse: collapse;
-  font-size: 0.95rem;
+  font-size: var(--fs-md);
 }
 .specs th,
 .specs td {
@@ -573,12 +573,12 @@
 .helpTitle {
   margin: 0 0 4px;
   font-family: var(--font-serif);
-  font-size: 1.4rem;
+  font-size: var(--fs-2xl);
   color: #4c1d95;
 }
 .helpText {
   margin: 0;
-  font-size: 0.95rem;
+  font-size: var(--fs-md);
   color: #64748b;
 }
 
@@ -603,7 +603,7 @@
     padding: 12px 12px 16px;
   }
   .cardName {
-    font-size: 1.02rem;
+    font-size: var(--fs-base);
   }
   .cardShort {
     display: none;
