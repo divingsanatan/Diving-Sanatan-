@@ -295,7 +295,7 @@ export default function StatsDashboard({ pageType, actions, customStats }: Stats
           blogs: ["/api/blogs", "/api/blogs/categories"],
           "video-blogs": ["/api/blogs"],
           glossary: ["/api/glossary"],
-          faq: ["/api/faq"],
+          faq: ["/api/faq?all=1"],
 
           leads: ["/api/leads"],
           users: ["/api/users"],

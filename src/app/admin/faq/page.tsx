@@ -1,640 +1,284 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { Card } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
-import { FAQItem } from "@/types/database";
-import StatsDashboard from "@/components/admin/StatsDashboard";
-import RichTextEditor from "@/components/ui/RichTextEditor";
+import React, { useEffect, useMemo, useState } from "react";
+import { Check, ExternalLink, Pencil, Plus, Sparkles, Trash2 } from "lucide-react";
+import { truncate } from "@/lib/shopShared";
+import { scoreFaq, scoreTone, type FaqEntry } from "@/lib/faqShared";
+import {
+  ApiError,
+  blankFaq,
+  checkStaffSession,
+  createFaq,
+  deleteFaq,
+  fillBlanks,
+  listFaqs,
+  updateFaq,
+} from "./faqApi";
+import FaqEditor from "./FaqEditor";
+import shop from "../shop/adminShop.module.css";
+import styles from "../glossary/adminGlossary.module.css";
 
-import { clearApiCache } from "@/utils/apiCache";
+type StatusFilter = "all" | "published" | "draft";
+type Sort = "weakest" | "oldest" | "recent";
+const PAGE_SIZE = 25;
 
-const PAGE_SIZE = 10;
+const tone = (n: number) => styles[scoreTone(n)];
 
 export default function AdminFAQPage() {
-  const [faqs, setFaqs] = useState<FAQItem[]>([]);
+  const [faqs, setFaqs] = useState<FaqEntry[]>([]);
   const [loading, setLoading] = useState(true);
-  const [editMode, setEditMode] = useState(false);
-  const [editId, setEditId] = useState<string | null>(null);
+  const [authIssue, setAuthIssue] = useState("");
+  const [loadError, setLoadError] = useState("");
+  const [editing, setEditing] = useState<FaqEntry | null>(null);
+  const [formKey, setFormKey] = useState(0);
+  const [saving, setSaving] = useState(false);
+  const [query, setQuery] = useState("");
+  const [status, setStatus] = useState<StatusFilter>("all");
+  const [sort, setSort] = useState<Sort>("weakest");
+  const [page, setPage] = useState(1);
+  const [filling, setFilling] = useState(false);
+  const [toast, setToast] = useState<{ msg: string; err?: boolean } | null>(null);
 
-  // Form states
-  const [question, setQuestion] = useState("");
-  const [answer, setAnswer] = useState("");
-  const [verified, setVerified] = useState(true);
-  const [isPublished, setIsPublished] = useState(true);
-
-  // Modal, search, pagination state
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-
-  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
-
-  const showToast = (message: string, type: "success" | "error" = "success") => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3000);
+  const notify = (msg: string, err = false) => {
+    setToast({ msg, err });
+    window.setTimeout(() => setToast(null), err ? 6500 : 3800);
   };
 
-  const loadFaqs = async () => {
-    try {
-      setLoading(true);
-      const res = await fetch("/api/faq", { cache: "no-store" });
-      const json = await res.json();
-      if (json.success) {
-        setFaqs(json.data);
-        setCurrentPage(1); // Reset page on refresh/load
-      }
-    } catch (err) {
-      console.error("Error loading FAQs:", err);
-    } finally {
-      setLoading(false);
-    }
+  const handleError = (e: unknown, fallback: string) => {
+    if (e instanceof ApiError && (e.status === 401 || e.status === 403 || e.status === 503)) setAuthIssue(e.message);
+    else notify(e instanceof Error ? e.message : fallback, true);
   };
+
+  const reload = async () => setFaqs(await listFaqs());
 
   useEffect(() => {
-    loadFaqs();
+    let cancelled = false;
+    Promise.all([listFaqs(), checkStaffSession()])
+      .then(([f, sess]) => {
+        if (cancelled) return;
+        setFaqs(f);
+        if (!sess.ok) setAuthIssue(sess.message);
+      })
+      .catch((e: unknown) => {
+        if (cancelled) return;
+        if (e instanceof ApiError && (e.status === 401 || e.status === 403 || e.status === 503)) setAuthIssue(e.message);
+        else setLoadError(e instanceof Error ? e.message : "Could not load the FAQs.");
+      })
+      .finally(() => !cancelled && setLoading(false));
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  const resetForm = () => {
-    setQuestion("");
-    setAnswer("");
-    setVerified(true);
-    setIsPublished(true);
-    setEditMode(false);
-    setEditId(null);
-    setIsModalOpen(false);
-  };
+  const scored = useMemo(() => faqs.map((f) => ({ f, s: scoreFaq(f) })), [faqs]);
 
-  const handleOpenCreate = () => {
-    setEditMode(false);
-    setEditId(null);
-    setQuestion("");
-    setAnswer("");
-    setVerified(true);
-    setIsPublished(true);
-    setIsModalOpen(true);
-  };
-
-  const handleEdit = (faq: FAQItem) => {
-    setEditMode(true);
-    setEditId(faq.id);
-    setQuestion(faq.question);
-    setAnswer(faq.answer);
-    setVerified(faq.verified);
-    setIsPublished(faq.isPublished);
-    setIsModalOpen(true);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!question.trim() || !answer.trim()) {
-      showToast("Question and answer are required.", "error");
-      return;
+  const stats = useMemo(() => {
+    const live = scored.filter((x) => x.f.status === "published");
+    const avg = (get: (s: ReturnType<typeof scoreFaq>) => number) => (live.length ? Math.round(live.reduce((n, x) => n + get(x.s), 0) / live.length) : 0);
+    // Most common gaps across published FAQs
+    const gaps = new Map<string, number>();
+    for (const x of live) {
+      for (const p of [x.s.seo, x.s.geo, x.s.aeo]) for (const c of p.checks) if (!c.pass) gaps.set(c.label, (gaps.get(c.label) || 0) + 1);
     }
-
-    const payload = {
-      question: question.trim(),
-      answer: answer.trim(),
-      verified,
-      isPublished,
+    const topGaps = Array.from(gaps.entries()).sort((a, b) => b[1] - a[1]).slice(0, 6);
+    return {
+      total: faqs.length,
+      published: live.length,
+      drafts: faqs.length - live.length,
+      overall: avg((s) => s.overall),
+      seo: avg((s) => s.seo.score),
+      geo: avg((s) => s.geo.score),
+      aeo: avg((s) => s.aeo.score),
+      topGaps,
+      weak: live.filter((x) => x.s.overall < 50).length,
     };
+  }, [scored, faqs.length]);
 
+  const rows = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    const list = scored
+      .filter((x) => status === "all" || x.f.status === status)
+      .filter((x) => !q || `${x.f.question} ${x.f.slug} ${x.f.focusKeyword}`.toLowerCase().includes(q));
+    if (sort === "weakest") list.sort((a, b) => a.s.overall - b.s.overall || a.f.question.localeCompare(b.f.question));
+    else if (sort === "oldest") list.sort((a, b) => (a.f.createdAt || "").localeCompare(b.f.createdAt || ""));
+    else list.sort((a, b) => (b.f.updatedAt || "").localeCompare(a.f.updatedAt || ""));
+    return list;
+  }, [scored, query, status, sort]);
+
+  const pages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+  const pageRows = rows.slice((Math.min(page, pages) - 1) * PAGE_SIZE, Math.min(page, pages) * PAGE_SIZE);
+
+  const openEditor = (f: FaqEntry) => {
+    setFormKey((k) => k + 1);
+    setEditing(f);
+  };
+
+  const save = async (draft: FaqEntry) => {
+    setSaving(true);
     try {
-      const res = await fetch("/api/faq", {
-        method: editMode && editId ? "PUT" : "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(editMode && editId ? { id: editId, ...payload } : payload),
-      });
-      const json = await res.json();
-      if (json.success) {
-        clearApiCache("/api/faq");
-        showToast(editMode ? "FAQ updated successfully!" : "FAQ created successfully!", "success");
-        resetForm();
-        loadFaqs();
+      if (draft.id) {
+        const r = await updateFaq(draft);
+        setFaqs((l) => l.map((f) => (f.id === r.data.id ? r.data : f)));
+        setEditing(r.data);
+        notify(r.redirectCreated ? "Saved. A 301 redirect from the old address was created." : "FAQ saved.");
       } else {
-        showToast(json.error || "Operation failed.", "error");
+        const created = await createFaq(draft);
+        setFaqs((l) => [...l, created]);
+        setEditing(created);
+        notify("FAQ created.");
       }
-    } catch (err) {
-      console.error(err);
-      showToast("Something went wrong. Please try again.", "error");
+    } catch (e) {
+      handleError(e, "Could not save the FAQ.");
+    } finally {
+      setSaving(false);
     }
   };
 
-  const handleDelete = async (id: string, faqQuestion: string) => {
-    const truncatedQ = faqQuestion.length > 50 ? faqQuestion.substring(0, 50) + "..." : faqQuestion;
-    if (!confirm(`Delete FAQ: "${truncatedQ}"?`)) return;
+  const remove = async (f: FaqEntry) => {
+    if (!window.confirm(`Delete “${truncate(f.question, 60)}” permanently? This cannot be undone.\n\nTip: set it to Draft instead to hide it.`)) return;
     try {
-      const res = await fetch(`/api/faq?id=${encodeURIComponent(id)}`, { method: "DELETE" });
-      const json = await res.json();
-      if (json.success) {
-        clearApiCache("/api/faq");
-        showToast("FAQ deleted successfully!", "success");
-        if (editId === id) resetForm();
-        loadFaqs();
-      } else {
-        showToast(json.error || "Failed to delete FAQ.", "error");
-      }
-    } catch (err) {
-      console.error(err);
-      showToast("Something went wrong while deleting.", "error");
+      await deleteFaq(f.id);
+      setFaqs((l) => l.filter((x) => x.id !== f.id));
+      notify("FAQ deleted.");
+    } catch (e) {
+      handleError(e, "Could not delete the FAQ.");
     }
   };
 
-  // Filter FAQs based on search query
-  const filteredFaqs = faqs.filter(
-    (faq) =>
-      faq.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      faq.answer.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const runFill = async () => {
+    if (!window.confirm("Fill in the EMPTY basics for every FAQ?\n\nThis adds a quick answer, SEO title, meta description, focus keyword and related questions ONLY where they are blank. Anything you have already written is never changed. You can edit all of it afterwards.")) return;
+    setFilling(true);
+    try {
+      const r = await fillBlanks();
+      await reload();
+      notify(`Done. ${r.updated} of ${r.total} FAQs were updated.`);
+    } catch (e) {
+      handleError(e, "Could not fill the blanks.");
+    } finally {
+      setFilling(false);
+    }
+  };
 
-  // Pagination calculation
-  const totalPages = Math.ceil(filteredFaqs.length / PAGE_SIZE) || 1;
-  const safePage = Math.min(currentPage, totalPages);
-  const paginatedFaqs = filteredFaqs.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+  /* ------------------------------- editor ------------------------------- */
+  if (editing) {
+    return (
+      <div className={shop.wrap}>
+        {authIssue && <AuthBanner message={authIssue} />}
+        <FaqEditor
+          key={formKey}
+          initial={editing}
+          allFaqs={faqs}
+          saving={saving}
+          onSave={save}
+          onError={(m) => notify(m, true)}
+          onBack={(dirty) => {
+            if (dirty && !window.confirm("You have unsaved changes. Leave without saving?")) return;
+            setEditing(null);
+          }}
+        />
+        {toast && <div className={`${shop.toast} ${toast.err ? shop.toastErr : ""}`} role="status">{toast.msg}</div>}
+      </div>
+    );
+  }
 
+  /* ------------------------------- list ------------------------------- */
   return (
-    <div className="dashboard-content">
-      {/* Toast Notification */}
-      {toast && (
-        <div className={`toast-notify ${toast.type}`}>
-          <span>{toast.message}</span>
+    <div className={shop.wrap}>
+      {authIssue && <AuthBanner message={authIssue} />}
+      {loadError && <div className={`${shop.banner} ${shop.bannerErr}`}><span>{loadError}</span></div>}
+
+      <div className={shop.topbar}>
+        <div>
+          <h2 className={shop.h2}>FAQs</h2>
+          <p className={shop.sub}>Every question gets its own page. Improve SEO, AI search (GEO) and answer-engine (AEO) readiness question by question.</p>
         </div>
-      )}
-
-      <StatsDashboard
-        pageType="faq"
-        actions={
-          <div className="header-actions">
-            <button type="button" className="sync-btn" onClick={loadFaqs}>
-              Refresh FAQs
-            </button>
-            <Button variant="gold" onClick={handleOpenCreate}>
-              + New FAQ
-            </Button>
-          </div>
-        }
-      />
-
-
-      <div className="admin-full-layout">
-        <Card variant="glass" className="admin-table-card">
-          <div className="table-header-bar" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
-            <h3 className="column-title" style={{ margin: 0 }}>FAQs Index ({filteredFaqs.length})</h3>
-            <div className="table-search-box">
-              <input
-                type="text"
-                placeholder="Search FAQs..."
-                className="glass-input"
-                style={{ maxWidth: "260px", padding: "8px 12px", fontSize: "0.85rem" }}
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setCurrentPage(1);
-                }}
-              />
-            </div>
-          </div>
-          
-          {loading ? (
-            <p className="admin-loading" style={{ padding: "40px", textAlign: "center" }}>Loading FAQs...</p>
-          ) : (
-            <>
-              <div className="table-wrapper">
-                {filteredFaqs.length === 0 ? (
-                  <div className="empty-state-padding" style={{ padding: "40px", textAlign: "center" }}>
-                    <p className="empty-list-msg">No FAQs found. Click &quot;+ New FAQ&quot; to create one.</p>
-                  </div>
-                ) : (
-                  <table className="admin-table">
-                    <thead>
-                      <tr>
-                        <th style={{ width: "35%" }}>Question</th>
-                        <th style={{ width: "35%" }}>Answer</th>
-                        <th style={{ width: "10%" }}>Verified</th>
-                        <th style={{ width: "10%" }}>Status</th>
-                        <th style={{ textAlign: "right", width: "10%" }}>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {paginatedFaqs.map((faq) => (
-                        <tr key={faq.id}>
-                          <td>
-                            <strong style={{ color: "#4c1d95" }}>{faq.question}</strong>
-                          </td>
-                          <td>
-                            <div className="term-def-cell" title={faq.answer} style={{ maxWidth: "420px" }}>
-                              {faq.answer}
-                            </div>
-                          </td>
-                          <td>
-                            {faq.verified ? (
-                              <span style={{ color: "#10b981", fontWeight: "bold", fontSize: "0.8rem" }}>✓ Yes</span>
-                            ) : (
-                              <span style={{ color: "#9ca3af", fontSize: "0.8rem" }}>No</span>
-                            )}
-                          </td>
-                          <td>
-                            {faq.isPublished ? (
-                              <span className="category-badge" style={{ background: "rgba(16, 185, 129, 0.06)", borderColor: "rgba(16, 185, 129, 0.2)", color: "#10b981" }}>Published</span>
-                            ) : (
-                              <span className="category-badge" style={{ background: "rgba(239, 68, 68, 0.06)", borderColor: "rgba(239, 68, 68, 0.2)", color: "#ef4444" }}>Draft</span>
-                            )}
-                          </td>
-                          <td>
-                            <div className="action-btns-row">
-                              <button
-                                type="button"
-                                className="edit-row-btn"
-                                onClick={() => handleEdit(faq)}
-                              >
-                                Edit
-                              </button>
-                              <button
-                                type="button"
-                                className="delete-row-btn"
-                                onClick={() => handleDelete(faq.id, faq.question)}
-                              >
-                                Delete
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                )}
-              </div>
-
-              {filteredFaqs.length > 0 && (
-                <div className="admin-pagination-wrapper" style={{ padding: "20px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid rgba(168, 85, 247, 0.08)" }}>
-                  <span className="pagination-info">
-                    Showing {(safePage - 1) * PAGE_SIZE + 1} to {Math.min(safePage * PAGE_SIZE, filteredFaqs.length)} of {filteredFaqs.length} entries
-                  </span>
-                  <ul className="admin-pagination" style={{ display: "flex", listStyle: "none", gap: "4px", margin: 0, padding: 0 }}>
-                    <li className={`page-item ${safePage === 1 ? 'disabled' : ''}`}>
-                      <button onClick={() => setCurrentPage(1)} disabled={safePage === 1}>«</button>
-                    </li>
-                    <li className={`page-item ${safePage === 1 ? 'disabled' : ''}`}>
-                      <button onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={safePage === 1}>Prev</button>
-                    </li>
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                      <li key={page} className={`page-item ${page === safePage ? 'active' : ''}`}>
-                        <button onClick={() => setCurrentPage(page)}>{page}</button>
-                      </li>
-                    ))}
-                    <li className={`page-item ${safePage === totalPages ? 'disabled' : ''}`}>
-                      <button onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={safePage === totalPages}>Next</button>
-                    </li>
-                    <li className={`page-item ${safePage === totalPages ? 'disabled' : ''}`}>
-                      <button onClick={() => setCurrentPage(totalPages)} disabled={safePage === totalPages}>»</button>
-                    </li>
-                  </ul>
-                </div>
-              )}
-            </>
-          )}
-        </Card>
+        <div className={shop.actions}>
+          <a href="/blog/faq" target="_blank" rel="noopener noreferrer" className={`${shop.btn} ${shop.secondary}`}><ExternalLink size={15} /> View FAQ</a>
+          <button className={`${shop.btn} ${shop.secondary}`} onClick={() => void runFill()} disabled={filling || !!authIssue || faqs.length === 0}>
+            <Sparkles size={15} /> {filling ? "Working…" : "Fill empty basics for all"}
+          </button>
+          <button className={`${shop.btn} ${shop.primary}`} onClick={() => openEditor(blankFaq())} disabled={!!authIssue}><Plus size={16} /> Add FAQ</button>
+        </div>
       </div>
 
-      {/* Slide / Popup Modal Form */}
-      {isModalOpen && (
-        <div className="modal-overlay" onClick={resetForm}>
-          <div className="modal-content-wrapper" onClick={(e) => e.stopPropagation()}>
-            <Card variant="glass" className="modal-inner-card">
-              <h3 className="modal-title-bar">
-                {editMode ? "Edit FAQ" : "Create FAQ"}
-              </h3>
-              <form onSubmit={handleSubmit} className="admin-catalog-form">
-                <div className="modal-form-scroll">
-                  <div className="form-group">
-                    <label>Question *</label>
-                    <textarea
-                      className="glass-input textarea-input"
-                      required
-                      rows={3}
-                      placeholder="Enter the question..."
-                      value={question}
-                      onChange={(e) => setQuestion(e.target.value)}
-                    />
-                  </div>
+      <div className={styles.bigScores}>
+        <div className={styles.bigScore}><div className={`${styles.num} ${tone(stats.overall)}`} style={{ background: "none" }}>{stats.published ? stats.overall : "–"}</div><div className={styles.lbl}><strong>Overall readiness</strong><br />{stats.published} published · {stats.drafts} draft</div></div>
+        <div className={styles.bigScore}><div className={`${styles.num} ${tone(stats.seo)}`} style={{ background: "none" }}>{stats.published ? stats.seo : "–"}</div><div className={styles.lbl}><strong>Average SEO</strong><br />Google search</div></div>
+        <div className={styles.bigScore}><div className={`${styles.num} ${tone(stats.geo)}`} style={{ background: "none" }}>{stats.published ? stats.geo : "–"}</div><div className={styles.lbl}><strong>Average GEO</strong><br />AI citations</div></div>
+        <div className={styles.bigScore}><div className={`${styles.num} ${tone(stats.aeo)}`} style={{ background: "none" }}>{stats.published ? stats.aeo : "–"}</div><div className={styles.lbl}><strong>Average AEO</strong><br />Answers &amp; voice</div></div>
+      </div>
 
-                  <div className="form-group">
-                    <label>Answer *</label>
-                    <RichTextEditor
-                      value={answer}
-                      onChange={setAnswer}
-                      placeholder="Enter the answer... use the toolbar above for formatting..."
-                      required
-                    />
-                  </div>
-
-                  <div className="form-group" style={{ flexDirection: "row", alignItems: "center", gap: "8px", marginTop: "8px" }}>
-                    <input
-                      type="checkbox"
-                      id="verified-checkbox"
-                      checked={verified}
-                      onChange={(e) => setVerified(e.target.checked)}
-                      style={{ width: "16px", height: "16px", accentColor: "#7c3aed" }}
-                    />
-                    <label htmlFor="verified-checkbox" style={{ textTransform: "none", cursor: "pointer", fontSize: "0.85rem", margin: 0, fontWeight: "normal" }}>
-                      Show "Verified by Dr. Meera Sharma" Badge
-                    </label>
-                  </div>
-
-                  <div className="form-group" style={{ flexDirection: "row", alignItems: "center", gap: "8px", marginTop: "8px" }}>
-                    <input
-                      type="checkbox"
-                      id="published-checkbox"
-                      checked={isPublished}
-                      onChange={(e) => setIsPublished(e.target.checked)}
-                      style={{ width: "16px", height: "16px", accentColor: "#7c3aed" }}
-                    />
-                    <label htmlFor="published-checkbox" style={{ textTransform: "none", cursor: "pointer", fontSize: "0.85rem", margin: 0, fontWeight: "normal" }}>
-                      Is Published (Visible to public)
-                    </label>
-                  </div>
-                </div>
-
-                <div className="modal-form-footer">
-                  <button type="button" className="modal-cancel-btn" onClick={resetForm}>
-                    Cancel
-                  </button>
-                  <Button variant="gold" type="submit" className="flex-1">
-                    {editMode ? "Update FAQ" : "Create FAQ"}
-                  </Button>
-                </div>
-              </form>
-            </Card>
-          </div>
+      {stats.topGaps.length > 0 && (
+        <div className={shop.panel}>
+          <h3 className={shop.sectionHead}>Biggest opportunities across your published FAQs</h3>
+          <ul className={styles.gaps}>
+            {stats.topGaps.map(([label, n]) => (<li key={label}><span>{label}</span><strong>{n} of {stats.published} FAQs</strong></li>))}
+          </ul>
+          <p className={shop.hint}>{stats.weak} {stats.weak === 1 ? "FAQ scores" : "FAQs score"} below 50. Sort by “Weakest first” and work down the list.</p>
         </div>
       )}
 
-      <style jsx>{`
-        .dashboard-content {
-          display: flex;
-          flex-direction: column;
-          gap: 32px;
-        }
-        .dashboard-header-row {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          gap: 16px;
-        }
-        .dashboard-header-row h2 {
-          font-family: var(--font-serif);
-          color: #4c1d95;
-          font-size: 1.8rem;
-        }
-        .header-actions {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-        }
-        .sync-btn {
-          background: rgba(0, 0, 0, 0.02);
-          border: 1px solid rgba(0, 0, 0, 0.08);
-          color: hsl(var(--text-cream));
-          padding: 10px 18px;
-          border-radius: 8px;
-          cursor: pointer;
-          font-size: 0.85rem;
-          font-weight: 600;
-        }
-        .sync-btn:hover {
-          background: rgba(168, 85, 247, 0.08);
-          border-color: #7c3aed;
-          color: #7c3aed;
-        }
-        .admin-full-layout {
-          width: 100%;
-        }
-        :global(.admin-table-card) {
-          padding: 0 !important;
-          overflow: hidden;
-        }
-        .table-header-bar {
-          padding: 24px 24px 12px;
-          border-bottom: 1px solid rgba(168, 85, 247, 0.08);
-        }
-        .column-title {
-          font-family: var(--font-serif);
-          font-size: 1.35rem;
-          color: #4c1d95;
-        }
-        .table-wrapper {
-          width: 100%;
-          overflow-x: auto;
-        }
-        .admin-table {
-          width: 100%;
-          border-collapse: collapse;
-          text-align: left;
-          font-size: 0.88rem;
-        }
-        .admin-table th {
-          background: rgba(168, 85, 247, 0.03);
-          border-bottom: 1px solid rgba(168, 85, 247, 0.08);
-          padding: 16px 24px;
-          font-weight: 600;
-          text-transform: uppercase;
-          font-size: 0.72rem;
-          color: #4c1d95;
-          letter-spacing: 0.05em;
-          white-space: nowrap;
-        }
-        .admin-table td {
-          border-bottom: 1px solid rgba(0, 0, 0, 0.04);
-          padding: 16px 24px;
-          vertical-align: middle;
-        }
-        .admin-table tbody tr:hover {
-          background: rgba(168, 85, 247, 0.01);
-        }
-        .admin-table tbody tr:last-child td {
-          border-bottom: none;
-        }
-        .category-badge {
-          font-size: 0.7rem;
-          font-weight: 700;
-          padding: 4px 10px;
-          border-radius: 6px;
-          text-transform: uppercase;
-          white-space: nowrap;
-          border: 1px solid;
-          display: inline-block;
-        }
-        .term-def-cell {
-          font-size: 0.85rem;
-          color: hsl(var(--text-muted));
-          line-height: 1.5;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .action-btns-row {
-          display: flex;
-          gap: 8px;
-          justify-content: flex-end;
-        }
-        .edit-row-btn,
-        .delete-row-btn {
-          padding: 6px 12px;
-          border-radius: 6px;
-          font-size: 0.75rem;
-          font-weight: 600;
-          cursor: pointer;
-          border: none;
-          transition: var(--transition-fast);
-        }
-        .edit-row-btn {
-          background: rgba(124, 58, 237, 0.06);
-          border: 1px solid rgba(124, 58, 237, 0.25);
-          color: #7c3aed;
-        }
-        .edit-row-btn:hover {
-          background: rgba(124, 58, 237, 0.12);
-        }
-        .delete-row-btn {
-          background: transparent;
-          border: 1px solid rgba(239, 68, 68, 0.3);
-          color: #ef4444;
-        }
-        .delete-row-btn:hover {
-          background: rgba(239, 68, 68, 0.08);
-        }
+      <div className={shop.filters}>
+        <input className={shop.input} placeholder="Search questions" aria-label="Search questions" value={query} onChange={(e) => { setQuery(e.target.value); setPage(1); }} />
+        <select className={shop.select} style={{ maxWidth: 170 }} aria-label="Status" value={status} onChange={(e) => { setStatus(e.target.value as StatusFilter); setPage(1); }}>
+          <option value="all">All statuses</option><option value="published">Published</option><option value="draft">Draft</option>
+        </select>
+        <select className={shop.select} style={{ maxWidth: 190 }} aria-label="Sort" value={sort} onChange={(e) => setSort(e.target.value as Sort)}>
+          <option value="weakest">Weakest first</option><option value="oldest">Oldest first</option><option value="recent">Recently updated</option>
+        </select>
+      </div>
 
-        /* Modal Overlay & Styling */
-        .modal-overlay {
-          position: fixed;
-          inset: 0;
-          background: rgba(0, 0, 0, 0.45);
-          backdrop-filter: blur(8px);
-          z-index: 1000;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 20px;
-        }
-        .modal-content-wrapper {
-          width: 100%;
-          max-width: 580px;
-          max-height: calc(90vh / var(--ui-zoom, 1));
-          border-radius: 20px;
-          overflow: hidden;
-        }
-        :global(.modal-inner-card) {
-          padding: 0 !important;
-          display: flex;
-          flex-direction: column;
-          max-height: calc(90vh / var(--ui-zoom, 1));
-        }
-        .modal-title-bar {
-          padding: 28px 28px 0;
-          font-family: var(--font-serif);
-          color: #4c1d95;
-          font-size: 1.4rem;
-        }
-        .admin-catalog-form {
-          display: flex;
-          flex-direction: column;
-          flex: 1;
-          min-height: 0;
-        }
-        .modal-form-scroll {
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-          overflow-y: auto;
-          padding: 20px 28px 24px;
-          flex: 1;
-        }
-        .modal-form-footer {
-          display: flex;
-          gap: 12px;
-          padding: 16px 28px 24px;
-          border-top: 1px solid rgba(0, 0, 0, 0.08);
-        }
-        .modal-cancel-btn {
-          background: transparent;
-          border: 1px solid rgba(0, 0, 0, 0.12);
-          color: hsl(var(--text-muted));
-          padding: 10px 20px;
-          border-radius: 8px;
-          font-size: 0.85rem;
-          font-weight: 600;
-          cursor: pointer;
-        }
-        :global(.flex-1) {
-          flex: 1;
-        }
+      <div className={shop.tableCard}>
+        {loading ? (
+          <div className={shop.empty}>Loading FAQs…</div>
+        ) : pageRows.length === 0 ? (
+          <div className={shop.empty}>{faqs.length === 0 ? "No FAQs yet. Click “Add FAQ”." : "No FAQs match your filters."}</div>
+        ) : (
+          <table className={shop.table}>
+            <thead><tr><th>Question</th><th>Status</th><th>Verified</th><th>SEO</th><th>GEO</th><th>AEO</th><th>Overall</th><th>Actions</th></tr></thead>
+            <tbody>
+              {pageRows.map(({ f, s }) => (
+                <tr key={f.id}>
+                  <td><div className={shop.prodName}>{truncate(f.question, 90)}</div><div className={shop.prodSlug}>/blog/faq/{f.slug}</div></td>
+                  <td><span className={`${shop.status} ${f.status === "published" ? shop.st_published : shop.st_draft}`}>{f.status}</span></td>
+                  <td>{f.verified ? <Check size={16} aria-label="Verified badge shown" /> : "–"}</td>
+                  <td><span className={`${styles.pillScore} ${tone(s.seo.score)}`}>{s.seo.score}</span></td>
+                  <td><span className={`${styles.pillScore} ${tone(s.geo.score)}`}>{s.geo.score}</span></td>
+                  <td><span className={`${styles.pillScore} ${tone(s.aeo.score)}`}>{s.aeo.score}</span></td>
+                  <td><span className={`${styles.pillScore} ${tone(s.overall)}`}>{s.overall}</span></td>
+                  <td>
+                    <div className={shop.actions}>
+                      <button className={`${shop.btn} ${shop.secondary} ${shop.small}`} onClick={() => openEditor(f)} aria-label={`Edit ${truncate(f.question, 40)}`}><Pencil size={14} /> Edit</button>
+                      {f.status === "published" && <a className={`${shop.btn} ${shop.secondary} ${shop.small}`} href={`/blog/faq/${f.slug}`} target="_blank" rel="noopener noreferrer" aria-label={`View ${truncate(f.question, 40)}`}><ExternalLink size={14} /></a>}
+                      <button className={`${shop.btn} ${shop.danger} ${shop.small}`} onClick={() => void remove(f)} aria-label={`Delete ${truncate(f.question, 40)}`}><Trash2 size={14} /></button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+      {pages > 1 && (
+        <div className={styles.pager}>
+          <span>{rows.length} FAQs · page {Math.min(page, pages)} of {pages}</span>
+          <span className={shop.actions}>
+            <button className={`${shop.btn} ${shop.secondary} ${shop.small}`} disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>Previous</button>
+            <button className={`${shop.btn} ${shop.secondary} ${shop.small}`} disabled={page >= pages} onClick={() => setPage((p) => p + 1)}>Next</button>
+          </span>
+        </div>
+      )}
 
-        /* Form Controls */
-        .form-group {
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-        }
-        .form-group label {
-          font-size: 0.75rem;
-          color: hsl(var(--text-muted));
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          font-weight: 600;
-        }
-        :global(.glass-input) {
-          width: 100%;
-          padding: 10px 14px;
-          border-radius: 10px;
-          border: 1px solid rgba(0, 0, 0, 0.1);
-          background: rgba(255, 255, 255, 0.8);
-          font-size: 0.9rem;
-          outline: none;
-          font-family: var(--font-sans);
-        }
-        :global(.glass-input:focus) {
-          border-color: #7c3aed;
-          box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
-        }
-        .textarea-input {
-          resize: vertical;
-        }
-        .toast-notify {
-          position: fixed;
-          top: 24px;
-          right: 24px;
-          padding: 16px 24px;
-          border-radius: 12px;
-          font-weight: 600;
-          font-size: 0.9rem;
-          color: #ffffff;
-          box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
-          z-index: 2000;
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .toast-notify.success {
-          background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-          border: 1px solid rgba(16, 185, 129, 0.2);
-        }
-        .toast-notify.error {
-          background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-          border: 1px solid rgba(239, 68, 68, 0.2);
-        }
-        @keyframes slideIn {
-          from {
-            transform: translateY(-20px) scale(0.95);
-            opacity: 0;
-          }
-          to {
-            transform: translateY(0) scale(1);
-            opacity: 1;
-          }
-        }
-      `}</style>
+      {toast && <div className={`${shop.toast} ${toast.err ? shop.toastErr : ""}`} role="status">{toast.msg}</div>}
+    </div>
+  );
+}
+
+function AuthBanner({ message }: { message: string }) {
+  return (
+    <div className={shop.banner} role="alert">
+      <span>{message}</span>
+      <a href="/admin/login?logout=1" className={`${shop.btn} ${shop.secondary} ${shop.small}`}>Sign in again</a>
     </div>
   );
 }

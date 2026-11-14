@@ -25,6 +25,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.75,
     },
     {
+      url: `${baseUrl}/blog/faq`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.75,
+    },
+    {
       url: `${baseUrl}/shop`,
       lastModified: new Date(),
       changeFrequency: "weekly",
@@ -70,7 +76,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   try {
     // Dynamic blog articles, services, and comparison pages from Supabase
-    const [blogsRes, servRes, compRes, shopRes, glossRes] = await Promise.all([
+    const [blogsRes, servRes, compRes, shopRes, glossRes, faqRes] = await Promise.all([
       supabaseServer.from("blogs").select("id, date").order("date", { ascending: false }),
       supabaseServer.from("services").select("id, name"),
       supabaseServer.from("comparison_pages").select("slug"),
@@ -83,6 +89,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       // Published glossary terms that haven't been marked "noindex"
       supabaseServer
         .from("glossary_terms")
+        .select("slug, updated_at, created_at")
+        .eq("status", "published")
+        .eq("noindex", false),
+      // Published FAQs that haven't been marked "noindex"
+      supabaseServer
+        .from("faqs")
         .select("slug, updated_at, created_at")
         .eq("status", "published")
         .eq("noindex", false)
@@ -127,7 +139,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.6,
     }));
 
-    return [...staticRoutes, ...blogRoutes, ...serviceRoutes, ...compRoutes, ...shopRoutes, ...glossaryRoutes];
+    const faqRoutes: MetadataRoute.Sitemap = (faqRes.data || []).map((f) => ({
+      url: `${baseUrl}/blog/faq/${f.slug}`,
+      lastModified: new Date(f.updated_at || f.created_at || Date.now()),
+      changeFrequency: "monthly",
+      priority: 0.6,
+    }));
+
+    return [...staticRoutes, ...blogRoutes, ...serviceRoutes, ...compRoutes, ...shopRoutes, ...glossaryRoutes, ...faqRoutes];
   } catch (error) {
     console.error("Error generating dynamic sitemap routes:", error);
   }

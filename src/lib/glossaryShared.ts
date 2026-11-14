@@ -204,7 +204,7 @@ export function scoreTerm(e: GlossaryEntry, now: number = Date.now()): Scores {
 
   const aeo: Check[] = [
     { id: "ans", label: "Quick answer is 40–60 words (featured-snippet length)", pass: !!e.shortAnswer.trim() && answerWords >= 40 && answerWords <= 60, weight: 25, hint: `Currently ${e.shortAnswer.trim() ? answerWords : 0} words.` },
-    { id: "faq3", label: "3+ FAQs", pass: e.faqs.filter((f) => f.question.trim() && f.answer.trim()).length >= 3, weight: 20, hint: "These can win “People also ask” boxes and FAQ rich results." },
+    { id: "faq3", label: "3+ FAQs", pass: e.faqs.filter((f) => f.question.trim() && f.answer.trim()).length >= 3, weight: 20, hint: "These feed “People also ask” and AI answers. (Google stopped showing FAQ rich results in May 2026, but the questions still help.)" },
     { id: "q", label: "FAQ questions are real questions (“What is…?”)", pass: e.faqs.length > 0 && e.faqs.every((f) => QUESTION.test(f.question.trim())), weight: 15, hint: "Start with What / Why / How / Is / Can and end with ?" },
     { id: "speak", label: "Quick answer is short enough to be read aloud (≤ 3 sentences)", pass: !!e.shortAnswer.trim() && (e.shortAnswer.match(/[.!?](\s|$)/g) || []).length <= 3 && answerWords <= 60, weight: 10, hint: "Voice assistants read short, complete answers." },
     { id: "bullets", label: "Key takeaways list", pass: e.keyTakeaways.filter((t) => t.trim()).length >= 3, weight: 10, hint: "Bullet lists are favoured for list-style answers." },

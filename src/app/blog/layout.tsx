@@ -50,7 +50,7 @@ function BlogLayoutInner({ children }: { children: React.ReactNode }) {
       }
       return "All Blogs";
     }
-    if (pathname === "/blog/faq") return "FAQ & Help";
+    if (pathname === "/blog/faq" || pathname.startsWith("/blog/faq/")) return "FAQ & Help";
     if (pathname === "/blog/glossary") return "Glossary";
     if (pathname === "/blog/quora-qa") return "Q&A Community";
     if (pathname === "/blog/video-transcripts") return "Video Transcripts";

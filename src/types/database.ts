@@ -211,6 +211,11 @@ export interface FAQItem {
   verified: boolean;
   isPublished: boolean;
   createdAt?: string;
+  /** Page address of the question's own page, /blog/faq/<slug> (see lib/faqShared.ts for the full entry). */
+  slug?: string;
+  shortAnswer?: string;
+  /** Named reviewer; shown in the verified badge when set. */
+  reviewedBy?: string;
 }
 
 export interface TeamMember {

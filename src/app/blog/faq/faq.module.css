@@ -1,0 +1,60 @@
+/* Extras for the FAQ hub and question pages. The article look (answer box, takeaways, related cards,
+   sources, pager) is shared with the glossary: see ../glossary/glossary.module.css */
+
+.questionList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 2px;
+  counter-reset: q;
+}
+.questionList li {
+  counter-increment: q;
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  gap: 6px;
+  padding: 10px 0;
+  border-top: 1px solid rgba(43, 47, 51, 0.07);
+}
+.questionList li::before {
+  content: counter(q);
+  font-family: var(--font-heading);
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  line-height: 1.3;
+  color: #7c3aed;
+}
+.questionList a {
+  color: #4c1d95;
+  font-size: var(--fs-base);
+  font-weight: 600;
+  line-height: 1.5;
+  text-decoration: none;
+}
+.questionList a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.altList {
+  margin: 0;
+  padding-left: 1.2em;
+  display: grid;
+  gap: 6px;
+  color: var(--text-main, #2b2f33);
+  line-height: 1.6;
+}
+
+.verified {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 14px 10px;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  background: #ecfdf5;
+  color: #047857;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+}

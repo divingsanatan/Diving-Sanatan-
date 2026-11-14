@@ -51,7 +51,7 @@ export async function runSiteScanPipeline(): Promise<ScanResult> {
     const { data: blogs } = await supabaseServer.from("blogs").select("id, title, content, updated_at");
     const { data: services } = await supabaseServer.from("services").select("id, name, description");
     const { data: glossary } = await supabaseServer.from("glossary_terms").select("id, word, definition");
-    const { data: faqs } = await supabaseServer.from("faq_items").select("id, question, answer");
+    const { data: faqs } = await supabaseServer.from("faqs").select("id, question, answer");
 
     let blogList: any[] = blogs || [];
     let serviceList: any[] = services || [];

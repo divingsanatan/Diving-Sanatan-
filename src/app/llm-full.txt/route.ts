@@ -8,7 +8,7 @@ export async function GET() {
     const [blogsRes, servicesRes, faqRes, glossRes] = await Promise.all([
       supabaseServer.from("blogs").select("id, slug, title, content, tldr, author, date").limit(20),
       supabaseServer.from("services").select("name, description, benefits, process").limit(10),
-      supabaseServer.from("faq_items").select("question, answer").limit(15),
+      supabaseServer.from("faqs").select("slug, question, answer, short_answer, key_takeaways, alternate_questions").eq("status", "published").eq("noindex", false).order("created_at", { ascending: true }).limit(150),
       supabaseServer.from("glossary_terms").select("slug, word, definition, short_answer, alternate_names, key_takeaways, faqs, origin").eq("status", "published").eq("noindex", false).order("word", { ascending: true }).limit(300)
     ]);
 
@@ -24,15 +24,23 @@ export async function GET() {
       fullText += `### ${s.name}\n${s.description || "Holistic healing session."}\n\n`;
     });
 
+    // FAQ: direct answers AI assistants can quote and cite, each with its own page
+    const plainText = (v: unknown) => String(v || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
     fullText += `## Frequently Asked Questions & Answers\n`;
-    (faqRes.data || []).forEach(f => {
-      fullText += `Q: ${f.question}\nA: ${f.answer}\n\n`;
-    });
+    fullText += `Index: ${baseUrl}/blog/faq\n\n`;
+    for (const f of (faqRes.data || []) as Array<Record<string, unknown>>) {
+      fullText += `Q: ${f.question}\nURL: ${baseUrl}/blog/faq/${f.slug}\n`;
+      fullText += `A: ${plainText(f.short_answer) || plainText(f.answer).substring(0, 700)}\n`;
+      const pts = Array.isArray(f.key_takeaways) ? (f.key_takeaways as string[]).filter(Boolean) : [];
+      for (const k of pts) fullText += `- ${k}\n`;
+      const alts = Array.isArray(f.alternate_questions) ? (f.alternate_questions as string[]).filter(Boolean) : [];
+      if (alts.length) fullText += `Also asked: ${alts.join(" | ")}\n`;
+      fullText += `\n`;
+    }
 
     // Glossary: definitions AI assistants can quote and cite, each with its own page
     fullText += `## Glossary of Sanatan Dharma, Chakra & Healing Terms\n`;
     fullText += `Index: ${baseUrl}/blog/glossary\n\n`;
-    const plainText = (v: unknown) => String(v || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
     for (const t of (glossRes.data || []) as Array<Record<string, unknown>>) {
       fullText += `### ${t.word}\nURL: ${baseUrl}/blog/glossary/${t.slug}\n`;
       fullText += `${plainText(t.short_answer) || plainText(t.definition)}\n`;
