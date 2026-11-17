@@ -52,7 +52,7 @@ function BlogLayoutInner({ children }: { children: React.ReactNode }) {
     }
     if (pathname === "/blog/faq" || pathname.startsWith("/blog/faq/")) return "FAQ & Help";
     if (pathname === "/blog/glossary") return "Glossary";
-    if (pathname === "/blog/quora-qa") return "Q&A Community";
+    if (pathname === "/blog/quora-qa" || pathname.startsWith("/blog/quora-qa/")) return "Q&A Community";
     if (pathname === "/blog/video-transcripts") return "Video Transcripts";
     if (pathname === "/blog/pillar") return "Pillar Blog";
     if (pathname.includes("/blog/") && activeBlog) return `Article: ${activeBlog.title}`;

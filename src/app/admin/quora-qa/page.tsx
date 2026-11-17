@@ -1,1124 +1,417 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { Card } from "@/components/ui/Card";
-import { 
-  Trash2, Edit, CheckCircle2, AlertCircle, PlusCircle, Search, Filter, MessageSquare, Trash 
-} from "lucide-react";
-import StatsDashboard from "@/components/admin/StatsDashboard";
-import RichTextEditor from "@/components/ui/RichTextEditor";
+import React, { useEffect, useMemo, useState } from "react";
+import { Check, ExternalLink, Pencil, Plus, Sparkles, Trash2, X } from "lucide-react";
+import { truncate } from "@/lib/shopShared";
+import { scoreTone } from "@/lib/faqShared";
+import { isAnswered, scoreQuestion, type QaComment, type QaQuestion, type QaStatus } from "@/lib/qaShared";
+import {
+  ApiError,
+  STAFF_ROLES,
+  blankQuestion,
+  createQuestion,
+  deleteComment,
+  deleteQuestion,
+  fillBlanks,
+  listComments,
+  listPractitioners,
+  listQuestions,
+  setCommentStatus,
+  setQuestionStatus,
+  updateQuestion,
+  whoAmI,
+  type PractitionerOption,
+} from "./qaApi";
+import QaEditor from "./QaEditor";
+import shop from "../shop/adminShop.module.css";
+import styles from "../glossary/adminGlossary.module.css";
 
-interface HealerReply {
+type View = "review" | "awaiting" | "answered" | "rejected" | "all";
+const PAGE_SIZE = 25;
+const tone = (n: number) => styles[scoreTone(n)];
+const fmt = (iso: string) => (iso ? new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }) : "");
 
-  healerName: string;
-  healerAvatar: string;
-  healerRole: string;
-  healerCredentials: string;
-  date: string;
-  content: string;
-  bullets: string[];
-  conclusion: string;
-  likes: number;
-  likedByUser?: boolean;
-  thankedByUser?: boolean;
-}
-
-interface QuestionItem {
-  id: string;
-  category: string;
-  title: string;
-  description: string;
-  askedBy: string;
-  askedByAvatar: string;
-  date: string;
-  views: string;
-  followers: number;
-  upvotes: number;
-  commentsCount: number;
-  upvotedByUser?: "up" | "down" | null;
-  followedByUser?: boolean;
-  bestAnswer?: HealerReply;
-  comments: any[];
-}
-
-const initialQuestions: QuestionItem[] = [
-  {
-    id: "anxiety-reduction",
-    category: "Mind & Emotions",
-    title: "How can I reduce anxiety naturally?",
-    description: "Looking for natural and holistic ways to manage anxiety without medication.",
-    askedBy: "Ananya",
-    askedByAvatar: "🧘‍♀️",
-    date: "May 10, 2025",
-    views: "1.2K",
-    followers: 23,
-    upvotes: 128,
-    commentsCount: 18,
-    bestAnswer: {
-      healerName: "Dr. Meera Sharma",
-      healerAvatar: "/images/anara.png",
-      healerRole: "Healer",
-      healerCredentials: "Holistic Therapist • 12 years experience",
-      date: "May 10, 2025",
-      content: "Anxiety often stems from an overactive mind and nervous system. Here are some natural and holistic ways that truly help:",
-      bullets: [
-        "Breathwork: Practice 4-7-8 breathing or alternate nostril breathing daily.",
-        "Meditation: 10–15 minutes of mindfulness meditation can calm your thoughts.",
-        "Yoga: Gentle asanas like Child's Pose, Forward Fold, and Legs-Up-The-Wall help relax the body.",
-        "Herbs: Ashwagandha, Brahmi, and Jatamansi are known to support the nervous system.",
-        "Lifestyle: Regular sleep, a sattvic diet, sunlight, and digital detox are game changers."
-      ],
-      conclusion: "Consistency is the key. Start small, stay regular, and your mind will thank you.",
-      likes: 86
-    },
-    comments: [
-      {
-        id: "c-1",
-        author: "Ritika S.",
-        avatar: "👩",
-        role: "Community Member",
-        content: "Breathwork has been life-changing for me. The 4-7-8 technique really helps at night!",
-        date: "May 11, 2025",
-        likes: 12,
-        replies: [
-          {
-            id: "r-1-1",
-            author: "Dr. Meera Sharma",
-            avatar: "⚕️",
-            role: "Holistic Therapist • Healer",
-            isHealer: true,
-            content: "So glad to hear that, Ritika! Consistency is magic ✨",
-            date: "May 11, 2025",
-            likes: 5
-          }
-        ],
-        showReplies: true
-      }
-    ]
-  },
-  {
-    id: "pcos-chakra",
-    category: "Chakra Healing",
-    title: "Can chakra healing help PCOS symptoms?",
-    description: "I've been dealing with PCOS-related hormone volatility and fatigue for a year. Can balancing the Lower Abdomen nodes help stabilize cortisol levels?",
-    askedBy: "Aditi S.",
-    askedByAvatar: "👩",
-    date: "May 8, 2025",
-    views: "950",
-    followers: 12,
-    upvotes: 42,
-    commentsCount: 5,
-    bestAnswer: {
-      healerName: "Dr. Meera Sharma",
-      healerAvatar: "/images/anara.png",
-      healerRole: "Healer",
-      healerCredentials: "Holistic Therapist • 12 years experience",
-      date: "May 9, 2025",
-      content: "Yes, absolutely. PCOS is heavily linked to nervous system hypersensitivity and high cortisol. By introducing focused chakra therapy, we soothe Svadhisthana (Sacral) and Muladhara (Root) nodes, calming fight-or-flight endocrine pathways:",
-      bullets: [
-        "Sacral Node Alignment: Practice Svadhisthana sound baths at 417Hz daily.",
-        "Crystals Integration: Place Orange Calcite or Carnelian on the lower abdomen during guided meditations.",
-        "Pranayama: Alternate nostril breathing for 10 minutes to calm the pituitary gland.",
-        "Sattvic Diet: Reduce inflammatory foods, processed sugars, and high-caffeine beverages."
-      ],
-      conclusion: "Realigning lower energy nodes helps restore overall hormonal harmony. We recommend starting with a 3-week daily alignment practice.",
-      likes: 32
-    },
-    comments: []
-  },
-  {
-    id: "hands-warmth",
-    category: "Aura & Energy",
-    title: "What causes sudden warmth in palms during meditation?",
-    description: "Sometimes during deep meditation, my palms start feeling extremely hot. Does this relate to reiki or active energy channels?",
-    askedBy: "Rohan K.",
-    askedByAvatar: "👨",
-    date: "May 5, 2025",
-    views: "720",
-    followers: 8,
-    upvotes: 28,
-    commentsCount: 3,
-    bestAnswer: {
-      healerName: "Guru Dev",
-      healerAvatar: "🧘",
-      healerRole: "Energy Master",
-      healerCredentials: "Kundalini Master • 15 years experience",
-      date: "May 6, 2025",
-      content: "This is a classical sign of prana (vital force) activation. Minor energy channels in your palms are opening up. Here is what is happening:",
-      bullets: [
-        "Prana Flow: Deep concentration directs energy downward and outward into the hand extremities.",
-        "Minor Chakras Activation: The hand chakras are responsible for healing transmission and energy scanning.",
-        "Thermal Transference: The warmth is a physical manifestation of high-frequency energy flow."
-      ],
-      conclusion: "You are ready to explore healing applications, such as Reiki or sound bowl projection. Embrace the warmth and focus on directing it intentionally.",
-      likes: 19
-    },
-    comments: []
-  },
-  {
-    id: "throat-chakra-blockage",
-    category: "Chakra Healing",
-    title: "How do I clear a blocked Throat Chakra (Vishuddha)?",
-    description: "Lately I find it hard to express my feelings clearly and feel a constant tightness in my neck during conversations. Can sound healing help balance the Throat Chakra?",
-    askedBy: "Meera K.",
-    askedByAvatar: "👩",
-    date: "May 3, 2025",
-    views: "640",
-    followers: 15,
-    upvotes: 35,
-    commentsCount: 2,
-    bestAnswer: {
-      healerName: "Dr. Meera Sharma",
-      healerAvatar: "/images/anara.png",
-      healerRole: "Healer",
-      healerCredentials: "Holistic Therapist • 12 years experience",
-      date: "May 4, 2025",
-      content: "A blocked Throat Chakra (Vishuddha) directly restricts self-expression and truth. Sound therapy using the frequency of 741Hz or chanting the HAM seed mantra is highly effective to restore energy flow:",
-      bullets: [
-        "HAM Mantra: Chant the HAM sound for 10-15 minutes in a comfortable sitting posture.",
-        "Blue Lace Agate: Place this crystal on your neck during throat chakra meditations.",
-        "Sound Therapy: Listen to 741Hz Solfeggio frequency vibrations daily.",
-        "Journaling: Practice uncensored stream-of-consciousness writing to release blocked emotions."
-      ],
-      conclusion: "Speak your truth gently, and let the sound vibrations wash away the mental blocks.",
-      likes: 15
-    },
-    comments: []
-  },
-  {
-    id: "protect-energy-crowds",
-    category: "Aura & Energy",
-    title: "How to protect my energy field in crowded places?",
-    description: "As an empath, I feel extremely drained after visiting shopping malls or taking public transport. What crystals or practices can help shield my aura?",
-    askedBy: "Kabir M.",
-    askedByAvatar: "👨",
-    date: "May 1, 2025",
-    views: "810",
-    followers: 18,
-    upvotes: 56,
-    commentsCount: 3,
-    bestAnswer: {
-      healerName: "Guru Dev",
-      healerAvatar: "🧘",
-      healerRole: "Energy Master",
-      healerCredentials: "Kundalini Master • 15 years experience",
-      date: "May 2, 2025",
-      content: "Empaths naturally absorb the emotional energy of their surroundings. To shield your aura, you must establish clear boundaries and activate a protective energy shield before stepping out:",
-      bullets: [
-        "Aura Shielding: Visualize a bright white or violet sphere of light surrounding your body.",
-        "Protective Crystals: Carry Black Tourmaline, Hematite, or Labradorite in your pocket.",
-        "Salt Bath: Take a warm bath with Epsom salt after returning home to cleanse residual energy.",
-        "Rooting Practice: Keep your feet flat on the ground and feel anchored to the Earth."
-      ],
-      conclusion: "A healthy aura acts as a filter, not a sponge. Shield daily and cleanse regularly.",
-      likes: 24
-    },
-    comments: []
-  },
-  {
-    id: "solfeggio-528hz-healing",
-    category: "Meditation & Mindfulness",
-    title: "What makes the 528Hz frequency so special for healing?",
-    description: "I keep seeing 528Hz mentioned everywhere in sound healing videos as the 'Love Frequency' or 'Transformation Frequency'. What is the science behind it?",
-    askedBy: "Sneha G.",
-    askedByAvatar: "👧",
-    date: "Apr 28, 2025",
-    views: "1.1K",
-    followers: 20,
-    upvotes: 78,
-    commentsCount: 4,
-    bestAnswer: {
-      healerName: "Dr. Meera Sharma",
-      healerAvatar: "/images/anara.png",
-      healerRole: "Healer",
-      healerCredentials: "Holistic Therapist • 12 years experience",
-      date: "Apr 29, 2025",
-      content: "528Hz is one of the core Solfeggio frequencies. It is traditionally associated with cell regeneration and DNA repair, helping bring the body into a state of deep relaxation:",
-      bullets: [
-        "Cellular Resonance: Studies suggest sound at 528Hz stimulates cellular repair pathways.",
-        "Solar Plexus Activation: This frequency realigns the Manipura chakra, boosting confidence.",
-        "Stress Reduction: Sound baths at 528Hz reduce cortisol levels significantly within 20 minutes."
-      ],
-      conclusion: "Incorporate 528Hz meditation sessions into your evening routine for deep, restorative rest.",
-      likes: 38
-    },
-    comments: []
-  },
-  {
-    id: "self-reiki-stress",
-    category: "Reiki Healing",
-    title: "Can I perform self-Reiki for quick stress relief?",
-    description: "I recently finished a Reiki Level 1 course but feel unsure how to execute a session on myself when feeling overwhelmed at work. What are the key hand positions?",
-    askedBy: "Rahul V.",
-    askedByAvatar: "👦",
-    date: "Apr 25, 2025",
-    views: "520",
-    followers: 9,
-    upvotes: 19,
-    commentsCount: 1,
-    bestAnswer: {
-      healerName: "Guru Dev",
-      healerAvatar: "🧘",
-      healerRole: "Energy Master",
-      healerCredentials: "Kundalini Master • 15 years experience",
-      date: "Apr 26, 2025",
-      content: "Yes, self-Reiki is a beautiful tool for immediate centering. Even a 5-minute session in your office chair can redirect nervous energy:",
-      bullets: [
-        "Center Yourself: Rub your hands together, place them over your heart, and set a clear healing intention.",
-        "Third Eye / Crown Position: Place your hands gently on your forehead and eyes to quiet a racing mind.",
-        "Throat & Heart Position: Place one hand on your throat and the other on your chest to balance emotional expression.",
-        "Solar Plexus Position: Place hands on the upper abdomen to calm any physical anxiety sensations."
-      ],
-      conclusion: "Reiki flows wherever it is needed. Trust your hands, breathe deeply, and allow the energy to work.",
-      likes: 12
-    },
-    comments: []
-  },
-  {
-    id: "sound-bowls-insomnia",
-    category: "Meditation & Mindfulness",
-    title: "Do Tibetan singing bowls actually help with chronic insomnia?",
-    description: "I've struggled with waking up at 3 AM for months. Will listening to Tibetan singing bowls or crystal bowls help me stay asleep?",
-    askedBy: "Priya S.",
-    askedByAvatar: "👩",
-    date: "Apr 20, 2025",
-    views: "930",
-    followers: 25,
-    upvotes: 62,
-    commentsCount: 3,
-    bestAnswer: {
-      healerName: "Dr. Meera Sharma",
-      healerAvatar: "/images/anara.png",
-      healerRole: "Healer",
-      healerCredentials: "Holistic Therapist • 12 years experience",
-      date: "Apr 21, 2025",
-      content: "Yes, sound bowls are highly effective for sleep disorders. They work by entraining brainwaves from active Beta states into slow Theta and Delta states associated with deep sleep:",
-      bullets: [
-        "Brainwave Entrainment: The slow harmonic frequencies induce alpha/theta states, quieting active thoughts.",
-        "Vibrational Healing: The physical resonance relaxes tense muscle tissue and regulates breathing.",
-        "Nighttime Ritual: Listen to crystal bowl audio for 30 minutes before sleep without screen exposure."
-      ],
-      conclusion: "Creating a dedicated sound-healing environment before bed transforms sleep quality over time.",
-      likes: 41
-    },
-    comments: []
-  }
-];
-
-export default function QuoraQAAdmin() {
-  const [questions, setQuestions] = useState<QuestionItem[]>([]);
-  const [healerCount, setHealerCount] = useState(24);
+export default function AdminQaPage() {
+  const [questions, setQuestions] = useState<QaQuestion[]>([]);
+  const [practitioners, setPractitioners] = useState<PractitionerOption[]>([]);
+  const [role, setRole] = useState("");
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [activeCategory, setActiveCategory] = useState("all");
-  const [activeTab, setActiveTab] = useState("all"); // all, answered, unanswered
+  const [authIssue, setAuthIssue] = useState("");
+  const [loadError, setLoadError] = useState("");
+  const [editing, setEditing] = useState<QaQuestion | null>(null);
+  const [formKey, setFormKey] = useState(0);
+  const [saving, setSaving] = useState(false);
+  const [view, setView] = useState<View | null>(null);
+  const [query, setQuery] = useState("");
+  const [page, setPage] = useState(1);
+  const [filling, setFilling] = useState(false);
+  const [comments, setComments] = useState<QaComment[]>([]);
+  const [commentStatus, setCommentStatusFilter] = useState<QaStatus>("pending");
+  const [toast, setToast] = useState<{ msg: string; err?: boolean } | null>(null);
 
-  const defaultCategories = [
-    "Mind & Emotions",
-    "Chakra Healing",
-    "Aura & Energy",
-    "Meditation & Mindfulness",
-    "Reiki Healing"
-  ];
+  const isStaff = STAFF_ROLES.includes(role);
 
-  const [categories, setCategories] = useState<string[]>([]);
-  const [showCatModal, setShowCatModal] = useState(false);
-  const [newCatName, setNewCatName] = useState("");
+  const notify = (msg: string, err = false) => {
+    setToast({ msg, err });
+    window.setTimeout(() => setToast(null), err ? 6500 : 3800);
+  };
+  const handleError = (e: unknown, fallback: string) => {
+    if (e instanceof ApiError && (e.status === 401 || e.status === 403)) setAuthIssue(e.status === 401 ? "Your admin session has expired. Please sign in again." : "You do not have permission to do that.");
+    else notify(e instanceof Error ? e.message : fallback, true);
+  };
 
-  // Modals States
-  const [showQModal, setShowQModal] = useState(false);
-  const [isEditingQ, setIsEditingQ] = useState(false);
-  const [currentQId, setCurrentQId] = useState("");
-
-  const [showAnsModal, setShowAnsModal] = useState(false);
-  const [currentAnsQId, setCurrentAnsQId] = useState("");
-
-  // Question Form State
-  const [qTitle, setQTitle] = useState("");
-  const [qDesc, setQDesc] = useState("");
-  const [qCategory, setQCategory] = useState("Mind & Emotions");
-  const [qAskedBy, setQAskedBy] = useState("Admin Healer");
-
-  // Answer Form State
-  const [ansHealerName, setAnsHealerName] = useState("Dr. Meera Sharma");
-  const [ansHealerAvatar, setAnsHealerAvatar] = useState("/images/anara.png");
-  const [ansHealerRole, setAnsHealerRole] = useState("Healer");
-  const [ansHealerCredentials, setAnsHealerCredentials] = useState("Holistic Therapist • 12 years experience");
-  const [ansContent, setAnsContent] = useState("");
-  const [ansBulletsStr, setAnsBulletsStr] = useState("");
-  const [ansConclusion, setAnsConclusion] = useState("");
-
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
-
-  // Pagination State
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
-
-  const triggerToast = (msg: string) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3000);
+  const reloadComments = async (status: QaStatus = commentStatus) => {
+    try {
+      setComments(await listComments(status));
+    } catch {
+      setComments([]);
+    }
   };
 
   useEffect(() => {
-    fetch("/api/practitioners")
-      .then(r => r.json())
-      .then(res => {
-        if (res?.success && Array.isArray(res.data) && res.data.length > 0) {
-          setHealerCount(res.data.length);
+    let cancelled = false;
+    (async () => {
+      try {
+        const me = await whoAmI();
+        if (cancelled) return;
+        if (!me) {
+          setAuthIssue("Your admin session has expired. Please sign in again.");
+          return;
         }
-      })
-      .catch(() => {});
-
-    const stored = localStorage.getItem("divingsanatan_quora_questions");
-    if (stored) {
-      try {
-        setQuestions(JSON.parse(stored));
+        setRole(me.role);
+        const [qs, pr] = await Promise.all([listQuestions(), listPractitioners()]);
+        if (cancelled) return;
+        setQuestions(qs);
+        setPractitioners(pr);
+        if (STAFF_ROLES.includes(me.role)) {
+          try {
+            setComments(await listComments("pending"));
+          } catch {
+            /* queue is optional */
+          }
+        }
       } catch (e) {
-        setQuestions([]);
+        if (cancelled) return;
+        if (e instanceof ApiError && (e.status === 401 || e.status === 403)) setAuthIssue(e.message);
+        else setLoadError(e instanceof Error ? e.message : "Could not load the questions.");
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-    } else {
-      setQuestions([]);
-    }
-
-    const storedCats = localStorage.getItem("divingsanatan_quora_categories");
-    if (storedCats) {
-      try {
-        setCategories(JSON.parse(storedCats));
-      } catch (e) {
-        setCategories(defaultCategories);
-      }
-    } else {
-      setCategories(defaultCategories);
-      localStorage.setItem("divingsanatan_quora_categories", JSON.stringify(defaultCategories));
-    }
-
-    setLoading(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  const saveToStorage = (newQuestions: QuestionItem[]) => {
-    setQuestions(newQuestions);
-    localStorage.setItem("divingsanatan_quora_questions", JSON.stringify(newQuestions));
+  const scored = useMemo(() => questions.map((q) => ({ q, s: isAnswered(q) ? scoreQuestion(q) : null })), [questions]);
+
+  const counts = useMemo(() => ({
+    review: questions.filter((q) => q.status === "pending").length,
+    awaiting: questions.filter((q) => q.status === "published" && !isAnswered(q)).length,
+    answered: questions.filter((q) => q.status === "published" && isAnswered(q)).length,
+    rejected: questions.filter((q) => q.status === "rejected").length,
+    all: questions.length,
+  }), [questions]);
+
+  // Healers start on the questions that need an answer; staff start on the review queue
+  const activeView: View = view ?? (isStaff ? (counts.review > 0 ? "review" : "awaiting") : "awaiting");
+
+  const stats = useMemo(() => {
+    const live = scored.filter((x) => x.s && x.q.status === "published");
+    const avg = (get: (s: NonNullable<(typeof live)[number]["s"]>) => number) => (live.length ? Math.round(live.reduce((n, x) => n + get(x.s!), 0) / live.length) : 0);
+    const gaps = new Map<string, number>();
+    for (const x of live) for (const p of [x.s!.seo, x.s!.geo, x.s!.aeo]) for (const c of p.checks) if (!c.pass) gaps.set(c.label, (gaps.get(c.label) || 0) + 1);
+    return { answered: live.length, overall: avg((s) => s.overall), seo: avg((s) => s.seo.score), geo: avg((s) => s.geo.score), aeo: avg((s) => s.aeo.score), topGaps: Array.from(gaps.entries()).sort((a, b) => b[1] - a[1]).slice(0, 5) };
+  }, [scored]);
+
+  const rows = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return scored
+      .filter(({ q: x }) => {
+        if (activeView === "review") return x.status === "pending";
+        if (activeView === "awaiting") return x.status === "published" && !isAnswered(x);
+        if (activeView === "answered") return x.status === "published" && isAnswered(x);
+        if (activeView === "rejected") return x.status === "rejected";
+        return true;
+      })
+      .filter(({ q: x }) => (isStaff ? true : x.status === "published")) // healers only see live questions
+      .filter(({ q: x }) => !q || `${x.title} ${x.slug} ${x.category} ${x.askedByName}`.toLowerCase().includes(q))
+      .sort((a, b) => (activeView === "answered" ? (a.s?.overall ?? 0) - (b.s?.overall ?? 0) : (b.q.createdAt || "").localeCompare(a.q.createdAt || "")));
+  }, [scored, activeView, query, isStaff]);
+
+  const pages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+  const pageRows = rows.slice((Math.min(page, pages) - 1) * PAGE_SIZE, Math.min(page, pages) * PAGE_SIZE);
+
+  const openEditor = (q: QaQuestion) => {
+    setFormKey((k) => k + 1);
+    setEditing(q);
   };
 
-  const saveCategoriesToStorage = (newCats: string[]) => {
-    setCategories(newCats);
-    localStorage.setItem("divingsanatan_quora_categories", JSON.stringify(newCats));
-  };
+  const replace = (next: QaQuestion) => setQuestions((l) => l.map((x) => (x.id === next.id ? { ...next, commentCount: x.commentCount } : x)));
 
-  const handleAddCategory = (e: React.FormEvent) => {
-    e.preventDefault();
-    const trimmed = newCatName.trim();
-    if (!trimmed) return;
-    if (categories.some(c => c.toLowerCase() === trimmed.toLowerCase())) {
-      alert("Category already exists!");
-      return;
-    }
-    const updated = [...categories, trimmed];
-    saveCategoriesToStorage(updated);
-    setNewCatName("");
-    triggerToast(`Category "${trimmed}" added.`);
-  };
-
-  const handleDeleteCategory = (catToDelete: string) => {
-    const count = questions.filter(q => q.category === catToDelete).length;
-    let confirmMsg = `Are you sure you want to delete the category "${catToDelete}"?`;
-    if (count > 0) {
-      confirmMsg = `Warning: There are ${count} question(s) currently assigned to "${catToDelete}". Deleting it will keep the questions but remove the category from the list. Are you sure you want to proceed?`;
-    }
-    if (!window.confirm(confirmMsg)) return;
-
-    const updated = categories.filter(c => c !== catToDelete);
-    saveCategoriesToStorage(updated);
-    triggerToast(`Category "${catToDelete}" removed.`);
-  };
-
-  // Question Handlers
-  const handleOpenAddQ = () => {
-    setIsEditingQ(false);
-    setQTitle("");
-    setQDesc("");
-    setQCategory(categories[0] || "Mind & Emotions");
-    setQAskedBy("Admin Healer");
-    setShowQModal(true);
-  };
-
-  const handleOpenEditQ = (q: QuestionItem) => {
-    setIsEditingQ(true);
-    setCurrentQId(q.id);
-    setQTitle(q.title);
-    setQDesc(q.description);
-    setQCategory(q.category);
-    setQAskedBy(q.askedBy);
-    setShowQModal(true);
-  };
-
-  const handleDeleteQ = (id: string) => {
-    if (!window.confirm("Are you sure you want to delete this question?")) return;
-    const updated = questions.filter(q => q.id !== id);
-    saveToStorage(updated);
-    triggerToast("Question deleted from board.");
-  };
-
-  const handleQSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!qTitle.trim()) return;
-
-    if (isEditingQ) {
-      const updated = questions.map(q => 
-        q.id === currentQId 
-          ? { ...q, title: qTitle.trim(), description: qDesc.trim(), category: qCategory, askedBy: qAskedBy } 
-          : q
-      );
-      saveToStorage(updated);
-      triggerToast("Question updated successfully.");
-    } else {
-      const newQuestion: QuestionItem = {
-        id: `q-${Date.now()}`,
-        category: qCategory,
-        title: qTitle.trim(),
-        description: qDesc.trim(),
-        askedBy: qAskedBy.trim() || "Anonymous Seeker",
-        askedByAvatar: "👤",
-        date: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
-        views: "0",
-        followers: 1,
-        upvotes: 0,
-        commentsCount: 0,
-        comments: []
-      };
-      saveToStorage([newQuestion, ...questions]);
-      triggerToast("New question created.");
-    }
-    setShowQModal(false);
-  };
-
-  // Answer Handlers
-  const handleOpenAnswer = (q: QuestionItem) => {
-    setCurrentAnsQId(q.id);
-    if (q.bestAnswer) {
-      setAnsHealerName(q.bestAnswer.healerName);
-      setAnsHealerAvatar(q.bestAnswer.healerAvatar);
-      setAnsHealerRole(q.bestAnswer.healerRole || "Healer");
-      setAnsHealerCredentials(q.bestAnswer.healerCredentials);
-      setAnsContent(q.bestAnswer.content);
-      setAnsBulletsStr(q.bestAnswer.bullets.join("\n"));
-      setAnsConclusion(q.bestAnswer.conclusion);
-    } else {
-      setAnsHealerName("Dr. Meera Sharma");
-      setAnsHealerAvatar("/images/anara.png");
-      setAnsHealerRole("Healer");
-      setAnsHealerCredentials("Holistic Therapist • 12 years experience");
-      setAnsContent("");
-      setAnsBulletsStr("");
-      setAnsConclusion("");
-    }
-    setShowAnsModal(true);
-  };
-
-  const handleAnsSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const bullets = ansBulletsStr
-      .split("\n")
-      .map(b => b.trim())
-      .filter(b => b.length > 0);
-
-    const updated = questions.map(q => {
-      if (q.id === currentAnsQId) {
-        return {
-          ...q,
-          bestAnswer: {
-            healerName: ansHealerName.trim(),
-            healerAvatar: ansHealerAvatar.trim(),
-            healerRole: ansHealerRole.trim(),
-            healerCredentials: ansHealerCredentials.trim(),
-            date: q.bestAnswer?.date || new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
-            content: ansContent.trim(),
-            bullets,
-            conclusion: ansConclusion.trim(),
-            likes: q.bestAnswer?.likes || 0,
-            likedByUser: q.bestAnswer?.likedByUser || false,
-            thankedByUser: q.bestAnswer?.thankedByUser || false
-          }
-        };
+  const save = async (draft: QaQuestion) => {
+    setSaving(true);
+    try {
+      if (draft.id) {
+        const r = await updateQuestion(draft);
+        replace(r.data);
+        setEditing(r.data);
+        notify(r.redirectCreated ? "Saved. A 301 redirect from the old address was created." : "Saved.");
+      } else {
+        const created = await createQuestion(draft);
+        setQuestions((l) => [created, ...l]);
+        setEditing(created);
+        notify("Q&A created.");
       }
-      return q;
-    });
-
-    saveToStorage(updated);
-    setShowAnsModal(false);
-    triggerToast("Practitioner reply saved.");
+    } catch (e) {
+      handleError(e, "Could not save.");
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleDeleteAnswer = (qId: string) => {
-    if (!window.confirm("Are you sure you want to delete this healer answer?")) return;
-    const updated = questions.map(q => {
-      if (q.id === qId) {
-        const { bestAnswer, ...rest } = q;
-        return rest as QuestionItem;
-      }
-      return q;
-    });
-    saveToStorage(updated);
-    triggerToast("Healer answer removed.");
+  const decide = async (q: QaQuestion, status: QaStatus) => {
+    let note: string | undefined;
+    if (status === "rejected") {
+      const reason = window.prompt("Optional private note (why was it rejected?). Only the team sees this.", q.moderationNote || "");
+      if (reason === null) return;
+      note = reason;
+    }
+    try {
+      const r = await setQuestionStatus(q.id, status, note);
+      replace(r.data);
+      notify(status === "published" ? "Approved and published." : status === "rejected" ? "Question rejected." : "Updated.");
+    } catch (e) {
+      handleError(e, "Could not update.");
+    }
   };
 
-  // Filter Logic
-  const filteredQuestions = questions.filter(q => {
-    const matchesSearch = q.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          q.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = activeCategory === "all" || q.category === activeCategory;
-    const matchesTab = activeTab === "all" || 
-                       (activeTab === "answered" && !!q.bestAnswer) || 
-                       (activeTab === "unanswered" && !q.bestAnswer);
-    return matchesSearch && matchesCategory && matchesTab;
-  });
+  const remove = async (q: QaQuestion) => {
+    if (!window.confirm(`Delete “${truncate(q.title, 60)}” and all its comments permanently? This cannot be undone.\n\nTip: use Reject to hide it instead.`)) return;
+    try {
+      await deleteQuestion(q.id);
+      setQuestions((l) => l.filter((x) => x.id !== q.id));
+      notify("Question deleted.");
+    } catch (e) {
+      handleError(e, "Could not delete.");
+    }
+  };
 
-  // Pagination Logic
-  const totalPages = Math.ceil(filteredQuestions.length / itemsPerPage);
-  const paginatedQuestions = filteredQuestions.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  const runFill = async () => {
+    if (!window.confirm("Fill in the EMPTY basics for every ANSWERED question?\n\nThis adds a quick answer, SEO title, meta description, focus keyword and related questions ONLY where they are blank. Anything you have already written is never changed.")) return;
+    setFilling(true);
+    try {
+      const r = await fillBlanks();
+      setQuestions(await listQuestions());
+      notify(`Done. ${r.updated} of ${r.total} answered questions were updated.`);
+    } catch (e) {
+      handleError(e, "Could not fill the blanks.");
+    } finally {
+      setFilling(false);
+    }
+  };
 
-  // Dynamic Stats Calculations
-  const totalQuestions = questions.length;
-  const totalAnswers = questions.filter(q => !!q.bestAnswer).length;
-  const pendingReview = questions.filter(q => !q.bestAnswer).length;
+  const moderateComment = async (c: QaComment, status: QaStatus) => {
+    try {
+      await setCommentStatus(c.id, status);
+      await reloadComments();
+      setQuestions(await listQuestions());
+      notify(status === "published" ? "Comment approved." : "Comment rejected.");
+    } catch (e) {
+      handleError(e, "Could not update the comment.");
+    }
+  };
 
+  const removeComment = async (c: QaComment) => {
+    if (!window.confirm("Delete this comment permanently?")) return;
+    try {
+      await deleteComment(c.id);
+      await reloadComments();
+      notify("Comment deleted.");
+    } catch (e) {
+      handleError(e, "Could not delete the comment.");
+    }
+  };
+
+  /* ------------------------------- editor ------------------------------- */
+  if (editing) {
+    return (
+      <div className={shop.wrap}>
+        {authIssue && <AuthBanner message={authIssue} />}
+        <QaEditor
+          key={formKey}
+          initial={editing}
+          allQuestions={questions}
+          practitioners={practitioners}
+          isStaff={isStaff}
+          saving={saving}
+          onSave={save}
+          onError={(m) => notify(m, true)}
+          onBack={(dirty) => {
+            if (dirty && !window.confirm("You have unsaved changes. Leave without saving?")) return;
+            setEditing(null);
+          }}
+        />
+        {toast && <div className={`${shop.toast} ${toast.err ? shop.toastErr : ""}`} role="status">{toast.msg}</div>}
+      </div>
+    );
+  }
+
+  const TABS: { id: View; label: string; count: number; staffOnly?: boolean }[] = [
+    { id: "review", label: "Needs review", count: counts.review, staffOnly: true },
+    { id: "awaiting", label: "Awaiting answer", count: counts.awaiting },
+    { id: "answered", label: "Answered", count: counts.answered },
+    { id: "rejected", label: "Rejected", count: counts.rejected, staffOnly: true },
+    { id: "all", label: "All", count: counts.all, staffOnly: true },
+  ];
+
+  /* ------------------------------- list ------------------------------- */
   return (
-    <div className="dashboard-content">
-      {/* Toast */}
-      {toastMessage && (
-        <div className="toast-notify">
-          {toastMessage}
+    <div className={shop.wrap}>
+      {authIssue && <AuthBanner message={authIssue} />}
+      {loadError && <div className={`${shop.banner} ${shop.bannerErr}`}><span>{loadError}</span></div>}
+
+      <div className={shop.topbar}>
+        <div>
+          <h2 className={shop.h2}>Q&amp;A Board</h2>
+          <p className={shop.sub}>
+            {isStaff
+              ? "Approve new questions, have a healer answer them, and optimise each answered question for SEO, AI search (GEO) and answer engines (AEO)."
+              : "Questions waiting for a healer's answer. Open one to write the official answer."}
+          </p>
         </div>
-      )}
-
-      <StatsDashboard
-        pageType="quora-qa"
-        customStats={{
-          val1: totalQuestions,
-          val2: totalAnswers,
-          val3: healerCount,
-          val4: pendingReview
-        }}
-        actions={
-          <div style={{ display: "flex", gap: "8px" }}>
-            <button className="btn btn-secondary btn-sm" onClick={() => setShowCatModal(true)}>
-              <Filter size={12} style={{ marginRight: '6px' }} />
-              Manage Categories
-            </button>
-            <button className="btn btn-primary btn-sm" onClick={handleOpenAddQ}>
-              <PlusCircle size={12} style={{ marginRight: '6px' }} />
-              Create Question
-            </button>
-          </div>
-        }
-      />
-
-
-      {/* Filter and Search Bar */}
-      <div className="filters-bar mb-3">
-        <div style={{ display: "flex", gap: "10px", width: "100%", flexWrap: "wrap" }}>
-          <div style={{ flex: "1 1 250px", position: "relative" }}>
-            <input 
-              type="text" 
-              placeholder="Search questions by text context..." 
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="form-control"
-            />
-          </div>
-
-          <div style={{ flex: "0 1 200px", minWidth: "150px" }}>
-            <select 
-              value={activeCategory} 
-              onChange={(e) => {
-                setActiveCategory(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="form-control"
-            >
-              <option value="all">All Categories</option>
-              {categories.map(cat => (
-                <option key={cat} value={cat}>{cat}</option>
-              ))}
-            </select>
-          </div>
+        <div className={shop.actions}>
+          <a href="/blog/quora-qa" target="_blank" rel="noopener noreferrer" className={`${shop.btn} ${shop.secondary}`}><ExternalLink size={15} /> View board</a>
+          {isStaff && (
+            <>
+              <button className={`${shop.btn} ${shop.secondary}`} onClick={() => void runFill()} disabled={filling || !!authIssue || stats.answered === 0}><Sparkles size={15} /> {filling ? "Working…" : "Fill empty basics for all"}</button>
+              <button className={`${shop.btn} ${shop.primary}`} onClick={() => openEditor(blankQuestion())} disabled={!!authIssue}><Plus size={16} /> Add Q&amp;A</button>
+            </>
+          )}
         </div>
       </div>
 
-      {/* Tabs Menu */}
-      <div className="category-tabs mb-3">
-        <button 
-          className={`category-tab ${activeTab === "all" ? "active" : ""}`}
-          onClick={() => {
-            setActiveTab("all");
-            setCurrentPage(1);
-          }}
-        >
-          All Questions ({questions.length})
-        </button>
-        <button 
-          className={`category-tab ${activeTab === "answered" ? "active" : ""}`}
-          onClick={() => {
-            setActiveTab("answered");
-            setCurrentPage(1);
-          }}
-        >
-          Answered ({questions.filter(q => !!q.bestAnswer).length})
-        </button>
-        <button 
-          className={`category-tab ${activeTab === "unanswered" ? "active" : ""}`}
-          onClick={() => {
-            setActiveTab("unanswered");
-            setCurrentPage(1);
-          }}
-        >
-          Unanswered ({questions.filter(q => !q.bestAnswer).length})
-        </button>
-      </div>
-
-      {/* List Table */}
-      {loading ? (
-        <p className="text-center" style={{ padding: "40px", color: "#6c757d" }}>Loading board data...</p>
-      ) : (
-        <Card variant="glass" className="admin-table-card card-primary">
-          <div className="table-responsive">
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th>Category</th>
-                  <th>Question & Context</th>
-                  <th>Asked By</th>
-                  <th>Date</th>
-                  <th>Status</th>
-                  <th>Healer Reply</th>
-                  <th className="text-right" style={{ minWidth: "180px" }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedQuestions.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="text-center" style={{ padding: "20px" }}>No questions match your current filters.</td>
-                  </tr>
-                ) : (
-                  paginatedQuestions.map(q => (
-                    <tr key={q.id}>
-                      <td>
-                        <span className="category-badge">{q.category}</span>
-                      </td>
-                      <td>
-                        <div className="question-title-cell" title={q.title}>
-                          {q.title}
-                        </div>
-                        <div className="question-desc-cell" title={q.description}>
-                          {q.description || "No context description."}
-                        </div>
-                      </td>
-                      <td>{q.askedBy}</td>
-                      <td style={{ whiteSpace: "nowrap" }}>{q.date}</td>
-                      <td>
-                        <span className={`status-badge ${q.bestAnswer ? 'confirmed' : 'pending'}`}>
-                          {q.bestAnswer ? "Answered" : "Unanswered"}
-                        </span>
-                      </td>
-                      <td>
-                        {q.bestAnswer ? (
-                          <div style={{ fontSize: "0.8rem", color: "#6d28d9" }}>
-                            <strong>{q.bestAnswer.healerName}</strong>
-                            <div className="healer-reply-text-cell" title={q.bestAnswer.content}>
-                              {q.bestAnswer.content}
-                            </div>
-                          </div>
-                        ) : (
-                          <span style={{ fontSize: "0.8rem", color: "#adb5bd", fontStyle: "italic" }}>No reply yet</span>
-                        )}
-                      </td>
-                      <td className="text-right" style={{ minWidth: "180px" }}>
-                        <div style={{ display: "flex", gap: "4px", justifyContent: "flex-end" }}>
-                          <button className="btn btn-primary btn-sm" onClick={() => handleOpenAnswer(q)}>
-                            <MessageSquare size={12} style={{ marginRight: "3px" }} />
-                            Reply
-                          </button>
-                          {q.bestAnswer && (
-                            <button className="btn btn-secondary btn-sm" onClick={() => handleDeleteAnswer(q.id)} title="Delete Reply">
-                              <Trash size={12} />
-                            </button>
-                          )}
-                          <button className="btn btn-secondary btn-sm" onClick={() => handleOpenEditQ(q)}>
-                            <Edit size={12} />
-                          </button>
-                          <button className="btn btn-danger btn-sm" onClick={() => handleDeleteQ(q.id)}>
-                            <Trash2 size={12} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+      {isStaff && stats.answered > 0 && (
+        <>
+          <div className={styles.bigScores}>
+            <div className={styles.bigScore}><div className={`${styles.num} ${tone(stats.overall)}`} style={{ background: "none" }}>{stats.overall}</div><div className={styles.lbl}><strong>Overall readiness</strong><br />{stats.answered} answered · {counts.awaiting} waiting</div></div>
+            <div className={styles.bigScore}><div className={`${styles.num} ${tone(stats.seo)}`} style={{ background: "none" }}>{stats.seo}</div><div className={styles.lbl}><strong>Average SEO</strong><br />Google search</div></div>
+            <div className={styles.bigScore}><div className={`${styles.num} ${tone(stats.geo)}`} style={{ background: "none" }}>{stats.geo}</div><div className={styles.lbl}><strong>Average GEO</strong><br />AI citations</div></div>
+            <div className={styles.bigScore}><div className={`${styles.num} ${tone(stats.aeo)}`} style={{ background: "none" }}>{stats.aeo}</div><div className={styles.lbl}><strong>Average AEO</strong><br />Answers &amp; voice</div></div>
           </div>
-
-          {/* Pagination Controls */}
-          {totalPages > 1 && (
-            <div className="admin-pagination-wrapper">
-              <span className="pagination-info">
-                Showing {filteredQuestions.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1} to {Math.min(filteredQuestions.length, currentPage * itemsPerPage)} of {filteredQuestions.length} entries
-              </span>
-              <ul className="admin-pagination">
-                <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
-                  <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1}>«</button>
-                </li>
-                <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
-                  <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1}>Prev</button>
-                </li>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNum => (
-                  <li key={pageNum} className={`page-item ${currentPage === pageNum ? 'active' : ''}`}>
-                    <button onClick={() => setCurrentPage(pageNum)}>{pageNum}</button>
-                  </li>
-                ))}
-                <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
-                  <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages}>Next</button>
-                </li>
-                <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
-                  <button onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages}>»</button>
-                </li>
-              </ul>
+          {stats.topGaps.length > 0 && (
+            <div className={shop.panel}>
+              <h3 className={shop.sectionHead}>Biggest opportunities across answered questions</h3>
+              <ul className={styles.gaps}>{stats.topGaps.map(([label, n]) => (<li key={label}><span>{label}</span><strong>{n} of {stats.answered}</strong></li>))}</ul>
             </div>
           )}
-        </Card>
+        </>
       )}
 
-      {/* Manage Categories Modal */}
-      {showCatModal && (
-        <div className="modal-overlay">
-          <div className="modal-content card card-primary" style={{ width: "450px", padding: "0 !important" }}>
-            <div style={{ borderBottom: "1px solid #dee2e6", padding: "12px 20px", background: "#f8f9fa", fontWeight: "700", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span>Manage Q&A Categories</span>
-              <button style={{ border: "none", background: "none", fontSize: "1.2rem", cursor: "pointer" }} onClick={() => setShowCatModal(false)}>✕</button>
-            </div>
-            
-            <div style={{ padding: "20px" }}>
-              {/* Category list */}
-              <div style={{ maxHeight: "250px", overflowY: "auto", marginBottom: "20px", border: "1px solid #e9ecef", borderRadius: "6px", padding: "10px" }}>
-                {categories.length === 0 ? (
-                  <p style={{ color: "#6c757d", fontStyle: "italic", textAlign: "center", margin: "10px 0" }}>No categories defined. Please add one below.</p>
-                ) : (
-                  categories.map(cat => (
-                    <div key={cat} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", borderBottom: "1px solid #f8f9fa" }} className="category-item-row">
-                      <span style={{ fontWeight: 600, color: "#4b5563" }}>{cat}</span>
-                      <button 
-                        type="button" 
-                        className="btn btn-danger btn-sm" 
-                        style={{ padding: "4px 8px" }} 
-                        onClick={() => handleDeleteCategory(cat)}
-                      >
-                        <Trash2 size={12} />
-                      </button>
+      <div className={shop.tabs} role="tablist" aria-label="Question lists">
+        {TABS.filter((t) => isStaff || !t.staffOnly).map((t) => (
+          <button key={t.id} type="button" role="tab" aria-selected={activeView === t.id} className={`${shop.tab} ${activeView === t.id ? shop.tabOn : ""}`} onClick={() => { setView(t.id); setPage(1); }}>
+            {t.label} · {t.count}
+          </button>
+        ))}
+      </div>
+
+      <div className={shop.filters}>
+        <input className={shop.input} placeholder="Search questions" aria-label="Search questions" value={query} onChange={(e) => { setQuery(e.target.value); setPage(1); }} />
+      </div>
+
+      <div className={shop.tableCard}>
+        {loading ? (
+          <div className={shop.empty}>Loading questions…</div>
+        ) : pageRows.length === 0 ? (
+          <div className={shop.empty}>{questions.length === 0 ? "No questions yet. Visitors can ask from the Q&A Board, or use “Add Q&A”." : "Nothing here."}</div>
+        ) : (
+          <table className={shop.table}>
+            <thead><tr><th>Question</th><th>Status</th><th>Asked by</th><th>Comments</th><th>SEO</th><th>GEO</th><th>AEO</th><th>Overall</th><th>Actions</th></tr></thead>
+            <tbody>
+              {pageRows.map(({ q, s }) => (
+                <tr key={q.id}>
+                  <td><div className={shop.prodName}>{truncate(q.title, 90)}</div><div className={shop.prodSlug}>{q.category ? `${q.category} · ` : ""}{fmt(q.createdAt)} · /blog/quora-qa/{q.slug}</div></td>
+                  <td>
+                    <span className={`${shop.status} ${q.status === "published" ? shop.st_published : q.status === "rejected" ? shop.st_archived : shop.st_draft}`}>
+                      {q.status === "pending" ? "needs review" : q.status === "published" ? (isAnswered(q) ? "answered" : "awaiting answer") : "rejected"}
+                    </span>
+                  </td>
+                  <td>{q.anonymous ? "Anonymous" : q.askedByName || "–"}</td>
+                  <td>{q.commentCount || 0}</td>
+                  <td>{s ? <span className={`${styles.pillScore} ${tone(s.seo.score)}`}>{s.seo.score}</span> : "–"}</td>
+                  <td>{s ? <span className={`${styles.pillScore} ${tone(s.geo.score)}`}>{s.geo.score}</span> : "–"}</td>
+                  <td>{s ? <span className={`${styles.pillScore} ${tone(s.aeo.score)}`}>{s.aeo.score}</span> : "–"}</td>
+                  <td>{s ? <span className={`${styles.pillScore} ${tone(s.overall)}`}>{s.overall}</span> : "–"}</td>
+                  <td>
+                    <div className={shop.actions}>
+                      {isStaff && q.status === "pending" && (
+                        <>
+                          <button className={`${shop.btn} ${shop.primary} ${shop.small}`} onClick={() => void decide(q, "published")} aria-label={`Approve ${truncate(q.title, 40)}`}><Check size={14} /> Approve</button>
+                          <button className={`${shop.btn} ${shop.secondary} ${shop.small}`} onClick={() => void decide(q, "rejected")} aria-label={`Reject ${truncate(q.title, 40)}`}><X size={14} /> Reject</button>
+                        </>
+                      )}
+                      <button className={`${shop.btn} ${shop.secondary} ${shop.small}`} onClick={() => openEditor(q)} aria-label={`${isAnswered(q) ? "Edit" : "Answer"} ${truncate(q.title, 40)}`}><Pencil size={14} /> {isAnswered(q) || isStaff ? "Edit" : "Answer"}</button>
+                      {q.status === "published" && <a className={`${shop.btn} ${shop.secondary} ${shop.small}`} href={`/blog/quora-qa/${q.slug}`} target="_blank" rel="noopener noreferrer" aria-label={`View ${truncate(q.title, 40)}`}><ExternalLink size={14} /></a>}
+                      {isStaff && <button className={`${shop.btn} ${shop.danger} ${shop.small}`} onClick={() => void remove(q)} aria-label={`Delete ${truncate(q.title, 40)}`}><Trash2 size={14} /></button>}
                     </div>
-                  ))
-                )}
-              </div>
-
-              {/* Add category form */}
-              <form onSubmit={handleAddCategory}>
-                <div className="form-group">
-                  <label style={{ fontWeight: 600, marginBottom: "6px", display: "block" }}>Add New Category</label>
-                  <div style={{ display: "flex", gap: "8px" }}>
-                    <input 
-                      type="text" 
-                      value={newCatName}
-                      onChange={(e) => setNewCatName(e.target.value)}
-                      placeholder="e.g., Crystal Healing"
-                      className="form-control"
-                      required
-                    />
-                    <button type="submit" className="btn btn-primary" style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                      <PlusCircle size={14} />
-                      Add
-                    </button>
-                  </div>
-                </div>
-              </form>
-
-              <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "20px" }}>
-                <button type="button" className="btn btn-secondary" onClick={() => setShowCatModal(false)}>
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+      {pages > 1 && (
+        <div className={styles.pager}>
+          <span>{rows.length} questions · page {Math.min(page, pages)} of {pages}</span>
+          <span className={shop.actions}>
+            <button className={`${shop.btn} ${shop.secondary} ${shop.small}`} disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>Previous</button>
+            <button className={`${shop.btn} ${shop.secondary} ${shop.small}`} disabled={page >= pages} onClick={() => setPage((p) => p + 1)}>Next</button>
+          </span>
         </div>
       )}
 
-      {/* Create / Edit Question Modal */}
-      {showQModal && (
-        <div className="modal-overlay">
-          <div className="modal-content card card-primary" style={{ width: "500px", padding: "0 !important" }}>
-            <div style={{ borderBottom: "1px solid #dee2e6", padding: "12px 20px", background: "#f8f9fa", fontWeight: "700", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span>{isEditingQ ? "Edit Question Info" : "Create New Question"}</span>
-              <button style={{ border: "none", background: "none", fontSize: "1.2rem", cursor: "pointer" }} onClick={() => setShowQModal(false)}>✕</button>
-            </div>
-            <div style={{ padding: "20px" }}>
-              <form onSubmit={handleQSubmit}>
-                <div className="form-group">
-                  <label>Question Title</label>
-                  <input 
-                    type="text" 
-                    value={qTitle}
-                    onChange={(e) => setQTitle(e.target.value)}
-                    placeholder="e.g., How do you cleanse rose quartz crystal?"
-                    className="form-control"
-                    required
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label>Additional Description / Context</label>
-                  <RichTextEditor 
-                    value={qDesc}
-                    onChange={setQDesc}
-                    placeholder="Provide context or details about the issue..."
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label>Category</label>
-                  <select 
-                    value={qCategory}
-                    onChange={(e) => setQCategory(e.target.value)}
-                    className="form-control"
-                  >
-                    {categories.map(cat => (
-                      <option key={cat} value={cat}>{cat}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label>Asked By (Author)</label>
-                  <input 
-                    type="text" 
-                    value={qAskedBy}
-                    onChange={(e) => setQAskedBy(e.target.value)}
-                    className="form-control"
-                  />
-                </div>
-
-                <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end", marginTop: "20px" }}>
-                  <button type="button" className="btn btn-secondary" onClick={() => setShowQModal(false)}>
-                    Cancel
-                  </button>
-                  <button type="submit" className="btn btn-primary">
-                    {isEditingQ ? "Save Changes" : "Create"}
-                  </button>
-                </div>
-              </form>
-            </div>
+      {isStaff && (
+        <div className={shop.panel}>
+          <div className={shop.listRow} style={{ justifyContent: "space-between", flexWrap: "wrap" }}>
+            <h3 className={shop.sectionHead}>Comments</h3>
+            <select className={shop.select} style={{ maxWidth: 200 }} aria-label="Comment status" value={commentStatus} onChange={(e) => { const s = e.target.value as QaStatus; setCommentStatusFilter(s); void reloadComments(s); }}>
+              <option value="pending">Awaiting approval</option>
+              <option value="published">Published</option>
+              <option value="rejected">Rejected</option>
+            </select>
           </div>
+          {comments.length === 0 ? (
+            <p className={shop.hint}>No {commentStatus === "pending" ? "comments awaiting approval" : `${commentStatus} comments`}.</p>
+          ) : (
+            <ul className={styles.pickList} style={{ maxHeight: "none" }}>
+              {comments.map((c) => (
+                <li key={c.id} className={styles.pickItem} style={{ cursor: "default", display: "block" }}>
+                  <div className={shop.hint}>{c.authorName} · {c.authorRole} · {fmt(c.createdAt)} · on “{truncate(c.questionTitle || "", 60)}”{c.parentId ? " (reply)" : ""}</div>
+                  <p style={{ margin: "4px 0 8px", whiteSpace: "pre-wrap" }}>{c.body}</p>
+                  <div className={shop.actions}>
+                    {c.status !== "published" && <button type="button" className={`${shop.btn} ${shop.primary} ${shop.small}`} onClick={() => void moderateComment(c, "published")}><Check size={14} /> Approve</button>}
+                    {c.status !== "rejected" && <button type="button" className={`${shop.btn} ${shop.secondary} ${shop.small}`} onClick={() => void moderateComment(c, "rejected")}><X size={14} /> {c.status === "published" ? "Hide" : "Reject"}</button>}
+                    <button type="button" className={`${shop.btn} ${shop.danger} ${shop.small}`} onClick={() => void removeComment(c)} aria-label="Delete comment"><Trash2 size={14} /></button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       )}
 
-      {/* Answer Question Modal */}
-      {showAnsModal && (
-        <div className="modal-overlay">
-          <div className="modal-content card card-success" style={{ width: "550px", padding: "0 !important" }}>
-            <div style={{ borderBottom: "1px solid #dee2e6", padding: "12px 20px", background: "#f8f9fa", fontWeight: "700", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span>Write Certified Healer Answer</span>
-              <button style={{ border: "none", background: "none", fontSize: "1.2rem", cursor: "pointer" }} onClick={() => setShowAnsModal(false)}>✕</button>
-            </div>
-            
-            <div style={{ padding: "20px", maxHeight: "calc(80vh / var(--ui-zoom, 1))", overflowY: "auto" }}>
-              <form onSubmit={handleAnsSubmit}>
-                
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "10px" }}>
-                  <div className="form-group">
-                    <label>Healer Name</label>
-                    <input 
-                      type="text" 
-                      value={ansHealerName}
-                      onChange={(e) => setAnsHealerName(e.target.value)}
-                      className="form-control"
-                      required
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Role</label>
-                    <input 
-                      type="text" 
-                      value={ansHealerRole}
-                      onChange={(e) => setAnsHealerRole(e.target.value)}
-                      className="form-control"
-                      required
-                    />
-                  </div>
-                </div>
+      {toast && <div className={`${shop.toast} ${toast.err ? shop.toastErr : ""}`} role="status">{toast.msg}</div>}
+    </div>
+  );
+}
 
-                <div className="form-group">
-                  <label>Credentials / Bio</label>
-                  <input 
-                    type="text" 
-                    value={ansHealerCredentials}
-                    onChange={(e) => setAnsHealerCredentials(e.target.value)}
-                    placeholder="e.g. Holistic Therapist • 12 years experience"
-                    className="form-control"
-                    required
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label>Avatar URL or Emoji symbol</label>
-                  <input 
-                    type="text" 
-                    value={ansHealerAvatar}
-                    onChange={(e) => setAnsHealerAvatar(e.target.value)}
-                    className="form-control"
-                    required
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label>Introductory Diagnostic Paragraph</label>
-                  <RichTextEditor 
-                    value={ansContent}
-                    onChange={setAnsContent}
-                    placeholder="Analyze the issue and write your main advice..."
-                    required
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label>Structured Recommendations (One per line)</label>
-                  <textarea 
-                    value={ansBulletsStr}
-                    onChange={(e) => setAnsBulletsStr(e.target.value)}
-                    placeholder="Sacral Node Alignment: Practice sound baths...&#10;Crystals: Use orange calcite..."
-                    className="form-control"
-                    rows={3}
-                  />
-                  <small style={{ color: "#6c757d", fontSize: "0.75rem", marginTop: "2px" }}>Separate suggestions by key presses. Use a colon (:) to make a topic bold.</small>
-                </div>
-
-                <div className="form-group">
-                  <label>Encouraging Conclusion Paragraph</label>
-                  <RichTextEditor 
-                    value={ansConclusion}
-                    onChange={setAnsConclusion}
-                    placeholder="Consistency is key to spiritual wellness..."
-                    required
-                  />
-                </div>
-
-                <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end", marginTop: "20px" }}>
-                  <button type="button" className="btn btn-secondary" onClick={() => setShowAnsModal(false)}>
-                    Cancel
-                  </button>
-                  <button type="submit" className="btn btn-success">
-                    Save Practitioner Reply
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <style jsx>{`
-        .modal-overlay {
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: rgba(0, 0, 0, 0.4);
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          z-index: 1050;
-        }
-        .mb-3 {
-          margin-bottom: 1rem;
-        }
-        :global(.admin-table-card) {
-          padding: 0 !important;
-          overflow: hidden;
-        }
-        .table-responsive {
-          width: 100%;
-          overflow-x: auto;
-          -webkit-overflow-scrolling: touch;
-        }
-        .question-title-cell {
-          font-weight: 700;
-          color: #4c1d95;
-          font-size: 0.9rem;
-          line-height: 1.4;
-          max-width: 250px;
-          word-break: break-word;
-          overflow: hidden;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-        }
-        .question-desc-cell {
-          font-size: 0.78rem;
-          color: #6c757d;
-          max-width: 250px;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          margin-top: 2px;
-        }
-        .healer-reply-text-cell {
-          font-size: 0.72rem;
-          color: #6c757d;
-          max-width: 160px;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .category-tabs {
-          display: flex;
-          border-bottom: 1px solid #dee2e6;
-          padding-bottom: 8px;
-          gap: 6px;
-          overflow-x: auto;
-          white-space: nowrap;
-        }
-        .category-tab {
-          background: transparent;
-          border: none;
-          padding: 6px 12px;
-          cursor: pointer;
-          font-weight: 600;
-          color: #6c757d;
-          font-size: 0.88rem;
-          border-radius: 4px;
-          flex-shrink: 0;
-        }
-        .category-tab.active, .category-tab:hover {
-          background: #e9ecef;
-          color: #007bff;
-        }
-        .toast-notify {
-          position: fixed;
-          top: 20px;
-          right: 20px;
-          background: #28a745;
-          color: #ffffff;
-          padding: 12px 24px;
-          border-radius: 4px;
-          font-weight: 700;
-          font-size: 0.85rem;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-          z-index: 1100;
-        }
-      `}</style>
+function AuthBanner({ message }: { message: string }) {
+  return (
+    <div className={shop.banner} role="alert">
+      <span>{message}</span>
+      <a href="/admin/login?logout=1" className={`${shop.btn} ${shop.secondary} ${shop.small}`}>Sign in again</a>
     </div>
   );
 }

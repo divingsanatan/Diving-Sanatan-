@@ -5,11 +5,12 @@ export async function GET() {
   const baseUrl = "https://divingsanatan.online";
 
   try {
-    const [blogsRes, servicesRes, faqRes, glossRes] = await Promise.all([
+    const [blogsRes, servicesRes, faqRes, glossRes, qaRes] = await Promise.all([
       supabaseServer.from("blogs").select("id, slug, title, content, tldr, author, date").limit(20),
       supabaseServer.from("services").select("name, description, benefits, process").limit(10),
       supabaseServer.from("faqs").select("slug, question, answer, short_answer, key_takeaways, alternate_questions").eq("status", "published").eq("noindex", false).order("created_at", { ascending: true }).limit(150),
-      supabaseServer.from("glossary_terms").select("slug, word, definition, short_answer, alternate_names, key_takeaways, faqs, origin").eq("status", "published").eq("noindex", false).order("word", { ascending: true }).limit(300)
+      supabaseServer.from("glossary_terms").select("slug, word, definition, short_answer, alternate_names, key_takeaways, faqs, origin").eq("status", "published").eq("noindex", false).order("word", { ascending: true }).limit(300),
+      supabaseServer.from("qa_questions").select("slug, title, description, answer, short_answer, answerer_name, answerer_role, answerer_credentials, key_takeaways, alternate_questions").eq("status", "published").eq("noindex", false).neq("answer", "").order("answered_at", { ascending: false }).limit(150)
     ]);
 
     let fullText = `# Diving Sanatan Sanctuary - Complete LLM Context Knowledge Document\n\n`;
@@ -34,6 +35,21 @@ export async function GET() {
       const pts = Array.isArray(f.key_takeaways) ? (f.key_takeaways as string[]).filter(Boolean) : [];
       for (const k of pts) fullText += `- ${k}\n`;
       const alts = Array.isArray(f.alternate_questions) ? (f.alternate_questions as string[]).filter(Boolean) : [];
+      if (alts.length) fullText += `Also asked: ${alts.join(" | ")}\n`;
+      fullText += `\n`;
+    }
+
+    // Community Q&A: a visitor's question with the answer a named healer gave. Answered questions only.
+    fullText += `## Community Q&A (answered by our healers)\n`;
+    fullText += `Index: ${baseUrl}/blog/quora-qa\n\n`;
+    for (const q of (qaRes.data || []) as Array<Record<string, unknown>>) {
+      fullText += `Q: ${q.title}\nURL: ${baseUrl}/blog/quora-qa/${q.slug}\n`;
+      const who = [q.answerer_name, q.answerer_role, q.answerer_credentials].filter(Boolean).join(", ");
+      if (who) fullText += `Answered by: ${who}\n`;
+      fullText += `A: ${plainText(q.short_answer) || plainText(q.answer).substring(0, 700)}\n`;
+      const pts = Array.isArray(q.key_takeaways) ? (q.key_takeaways as string[]).filter(Boolean) : [];
+      for (const k of pts) fullText += `- ${k}\n`;
+      const alts = Array.isArray(q.alternate_questions) ? (q.alternate_questions as string[]).filter(Boolean) : [];
       if (alts.length) fullText += `Also asked: ${alts.join(" | ")}\n`;
       fullText += `\n`;
     }

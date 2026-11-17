@@ -268,16 +268,21 @@ export default function StatsDashboard({ pageType, actions, customStats }: Stats
             }
           } catch (e) {}
 
-          const stored = typeof window !== "undefined" ? localStorage.getItem("divingsanatan_quora_questions") : null;
-          const questions = stored ? JSON.parse(stored) : [];
-          const answers = questions.filter((q: any) => q.bestAnswer).length;
-          const unanswered = questions.filter((q: any) => !q.bestAnswer).length;
+          // Real, shared data from the database (this used to be read from the admin's own browser)
+          let questions: Array<{ status?: string; answer?: string }> = [];
+          try {
+            const res = await fetch("/api/qa/questions?all=1", { credentials: "same-origin", cache: "no-store" });
+            const j = await res.json();
+            if (j?.success && Array.isArray(j.data)) questions = j.data;
+          } catch (e) {}
+          const answers = questions.filter((q) => q.status === "published" && String(q.answer || "").replace(/<[^>]*>/g, "").trim()).length;
+          const pending = questions.filter((q) => q.status === "pending").length;
           if (active) {
             setStatsData({
               val1: questions.length,
               val2: answers,
               val3: pracCount,
-              val4: unanswered
+              val4: pending
             });
           }
           return;

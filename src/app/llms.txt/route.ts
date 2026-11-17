@@ -5,11 +5,12 @@ export async function GET() {
   const baseUrl = "https://divingsanatan.online";
 
   try {
-    const [blogsRes, servicesRes, glossRes, faqRes] = await Promise.all([
+    const [blogsRes, servicesRes, glossRes, faqRes, qaRes] = await Promise.all([
       supabaseServer.from("blogs").select("id, slug, title, tldr").limit(50),
       supabaseServer.from("services").select("id, name, description").limit(20),
       supabaseServer.from("glossary_terms").select("slug, word, short_answer, definition").eq("status", "published").eq("noindex", false).order("word", { ascending: true }).limit(300),
-      supabaseServer.from("faqs").select("slug, question, short_answer, answer").eq("status", "published").eq("noindex", false).order("created_at", { ascending: true }).limit(300)
+      supabaseServer.from("faqs").select("slug, question, short_answer, answer").eq("status", "published").eq("noindex", false).order("created_at", { ascending: true }).limit(300),
+      supabaseServer.from("qa_questions").select("slug, title, short_answer, answer, answerer_name").eq("status", "published").eq("noindex", false).neq("answer", "").order("answered_at", { ascending: false }).limit(300)
     ]);
 
     const glossaryList = (glossRes.data || []).map((t: { slug: string; word: string; short_answer?: string; definition?: string }) => {
@@ -20,6 +21,11 @@ export async function GET() {
     const faqList = (faqRes.data || []).map((f: { slug: string; question: string; short_answer?: string; answer?: string }) => {
       const plain = String(f.short_answer || f.answer || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
       return `- [${f.question}](${baseUrl}/blog/faq/${f.slug}): ${plain.substring(0, 140)}${plain.length > 140 ? "…" : ""}`;
+    }).join("\n");
+
+    const qaList = (qaRes.data || []).map((q: { slug: string; title: string; short_answer?: string; answer?: string; answerer_name?: string }) => {
+      const plain = String(q.short_answer || q.answer || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+      return `- [${q.title}](${baseUrl}/blog/quora-qa/${q.slug}): ${plain.substring(0, 140)}${plain.length > 140 ? "…" : ""}${q.answerer_name ? ` (answered by ${q.answerer_name})` : ""}`;
     }).join("\n");
 
     const blogList = (blogsRes.data || []).map(b => 
@@ -54,6 +60,10 @@ ${glossaryList}
 ## Frequently Asked Questions
 - [All questions](${baseUrl}/blog/faq): Straight answers about energy healing, chakras, meditation and booking sessions.
 ${faqList}
+
+## Community Q&A (answered by our healers)
+- [All answered questions](${baseUrl}/blog/quora-qa): Questions from our community about healing, chakras and meditation, answered by certified healers.
+${qaList}
 
 ## Contact & Location
 - Website: ${baseUrl}

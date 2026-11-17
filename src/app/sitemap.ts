@@ -31,6 +31,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.75,
     },
     {
+      url: `${baseUrl}/blog/quora-qa`,
+      lastModified: new Date(),
+      changeFrequency: "daily",
+      priority: 0.75,
+    },
+    {
       url: `${baseUrl}/shop`,
       lastModified: new Date(),
       changeFrequency: "weekly",
@@ -76,7 +82,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   try {
     // Dynamic blog articles, services, and comparison pages from Supabase
-    const [blogsRes, servRes, compRes, shopRes, glossRes, faqRes] = await Promise.all([
+    const [blogsRes, servRes, compRes, shopRes, glossRes, faqRes, qaRes] = await Promise.all([
       supabaseServer.from("blogs").select("id, date").order("date", { ascending: false }),
       supabaseServer.from("services").select("id, name"),
       supabaseServer.from("comparison_pages").select("slug"),
@@ -97,7 +103,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         .from("faqs")
         .select("slug, updated_at, created_at")
         .eq("status", "published")
+        .eq("noindex", false),
+      // Q&A: only live questions that a healer has ANSWERED and that aren't marked "noindex"
+      // (an unanswered question is a thin page, so it is kept out of the sitemap)
+      supabaseServer
+        .from("qa_questions")
+        .select("slug, answer, updated_at, published_at, created_at")
+        .eq("status", "published")
         .eq("noindex", false)
+        .neq("answer", "")
     ]);
 
     const blogRoutes: MetadataRoute.Sitemap = (blogsRes.data || []).map((blog) => ({
@@ -146,7 +160,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.6,
     }));
 
-    return [...staticRoutes, ...blogRoutes, ...serviceRoutes, ...compRoutes, ...shopRoutes, ...glossaryRoutes, ...faqRoutes];
+    const qaRoutes: MetadataRoute.Sitemap = (qaRes.data || [])
+      .filter((q) => String(q.answer || "").replace(/<[^>]*>/g, "").trim())
+      .map((q) => ({
+        url: `${baseUrl}/blog/quora-qa/${q.slug}`,
+        lastModified: new Date(q.updated_at || q.published_at || q.created_at || Date.now()),
+        changeFrequency: "monthly" as const,
+        priority: 0.6,
+      }));
+
+    return [...staticRoutes, ...blogRoutes, ...serviceRoutes, ...compRoutes, ...shopRoutes, ...glossaryRoutes, ...faqRoutes, ...qaRoutes];
   } catch (error) {
     console.error("Error generating dynamic sitemap routes:", error);
   }

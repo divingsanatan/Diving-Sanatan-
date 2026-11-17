@@ -109,10 +109,10 @@ export function defaultFocusKeyword(question: string): string {
 const STOP = new Set(
   "a an and are as at be by can do does for from has have how i in is it its my of on or our should the their there this to was we what when where which who why will with you your".split(" ")
 );
-const tokens = (s: string) => s.toLowerCase().replace(/[^a-z0-9\s]/g, " ").split(/\s+/).filter((t) => t && !STOP.has(t));
+export const tokens = (s: string) => s.toLowerCase().replace(/[^a-z0-9\s]/g, " ").split(/\s+/).filter((t) => t && !STOP.has(t));
 
 /** Does the text cover the keyword? (exact phrase, or at least 75% of its meaningful words) */
-function covers(text: string, keyword: string): boolean {
+export function covers(text: string, keyword: string): boolean {
   const kw = keyword.trim().toLowerCase();
   if (!kw) return false;
   const t = text.toLowerCase();
@@ -181,9 +181,9 @@ export interface Scores {
 }
 
 const QUESTION = /^(what|why|how|is|are|can|could|does|do|did|who|when|where|which|should|will|would)\b.*\?$/i;
-const isUrl = (s: string) => /^https?:\/\/[^\s]+\.[^\s]+/i.test(s.trim());
-const sum = (checks: Check[]) => checks.reduce((n, c) => n + (c.pass ? c.weight : 0), 0);
-const sentences = (s: string) => (s.match(/[^.!?]+[.!?]+(\s|$)|[^.!?]+$/g) || []).map((x) => x.trim()).filter(Boolean);
+export const isUrl = (s: string) => /^https?:\/\/[^\s]+\.[^\s]+/i.test(s.trim());
+export const sumChecks = (checks: Check[]) => checks.reduce((n, c) => n + (c.pass ? c.weight : 0), 0);
+export const sentences = (s: string) => (s.match(/[^.!?]+[.!?]+(\s|$)|[^.!?]+$/g) || []).map((x) => x.trim()).filter(Boolean);
 
 export function scoreFaq(e: FaqEntry, now: number = Date.now()): Scores {
   const kw = e.focusKeyword.trim().toLowerCase();
@@ -259,7 +259,7 @@ export function scoreFaq(e: FaqEntry, now: number = Date.now()): Scores {
     { id: "related", label: "2+ related questions for follow-ups", pass: e.relatedFaqs.length >= 2, weight: 5, hint: "Answer engines love connected topics." },
   ];
 
-  const s = sum(seo), g = sum(geo), a = sum(aeo);
+  const s = sumChecks(seo), g = sumChecks(geo), a = sumChecks(aeo);
   return {
     seo: { score: s, checks: seo },
     geo: { score: g, checks: geo },
