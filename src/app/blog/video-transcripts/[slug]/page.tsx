@@ -1,948 +1,217 @@
-"use client";
-
-import React, { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { Card } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
+import type { Metadata } from "next";
 import Link from "next/link";
-import { useBlog } from "@/app/blog/BlogContext";
-import { Blog } from "@/types/database";
-import { normalizeBlogHtml } from "@/utils/normalizeBlogHtml";
+import { notFound } from "next/navigation";
+import { WatchPlayer, WatchRoot, WatchTranscript } from "./VideoWatch";
+import SubscribeButton from "../SubscribeButton";
 import AdSense from "@/components/AdSense";
+import { getPublishedVideos, getVideoBySlug } from "@/lib/videoServer";
 import {
-  FALLBACK_VIDEOS,
-  ParsedVideoBlog,
-  parseTranscriptText,
-  normalizeEmbedUrl,
-  TranscriptLine
-} from "../page";
+  effectiveCanonical,
+  effectiveMetaDescription,
+  effectiveMetaTitle,
+  effectiveSummary,
+  formatDuration,
+  isIndexableVideo,
+  parseTranscript,
+  relatedVideos,
+  thumbnailOf,
+  videoJsonLd,
+  videoPath,
+  videoUrl,
+} from "@/lib/videoShared";
+import { youtubeEmbedBase } from "@/lib/youtube";
+import { truncate } from "@/lib/shopShared";
+import { jsonLdString } from "@/lib/shopServer";
+import { sanitizeHtml } from "@/utils/sanitizeHtml";
+import { normalizeBlogHtml } from "@/utils/normalizeBlogHtml";
+import { PlayIcon } from "../Icons";
+import styles from "../video.module.css";
 
-export default function VideoBlogDetailPage() {
-  const router = useRouter();
-  const params = useParams();
-  const rawSlug = (params?.slug as string) || "";
-  const { setActiveBlog } = useBlog();
+export const revalidate = 60;
+export const dynamicParams = true;
 
-  const [videoBlog, setVideoBlog] = useState<ParsedVideoBlog | null>(null);
-  const [allVideos, setAllVideos] = useState<ParsedVideoBlog[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string>("");
+type Props = { params: Promise<{ slug: string }> };
 
-  // Video playback timestamp state
-  const [activeTimestamp, setActiveTimestamp] = useState<number>(0);
+export async function generateStaticParams() {
+  const all = await getPublishedVideos();
+  return all.slice(0, 300).map((v) => ({ slug: v.slug }));
+}
 
-  // User session state
-  const [user, setUser] = useState<any>(null);
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params;
+  const v = await getVideoBySlug(slug);
+  if (!v) return { title: { absolute: "Video not found | Diving Sanatan" }, robots: { index: false, follow: false } };
 
-  // Engagement states
-  const [likesCount, setLikesCount] = useState<number>(0);
-  const [isLiked, setIsLiked] = useState<boolean>(false);
-  const [loadingLikes, setLoadingLikes] = useState<boolean>(false);
-
-  // Comments states
-  const [comments, setComments] = useState<any[]>([]);
-  const [commentText, setCommentText] = useState<string>("");
-  const [postingComment, setPostingComment] = useState<boolean>(false);
-
-  // Share state
-  const [copiedLink, setCopiedLink] = useState<boolean>(false);
-
-  // 1. Fetch user session
-  useEffect(() => {
-    const session = window.localStorage.getItem("divingsanatan_user_session");
-    if (session) {
-      try {
-        setUser(JSON.parse(session));
-      } catch (e) {
-        setUser(null);
-      }
-    }
-  }, []);
-
-  // 2. Resolve video blog data
-  useEffect(() => {
-    if (!rawSlug) return;
-    let isMounted = true;
-    setLoading(true);
-    setError("");
-
-    fetch("/api/blogs")
-      .then((res) => res.json())
-      .then((json) => {
-        if (!isMounted) return;
-        if (json.success && Array.isArray(json.data)) {
-          const rawBlogs: Blog[] = json.data;
-          const filtered = rawBlogs.filter(
-            (b) =>
-              b.content_type === "video" ||
-              Boolean(b.video_embed_url) ||
-              (b.videos && b.videos.length > 0) ||
-              b.category?.toLowerCase().includes("video") ||
-              b.section?.toLowerCase().includes("video")
-          );
-
-          const parsedList: ParsedVideoBlog[] = filtered.map((b) => {
-            const embed = normalizeEmbedUrl(b.video_embed_url || (b.videos?.[0] ?? ""));
-            const lines = parseTranscriptText(b.video_transcript);
-
-            return {
-              id: b.id,
-              slug: b.slug || b.id,
-              title: b.title,
-              author: b.author,
-              category: b.category || "Video Transcripts",
-              date: b.date,
-              readTime: b.readTime || "5 Min Watch",
-              content: b.content,
-              videoEmbedUrl: embed || "https://www.youtube.com/embed/dQw4w9WgXcQ",
-              image: b.image || "/images/insight_video.png",
-              lines: lines.length > 0 ? lines : [
-                { timeStr: "00:00", seconds: 0, text: b.content.substring(0, 120) }
-              ],
-            };
-          });
-
-          setAllVideos(parsedList);
-
-          const target = parsedList.find(
-            (v) => v.slug === rawSlug || v.id === rawSlug
-          );
-
-          if (target) {
-            setVideoBlog(target);
-          } else {
-            setError("Video blog post not found.");
-          }
-        } else {
-          setError("Failed to resolve video blog.");
-        }
-      })
-      .catch((err) => {
-        console.error("Failed to load video blog details:", err);
-        if (isMounted) {
-          setError("Connection error while loading video blog.");
-        }
-      })
-      .finally(() => {
-        if (isMounted) setLoading(false);
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [rawSlug]);
-
-  // Set active blog context for sidebar
-  useEffect(() => {
-    if (videoBlog) {
-      setActiveBlog({
-        id: videoBlog.id,
-        slug: videoBlog.slug,
-        title: videoBlog.title,
-        category: videoBlog.category,
-        author: videoBlog.author,
-        content: videoBlog.content,
-        date: videoBlog.date,
-        readTime: videoBlog.readTime,
-        image: videoBlog.image,
-        videos: [videoBlog.videoEmbedUrl],
-      } as any);
-    }
-    return () => {
-      setActiveBlog(null);
-    };
-  }, [videoBlog, setActiveBlog]);
-
-  // Fetch Likes & Comments for the blog
-  useEffect(() => {
-    if (!videoBlog?.id) return;
-    const blogId = videoBlog.id;
-
-    // Likes
-    const profileId = user?.id || "";
-    fetch(`/api/blogs/likes?blogId=${encodeURIComponent(blogId)}&profileId=${encodeURIComponent(profileId)}`)
-      .then((res) => res.json())
-      .then((json) => {
-        if (json.success) {
-          setLikesCount(json.count || 0);
-          setIsLiked(Boolean(json.liked));
-        }
-      })
-      .catch((err) => console.error("Error loading likes:", err));
-
-    // Comments
-    fetch(`/api/blogs/comments?blogId=${encodeURIComponent(blogId)}`)
-      .then((res) => res.json())
-      .then((json) => {
-        if (json.success && Array.isArray(json.data)) {
-          setComments(json.data);
-        }
-      })
-      .catch((err) => console.error("Error loading comments:", err));
-  }, [videoBlog?.id, user?.id]);
-
-  // Handle Like Action
-  const handleLike = async () => {
-    if (!videoBlog) return;
-    if (!user) {
-      alert("Please log in to like this video blog post.");
-      return;
-    }
-
-    try {
-      setLoadingLikes(true);
-      const res = await fetch("/api/blogs/likes", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ blogId: videoBlog.id, profileId: user.id }),
-      });
-      const json = await res.json();
-      if (json.success) {
-        setIsLiked(json.liked);
-        setLikesCount((prev) => (json.liked ? prev + 1 : prev - 1));
-      }
-    } catch (err) {
-      console.error("Failed to like video blog:", err);
-    } finally {
-      setLoadingLikes(false);
-    }
+  const title = effectiveMetaTitle(v);
+  const description = effectiveMetaDescription(v);
+  const image = v.ogImage.trim() || thumbnailOf(v);
+  const vertical = v.format === "vertical";
+  return {
+    title: { absolute: title },
+    description,
+    alternates: { canonical: effectiveCanonical(v) },
+    robots: isIndexableVideo(v) ? { index: true, follow: true } : { index: false, follow: true },
+    keywords: [v.focusKeyword, ...v.secondaryKeywords].filter(Boolean),
+    openGraph: {
+      type: "video.other",
+      title,
+      description,
+      url: videoUrl(v.slug),
+      siteName: "Diving Sanatan",
+      images: [{ url: image, alt: v.title }],
+      videos: [{ url: youtubeEmbedBase(v.youtubeId), width: vertical ? 720 : 1280, height: vertical ? 1280 : 720 }],
+    },
+    twitter: { card: "summary_large_image", title, description, images: [image] },
   };
+}
 
-  // Handle Comment Submission
-  const handleCommentSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!videoBlog || !commentText.trim()) return;
-    if (!user) {
-      alert("Please log in to leave a comment.");
-      return;
-    }
+const fmtDate = (d: string) => new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
 
-    try {
-      setPostingComment(true);
-      const res = await fetch("/api/blogs/comments", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          blogId: videoBlog.id,
-          profileId: user.id,
-          commentText: commentText.trim(),
-        }),
-      });
-      const json = await res.json();
-      if (json.success) {
-        setComments((prev) => [json.data, ...prev]);
-        setCommentText("");
-      } else {
-        alert("Failed to post comment: " + json.error);
-      }
-    } catch (err) {
-      console.error("Error submitting comment:", err);
-    } finally {
-      setPostingComment(false);
-    }
-  };
+export default async function VideoPage({ params }: Props) {
+  const { slug } = await params;
+  const v = await getVideoBySlug(slug);
+  if (!v) notFound();
 
-  // Handle Share Link Copy
-  const copyShareLink = () => {
-    if (typeof window !== "undefined") {
-      navigator.clipboard.writeText(window.location.href);
-      setCopiedLink(true);
-      setTimeout(() => setCopiedLink(false), 2000);
-    }
-  };
+  const all = await getPublishedVideos();
+  const bySlug = new Map(all.map((x) => [x.slug, x]));
+  let related = v.relatedVideos.map((s) => bySlug.get(s)).filter((x): x is NonNullable<typeof x> => !!x && x.id !== v.id && isIndexableVideo(x));
+  if (related.length === 0) related = relatedVideos(v, all, 4);
 
-  const isDirectVideoFile = (url: string) => {
-    if (!url) return false;
-    const clean = url.trim().toLowerCase();
-    return (
-      clean.endsWith(".mp4") ||
-      clean.endsWith(".webm") ||
-      clean.endsWith(".mov") ||
-      clean.endsWith(".ogg") ||
-      clean.includes("/storage/v1/object/public/uploads/") ||
-      clean.includes("video/upload")
-    );
-  };
+  const idx = all.findIndex((x) => x.id === v.id);
+  const prev = idx > 0 ? all[idx - 1] : null;
+  const next = idx >= 0 && idx < all.length - 1 ? all[idx + 1] : null;
 
-  const getEmbedWithTime = (baseUrl: string, startSecs: number) => {
-    if (!baseUrl) return "";
-    const joinChar = baseUrl.includes("?") ? "&" : "?";
-    return `${baseUrl}${joinChar}autoplay=1&start=${startSecs}`;
-  };
-
-  if (loading) {
-    return (
-      <div className="video-detail-loading">
-        <div className="infinite-loader-box">
-          <svg viewBox="0 0 100 100" className="loader-lotus-spin">
-            <path d="M50 25 C45 45 35 60 50 80 C65 60 55 45 50 25 Z" fill="none" stroke="#7c3aed" strokeWidth="4" />
-          </svg>
-          <span>Loading Video Blog Details...</span>
-        </div>
-      </div>
-    );
-  }
-
-  if (error || !videoBlog) {
-    return (
-      <div className="video-detail-error glass-panel">
-        <h2>Video Blog Not Found</h2>
-        <p>{error || "The requested video blog post could not be resolved."}</p>
-        <Link href="/blog/video-transcripts" className="back-link-btn">
-          ← Back to Video Transcripts
-        </Link>
-      </div>
-    );
-  }
-
-  const relatedVideos = allVideos
-    .filter((v) => v.id !== videoBlog.id && v.slug !== videoBlog.slug)
-    .slice(0, 3);
+  const lines = parseTranscript(v.transcript);
+  const takeaways = v.keyTakeaways.filter(Boolean);
+  const questions = v.alternateQuestions.filter(Boolean);
+  const sources = v.sources.filter((s) => s.url);
+  const summary = effectiveSummary(v);
+  const content = sanitizeHtml(v.content);
+  const wide = v.format === "horizontal";
 
   return (
-    <div className="video-detail-page">
-      {/* Breadcrumb Navigation */}
-      <nav className="article-breadcrumb">
-        <Link href="/blog" className="breadcrumb-link">
-          Blog
-        </Link>
-        <span className="breadcrumb-sep">&gt;</span>
-        <Link href="/blog/video-transcripts" className="breadcrumb-link">
-          Video Transcripts
-        </Link>
-        <span className="breadcrumb-sep">&gt;</span>
-        <span className="breadcrumb-current">{videoBlog.title}</span>
+    <article className={styles.article}>
+      <nav className={styles.crumbs} aria-label="Breadcrumb">
+        <Link href="/">Home</Link><span aria-hidden="true">/</span>
+        <Link href="/blog">Blog</Link><span aria-hidden="true">/</span>
+        <Link href="/blog/video-transcripts">Video Blogs</Link><span aria-hidden="true">/</span>
+        <span aria-current="page">{truncate(v.title, 60)}</span>
       </nav>
 
-      {/* Main Video Detail Article Container */}
-      <article className="video-detail-article">
-        {/* Header Block */}
-        <div className="video-detail-header">
-          <div className="category-tag-row">
-            <span className="category-badge">{videoBlog.category}</span>
-            <span className="duration-badge">⏱ {videoBlog.readTime}</span>
-          </div>
-          <h1 className="video-detail-title">{videoBlog.title}</h1>
-          <div className="video-detail-meta">
-            <div className="author-box">
-              <div className="author-avatar">{videoBlog.author.charAt(0)}</div>
-              <span className="author-name">{videoBlog.author}</span>
-            </div>
-            <span className="meta-sep">•</span>
-            <span className="publish-date">Published {videoBlog.date}</span>
-          </div>
-        </div>
+      <WatchRoot>
+        <div className={`${styles.layout} ${wide ? styles.layoutWide : ""}`}>
+          <WatchPlayer youtubeId={v.youtubeId} format={v.format} title={v.title} poster={thumbnailOf(v)} shareUrl={videoUrl(v.slug)} />
 
-        {/* Video Player & Interactive Transcript 2-Column Grid */}
-        <div className="video-interactive-grid">
-          {/* Main Video Screen */}
-          <div className="video-player-column">
-            <div className="video-screen-wrapper">
-              {isDirectVideoFile(videoBlog.videoEmbedUrl) ? (
-                <video
-                  src={videoBlog.videoEmbedUrl}
-                  controls
-                  style={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "contain",
-                    background: "#000",
-                  }}
-                />
-              ) : (
-                <iframe
-                  src={getEmbedWithTime(videoBlog.videoEmbedUrl, activeTimestamp)}
-                  className="video-iframe"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  title={videoBlog.title}
-                />
+          <div>
+            <span className={styles.badge}>{v.category || "Video"}</span>
+            <h1 className={styles.h1}>{v.title}</h1>
+            <p className={styles.byline}>
+              {v.authorName && (
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
+                  <span className={styles.avatar} aria-hidden="true">{v.authorName.charAt(0).toUpperCase()}</span>
+                  <span>
+                    <span className={styles.byName}>{v.authorName}</span>
+                    {v.authorCredentials && <span>{v.authorCredentials}</span>}
+                  </span>
+                </span>
               )}
-            </div>
-            <p className="timestamp-note">
-              💡 Tip: Click any transcript line on the right to jump directly to that timestamp in the video session!
+              {v.uploadDate && <span>{v.authorName && <span className={styles.dot} aria-hidden="true">· </span>}{fmtDate(v.uploadDate)}</span>}
+              {v.durationSeconds ? <span><span className={styles.dot} aria-hidden="true">· </span>{formatDuration(v.durationSeconds)}</span> : null}
+              {v.reviewedBy && <span><span className={styles.dot} aria-hidden="true">· </span>Reviewed by {v.reviewedBy}</span>}
             </p>
-          </div>
 
-          {/* Time-Synced Transcript Box */}
-          <div className="transcript-column glass-panel">
-            <div className="transcript-header-row">
-              <h3 className="transcript-heading">📜 Interactive Transcript</h3>
-              <span className="lines-count">{videoBlog.lines.length} Timestamp Notes</span>
-            </div>
-            <div className="transcript-lines-scroll">
-              {videoBlog.lines.map((line, idx) => {
-                const isActive = activeTimestamp === line.seconds;
-                return (
-                  <button
-                    key={`${line.seconds}-${idx}`}
-                    className={`transcript-line-btn ${isActive ? "active" : ""}`}
-                    onClick={() => setActiveTimestamp(line.seconds)}
-                  >
-                    <span className="time-badge">[{line.timeStr}]</span>
-                    <span className="line-text">{line.text}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
+            {summary && (
+              <section className={`${styles.answer} speakable-answer`} aria-label="Summary">
+                <p className={styles.answerLabel}>In short</p>
+                <p className={styles.answerText}>{summary}</p>
+              </section>
+            )}
 
-        {/* About This Video / Article Content */}
-        <div className="video-content-section glass-panel">
-          <h3 className="section-title">About This Guided Video Session</h3>
-          <div
-            className="video-content-body"
-            dangerouslySetInnerHTML={{ __html: normalizeBlogHtml(videoBlog.content) }}
-          />
+            {takeaways.length > 0 && (
+              <section className={styles.section} aria-labelledby="takeaways">
+                <h2 id="takeaways" className={styles.h2}>Key takeaways</h2>
+                <ul className={styles.takeaways}>{takeaways.map((t, i) => (<li key={i}>{t}</li>))}</ul>
+              </section>
+            )}
 
-          {/* Google AdSense In-Article Ad Slot */}
-          <AdSense
-            adClient="ca-pub-4820128927673407"
-            adSlot="3156896316"
-            adLayout="in-article"
-            adFormat="fluid"
-            style={{ display: "block", textAlign: "center" }}
-          />
+            {lines.length > 0 && (
+              <section className={styles.section} aria-labelledby="transcript">
+                <h2 id="transcript" className={styles.h2}>Transcript</h2>
+                <WatchTranscript lines={lines} />
+              </section>
+            )}
 
-          {/* Social Actions & Engagement Row */}
-          <div className="engagement-bar">
-            <button
-              className={`like-btn ${isLiked ? "liked" : ""}`}
-              onClick={handleLike}
-              disabled={loadingLikes}
-            >
-              <span className="heart-icon">{isLiked ? "❤️" : "🤍"}</span>
-              <span>{likesCount} Likes</span>
-            </button>
+            <AdSense adClient="ca-pub-4820128927673407" adSlot="3156896316" adLayout="in-article" adFormat="fluid" style={{ display: "block", textAlign: "center" }} />
 
-            <button className="share-btn" onClick={copyShareLink}>
-              <span className="share-icon">🔗</span>
-              <span>{copiedLink ? "Link Copied!" : "Share Video"}</span>
-            </button>
-          </div>
-        </div>
+            {content && (
+              <section className={styles.section} aria-labelledby="writeup">
+                <h2 id="writeup" className={styles.h2}>The full story</h2>
+                <div className="prose" dangerouslySetInnerHTML={{ __html: normalizeBlogHtml(content) }} />
+              </section>
+            )}
 
-        {/* Comments Section */}
-        <div className="comments-section glass-panel">
-          <h3 className="section-title">Discussion & Insights ({comments.length})</h3>
+            {questions.length > 0 && (
+              <section className={styles.section} aria-labelledby="questions">
+                <h2 id="questions" className={styles.h2}>Questions this video answers</h2>
+                <ul className={styles.altList}>{questions.map((q, i) => (<li key={i}>{q}</li>))}</ul>
+              </section>
+            )}
 
-          {/* Add Comment Form */}
-          <form onSubmit={handleCommentSubmit} className="comment-form">
-            <textarea
-              rows={3}
-              placeholder={user ? "Share your reflection or experience..." : "Log in to post a reflection..."}
-              className="comment-textarea"
-              value={commentText}
-              onChange={(e) => setCommentText(e.target.value)}
-              disabled={!user || postingComment}
-            />
-            <div className="comment-submit-row">
-              {!user && <span className="login-hint">Please sign in to join the conversation.</span>}
-              <Button
-                type="submit"
-                variant="gold"
-                size="sm"
-                disabled={!user || !commentText.trim() || postingComment}
-              >
-                {postingComment ? "Posting..." : "Post Reflection"}
-              </Button>
-            </div>
-          </form>
-
-          {/* Comments List */}
-          <div className="comments-list">
-            {comments.length > 0 ? (
-              comments.map((c) => (
-                <div key={c.id || c.created_at} className="comment-item">
-                  <div className="comment-avatar">
-                    {(c.profiles?.name || c.author || "U").charAt(0).toUpperCase()}
-                  </div>
-                  <div className="comment-body">
-                    <div className="comment-meta">
-                      <span className="comment-author">{c.profiles?.name || c.author || "Anonymous Seeker"}</span>
-                      <span className="comment-date">{c.created_at ? new Date(c.created_at).toLocaleDateString() : "Just now"}</span>
-                    </div>
-                    <p className="comment-text">{c.comment_text || c.text}</p>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <p className="no-comments-msg">Be the first to share your reflection on this video blog session!</p>
+            {sources.length > 0 && (
+              <section className={styles.section} aria-labelledby="sources">
+                <h2 id="sources" className={styles.h2}>Sources and further reading</h2>
+                <ol className={styles.sources}>
+                  {sources.map((s, i) => (<li key={i}><a href={s.url} target="_blank" rel="noopener noreferrer">{s.title}</a></li>))}
+                </ol>
+              </section>
             )}
           </div>
         </div>
-      </article>
+      </WatchRoot>
 
-      <style jsx>{`
-        .video-detail-page {
-          display: flex;
-          flex-direction: column;
-          gap: 20px;
-          width: 100%;
-          font-family: var(--font-family);
-        }
+      <aside className={styles.band} aria-label="Subscribe on YouTube" style={{ marginTop: 40 }}>
+        <div className={styles.bandText}>
+          <h2 className={styles.bandTitle}>Enjoyed this? There&apos;s more.</h2>
+          <p className={styles.bandSub}>Subscribe to the Diving Sanatan YouTube channel so you never miss the next one.</p>
+        </div>
+        <SubscribeButton />
+      </aside>
 
-        /* Breadcrumb */
-        .article-breadcrumb {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          font-size: var(--fs-sm);
-          color: #64748b;
-          font-family: var(--font-family);
-        }
-        .breadcrumb-link {
-          color: #7c3aed;
-          text-decoration: none;
-          font-weight: 600;
-        }
-        .breadcrumb-link:hover {
-          text-decoration: underline;
-        }
-        .breadcrumb-sep {
-          color: #cbd5e1;
-        }
-        .breadcrumb-current {
-          color: #1e1b4b;
-          font-weight: 700;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          max-width: 320px;
-        }
+      {related.length > 0 && (
+        <section className={styles.section} aria-labelledby="related">
+          <h2 id="related" className={styles.h2}>More videos</h2>
+          <ul className={styles.related}>
+            {related.map((r) => (
+              <li key={r.id}>
+                <Link href={videoPath(r.slug)} className={styles.card} aria-label={`Watch: ${r.title}`}>
+                  <div className={`${styles.poster} ${r.format === "horizontal" ? styles.posterWide : ""}`}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={thumbnailOf(r)} alt="" className={styles.posterImg} loading="lazy" />
+                    <div className={styles.posterShade} />
+                    <span className={styles.posterPlay}><PlayIcon /></span>
+                    <div className={styles.posterBody}><h3 className={styles.posterTitle}>{r.title}</h3></div>
+                  </div>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
-        .video-detail-article {
-          display: flex;
-          flex-direction: column;
-          gap: 24px;
-          font-family: var(--font-family);
-        }
+      <aside className={styles.cta}>
+        <div>
+          <h2 className={styles.ctaTitle}>Want guidance made for you?</h2>
+          <p className={styles.ctaText}>Our practitioners offer personal sessions in healing, meditation and life guidance.</p>
+        </div>
+        <Link href="/explore-services" className={styles.btnLight}>Explore services</Link>
+      </aside>
 
-        .video-detail-header {
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-        }
-        .category-tag-row {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-        }
-        .category-badge {
-          background: #7c3aed;
-          color: #ffffff;
-          font-size: var(--fs-2xs);
-          font-weight: 700;
-          padding: 4px 12px;
-          border-radius: 20px;
-          text-transform: uppercase;
-        }
-        .duration-badge {
-          background: #f3e8ff;
-          color: #6b21a8;
-          font-size: var(--fs-2xs);
-          font-weight: 700;
-          padding: 4px 12px;
-          border-radius: 20px;
-        }
-        .video-detail-title {
-          font-family: var(--font-serif);
-          font-size: var(--fs-4xl);
-          color: #2e1065;
-          margin: 0;
-          font-weight: 800;
-          line-height: 1.25;
-        }
-        .video-detail-meta {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          font-size: var(--fs-sm);
-          color: #64748b;
-        }
-        .author-box {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-        .author-avatar {
-          width: 28px;
-          height: 28px;
-          border-radius: 50%;
-          background: #7c3aed;
-          color: #ffffff;
-          font-size: var(--fs-xs);
-          font-weight: 700;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-        .author-name {
-          font-weight: 700;
-          color: #334155;
-        }
-        .meta-sep {
-          color: #cbd5e1;
-        }
+      <nav className={styles.pager} aria-label="More videos">
+        {prev ? <Link href={videoPath(prev.slug)}>← {truncate(prev.title, 45)}</Link> : <span />}
+        {next ? <Link href={videoPath(next.slug)}>{truncate(next.title, 45)} →</Link> : <span />}
+      </nav>
 
-        /* 2-Column Grid */
-        .video-interactive-grid {
-          display: grid;
-          grid-template-columns: 1.25fr 0.75fr;
-          gap: 24px;
-          align-items: flex-start;
-        }
-        @media (max-width: 900px) {
-          .video-interactive-grid {
-            grid-template-columns: 1fr;
-          }
-        }
-
-        .video-player-column {
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-        }
-        .video-screen-wrapper {
-          position: relative;
-          width: 100%;
-          padding-top: 56.25%;
-          background: #090514;
-          border-radius: 20px;
-          overflow: hidden;
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
-        }
-        .video-iframe {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          border: none;
-        }
-        .timestamp-note {
-          font-size: var(--fs-xs);
-          color: #6b21a8;
-          background: #f5f3ff;
-          padding: 8px 14px;
-          border-radius: 10px;
-          margin: 0;
-          border: 1px solid rgba(124, 58, 237, 0.15);
-        }
-
-        /* Transcript */
-        .transcript-column {
-          display: flex;
-          flex-direction: column;
-          gap: 14px;
-          max-height: 480px;
-          padding: 20px !important;
-          border-radius: 20px !important;
-          background: #ffffff !important;
-          border: 1px solid rgba(168, 85, 247, 0.15) !important;
-        }
-        .transcript-header-row {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding-bottom: 10px;
-          border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-        }
-        .transcript-heading {
-          font-size: var(--fs-lg);
-          color: #4c1d95;
-          margin: 0;
-          font-weight: 700;
-        }
-        .lines-count {
-          font-size: var(--fs-2xs);
-          color: #7c3aed;
-          font-weight: 600;
-        }
-        .transcript-lines-scroll {
-          overflow-y: auto;
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-          padding-right: 4px;
-        }
-        .transcript-line-btn {
-          display: flex;
-          align-items: flex-start;
-          gap: 10px;
-          padding: 10px 12px;
-          border-radius: 12px;
-          background: #faf5ff;
-          border: 1px solid transparent;
-          cursor: pointer;
-          text-align: left;
-          transition: all 0.2s ease;
-        }
-        .transcript-line-btn:hover {
-          background: #f3e8ff;
-          border-color: rgba(124, 58, 237, 0.2);
-        }
-        .transcript-line-btn.active {
-          background: #6b21a8;
-          border-color: #581c87;
-        }
-        .transcript-line-btn.active .time-badge {
-          color: #e9d5ff;
-        }
-        .transcript-line-btn.active .line-text {
-          color: #ffffff;
-          font-weight: 600;
-        }
-        .time-badge {
-          font-family: monospace;
-          color: #7c3aed;
-          font-weight: 700;
-          font-size: var(--fs-sm);
-          flex-shrink: 0;
-        }
-        .line-text {
-          font-size: var(--fs-sm);
-          color: #334155;
-          line-height: 1.45;
-        }
-
-        /* Video Content Section */
-        .video-content-section {
-          padding: 28px !important;
-          border-radius: 20px !important;
-          background: #ffffff !important;
-          border: 1px solid rgba(168, 85, 247, 0.15) !important;
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-        }
-        .section-title {
-          font-family: var(--font-serif);
-          font-size: var(--fs-xl);
-          color: #3b0764;
-          margin: 0;
-          font-weight: 750;
-        }
-        .video-content-body {
-          font-family: var(--font-family);
-          font-size: var(--fs-base);
-          color: #334155;
-          line-height: 1.75;
-        }
-
-        /* Engagement Bar */
-        .engagement-bar {
-          display: flex;
-          align-items: center;
-          gap: 16px;
-          margin-top: 12px;
-          padding-top: 16px;
-          border-top: 1px solid rgba(0, 0, 0, 0.08);
-        }
-        .like-btn,
-        .share-btn {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          padding: 8px 18px;
-          border-radius: 30px;
-          font-size: var(--fs-sm);
-          font-weight: 700;
-          cursor: pointer;
-          border: 1px solid rgba(168, 85, 247, 0.2);
-          background: #f5f3ff;
-          color: #6b21a8;
-          transition: all 0.2s ease;
-        }
-        .like-btn:hover,
-        .share-btn:hover {
-          background: #e9d5ff;
-        }
-        .like-btn.liked {
-          background: #fce7f3;
-          color: #be185d;
-          border-color: rgba(190, 24, 93, 0.2);
-        }
-
-        /* Comments Section */
-        .comments-section {
-          padding: 28px !important;
-          border-radius: 20px !important;
-          background: #ffffff !important;
-          border: 1px solid rgba(168, 85, 247, 0.15) !important;
-          display: flex;
-          flex-direction: column;
-          gap: 20px;
-        }
-        .comment-form {
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-        }
-        .comment-textarea {
-          width: 100%;
-          padding: 14px;
-          border-radius: 14px;
-          border: 1px solid rgba(168, 85, 247, 0.2);
-          font-family: inherit;
-          font-size: var(--fs-md);
-          outline: none;
-          resize: vertical;
-        }
-        .comment-textarea:focus {
-          border-color: #7c3aed;
-          box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
-        }
-        .comment-submit-row {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-        }
-        .login-hint {
-          font-size: var(--fs-xs);
-          color: #64748b;
-        }
-        .comments-list {
-          display: flex;
-          flex-direction: column;
-          gap: 14px;
-        }
-        .comment-item {
-          display: flex;
-          gap: 12px;
-          padding: 12px;
-          background: #faf5ff;
-          border-radius: 14px;
-        }
-        .comment-avatar {
-          width: 32px;
-          height: 32px;
-          border-radius: 50%;
-          background: #6b21a8;
-          color: #ffffff;
-          font-size: var(--fs-sm);
-          font-weight: 700;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-shrink: 0;
-        }
-        .comment-body {
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
-        }
-        .comment-meta {
-          display: flex;
-          gap: 8px;
-          font-size: var(--fs-xs);
-        }
-        .comment-author {
-          font-weight: 700;
-          color: #1e1b4b;
-        }
-        .comment-date {
-          color: #94a3b8;
-        }
-        .comment-text {
-          font-size: var(--fs-sm);
-          color: #334155;
-          margin: 0;
-        }
-        .no-comments-msg {
-          font-size: var(--fs-sm);
-          color: #64748b;
-          font-style: italic;
-          margin: 0;
-        }
-
-        /* Related Videos */
-        .related-videos-section {
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-          margin-top: 10px;
-        }
-        .related-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-          gap: 18px;
-        }
-        .related-card {
-          padding: 0 !important;
-          overflow: hidden;
-          border-radius: 16px !important;
-          background: #ffffff !important;
-          border: 1px solid rgba(168, 85, 247, 0.15) !important;
-        }
-        .related-thumb-link {
-          position: relative;
-          display: block;
-          height: 140px;
-        }
-        .related-img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-        }
-        .related-play {
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          width: 36px;
-          height: 36px;
-          border-radius: 50%;
-          background: rgba(124, 58, 237, 0.9);
-          color: #ffffff;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: var(--fs-sm);
-        }
-        .related-body {
-          padding: 12px;
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
-        }
-        .related-cat {
-          font-size: var(--fs-2xs);
-          color: #7c3aed;
-          font-weight: 700;
-          text-transform: uppercase;
-        }
-        .related-title-link {
-          text-decoration: none;
-        }
-        .related-title {
-          font-size: var(--fs-md);
-          color: #1e1b4b;
-          margin: 0;
-          font-weight: 700;
-          line-height: 1.3;
-        }
-        .related-title-link:hover .related-title {
-          color: #7c3aed;
-        }
-
-        .video-detail-loading,
-        .video-detail-error {
-          padding: 60px 20px;
-          text-align: center;
-        }
-        .back-link-btn {
-          display: inline-block;
-          margin-top: 14px;
-          color: #7c3aed;
-          font-weight: 700;
-          text-decoration: none;
-        }
-      `}</style>
-    </div>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdString(videoJsonLd(v)) }} />
+    </article>
   );
 }

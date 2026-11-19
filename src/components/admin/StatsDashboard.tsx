@@ -185,7 +185,7 @@ export default function StatsDashboard({ pageType, actions, customStats }: Stats
       cards: [
         { label: "Total Video Blogs", trend: "Published catalog", trendType: "up", icon: FileText },
         { label: "With Transcripts", trend: "Timed notes added", trendType: "neutral", icon: List },
-        { label: "YouTube Connected", trend: "Active video embeds", trendType: "up", icon: Activity },
+        { label: "Vertical (Shorts)", trend: "Tall 9:16 videos", trendType: "up", icon: Activity },
         { label: "Published Status", trend: "Live on site", trendType: "up", icon: CheckCircle2 }
       ]
     },
@@ -298,7 +298,7 @@ export default function StatsDashboard({ pageType, actions, customStats }: Stats
           keywords: ["/api/keywords", "/api/blogs"],
           "quiz-questions": ["/api/quiz-questions"],
           blogs: ["/api/blogs", "/api/blogs/categories"],
-          "video-blogs": ["/api/blogs"],
+          "video-blogs": ["/api/videos?all=1"],
           glossary: ["/api/glossary"],
           faq: ["/api/faq?all=1"],
 
@@ -333,6 +333,7 @@ export default function StatsDashboard({ pageType, actions, customStats }: Stats
         const blogs = getDataset("blogs");
         const glossary = getDataset("glossary");
         const faq = getDataset("faq");
+        const videoPosts = getDataset("videos");
 
         const leads = getDataset("leads");
         const users = getDataset("users");
@@ -418,16 +419,11 @@ export default function StatsDashboard({ pageType, actions, customStats }: Stats
             break;
 
           case "video-blogs":
-            const vBlogs = blogs.filter((b: any) =>
-              b.content_type === "video" ||
-              Boolean(b.video_embed_url) ||
-              b.category?.toLowerCase().includes("video") ||
-              b.section?.toLowerCase().includes("video")
-            );
-            val1 = vBlogs.length;
-            val2 = vBlogs.filter((b: any) => b.video_transcript && b.video_transcript.trim().length > 0).length;
-            val3 = vBlogs.filter((b: any) => Boolean(b.video_embed_url || (b.videos && b.videos.length > 0))).length;
-            val4 = vBlogs.filter((b: any) => (b.status || b.approval_status) === "published").length;
+            // Real videos from the database (they used to be read from the general blog list)
+            val1 = videoPosts.length;
+            val2 = videoPosts.filter((v: any) => v.transcript && String(v.transcript).trim().length > 0).length;
+            val3 = videoPosts.filter((v: any) => v.format === "vertical").length;
+            val4 = videoPosts.filter((v: any) => v.status === "published").length;
             break;
 
           case "glossary":

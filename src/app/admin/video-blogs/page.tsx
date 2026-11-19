@@ -1,503 +1,345 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { Card } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
-import StatsDashboard from "@/components/admin/StatsDashboard";
-import { Blog } from "@/types/database";
+import React, { useEffect, useMemo, useState } from "react";
+import { DownloadCloud, ExternalLink, Pencil, Plus, Sparkles, Star, Trash2 } from "lucide-react";
+import { truncate } from "@/lib/shopShared";
+import { scoreTone } from "@/lib/faqShared";
+import { formatDuration, scoreVideo, thumbnailOf, type VideoPost } from "@/lib/videoShared";
+import {
+  ApiError,
+  blankVideo,
+  checkStaffSession,
+  createVideo,
+  deleteVideo,
+  fillBlanks,
+  importFromBlogs,
+  listVideos,
+  updateVideo,
+  type ImportReport,
+} from "./videoApi";
+import VideoEditor from "./VideoEditor";
+import shop from "../shop/adminShop.module.css";
+import styles from "../glossary/adminGlossary.module.css";
+
+type StatusFilter = "all" | "published" | "draft";
+type FormatFilter = "all" | "vertical" | "horizontal";
+type Sort = "weakest" | "newest" | "oldest";
+const PAGE_SIZE = 20;
+const tone = (n: number) => styles[scoreTone(n)];
 
 export default function AdminVideoBlogsPage() {
-  const router = useRouter();
-  const [blogs, setBlogs] = useState<Blog[]>([]);
+  const [videos, setVideos] = useState<VideoPost[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [authIssue, setAuthIssue] = useState("");
+  const [loadError, setLoadError] = useState("");
+  const [editing, setEditing] = useState<VideoPost | null>(null);
+  const [formKey, setFormKey] = useState(0);
+  const [saving, setSaving] = useState(false);
+  const [query, setQuery] = useState("");
+  const [status, setStatus] = useState<StatusFilter>("all");
+  const [format, setFormat] = useState<FormatFilter>("all");
+  const [sort, setSort] = useState<Sort>("newest");
+  const [page, setPage] = useState(1);
+  const [filling, setFilling] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [report, setReport] = useState<ImportReport | null>(null);
+  const [toast, setToast] = useState<{ msg: string; err?: boolean } | null>(null);
 
-  // Pagination states
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 8;
-
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      const res = await fetch("/api/blogs?admin_view=true", { cache: "no-store" });
-      const json = await res.json();
-      if (json.success) {
-        setBlogs(json.data || []);
-      }
-    } catch (err) {
-      console.error("Failed to load video blogs data:", err);
-    } finally {
-      setLoading(false);
-    }
+  const notify = (msg: string, err = false) => {
+    setToast({ msg, err });
+    window.setTimeout(() => setToast(null), err ? 6500 : 3800);
   };
+  const handleError = (e: unknown, fallback: string) => {
+    if (e instanceof ApiError && (e.status === 401 || e.status === 403 || e.status === 503)) setAuthIssue(e.message);
+    else notify(e instanceof Error ? e.message : fallback, true);
+  };
+  const reload = async () => setVideos(await listVideos());
 
   useEffect(() => {
-    loadData();
+    let cancelled = false;
+    Promise.all([listVideos(), checkStaffSession()])
+      .then(([v, sess]) => {
+        if (cancelled) return;
+        setVideos(v);
+        if (!sess.ok) setAuthIssue(sess.message);
+      })
+      .catch((e: unknown) => {
+        if (cancelled) return;
+        if (e instanceof ApiError && (e.status === 401 || e.status === 403 || e.status === 503)) setAuthIssue(e.message);
+        else setLoadError(e instanceof Error ? e.message : "Could not load the videos.");
+      })
+      .finally(() => !cancelled && setLoading(false));
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  // Filter video blogs
-  const videoBlogs = blogs.filter((b) => {
-    const isVid =
-      b.content_type === "video" ||
-      Boolean(b.video_embed_url) ||
-      b.category?.toLowerCase().includes("video") ||
-      b.section?.toLowerCase().includes("video");
-    return isVid;
-  });
+  const scored = useMemo(() => videos.map((v) => ({ v, s: scoreVideo(v) })), [videos]);
 
-  // Extract unique category names for filter dropdown
-  const categoryOptions = Array.from(
-    new Set(
-      ["Video Transcripts", "Chakra Shorts", "Aura Alignment", "Guided Sessions", "Sound Therapy"].concat(
-        videoBlogs.map((b) => b.category).filter(Boolean)
-      )
-    )
-  );
+  const stats = useMemo(() => {
+    const live = scored.filter((x) => x.v.status === "published");
+    const avg = (get: (s: ReturnType<typeof scoreVideo>) => number) => (live.length ? Math.round(live.reduce((n, x) => n + get(x.s), 0) / live.length) : 0);
+    const gaps = new Map<string, number>();
+    for (const x of live) for (const p of [x.s.seo, x.s.geo, x.s.aeo]) for (const c of p.checks) if (!c.pass) gaps.set(c.label, (gaps.get(c.label) || 0) + 1);
+    return {
+      published: live.length,
+      drafts: videos.length - live.length,
+      overall: avg((s) => s.overall), seo: avg((s) => s.seo.score), geo: avg((s) => s.geo.score), aeo: avg((s) => s.aeo.score),
+      topGaps: Array.from(gaps.entries()).sort((a, b) => b[1] - a[1]).slice(0, 6),
+    };
+  }, [scored, videos.length]);
 
-  const filteredVideoBlogs = videoBlogs.filter((b) => {
-    const matchesSearch =
-      b.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      b.author.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      b.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (b.video_transcript && b.video_transcript.toLowerCase().includes(searchQuery.toLowerCase()));
+  const rows = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    const list = scored
+      .filter((x) => status === "all" || x.v.status === status)
+      .filter((x) => format === "all" || x.v.format === format)
+      .filter((x) => !q || `${x.v.title} ${x.v.slug} ${x.v.category} ${x.v.authorName}`.toLowerCase().includes(q));
+    if (sort === "weakest") list.sort((a, b) => a.s.overall - b.s.overall);
+    else if (sort === "oldest") list.sort((a, b) => (a.v.uploadDate || a.v.createdAt || "").localeCompare(b.v.uploadDate || b.v.createdAt || ""));
+    else list.sort((a, b) => (b.v.uploadDate || b.v.createdAt || "").localeCompare(a.v.uploadDate || a.v.createdAt || ""));
+    return list;
+  }, [scored, query, status, format, sort]);
 
-    const matchesCategory = categoryFilter === "all" || b.category === categoryFilter;
+  const pages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+  const pageRows = rows.slice((Math.min(page, pages) - 1) * PAGE_SIZE, Math.min(page, pages) * PAGE_SIZE);
 
-    return matchesSearch && matchesCategory;
-  });
-
-  const totalPages = Math.max(1, Math.ceil(filteredVideoBlogs.length / itemsPerPage));
-  const paginatedVideoBlogs = filteredVideoBlogs.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
-  const getEmbeddableUrl = (url: string) => {
-    if (!url) return "";
-    let cleanUrl = url.trim();
-
-    if (
-      cleanUrl.match(/\.(mp4|webm|mov|ogg)($|\?)/i) ||
-      cleanUrl.includes("/storage/v1/object/public/uploads/") ||
-      cleanUrl.includes("video/upload")
-    ) {
-      return cleanUrl;
-    }
-
-    if (cleanUrl.toLowerCase().includes("<iframe")) {
-      const srcMatch = cleanUrl.match(/src=["']([^"']+)["']/i);
-      if (srcMatch && srcMatch[1]) {
-        cleanUrl = srcMatch[1];
-      }
-    }
-
-    if (cleanUrl.includes("youtube.com/shorts/")) {
-      const videoId = cleanUrl.split("youtube.com/shorts/")[1]?.split("?")[0]?.split("/")[0];
-      if (videoId) return `https://www.youtube.com/embed/${videoId}`;
-    }
-
-    if (cleanUrl.includes("youtube.com/watch")) {
-      const videoId = cleanUrl.split("v=")[1]?.split("&")[0];
-      if (videoId) return `https://www.youtube.com/embed/${videoId}`;
-    }
-
-    if (cleanUrl.includes("youtu.be/")) {
-      const videoId = cleanUrl.split("youtu.be/")[1]?.split("?")[0]?.split("/")[0];
-      if (videoId) return `https://www.youtube.com/embed/${videoId}`;
-    }
-
-    if (cleanUrl.includes("youtube.com/embed/")) {
-      return cleanUrl;
-    }
-
-    if (cleanUrl.includes("vimeo.com/") && !cleanUrl.includes("player.vimeo.com")) {
-      const videoId = cleanUrl.split("vimeo.com/")[1]?.split("?")[0]?.split("/")[0];
-      if (videoId) return `https://player.vimeo.com/video/${videoId}`;
-    }
-
-    return cleanUrl;
+  const openEditor = (v: VideoPost) => {
+    setFormKey((k) => k + 1);
+    setEditing(v);
   };
 
-  const handleDeleteVideoBlog = async (id: string, blogTitle: string) => {
-    if (!confirm(`Are you sure you want to delete video blog "${blogTitle}"?`)) return;
+  const save = async (draft: VideoPost) => {
+    setSaving(true);
     try {
-      const res = await fetch(`/api/blogs?id=${id}`, { method: "DELETE" });
-      const json = await res.json();
-      if (json.success) {
-        loadData();
+      if (draft.id) {
+        const r = await updateVideo(draft);
+        await reload(); // the featured video may have changed
+        setEditing(r.data);
+        notify(r.redirectCreated ? "Saved. A 301 redirect from the old address was created." : "Video saved.");
       } else {
-        alert("Failed to delete video blog: " + json.error);
+        const created = await createVideo(draft);
+        await reload();
+        setEditing(created);
+        notify("Video created.");
       }
-    } catch (err) {
-      console.error(err);
+    } catch (e) {
+      handleError(e, "Could not save the video.");
+    } finally {
+      setSaving(false);
     }
   };
 
-  const countTranscriptLines = (text?: string) => {
-    if (!text) return 0;
-    return text.split("\n").filter((line) => line.trim().length > 0).length;
+  const toggleStatus = async (v: VideoPost) => {
+    try {
+      const next = v.status === "published" ? "draft" : "published";
+      const r = await updateVideo({ id: v.id, status: next });
+      setVideos((l) => l.map((x) => (x.id === v.id ? r.data : x)));
+      notify(next === "published" ? "Video published." : "Video moved to drafts.");
+    } catch (e) {
+      handleError(e, "Could not change the status.");
+    }
   };
 
+  const remove = async (v: VideoPost) => {
+    if (!window.confirm(`Delete “${truncate(v.title, 60)}” permanently? This cannot be undone.\n\nTip: set it to Draft instead to hide it.`)) return;
+    try {
+      await deleteVideo(v.id);
+      setVideos((l) => l.filter((x) => x.id !== v.id));
+      notify("Video deleted.");
+    } catch (e) {
+      handleError(e, "Could not delete the video.");
+    }
+  };
+
+  const runFill = async () => {
+    if (!window.confirm("Fill in the EMPTY basics for every video?\n\nThis adds a summary, SEO title, meta description, focus keyword and related videos ONLY where they are blank. Anything you have already written is never changed.")) return;
+    setFilling(true);
+    try {
+      const r = await fillBlanks();
+      await reload();
+      notify(`Done. ${r.updated} of ${r.total} videos were updated.`);
+    } catch (e) {
+      handleError(e, "Could not fill the blanks.");
+    } finally {
+      setFilling(false);
+    }
+  };
+
+  const runImport = async () => {
+    if (!window.confirm(
+      "Import your existing video blog posts?\n\n" +
+      "• Each video post that has a real YouTube link is copied into this list (the original blog post is not changed or deleted).\n" +
+      "• Videos are set to VERTICAL by default. Open any horizontal video afterwards and switch its shape.\n" +
+      "• For every live video, its old /blog/… address will permanently redirect (301) to the new video page, so there is no duplicate content.\n\n" +
+      "It is safe to run again: videos already imported are skipped."
+    )) return;
+    setImporting(true);
+    try {
+      const r = await importFromBlogs(true);
+      await reload();
+      setReport(r);
+      notify(`Imported ${r.imported.length} video${r.imported.length === 1 ? "" : "s"}${r.skipped.length ? `, skipped ${r.skipped.length}` : ""}.`);
+    } catch (e) {
+      handleError(e, "Import failed.");
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  /* ------------------------------- editor ------------------------------- */
+  if (editing) {
+    return (
+      <div className={shop.wrap}>
+        {authIssue && <AuthBanner message={authIssue} />}
+        <VideoEditor
+          key={formKey}
+          initial={editing}
+          allVideos={videos}
+          saving={saving}
+          onSave={save}
+          onError={(m) => notify(m, true)}
+          onBack={(dirty) => {
+            if (dirty && !window.confirm("You have unsaved changes. Leave without saving?")) return;
+            setEditing(null);
+          }}
+        />
+        {toast && <div className={`${shop.toast} ${toast.err ? shop.toastErr : ""}`} role="status">{toast.msg}</div>}
+      </div>
+    );
+  }
+
+  /* ------------------------------- list ------------------------------- */
   return (
-    <div className="dashboard-content">
-      <StatsDashboard
-        pageType="video-blogs"
-        actions={
-          <div className="header-actions">
-            <button className="sync-btn" onClick={loadData}>
-              🔄 Refresh Video Catalog
-            </button>
-            <Button variant="gold" onClick={() => router.push("/admin/video-blogs/new")}>
-              🎥 + Add Video Blog
-            </Button>
-          </div>
-        }
-      />
+    <div className={shop.wrap}>
+      {authIssue && <AuthBanner message={authIssue} />}
+      {loadError && <div className={`${shop.banner} ${shop.bannerErr}`}><span>{loadError}</span></div>}
 
-      {/* Search & Filter Row */}
-      <div
-        className="search-bar-row flex-between"
-        style={{ margin: "20px 0", gap: "15px", flexWrap: "wrap" }}
-      >
-        <div style={{ flex: 1, minWidth: "280px" }}>
-          <input
-            type="text"
-            placeholder="Search video blogs by title, author, transcript..."
-            className="form-control search-blogs-input"
-            value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              setCurrentPage(1);
-            }}
-          />
+      <div className={shop.topbar}>
+        <div>
+          <h2 className={shop.h2}>Video Blogs</h2>
+          <p className={shop.sub}>Vertical Shorts and normal videos, each with its own page. Improve SEO, AI search (GEO) and answer-engine (AEO) readiness video by video.</p>
         </div>
-
-        <div style={{ width: "220px" }}>
-          <select
-            className="form-control"
-            value={categoryFilter}
-            onChange={(e) => {
-              setCategoryFilter(e.target.value);
-              setCurrentPage(1);
-            }}
-          >
-            <option value="all">All Playlists / Categories</option>
-            {categoryOptions.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat}
-              </option>
-            ))}
-          </select>
+        <div className={shop.actions}>
+          <a href="/blog/video-transcripts" target="_blank" rel="noopener noreferrer" className={`${shop.btn} ${shop.secondary}`}><ExternalLink size={15} /> View page</a>
+          <button className={`${shop.btn} ${shop.secondary}`} onClick={() => void runImport()} disabled={importing || !!authIssue}><DownloadCloud size={15} /> {importing ? "Importing…" : "Import from blog posts"}</button>
+          <button className={`${shop.btn} ${shop.secondary}`} onClick={() => void runFill()} disabled={filling || !!authIssue || videos.length === 0}><Sparkles size={15} /> {filling ? "Working…" : "Fill empty basics for all"}</button>
+          <button className={`${shop.btn} ${shop.primary}`} onClick={() => openEditor(blankVideo())} disabled={!!authIssue}><Plus size={16} /> Add video</button>
         </div>
       </div>
 
-      {loading ? (
-        <p className="admin-loading">Loading video blogs catalog...</p>
-      ) : (
-        <Card variant="glass" className="card-primary" style={{ padding: "0 !important" }}>
-          <div
-            style={{
-              borderBottom: "1px solid #dee2e6",
-              padding: "14px 20px",
-              background: "#f8f9fa",
-              fontWeight: "700",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <span>🎥 Dynamic Video Catalog ({filteredVideoBlogs.length})</span>
-            <span style={{ fontSize: "0.82rem", color: "#6c757d", fontWeight: "normal" }}>
-              Backend Managed Videos &amp; Interactive Transcripts
-            </span>
+      {report && (
+        <div className={shop.panel}>
+          <div className={shop.listRow} style={{ justifyContent: "space-between" }}>
+            <h3 className={shop.sectionHead}>Import result</h3>
+            <button type="button" className={`${shop.btn} ${shop.secondary} ${shop.small}`} onClick={() => setReport(null)}>Dismiss</button>
           </div>
-
-          <div className="table-responsive-container">
-            <table className="admin-glass-table">
-              <thead>
-                <tr>
-                  <th>Video Title &amp; Excerpt</th>
-                  <th>YouTube / Player Link</th>
-                  <th>Playlist / Category</th>
-                  <th>Transcript Notes</th>
-                  <th>Author</th>
-                  <th>Status</th>
-                  <th className="text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedVideoBlogs.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={7}
-                      className="admin-empty-cell text-center"
-                      style={{ padding: "35px" }}
-                    >
-                      No video blogs found matching your criteria. Click{" "}
-                      <strong>+ Add Video Blog</strong> to create one!
-                    </td>
-                  </tr>
-                ) : (
-                  paginatedVideoBlogs.map((b) => {
-                    const embedUrl = getEmbeddableUrl(
-                      b.video_embed_url || (b.videos?.[0] ?? "")
-                    );
-                    const lineCount = countTranscriptLines(b.video_transcript);
-
-                    return (
-                      <tr key={b.id}>
-                        <td>
-                          <div
-                            className="table-service-info"
-                            style={{ display: "flex", gap: "12px", alignItems: "center" }}
-                          >
-                            <div
-                              style={{
-                                width: "64px",
-                                height: "36px",
-                                borderRadius: "6px",
-                                overflow: "hidden",
-                                background: "#1e293b",
-                                flexShrink: 0,
-                                position: "relative",
-                                border: "1px solid #e2e8f0",
-                              }}
-                            >
-                              <img
-                                src={b.image || "/images/insight_video.png"}
-                                alt={b.title}
-                                style={{
-                                  width: "100%",
-                                  height: "100%",
-                                  objectFit: "cover",
-                                }}
-                                onError={(e) => {
-                                  (e.target as HTMLElement).setAttribute(
-                                    "src",
-                                    "/images/insight_video.png"
-                                  );
-                                }}
-                              />
-                              <div
-                                style={{
-                                  position: "absolute",
-                                  inset: 0,
-                                  background: "rgba(0,0,0,0.3)",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  color: "#fff",
-                                  fontSize: "12px",
-                                }}
-                              >
-                                ▶
-                              </div>
-                            </div>
-                            <div>
-                              <span className="service-name">
-                                <strong>{b.title}</strong>
-                              </span>
-                              <div
-                                style={{
-                                  fontSize: "0.78rem",
-                                  color: "#6c757d",
-                                  maxWidth: "240px",
-                                  overflow: "hidden",
-                                  textOverflow: "ellipsis",
-                                  whiteSpace: "nowrap",
-                                }}
-                              >
-                                {b.content}
-                              </div>
-                            </div>
-                          </div>
-                        </td>
-                        <td>
-                          {embedUrl ? (
-                            <a
-                              href={embedUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                              style={{
-                                fontSize: "0.82rem",
-                                color: "#4f46e5",
-                                textDecoration: "none",
-                                fontWeight: "600",
-                                display: "inline-flex",
-                                alignItems: "center",
-                                gap: "4px",
-                                background: "#eef2ff",
-                                padding: "4px 8px",
-                                borderRadius: "6px",
-                              }}
-                            >
-                              ▶ Play Link
-                            </a>
-                          ) : (
-                            <span style={{ color: "#dc3545", fontSize: "0.8rem" }}>
-                              No Link
-                            </span>
-                          )}
-                        </td>
-                        <td>
-                          <span
-                            className="category-badge"
-                            style={{
-                              background: "#f3e8ff",
-                              color: "#6b21a8",
-                              borderColor: "#e9d5ff",
-                            }}
-                          >
-                            {b.category || "Video Transcripts"}
-                          </span>
-                        </td>
-                        <td>
-                          <span
-                            className="category-badge"
-                            style={{
-                              background: lineCount > 0 ? "#e0e7ff" : "#f1f5f9",
-                              color: lineCount > 0 ? "#4338ca" : "#64748b",
-                            }}
-                          >
-                            {lineCount > 0
-                              ? `📜 ${lineCount} Timed Lines`
-                              : "No Transcript"}
-                          </span>
-                        </td>
-                        <td>
-                          <div style={{ fontSize: "0.85rem" }}>
-                            <strong>{b.author}</strong>
-                            <div style={{ fontSize: "0.75rem", color: "#6c757d" }}>
-                              {b.date}
-                            </div>
-                          </div>
-                        </td>
-                        <td>
-                          <span
-                            style={{
-                              padding: "3px 8px",
-                              borderRadius: "12px",
-                              fontSize: "0.75rem",
-                              fontWeight: "600",
-                              background:
-                                b.status === "draft" ? "#fef3c7" : "#dcfce7",
-                              color:
-                                b.status === "draft" ? "#92400e" : "#166534",
-                            }}
-                          >
-                            {b.status === "draft" ? "🟡 Draft" : "🟢 Published"}
-                          </span>
-                        </td>
-                        <td className="text-right">
-                          <div
-                            className="action-buttons-cell"
-                            style={{
-                              display: "flex",
-                              gap: "4px",
-                              justifyContent: "flex-end",
-                            }}
-                          >
-                            <button
-                              className="btn btn-primary btn-sm"
-                              onClick={() =>
-                                window.open(
-                                  `/blog/${b.slug || b.id}`,
-                                  "_blank"
-                                )
-                              }
-                            >
-                              👁 View
-                            </button>
-                            <button
-                              className="btn btn-secondary btn-sm"
-                              onClick={() => router.push(`/admin/video-blogs/edit/${b.id}`)}
-                            >
-                              ✎ Edit
-                            </button>
-                            <button
-                              className="btn btn-danger btn-sm"
-                              onClick={() =>
-                                handleDeleteVideoBlog(b.id, b.title)
-                              }
-                            >
-                              ✕ Delete
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Pagination Controls */}
-          {totalPages > 1 && (
-            <div className="admin-pagination-wrapper">
-              <span className="pagination-info">
-                Showing{" "}
-                {filteredVideoBlogs.length === 0
-                  ? 0
-                  : (currentPage - 1) * itemsPerPage + 1}{" "}
-                to {Math.min(filteredVideoBlogs.length, currentPage * itemsPerPage)}{" "}
-                of {filteredVideoBlogs.length} entries
-              </span>
-              <ul className="admin-pagination">
-                <li className={`page-item ${currentPage === 1 ? "disabled" : ""}`}>
-                  <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1}>
-                    «
-                  </button>
-                </li>
-                <li className={`page-item ${currentPage === 1 ? "disabled" : ""}`}>
-                  <button
-                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                    disabled={currentPage === 1}
-                  >
-                    Prev
-                  </button>
-                </li>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
-                  <li
-                    key={pageNum}
-                    className={`page-item ${currentPage === pageNum ? "active" : ""}`}
-                  >
-                    <button onClick={() => setCurrentPage(pageNum)}>{pageNum}</button>
-                  </li>
-                ))}
-                <li
-                  className={`page-item ${
-                    currentPage === totalPages ? "disabled" : ""
-                  }`}
-                >
-                  <button
-                    onClick={() =>
-                      setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                    }
-                    disabled={currentPage === totalPages}
-                  >
-                    Next
-                  </button>
-                </li>
-                <li
-                  className={`page-item ${
-                    currentPage === totalPages ? "disabled" : ""
-                  }`}
-                >
-                  <button
-                    onClick={() => setCurrentPage(totalPages)}
-                    disabled={currentPage === totalPages}
-                  >
-                    »
-                  </button>
-                </li>
+          <p className={shop.hint}>
+            Imported {report.imported.length}. {report.imported.filter((i) => i.status === "published").length} are live{report.redirects ? " and their old addresses now redirect here" : ""}; the rest are drafts.
+            Videos start as vertical: open any horizontal one and switch its shape.
+          </p>
+          {report.skipped.length > 0 && (
+            <>
+              <h4 className={shop.sectionHead} style={{ marginTop: 8 }}>Skipped ({report.skipped.length})</h4>
+              <ul className={styles.gaps}>
+                {report.skipped.map((s, i) => (<li key={i}><span>{truncate(s.title, 70)}</span><strong>{s.reason}</strong></li>))}
               </ul>
+            </>
+          )}
+        </div>
+      )}
+
+      {stats.published > 0 && (
+        <>
+          <div className={styles.bigScores}>
+            <div className={styles.bigScore}><div className={`${styles.num} ${tone(stats.overall)}`} style={{ background: "none" }}>{stats.overall}</div><div className={styles.lbl}><strong>Overall readiness</strong><br />{stats.published} live · {stats.drafts} draft</div></div>
+            <div className={styles.bigScore}><div className={`${styles.num} ${tone(stats.seo)}`} style={{ background: "none" }}>{stats.seo}</div><div className={styles.lbl}><strong>Average SEO</strong><br />Google search</div></div>
+            <div className={styles.bigScore}><div className={`${styles.num} ${tone(stats.geo)}`} style={{ background: "none" }}>{stats.geo}</div><div className={styles.lbl}><strong>Average GEO</strong><br />AI citations</div></div>
+            <div className={styles.bigScore}><div className={`${styles.num} ${tone(stats.aeo)}`} style={{ background: "none" }}>{stats.aeo}</div><div className={styles.lbl}><strong>Average AEO</strong><br />Answers &amp; voice</div></div>
+          </div>
+          {stats.topGaps.length > 0 && (
+            <div className={shop.panel}>
+              <h3 className={shop.sectionHead}>Biggest opportunities across your live videos</h3>
+              <ul className={styles.gaps}>{stats.topGaps.map(([label, n]) => (<li key={label}><span>{label}</span><strong>{n} of {stats.published}</strong></li>))}</ul>
             </div>
           )}
-        </Card>
+        </>
       )}
+
+      <div className={shop.filters}>
+        <input className={shop.input} placeholder="Search videos" aria-label="Search videos" value={query} onChange={(e) => { setQuery(e.target.value); setPage(1); }} />
+        <select className={shop.select} style={{ maxWidth: 160 }} aria-label="Status" value={status} onChange={(e) => { setStatus(e.target.value as StatusFilter); setPage(1); }}>
+          <option value="all">All statuses</option><option value="published">Live</option><option value="draft">Draft</option>
+        </select>
+        <select className={shop.select} style={{ maxWidth: 160 }} aria-label="Shape" value={format} onChange={(e) => { setFormat(e.target.value as FormatFilter); setPage(1); }}>
+          <option value="all">Any shape</option><option value="vertical">Vertical</option><option value="horizontal">Horizontal</option>
+        </select>
+        <select className={shop.select} style={{ maxWidth: 180 }} aria-label="Sort" value={sort} onChange={(e) => setSort(e.target.value as Sort)}>
+          <option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="weakest">Weakest first</option>
+        </select>
+      </div>
+
+      <div className={shop.tableCard}>
+        {loading ? (
+          <div className={shop.empty}>Loading videos…</div>
+        ) : pageRows.length === 0 ? (
+          <div className={shop.empty}>{videos.length === 0 ? "No videos yet. Use “Import from blog posts” to bring over your existing ones, or “Add video”." : "No videos match your filters."}</div>
+        ) : (
+          <table className={shop.table}>
+            <thead><tr><th>Video</th><th>Shape</th><th>Status</th><th>SEO</th><th>GEO</th><th>AEO</th><th>Overall</th><th>Actions</th></tr></thead>
+            <tbody>
+              {pageRows.map(({ v, s }) => (
+                <tr key={v.id}>
+                  <td>
+                    <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={thumbnailOf(v)} alt="" style={{ objectFit: "cover", borderRadius: 6, height: 52, width: v.format === "vertical" ? 30 : 64, flex: "none", background: "#1e1b4b" }} />
+                      <div>
+                        <div className={shop.prodName}>{v.featured && <Star size={13} style={{ color: "#d97706", marginRight: 4, verticalAlign: "-1px" }} aria-label="Featured" />}{truncate(v.title, 80)}</div>
+                        <div className={shop.prodSlug}>{v.category ? `${v.category} · ` : ""}{v.durationSeconds ? `${formatDuration(v.durationSeconds)} · ` : ""}/blog/video-transcripts/{v.slug}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>{v.format === "vertical" ? "Vertical" : "Horizontal"}</td>
+                  <td><span className={`${shop.status} ${v.status === "published" ? shop.st_published : shop.st_draft}`}>{v.status === "published" ? "live" : "draft"}</span></td>
+                  <td><span className={`${styles.pillScore} ${tone(s.seo.score)}`}>{s.seo.score}</span></td>
+                  <td><span className={`${styles.pillScore} ${tone(s.geo.score)}`}>{s.geo.score}</span></td>
+                  <td><span className={`${styles.pillScore} ${tone(s.aeo.score)}`}>{s.aeo.score}</span></td>
+                  <td><span className={`${styles.pillScore} ${tone(s.overall)}`}>{s.overall}</span></td>
+                  <td>
+                    <div className={shop.actions}>
+                      <button className={`${shop.btn} ${shop.secondary} ${shop.small}`} onClick={() => openEditor(v)} aria-label={`Edit ${truncate(v.title, 40)}`}><Pencil size={14} /> Edit</button>
+                      <button className={`${shop.btn} ${shop.secondary} ${shop.small}`} onClick={() => void toggleStatus(v)}>{v.status === "published" ? "Unpublish" : "Publish"}</button>
+                      {v.status === "published" && <a className={`${shop.btn} ${shop.secondary} ${shop.small}`} href={`/blog/video-transcripts/${v.slug}`} target="_blank" rel="noopener noreferrer" aria-label={`View ${truncate(v.title, 40)}`}><ExternalLink size={14} /></a>}
+                      <button className={`${shop.btn} ${shop.danger} ${shop.small}`} onClick={() => void remove(v)} aria-label={`Delete ${truncate(v.title, 40)}`}><Trash2 size={14} /></button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+      {pages > 1 && (
+        <div className={styles.pager}>
+          <span>{rows.length} videos · page {Math.min(page, pages)} of {pages}</span>
+          <span className={shop.actions}>
+            <button className={`${shop.btn} ${shop.secondary} ${shop.small}`} disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>Previous</button>
+            <button className={`${shop.btn} ${shop.secondary} ${shop.small}`} disabled={page >= pages} onClick={() => setPage((p) => p + 1)}>Next</button>
+          </span>
+        </div>
+      )}
+
+      {toast && <div className={`${shop.toast} ${toast.err ? shop.toastErr : ""}`} role="status">{toast.msg}</div>}
+    </div>
+  );
+}
+
+function AuthBanner({ message }: { message: string }) {
+  return (
+    <div className={shop.banner} role="alert">
+      <span>{message}</span>
+      <a href="/admin/login?logout=1" className={`${shop.btn} ${shop.secondary} ${shop.small}`}>Sign in again</a>
     </div>
   );
 }

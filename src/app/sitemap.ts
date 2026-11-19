@@ -1,4 +1,6 @@
 import { MetadataRoute } from "next";
+import { effectiveSummary, mapVideoRow, thumbnailOf, videoUrl } from "@/lib/videoShared";
+import { YOUTUBE_CHANNEL_NAME, YOUTUBE_CHANNEL_URL, youtubeEmbedBase } from "@/lib/youtube";
 import { supabaseServer } from "@/utils/supabaseServer";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -35,6 +37,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(),
       changeFrequency: "daily",
       priority: 0.75,
+    },
+    {
+      url: `${baseUrl}/blog/video-transcripts`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.8,
     },
     {
       url: `${baseUrl}/shop`,
@@ -82,7 +90,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   try {
     // Dynamic blog articles, services, and comparison pages from Supabase
-    const [blogsRes, servRes, compRes, shopRes, glossRes, faqRes, qaRes] = await Promise.all([
+    const [blogsRes, servRes, compRes, shopRes, glossRes, faqRes, qaRes, videoRes] = await Promise.all([
       supabaseServer.from("blogs").select("id, date").order("date", { ascending: false }),
       supabaseServer.from("services").select("id, name"),
       supabaseServer.from("comparison_pages").select("slug"),
@@ -111,10 +119,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         .select("slug, answer, updated_at, published_at, created_at")
         .eq("status", "published")
         .eq("noindex", false)
-        .neq("answer", "")
+        .neq("answer", ""),
+      // Live videos that haven't been marked "noindex" (with the fields Google's video sitemap needs)
+      supabaseServer
+        .from("video_posts")
+        .select("*")
+        .eq("status", "published")
+        .eq("noindex", false)
     ]);
 
-    const blogRoutes: MetadataRoute.Sitemap = (blogsRes.data || []).map((blog) => ({
+    const videoPosts = (videoRes.data || []).map(mapVideoRow);
+    // Blog posts that were imported as videos now redirect to their video page: keep them out of the sitemap
+    const importedBlogIds = new Set(videoPosts.map((v) => v.sourceBlogId).filter(Boolean));
+
+    const blogRoutes: MetadataRoute.Sitemap = (blogsRes.data || []).filter((blog) => !importedBlogIds.has(String(blog.id))).map((blog) => ({
       url: `${baseUrl}/blog/${blog.id}`,
       lastModified: blog.date ? new Date(blog.date) : new Date(),
       changeFrequency: "weekly",
@@ -169,7 +187,27 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: 0.6,
       }));
 
-    return [...staticRoutes, ...blogRoutes, ...serviceRoutes, ...compRoutes, ...shopRoutes, ...glossaryRoutes, ...faqRoutes, ...qaRoutes];
+    const videoRoutes: MetadataRoute.Sitemap = videoPosts.map((v) => ({
+      url: videoUrl(v.slug),
+      lastModified: new Date(v.updatedAt || v.publishedAt || v.createdAt || Date.now()),
+      changeFrequency: "monthly" as const,
+      priority: 0.7,
+      // Google video sitemap entry: helps the video show up in video results and Key Moments
+      videos: [
+        {
+          title: v.title.slice(0, 100),
+          thumbnail_loc: thumbnailOf(v),
+          description: (effectiveSummary(v) || v.title).slice(0, 2000),
+          player_loc: youtubeEmbedBase(v.youtubeId),
+          ...(v.durationSeconds ? { duration: v.durationSeconds } : {}),
+          publication_date: v.uploadDate || v.publishedAt || undefined,
+          family_friendly: "yes" as const,
+          uploader: { info: YOUTUBE_CHANNEL_URL, content: YOUTUBE_CHANNEL_NAME },
+        },
+      ],
+    }));
+
+    return [...staticRoutes, ...blogRoutes, ...serviceRoutes, ...compRoutes, ...shopRoutes, ...glossaryRoutes, ...faqRoutes, ...qaRoutes, ...videoRoutes];
   } catch (error) {
     console.error("Error generating dynamic sitemap routes:", error);
   }

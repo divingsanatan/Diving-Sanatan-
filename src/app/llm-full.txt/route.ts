@@ -1,3 +1,4 @@
+import { YOUTUBE_CHANNEL_URL } from "@/lib/youtube";
 import { NextResponse } from "next/server";
 import { supabaseServer } from "@/utils/supabaseServer";
 
@@ -5,12 +6,13 @@ export async function GET() {
   const baseUrl = "https://divingsanatan.online";
 
   try {
-    const [blogsRes, servicesRes, faqRes, glossRes, qaRes] = await Promise.all([
+    const [blogsRes, servicesRes, faqRes, glossRes, qaRes, videoRes] = await Promise.all([
       supabaseServer.from("blogs").select("id, slug, title, content, tldr, author, date").limit(20),
       supabaseServer.from("services").select("name, description, benefits, process").limit(10),
       supabaseServer.from("faqs").select("slug, question, answer, short_answer, key_takeaways, alternate_questions").eq("status", "published").eq("noindex", false).order("created_at", { ascending: true }).limit(150),
       supabaseServer.from("glossary_terms").select("slug, word, definition, short_answer, alternate_names, key_takeaways, faqs, origin").eq("status", "published").eq("noindex", false).order("word", { ascending: true }).limit(300),
-      supabaseServer.from("qa_questions").select("slug, title, description, answer, short_answer, answerer_name, answerer_role, answerer_credentials, key_takeaways, alternate_questions").eq("status", "published").eq("noindex", false).neq("answer", "").order("answered_at", { ascending: false }).limit(150)
+      supabaseServer.from("qa_questions").select("slug, title, description, answer, short_answer, answerer_name, answerer_role, answerer_credentials, key_takeaways, alternate_questions").eq("status", "published").eq("noindex", false).neq("answer", "").order("answered_at", { ascending: false }).limit(150),
+      supabaseServer.from("video_posts").select("slug, title, description, short_answer, key_takeaways, alternate_questions, transcript, author_name, author_credentials, youtube_id, category").eq("status", "published").eq("noindex", false).order("upload_date", { ascending: false }).limit(100)
     ]);
 
     let fullText = `# Diving Sanatan Sanctuary - Complete LLM Context Knowledge Document\n\n`;
@@ -36,6 +38,23 @@ export async function GET() {
       for (const k of pts) fullText += `- ${k}\n`;
       const alts = Array.isArray(f.alternate_questions) ? (f.alternate_questions as string[]).filter(Boolean) : [];
       if (alts.length) fullText += `Also asked: ${alts.join(" | ")}\n`;
+      fullText += `\n`;
+    }
+
+    // Video blogs: what is said in each video (the transcript), so AI assistants can read and cite it
+    fullText += `## Video Blogs (short videos with transcripts)\n`;
+    fullText += `Index: ${baseUrl}/blog/video-transcripts\nYouTube channel: ${YOUTUBE_CHANNEL_URL}\n\n`;
+    for (const v of (videoRes.data || []) as Array<Record<string, unknown>>) {
+      fullText += `Video: ${v.title}\nURL: ${baseUrl}/blog/video-transcripts/${v.slug}\nWatch on YouTube: https://www.youtube.com/watch?v=${v.youtube_id}\n`;
+      const who = [v.author_name, v.author_credentials].filter(Boolean).join(", ");
+      if (who) fullText += `Speaker: ${who}\n`;
+      fullText += `Summary: ${plainText(v.short_answer) || plainText(v.description)}\n`;
+      const pts = Array.isArray(v.key_takeaways) ? (v.key_takeaways as string[]).filter(Boolean) : [];
+      for (const k of pts) fullText += `- ${k}\n`;
+      const qs = Array.isArray(v.alternate_questions) ? (v.alternate_questions as string[]).filter(Boolean) : [];
+      if (qs.length) fullText += `Questions answered: ${qs.join(" | ")}\n`;
+      const tr = plainText(String(v.transcript || "").replace(/^\[?\d{1,2}:\d{2}(?::\d{2})?\]?\s*[-–:]?\s*/gm, ""));
+      if (tr) fullText += `Transcript: ${tr.substring(0, 1500)}${tr.length > 1500 ? "…" : ""}\n`;
       fullText += `\n`;
     }
 
