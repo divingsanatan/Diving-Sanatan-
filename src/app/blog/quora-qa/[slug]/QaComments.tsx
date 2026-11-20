@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import type { QaComment } from "@/lib/qaShared";
 import styles from "../qa.module.css";
+import RichCommentEditor from "./RichCommentEditor";
 
 type Me = { id: string; role: string } | null;
 const fmt = (iso: string) => (iso ? new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }) : "");
@@ -17,7 +18,9 @@ export default function QaComments({ questionId, initialComments }: { questionId
   const [comments, setComments] = useState<QaComment[]>(initialComments);
   const [me, setMe] = useState<Me>(null);
   const [meLoaded, setMeLoaded] = useState(false);
-  const [text, setText] = useState("");
+  const [html, setHtml] = useState("");
+  const [textLen, setTextLen] = useState(0);
+  const [resetKey, setResetKey] = useState(0);
   const [replyTo, setReplyTo] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
@@ -55,7 +58,7 @@ export default function QaComments({ questionId, initialComments }: { questionId
         method: "POST",
         credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ questionId, parentId: replyTo, body: text }),
+        body: JSON.stringify({ questionId, parentId: replyTo, body: html }),
       });
       const j = await r.json().catch(() => ({}));
       if (r.status === 401) {
@@ -64,7 +67,9 @@ export default function QaComments({ questionId, initialComments }: { questionId
       } else if (!r.ok || !j.success) {
         setMsg({ ok: false, text: j.error || "Something went wrong. Please try again." });
       } else {
-        setText("");
+        setHtml("");
+        setTextLen(0);
+        setResetKey((k) => k + 1);
         setReplyTo(null);
         setMsg({ ok: true, text: j.awaitingApproval ? "Thank you! Your comment will appear once our team has approved it." : "Your comment is live." });
         if (!j.awaitingApproval) await refresh();
@@ -87,7 +92,7 @@ export default function QaComments({ questionId, initialComments }: { questionId
         {c.authorRole === "staff" && <span className={styles.badge}>Team</span>}
         <span className={styles.commentDate}>{fmt(c.createdAt)}</span>
       </div>
-      <p className={styles.commentBody}>{c.body}</p>
+      <div className={styles.commentRich} dangerouslySetInnerHTML={{ __html: c.html }} />
       {canReply && me && (
         <button type="button" className={styles.linkBtn} onClick={() => setReplyTo(replyTo === c.id ? null : c.id)}>
           {replyTo === c.id ? "Cancel reply" : "Reply"}
@@ -124,11 +129,20 @@ export default function QaComments({ questionId, initialComments }: { questionId
           <form onSubmit={submit} noValidate>
             <div className={styles.field}>
               <label className={styles.label} htmlFor="qa-comment">{replyTo ? "Your reply" : "Add a comment"}</label>
-              <textarea id="qa-comment" className={styles.textarea} value={text} maxLength={2000} placeholder="Be kind and keep it relevant. This is general guidance, not medical advice." onChange={(e) => setText(e.target.value)} />
-              <span className={styles.hint}>{text.length}/2000. Links are not allowed. Comments are reviewed before they appear.</span>
+              <RichCommentEditor
+                id="qa-comment"
+                value={html}
+                resetKey={resetKey}
+                placeholder="Share your experience or ask a follow-up. Be kind and keep it relevant. This is general guidance, not medical advice."
+                onChange={(h, n) => {
+                  setHtml(h);
+                  setTextLen(n);
+                }}
+              />
+              <span className={styles.hint}>{textLen}/2000. You can use bold, lists, quotes and up to 3 links (links are marked nofollow). Comments are reviewed before they appear.</span>
             </div>
             {msg && <p className={`${styles.notice} ${msg.ok ? styles.ok : styles.err}`} role="status">{msg.text}</p>}
-            <button type="submit" className={styles.btn} disabled={sending || text.trim().length < 2}>{sending ? "Sending…" : replyTo ? "Post reply" : "Post comment"}</button>
+            <button type="submit" className={styles.btn} disabled={sending || textLen < 2 || textLen > 2000}>{sending ? "Sending…" : replyTo ? "Post reply" : "Post comment"}</button>
           </form>
         )
       )}

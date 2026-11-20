@@ -92,6 +92,7 @@ export async function POST(req: NextRequest) {
           author_name: role === "member" ? publicName(user.name || user.email || "") || "Member" : user.name || "Diving Sanatan",
           author_role: role,
           body: parsed.text,
+          body_format: "html",
           status,
         },
       ])

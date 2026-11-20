@@ -6,10 +6,9 @@ export async function GET() {
   const baseUrl = "https://divingsanatan.online";
 
   try {
-    const [blogsRes, servicesRes, faqRes, glossRes, qaRes, videoRes] = await Promise.all([
+    const [blogsRes, servicesRes, glossRes, qaRes, videoRes] = await Promise.all([
       supabaseServer.from("blogs").select("id, slug, title, content, tldr, author, date").limit(20),
       supabaseServer.from("services").select("name, description, benefits, process").limit(10),
-      supabaseServer.from("faqs").select("slug, question, answer, short_answer, key_takeaways, alternate_questions").eq("status", "published").eq("noindex", false).order("created_at", { ascending: true }).limit(150),
       supabaseServer.from("glossary_terms").select("slug, word, definition, short_answer, alternate_names, key_takeaways, faqs, origin").eq("status", "published").eq("noindex", false).order("word", { ascending: true }).limit(300),
       supabaseServer.from("qa_questions").select("slug, title, description, answer, short_answer, answerer_name, answerer_role, answerer_credentials, key_takeaways, alternate_questions").eq("status", "published").eq("noindex", false).neq("answer", "").order("answered_at", { ascending: false }).limit(150),
       supabaseServer.from("video_posts").select("slug, title, description, short_answer, key_takeaways, alternate_questions, transcript, author_name, author_credentials, youtube_id, category").eq("status", "published").eq("noindex", false).order("upload_date", { ascending: false }).limit(100)
@@ -27,20 +26,7 @@ export async function GET() {
       fullText += `### ${s.name}\n${s.description || "Holistic healing session."}\n\n`;
     });
 
-    // FAQ: direct answers AI assistants can quote and cite, each with its own page
     const plainText = (v: unknown) => String(v || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
-    fullText += `## Frequently Asked Questions & Answers\n`;
-    fullText += `Index: ${baseUrl}/blog/faq\n\n`;
-    for (const f of (faqRes.data || []) as Array<Record<string, unknown>>) {
-      fullText += `Q: ${f.question}\nURL: ${baseUrl}/blog/faq/${f.slug}\n`;
-      fullText += `A: ${plainText(f.short_answer) || plainText(f.answer).substring(0, 700)}\n`;
-      const pts = Array.isArray(f.key_takeaways) ? (f.key_takeaways as string[]).filter(Boolean) : [];
-      for (const k of pts) fullText += `- ${k}\n`;
-      const alts = Array.isArray(f.alternate_questions) ? (f.alternate_questions as string[]).filter(Boolean) : [];
-      if (alts.length) fullText += `Also asked: ${alts.join(" | ")}\n`;
-      fullText += `\n`;
-    }
-
     // Video blogs: what is said in each video (the transcript), so AI assistants can read and cite it
     fullText += `## Video Blogs (short videos with transcripts)\n`;
     fullText += `Index: ${baseUrl}/blog/video-transcripts\nYouTube channel: ${YOUTUBE_CHANNEL_URL}\n\n`;
@@ -59,7 +45,7 @@ export async function GET() {
     }
 
     // Community Q&A: a visitor's question with the answer a named healer gave. Answered questions only.
-    fullText += `## Community Q&A (answered by our healers)\n`;
+    fullText += `## Questions & Answers (answered by our healers and team)\n`;
     fullText += `Index: ${baseUrl}/blog/quora-qa\n\n`;
     for (const q of (qaRes.data || []) as Array<Record<string, unknown>>) {
       fullText += `Q: ${q.title}\nURL: ${baseUrl}/blog/quora-qa/${q.slug}\n`;

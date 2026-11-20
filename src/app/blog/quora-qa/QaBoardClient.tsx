@@ -10,6 +10,7 @@ import styles from "./qa.module.css";
 type Me = { id: string; role: string; name: string } | null;
 type Mine = { id: string; slug: string; title: string; status: "pending" | "published" | "rejected"; answered: boolean; createdAt: string };
 type Sort = "answered" | "newest";
+type Source = "all" | "expert" | "community";
 
 const PAGE = 10;
 const fmt = (iso: string | null) =>
@@ -27,6 +28,7 @@ export default function QaBoardClient({ initialQuestions, categories }: { initia
   const [mine, setMine] = useState<Mine[]>([]);
   const [showAsk, setShowAsk] = useState(false);
   const [category, setCategory] = useState("all");
+  const [source, setSource] = useState<Source>("all");
   const [sort, setSort] = useState<Sort>("answered");
   const [visible, setVisible] = useState(PAGE);
 
@@ -84,6 +86,7 @@ export default function QaBoardClient({ initialQuestions, categories }: { initia
     const q = (searchQuery || "").trim().toLowerCase();
     const filtered = initialQuestions
       .filter((x) => category === "all" || x.category === category)
+      .filter((x) => source === "all" || (source === "expert" ? x.source === "staff" : x.source === "member"))
       .filter((x) => !q || `${x.title} ${x.description} ${x.category} ${x.shortAnswer}`.toLowerCase().includes(q));
     const byDate = (a: QaQuestion, b: QaQuestion) => (b.publishedAt || b.createdAt).localeCompare(a.publishedAt || a.createdAt);
     return [...filtered].sort((a, b) => {
@@ -93,7 +96,7 @@ export default function QaBoardClient({ initialQuestions, categories }: { initia
       }
       return byDate(a, b);
     });
-  }, [initialQuestions, category, searchQuery, sort]);
+  }, [initialQuestions, category, source, searchQuery, sort]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -133,7 +136,7 @@ export default function QaBoardClient({ initialQuestions, categories }: { initia
     <div className={styles.page}>
       <header className={styles.hero}>
         <div className={styles.heroText}>
-          <p className={styles.eyebrow}>Q&amp;A Community</p>
+          <p className={styles.eyebrow}>Questions &amp; Answers</p>
           <h1 className={styles.heroTitle}>Ask a Healer</h1>
           <p className={styles.heroSub}>
             Real questions about energy healing, chakras, meditation and everyday wellbeing, answered by our certified healers.
@@ -206,6 +209,12 @@ export default function QaBoardClient({ initialQuestions, categories }: { initia
           </ul>
         </section>
       )}
+
+      <div className={styles.chips} role="group" aria-label="Filter by who asked">
+        {([["all", "All questions"], ["expert", "Expert answers"], ["community", "From the community"]] as [Source, string][]).map(([k, label]) => (
+          <button key={k} type="button" className={`${styles.chip} ${source === k ? styles.chipOn : ""}`} aria-pressed={source === k} onClick={() => { setSource(k); setVisible(PAGE); }}>{label}</button>
+        ))}
+      </div>
 
       {cats.length > 0 && (
         <div className={styles.chips} role="group" aria-label="Filter by topic">

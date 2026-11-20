@@ -25,7 +25,7 @@ const LINK_GROUPS: { title: string; links: FooterLink[] }[] = [
     links: [
       { label: "Blog", href: "/blog" },
       { label: "Glossary", href: "/blog/glossary" },
-      { label: "FAQ", href: "/blog/faq" },
+      { label: "Questions & answers", href: "/blog/quora-qa" },
       { label: "Case studies", href: "/blog/case-studies" },
       { label: "Video transcripts", href: "/blog/video-transcripts" },
     ],

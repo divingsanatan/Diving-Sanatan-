@@ -1,5 +1,5 @@
 import { supabaseServer } from "@/utils/supabaseServer";
-import { sanitizeHtml } from "@/utils/sanitizeHtml";
+import { sanitizeCommentHtml, sanitizeHtml } from "@/utils/sanitizeHtml";
 import { leadingWords } from "./glossaryShared";
 import { slugifyQuestion } from "./faqShared";
 import {
@@ -128,17 +128,28 @@ export function parseAskInput(body: unknown, categories: string[]): Parsed {
   return { ok: true, row: { title, description, category, anonymous: b.anonymous === true } };
 }
 
-/** A visitor's (or healer's) comment. Plain text only. */
+/** Most links one comment may contain (link-spam guard). */
+export const MAX_LINKS_PER_COMMENT = 3;
+
+/**
+ * A visitor's (or healer's) comment. The editor sends a little formatting (bold, italic, lists, quotes, links).
+ * It is cleaned here with an allow-list, so nothing else (scripts, images, styles) can ever be stored.
+ */
 export function parseCommentInput(body: unknown): { ok: true; questionId: string; parentId: string | null; text: string } | { ok: false; errors: string[] } {
   const b = (body && typeof body === "object" ? body : {}) as Record<string, unknown>;
   const questionId = str(b.questionId, 100);
   const parentId = str(b.parentId, 100) || null;
-  const text = plainText(typeof b.body === "string" ? b.body : "", 2000);
+  const html = sanitizeCommentHtml(typeof b.body === "string" ? b.body.slice(0, 12000) : "").trim();
+  const text = plainText(html.replace(/<\/(p|li|blockquote)>|<br>/gi, " "), 6000);
   const errors: string[] = [];
   if (!questionId) errors.push("Missing question.");
   if (text.length < 2) errors.push("Please write a comment.");
-  if (linkCount(text) > 1) errors.push("Please remove links from your comment.");
-  return errors.length ? { ok: false, errors } : { ok: true, questionId, parentId, text };
+  if (text.length > 2000) errors.push("Please keep your comment under 2000 characters.");
+  // count real links plus any bare web addresses typed outside a link (a link whose text is its own URL counts once)
+  const outsideLinks = plainText(html.replace(/<a\s[^>]*>[\s\S]*?<\/a>/gi, " "), 6000);
+  const links = (html.match(/<a\s/gi) || []).length + linkCount(outsideLinks);
+  if (links > MAX_LINKS_PER_COMMENT) errors.push(`Please use at most ${MAX_LINKS_PER_COMMENT} links in a comment.`);
+  return errors.length ? { ok: false, errors } : { ok: true, questionId, parentId, text: html };
 }
 
 const ANSWER_KEYS = new Set([

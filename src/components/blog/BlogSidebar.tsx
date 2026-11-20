@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   Grid, Flower, Sparkles, Compass, Heart, Volume2,
   Flame, Leaf, Shield, BookOpen, Quote,
-  HelpCircle, MessageSquare, Video, ChevronDown, ChevronUp
+  MessageSquare, Video, ChevronDown, ChevronUp
 } from "lucide-react";
 
 interface CategoryItem {
@@ -161,20 +161,6 @@ export const BlogSidebar: React.FC = () => {
           {pathname === "/blog/glossary" && <span className="sidebar-active-dot" />}
         </button>
 
-        {/* FAQ & Help */}
-        <button
-          onClick={() => router.push("/blog/faq")}
-          className={`sidebar-item ${pathname === "/blog/faq" ? "active" : ""}`}
-        >
-          <div className="sidebar-icon-box">
-            <HelpCircle size={16} strokeWidth={1.5} />
-          </div>
-          <div className="item-text-container">
-            <span className="item-name">FAQ & Help</span>
-          </div>
-          {pathname === "/blog/faq" && <span className="sidebar-active-dot" />}
-        </button>
-
         {/* Q&A Community */}
         <button
           onClick={() => router.push("/blog/quora-qa")}
@@ -184,7 +170,7 @@ export const BlogSidebar: React.FC = () => {
             <MessageSquare size={16} strokeWidth={1.5} />
           </div>
           <div className="item-text-container">
-            <span className="item-name">Q&A Community</span>
+            <span className="item-name">Questions & Answers</span>
           </div>
           {pathname === "/blog/quora-qa" && <span className="sidebar-active-dot" />}
         </button>

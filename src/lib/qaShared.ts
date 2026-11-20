@@ -1,4 +1,5 @@
 import { SITE_NAME, SITE_URL, stripHtml, truncate, wordCount } from "./shopShared";
+import { sanitizeCommentHtml } from "@/utils/sanitizeHtml";
 import { leadingWords } from "./glossaryShared";
 import {
   FAQ_SLUG_MAX,
@@ -78,7 +79,10 @@ export interface QaComment {
   parentId: string | null;
   authorName: string;
   authorRole: "member" | "healer" | "staff";
+  /** Stored text: plain text (old comments) or the sanitised formatting HTML (new comments). */
   body: string;
+  /** Always safe to show: sanitised HTML built from `body`. */
+  html: string;
   status: QaStatus;
   createdAt: string;
   // staff queue only
@@ -143,13 +147,21 @@ export function mapQaRow(r: any, staff = false): QaQuestion {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function mapQaComment(r: any): QaComment {
+  const raw: string = r.body ?? "";
+  const esc = (t: string) => t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  // Old comments are plain text; new ones are formatting HTML. Both are cleaned again on the way out.
+  const html =
+    r.body_format === "html"
+      ? sanitizeCommentHtml(raw)
+      : `<p>${esc(raw).replace(/\n{2,}/g, "</p><p>").replace(/\n/g, "<br>")}</p>`;
   return {
     id: r.id,
     questionId: r.question_id,
     parentId: r.parent_id ?? null,
     authorName: r.author_name || ANON_NAME,
     authorRole: r.author_role === "healer" || r.author_role === "staff" ? r.author_role : "member",
-    body: r.body ?? "",
+    body: raw,
+    html,
     status: r.status === "published" || r.status === "rejected" ? r.status : "pending",
     createdAt: r.created_at ?? "",
   };
@@ -357,7 +369,7 @@ export function qaJsonLd(q: QaQuestion, comments: QaComment[] = []) {
     author: { "@type": "Person", name: q.askedByName.trim() || ANON_NAME },
     acceptedAnswer: answer,
     ...(approved.length
-      ? { comment: approved.map((c) => ({ "@type": "Comment", text: c.body, dateCreated: isoDate(c.createdAt), author: { "@type": "Person", name: c.authorName } })) }
+      ? { comment: approved.map((c) => ({ "@type": "Comment", text: stripHtml(c.html), dateCreated: isoDate(c.createdAt), author: { "@type": "Person", name: c.authorName } })) }
       : {}),
   };
 
