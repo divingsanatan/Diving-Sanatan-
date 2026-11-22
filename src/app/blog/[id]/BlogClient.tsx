@@ -93,14 +93,15 @@ const FALLBACK_QUOTE =
 
 const FALLBACK_BODY =
   "Somatic therapies remind us that blockades within our chakras aren't just mystical constructs. They represent tension held in our nervous pathways. By introducing sound bowls at specific frequencies, we assist the body in aligning these rhythms, which stabilizes cortisol flow and reduces tension.";
-export default function BlogDetailsPage() {
+export default function BlogDetailsPage({ initialBlog = null }: { initialBlog?: Blog | null } = {}) {
   const router = useRouter();
   const params = useParams();
   const id = params?.id as string;
   const { setActiveBlog } = useBlog();
 
-  const [blog, setBlog] = useState<Blog | null>(null);
-  const [loading, setLoading] = useState(true);
+  // The server sends the article with the page, so the text is in the HTML crawlers receive.
+  const [blog, setBlog] = useState<Blog | null>(initialBlog);
+  const [loading, setLoading] = useState(!initialBlog);
   const [error, setError] = useState("");
   const [activeMediaIndex, setActiveMediaIndex] = useState(0);
 
@@ -667,7 +668,7 @@ export default function BlogDetailsPage() {
       }
     };
 
-    if (!preMatch) setLoading(true);
+    if (!preMatch && !initialBlog) setLoading(true);
 
     cachedFetch<any>(`/api/blogs?id=${id}`, undefined, processBlogJson)
       .then((json) => {
@@ -688,7 +689,7 @@ export default function BlogDetailsPage() {
     return () => {
       isMounted = false;
     };
-  }, [id, allBlogs]);
+  }, [id, allBlogs, initialBlog]);
 
   // 3. Fetch likes count & status
   useEffect(() => {

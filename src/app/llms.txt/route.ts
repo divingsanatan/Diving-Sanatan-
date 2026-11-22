@@ -1,6 +1,8 @@
 import { YOUTUBE_CHANNEL_URL } from "@/lib/youtube";
 import { NextResponse } from "next/server";
 import { supabaseServer } from "@/utils/supabaseServer";
+import { getTopicsWithItems } from "@/lib/topicsServer";
+import { journeyOf, topicUrl } from "@/lib/topicsShared";
 
 export async function GET() {
   const baseUrl = "https://divingsanatan.online";
@@ -13,6 +15,16 @@ export async function GET() {
       supabaseServer.from("qa_questions").select("slug, title, short_answer, answer, answerer_name").eq("status", "published").eq("noindex", false).neq("answer", "").order("answered_at", { ascending: false }).limit(300),
       supabaseServer.from("video_posts").select("slug, title, description, short_answer, youtube_id, duration_seconds").eq("status", "published").eq("noindex", false).order("upload_date", { ascending: false }).limit(300)
     ]);
+
+    // Topic guides: the map of how our articles, videos, questions and terms fit together
+    const topicEntries = await getTopicsWithItems().catch(() => []);
+    const topicList = topicEntries
+      .filter(({ topic }) => !topic.noindex)
+      .map(({ topic, items }) => {
+        const parts = journeyOf(items.slice()).slice(0, 8).map((i) => `  - [${i.title}](${baseUrl}${i.path})`).join("\n");
+        return `- [${topic.title}](${topicUrl(topic.slug)}): ${topic.shortAnswer.replace(/\s+/g, " ").trim()}${parts ? `\n${parts}` : ""}`;
+      })
+      .join("\n");
 
     const glossaryList = (glossRes.data || []).map((t: { slug: string; word: string; short_answer?: string; definition?: string }) => {
       const plain = String(t.short_answer || t.definition || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
@@ -53,6 +65,10 @@ ${serviceList || "- Chakra Balancing & Alignment\n- Sound Bath Healing\n- Usui R
 
 ## Articles & Spiritual Guides
 ${blogList || "- Guides on Chakra Blocks, Energy Cleansing, and Meditation Practices"}
+
+## Topic Guides (start here for any subject)
+- [All topic guides](${baseUrl}/blog/topics): Each guide gives a short answer, a full explanation and links to our in-depth articles, videos, questions and glossary terms.
+${topicList}
 
 ## Glossary of Sanatan Dharma, Chakra & Healing Terms
 - [Full glossary](${baseUrl}/blog/glossary): Plain-language definitions of spiritual and energy-healing terms.

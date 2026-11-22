@@ -13,6 +13,8 @@ import {
   termUrl,
 } from "@/lib/glossaryShared";
 import { jsonLdString } from "@/lib/shopServer";
+import { getTrailFor } from "@/lib/topicsServer";
+import { TopicBadge, TopicTrail } from "@/components/blog/TopicTrail";
 import { sanitizeHtml } from "@/utils/sanitizeHtml";
 import { normalizeBlogHtml } from "@/utils/normalizeBlogHtml";
 import styles from "../glossary.module.css";
@@ -62,7 +64,7 @@ export default async function GlossaryTermPage({ params }: Props) {
   const e = await getGlossaryBySlug(slug);
   if (!e) notFound();
 
-  const all = await getPublishedGlossary();
+  const [all, trail] = await Promise.all([getPublishedGlossary(), getTrailFor("glossary", e.slug)]);
   const bySlug = new Map(all.map((x) => [x.slug, x]));
   let related = e.relatedTerms.map((s) => bySlug.get(s)).filter((x): x is NonNullable<typeof x> => !!x && x.id !== e.id);
   if (related.length === 0) related = all.filter((x) => x.id !== e.id && x.category && x.category === e.category).slice(0, 4);
@@ -101,6 +103,7 @@ export default async function GlossaryTermPage({ params }: Props) {
             {e.lastReviewed && <>Last reviewed {fmtDate(e.lastReviewed)}</>}
           </p>
         )}
+        <TopicBadge trail={trail} />
       </header>
 
       <section className={`${styles.answer} speakable-answer`} aria-label="Quick answer">
@@ -170,6 +173,8 @@ export default async function GlossaryTermPage({ params }: Props) {
           </ol>
         </section>
       )}
+
+      <TopicTrail trail={trail} currentTitle={core} currentUrl={termUrl(e.slug)} />
 
       <aside className={styles.cta}>
         <div>

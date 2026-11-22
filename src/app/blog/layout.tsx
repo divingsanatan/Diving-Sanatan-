@@ -24,6 +24,7 @@ function BlogLayoutInner({ children }: { children: React.ReactNode }) {
     "/blog": { title: "Explore Blogs", placeholder: "Search blogs, topics, healers..." },
     "/blog/faq": { title: "Search Questions", placeholder: "Type your question..." },
     "/blog/glossary": { title: "Search Terms", placeholder: "Type a term..." },
+    "/blog/topics": { title: "Search Topics", placeholder: "Type a topic..." },
     "/blog/quora-qa": { title: "Search Questions", placeholder: "Type your question..." },
     "/blog/case-studies": { title: "Search Case Studies", placeholder: "Type keywords..." },
     "/blog/video-transcripts": { title: "Search Videos", placeholder: "Type keywords..." },
@@ -35,6 +36,7 @@ function BlogLayoutInner({ children }: { children: React.ReactNode }) {
     pathname === "/blog/faq" || 
     pathname === "/blog/glossary" || 
     pathname.startsWith("/blog/quora-qa") ||
+    pathname.startsWith("/blog/topics") ||
     pathname.startsWith("/blog/video-transcripts");
 
   const isVideoBlog = activeBlog && (
@@ -52,6 +54,7 @@ function BlogLayoutInner({ children }: { children: React.ReactNode }) {
     }
     if (pathname === "/blog/faq" || pathname.startsWith("/blog/faq/")) return "FAQ & Help";
     if (pathname === "/blog/glossary") return "Glossary";
+    if (pathname === "/blog/topics" || pathname.startsWith("/blog/topics/")) return "Topic Guides";
     if (pathname === "/blog/quora-qa" || pathname.startsWith("/blog/quora-qa/")) return "Questions & Answers";
     if (pathname === "/blog/video-transcripts" || pathname.startsWith("/blog/video-transcripts/")) return "Video Blogs";
     if (pathname === "/blog/pillar") return "Pillar Blog";

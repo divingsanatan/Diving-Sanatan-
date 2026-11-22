@@ -19,6 +19,8 @@ import {
 import { stripHtml, truncate } from "@/lib/shopShared";
 import { jsonLdString } from "@/lib/shopServer";
 import { sanitizeHtml } from "@/utils/sanitizeHtml";
+import { getTrailFor } from "@/lib/topicsServer";
+import { TopicBadge, TopicTrail } from "@/components/blog/TopicTrail";
 import { normalizeBlogHtml } from "@/utils/normalizeBlogHtml";
 // The article look (quick-answer box, takeaways, related cards, sources, pager) is shared with the glossary.
 import glossary from "../../glossary/glossary.module.css";
@@ -69,7 +71,7 @@ export default async function QuestionPage({ params }: Props) {
   const q = await getQuestionBySlug(slug);
   if (!q) notFound();
 
-  const [comments, all] = await Promise.all([getPublishedComments(q.id), getPublishedQuestions()]);
+  const [comments, all, trail] = await Promise.all([getPublishedComments(q.id), getPublishedQuestions(), getTrailFor("qa", q.slug)]);
   const answered = isAnswered(q);
   const bySlug = new Map(all.map((x) => [x.slug, x]));
   let related = q.relatedQuestions.map((s) => bySlug.get(s)).filter((x): x is NonNullable<typeof x> => !!x && x.id !== q.id && isIndexable(x));
@@ -106,6 +108,7 @@ export default async function QuestionPage({ params }: Props) {
           Asked by {q.askedByName || "a community member"}
           {(q.publishedAt || q.createdAt) && <> · {fmtDate(q.publishedAt || q.createdAt)}</>}
         </p>
+        <TopicBadge trail={trail} />
       </header>
 
       {q.description && <p className={styles.details}>{q.description}</p>}
@@ -192,6 +195,8 @@ export default async function QuestionPage({ params }: Props) {
           </ol>
         </section>
       )}
+
+      <TopicTrail trail={trail} currentTitle={q.title} currentUrl={qaUrl(q.slug)} />
 
       <aside className={glossary.cta}>
         <div>

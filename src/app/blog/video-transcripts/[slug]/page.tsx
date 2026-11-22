@@ -23,6 +23,8 @@ import { youtubeEmbedBase } from "@/lib/youtube";
 import { truncate } from "@/lib/shopShared";
 import { jsonLdString } from "@/lib/shopServer";
 import { sanitizeHtml } from "@/utils/sanitizeHtml";
+import { getTrailFor } from "@/lib/topicsServer";
+import { TopicBadge, TopicTrail } from "@/components/blog/TopicTrail";
 import { normalizeBlogHtml } from "@/utils/normalizeBlogHtml";
 import { PlayIcon } from "../Icons";
 import styles from "../video.module.css";
@@ -72,7 +74,7 @@ export default async function VideoPage({ params }: Props) {
   const v = await getVideoBySlug(slug);
   if (!v) notFound();
 
-  const all = await getPublishedVideos();
+  const [all, trail] = await Promise.all([getPublishedVideos(), getTrailFor("video", v.slug)]);
   const bySlug = new Map(all.map((x) => [x.slug, x]));
   let related = v.relatedVideos.map((s) => bySlug.get(s)).filter((x): x is NonNullable<typeof x> => !!x && x.id !== v.id && isIndexableVideo(x));
   if (related.length === 0) related = relatedVideos(v, all, 4);
@@ -105,6 +107,7 @@ export default async function VideoPage({ params }: Props) {
           <div>
             <span className={styles.badge}>{v.category || "Video"}</span>
             <h1 className={styles.h1}>{v.title}</h1>
+            <TopicBadge trail={trail} />
             <p className={styles.byline}>
               {v.authorName && (
                 <span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
@@ -197,6 +200,8 @@ export default async function VideoPage({ params }: Props) {
           </ul>
         </section>
       )}
+
+      <TopicTrail trail={trail} currentTitle={v.title} currentUrl={videoUrl(v.slug)} />
 
       <aside className={styles.cta}>
         <div>

@@ -142,6 +142,8 @@ export default function AdminLayout({
         return "SEO Keywords";
       case "/admin/quiz-questions":
         return "Diagnostic Quiz Bank";
+      case "/admin/topics":
+        return "Topic Guides (pillar pages)";
       case "/admin/quora-qa":
         return "Public Q&A Board";
       case "/admin/blogs":
@@ -187,6 +189,8 @@ export default function AdminLayout({
         return "Keywords";
       case "/admin/quiz-questions":
         return "Quiz Questions";
+      case "/admin/topics":
+        return "Topic Guides";
       case "/admin/quora-qa":
         return "Q&A Board";
       case "/admin/blogs":
@@ -375,6 +379,15 @@ export default function AdminLayout({
           >
             <Video size={16} />
             <span>Video Blogs</span>
+          </Link>
+          <Link
+            href="/admin/topics"
+            title="Topic Guides"
+            className={`sidebar-link ${pathname === "/admin/topics" ? "active" : ""}`}
+            onClick={() => setSidebarOpen(false)}
+          >
+            <Compass size={16} />
+            <span>Topic Guides</span>
           </Link>
           <Link
             href="/admin/pillar"

@@ -1,6 +1,8 @@
 import { YOUTUBE_CHANNEL_URL } from "@/lib/youtube";
 import { NextResponse } from "next/server";
 import { supabaseServer } from "@/utils/supabaseServer";
+import { getTopicsWithItems } from "@/lib/topicsServer";
+import { journeyOf, topicUrl } from "@/lib/topicsShared";
 
 export async function GET() {
   const baseUrl = "https://divingsanatan.online";
@@ -42,6 +44,24 @@ export async function GET() {
       const tr = plainText(String(v.transcript || "").replace(/^\[?\d{1,2}:\d{2}(?::\d{2})?\]?\s*[-–:]?\s*/gm, ""));
       if (tr) fullText += `Transcript: ${tr.substring(0, 1500)}${tr.length > 1500 ? "…" : ""}\n`;
       fullText += `\n`;
+    }
+
+    // Topic guides: each topic's quick answer and the pages that make up the guide
+    try {
+      const topicEntries = (await getTopicsWithItems()).filter(({ topic }) => !topic.noindex);
+      if (topicEntries.length) {
+        fullText += `## Topic Guides\n`;
+        fullText += `Index: ${baseUrl}/blog/topics\n\n`;
+        for (const { topic, items } of topicEntries) {
+          fullText += `### ${topic.title}\nURL: ${topicUrl(topic.slug)}\nQuick answer: ${topic.shortAnswer.replace(/\s+/g, " ").trim()}\n`;
+          for (const k of topic.keyTakeaways) fullText += `- ${k}\n`;
+          const path = journeyOf(items.slice());
+          if (path.length) fullText += `Reading path:\n${path.map((i, n) => `${n + 1}. ${i.title} (${baseUrl}${i.path})`).join("\n")}\n`;
+          fullText += `\n`;
+        }
+      }
+    } catch {
+      /* topic guides are optional */
     }
 
     // Community Q&A: a visitor's question with the answer a named healer gave. Answered questions only.

@@ -4,7 +4,7 @@ import React from "react";
 import { useBlog } from "@/app/blog/BlogContext";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  Grid, Flower, Sparkles, Compass, Heart, Volume2,
+  Grid, Flower, Sparkles, Compass, Heart, Volume2, Layers,
   Flame, Leaf, Shield, BookOpen, Quote,
   MessageSquare, Video, ChevronDown, ChevronUp
 } from "lucide-react";
@@ -133,6 +133,20 @@ export const BlogSidebar: React.FC = () => {
             </div>
           )}
         </div>
+        {/* Topic guides (pillar pages) */}
+        <button
+          onClick={() => router.push("/blog/topics")}
+          className={`sidebar-item ${pathname === "/blog/topics" || pathname.startsWith("/blog/topics/") ? "active" : ""}`}
+        >
+          <div className="sidebar-icon-box">
+            <Layers size={16} strokeWidth={1.5} />
+          </div>
+          <div className="item-text-container">
+            <span className="item-name">Topic Guides</span>
+          </div>
+          {(pathname === "/blog/topics" || pathname.startsWith("/blog/topics/")) && <span className="sidebar-active-dot" />}
+        </button>
+
         {/* Pillar Blog Accordions Listing */}
         <button
           onClick={() => router.push("/blog/pillar")}
