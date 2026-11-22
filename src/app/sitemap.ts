@@ -85,7 +85,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     // Dynamic blog articles, services, and comparison pages from Supabase
     const [blogsRes, servRes, compRes, shopRes, glossRes, topicRes, qaRes, videoRes] = await Promise.all([
-      supabaseServer.from("blogs").select("id, date").order("date", { ascending: false }),
+      supabaseServer.from("blogs").select("id, slug, date").order("date", { ascending: false }),
       supabaseServer.from("services").select("id, name"),
       supabaseServer.from("comparison_pages").select("slug"),
       // Published products that haven't been marked "noindex"
@@ -127,7 +127,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const importedBlogIds = new Set(videoPosts.map((v) => v.sourceBlogId).filter(Boolean));
 
     const blogRoutes: MetadataRoute.Sitemap = (blogsRes.data || []).filter((blog) => !importedBlogIds.has(String(blog.id))).map((blog) => ({
-      url: `${baseUrl}/blog/${blog.id}`,
+      url: `${baseUrl}/blog/${blog.slug || blog.id}`, // the same address each article names as its canonical link
       lastModified: blog.date ? new Date(blog.date) : new Date(),
       changeFrequency: "weekly",
       priority: 0.7,
