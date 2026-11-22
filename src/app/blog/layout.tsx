@@ -21,14 +21,13 @@ function BlogLayoutInner({ children }: { children: React.ReactNode }) {
 
   // Per-page search config
   const searchConfig: Record<string, { title: string; placeholder: string }> = {
-    "/blog": { title: "Explore Blogs", placeholder: "Search blogs, topics, healers..." },
+    "/blog": { title: "Explore Guides", placeholder: "Search topics and articles..." },
     "/blog/faq": { title: "Search Questions", placeholder: "Type your question..." },
     "/blog/glossary": { title: "Search Terms", placeholder: "Type a term..." },
     "/blog/topics": { title: "Search Topics", placeholder: "Type a topic..." },
     "/blog/quora-qa": { title: "Search Questions", placeholder: "Type your question..." },
     "/blog/case-studies": { title: "Search Case Studies", placeholder: "Type keywords..." },
     "/blog/video-transcripts": { title: "Search Videos", placeholder: "Type keywords..." },
-    "/blog/pillar": { title: "Search Pillar Blogs", placeholder: "Search pillar guides..." },
   };
 
   const config = searchConfig[pathname] ?? { title: "Search", placeholder: "Type keywords..." };
@@ -50,14 +49,13 @@ function BlogLayoutInner({ children }: { children: React.ReactNode }) {
       if (activeCategory && activeCategory !== "all") {
         return `Category: ${activeCategory.split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")}`;
       }
-      return "All Blogs";
+      return "Topic Guides & Articles";
     }
     if (pathname === "/blog/faq" || pathname.startsWith("/blog/faq/")) return "FAQ & Help";
     if (pathname === "/blog/glossary") return "Glossary";
     if (pathname === "/blog/topics" || pathname.startsWith("/blog/topics/")) return "Topic Guides";
     if (pathname === "/blog/quora-qa" || pathname.startsWith("/blog/quora-qa/")) return "Questions & Answers";
     if (pathname === "/blog/video-transcripts" || pathname.startsWith("/blog/video-transcripts/")) return "Video Blogs";
-    if (pathname === "/blog/pillar") return "Pillar Blog";
     if (pathname.includes("/blog/") && activeBlog) return `Article: ${activeBlog.title}`;
     return "Blog Menu";
   };

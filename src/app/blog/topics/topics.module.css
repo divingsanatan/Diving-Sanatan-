@@ -150,3 +150,8 @@
   .pagerNext { text-align: left; }
   .startCard { padding: 18px; }
 }
+
+/* quick links under the /blog hero */
+.quickRow { display: flex; flex-wrap: wrap; gap: 10px; margin: 18px 0 0; }
+.quickLink { padding: 7px 16px; border-radius: 9999px; background: #fff; border: 1px solid rgba(124, 58, 237, 0.25); color: #5b21b6; font-size: var(--fs-sm); font-weight: 600; text-decoration: none; }
+.quickLink:hover { background: #6d28d9; border-color: #6d28d9; color: #fff; }

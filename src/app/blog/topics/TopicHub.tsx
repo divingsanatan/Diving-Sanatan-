@@ -72,7 +72,6 @@ export default function TopicHub({ topic, items, otherTopics, preview = false }:
       <nav className={glossary.crumbs} aria-label="Breadcrumb">
         <Link href="/">Home</Link><span aria-hidden="true">/</span>
         <Link href="/blog">Blog</Link><span aria-hidden="true">/</span>
-        <Link href="/blog/topics">Topics</Link><span aria-hidden="true">/</span>
         <span aria-current="page">{topic.title}</span>
       </nav>
 

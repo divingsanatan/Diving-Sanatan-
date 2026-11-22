@@ -4,7 +4,7 @@ import React from "react";
 import { useBlog } from "@/app/blog/BlogContext";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  Grid, Flower, Sparkles, Compass, Heart, Volume2, Layers,
+  Grid, Flower, Sparkles, Compass, Heart, Volume2,
   Flame, Leaf, Shield, BookOpen, Quote,
   MessageSquare, Video, ChevronDown, ChevronUp
 } from "lucide-react";
@@ -102,7 +102,7 @@ export const BlogSidebar: React.FC = () => {
               <Grid size={16} strokeWidth={1.5} />
             </div>
             <div className="item-text-container">
-              <span className="item-name">Best Blogs</span>
+              <span className="item-name">Topic Guides &amp; Articles</span>
             </div>
             {categoriesExpanded ? (
               <ChevronUp size={14} strokeWidth={1.5} style={{ opacity: 0.5 }} />
@@ -133,34 +133,6 @@ export const BlogSidebar: React.FC = () => {
             </div>
           )}
         </div>
-        {/* Topic guides (pillar pages) */}
-        <button
-          onClick={() => router.push("/blog/topics")}
-          className={`sidebar-item ${pathname === "/blog/topics" || pathname.startsWith("/blog/topics/") ? "active" : ""}`}
-        >
-          <div className="sidebar-icon-box">
-            <Layers size={16} strokeWidth={1.5} />
-          </div>
-          <div className="item-text-container">
-            <span className="item-name">Topic Guides</span>
-          </div>
-          {(pathname === "/blog/topics" || pathname.startsWith("/blog/topics/")) && <span className="sidebar-active-dot" />}
-        </button>
-
-        {/* Pillar Blog Accordions Listing */}
-        <button
-          onClick={() => router.push("/blog/pillar")}
-          className={`sidebar-item ${pathname === "/blog/pillar" || pathname.startsWith("/blog/pillar") ? "active" : ""}`}
-        >
-          <div className="sidebar-icon-box">
-            <Compass size={16} strokeWidth={1.5} />
-          </div>
-          <div className="item-text-container">
-            <span className="item-name">Pillar Blog</span>
-          </div>
-          {(pathname === "/blog/pillar" || pathname.startsWith("/blog/pillar")) && <span className="sidebar-active-dot" />}
-        </button>
-
         {/* Glossary */}
         <button
           onClick={() => router.push("/blog/glossary")}

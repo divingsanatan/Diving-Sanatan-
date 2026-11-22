@@ -51,7 +51,7 @@ export async function GET() {
       const topicEntries = (await getTopicsWithItems()).filter(({ topic }) => !topic.noindex);
       if (topicEntries.length) {
         fullText += `## Topic Guides\n`;
-        fullText += `Index: ${baseUrl}/blog/topics\n\n`;
+        fullText += `Index: ${baseUrl}/blog\n\n`;
         for (const { topic, items } of topicEntries) {
           fullText += `### ${topic.title}\nURL: ${topicUrl(topic.slug)}\nQuick answer: ${topic.shortAnswer.replace(/\s+/g, " ").trim()}\n`;
           for (const k of topic.keyTakeaways) fullText += `- ${k}\n`;

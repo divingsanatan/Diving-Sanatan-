@@ -246,12 +246,12 @@ export default function BlogDetailsPage({ initialBlog = null }: { initialBlog?: 
         ? next.link
         : nextPillar
         ? `/blog/${nextPillar.slug || nextPillar.id}`
-        : "/blog/pillar";
+        : "/blog";
       const nextTitleText = next
         ? next.title
         : nextPillar
         ? nextPillar.title
-        : "Explore All Pillar Guides";
+        : "Explore all guides";
       const nextReadTimeText = next
         ? next.readTime
         : nextPillar

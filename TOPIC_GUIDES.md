@@ -2,6 +2,10 @@
 
 A topic ties together one guide, in-depth articles, videos, questions and glossary terms.
 Each topic has its own page at `/blog/topics/<slug>`; every linked page points back to it.
+The topic list itself is the `/blog` page (topic guides first, then articles; the sidebar categories and the search box still narrow the articles).
+`/blog/topics` and `/blog/pillar` now permanently redirect to `/blog`, and `/admin/pillar` redirects to Admin > Topic Guides.
+
+Two old files are no longer used and can be deleted from the repo: `src/app/blog/BlogListingClient.tsx` and `src/app/blog/pillar/PillarListingClient.tsx`.
 
 ## Where to manage it
 Admin > **Topic Guides**

@@ -242,38 +242,37 @@ export function topicJsonLd(t: Topic, items: ResolvedItem[]) {
         itemListElement: [
           { "@type": "ListItem", position: 1, name: "Home", item: SITE_URL },
           { "@type": "ListItem", position: 2, name: "Blog", item: `${SITE_URL}/blog` },
-          { "@type": "ListItem", position: 3, name: "Topics", item: `${SITE_URL}${TOPICS_PATH}` },
-          { "@type": "ListItem", position: 4, name: t.title, item: url },
+          { "@type": "ListItem", position: 3, name: t.title, item: url },
         ],
       },
     ],
   };
 }
 
-/** Topics index page. */
-export function topicsIndexJsonLd(topics: Topic[]) {
-  const url = `${SITE_URL}${TOPICS_PATH}`;
+/** The /blog page: topic guides first, then articles. */
+export function landingJsonLd(topics: Topic[], articles: { title: string; path: string }[]) {
+  const url = `${SITE_URL}/blog`;
+  const list = [
+    ...topics.map((t) => ({ url: topicUrl(t.slug), name: t.title })),
+    ...articles.slice(0, 30).map((a) => ({ url: `${SITE_URL}${a.path}`, name: a.title })),
+  ];
   return {
     "@context": "https://schema.org",
     "@graph": [
       {
         "@type": "CollectionPage",
-        "@id": url,
+        "@id": `${url}#page`,
         url,
         name: `${TOPICS_NAME} | ${SITE_NAME}`,
         inLanguage: "en",
         isPartOf: { "@type": "WebSite", name: SITE_NAME, url: SITE_URL },
-        mainEntity: {
-          "@type": "ItemList",
-          itemListElement: topics.map((t, n) => ({ "@type": "ListItem", position: n + 1, url: topicUrl(t.slug), name: t.title })),
-        },
+        mainEntity: { "@type": "ItemList", itemListElement: list.map((x, n) => ({ "@type": "ListItem", position: n + 1, url: x.url, name: x.name })) },
       },
       {
         "@type": "BreadcrumbList",
         itemListElement: [
           { "@type": "ListItem", position: 1, name: "Home", item: SITE_URL },
-          { "@type": "ListItem", position: 2, name: "Blog", item: `${SITE_URL}/blog` },
-          { "@type": "ListItem", position: 3, name: "Topics", item: url },
+          { "@type": "ListItem", position: 2, name: "Blog", item: url },
         ],
       },
     ],
@@ -288,7 +287,7 @@ export function memberBreadcrumbJsonLd(t: Topic, currentName: string, currentUrl
     "@id": `${currentUrl}#topic-breadcrumb`,
     itemListElement: [
       { "@type": "ListItem", position: 1, name: "Home", item: SITE_URL },
-      { "@type": "ListItem", position: 2, name: "Topics", item: `${SITE_URL}${TOPICS_PATH}` },
+      { "@type": "ListItem", position: 2, name: "Blog", item: `${SITE_URL}/blog` },
       { "@type": "ListItem", position: 3, name: t.title, item: topicUrl(t.slug) },
       { "@type": "ListItem", position: 4, name: truncate(currentName.trim(), 80), item: currentUrl },
     ],

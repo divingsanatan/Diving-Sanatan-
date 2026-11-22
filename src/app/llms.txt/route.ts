@@ -67,7 +67,7 @@ ${serviceList || "- Chakra Balancing & Alignment\n- Sound Bath Healing\n- Usui R
 ${blogList || "- Guides on Chakra Blocks, Energy Cleansing, and Meditation Practices"}
 
 ## Topic Guides (start here for any subject)
-- [All topic guides](${baseUrl}/blog/topics): Each guide gives a short answer, a full explanation and links to our in-depth articles, videos, questions and glossary terms.
+- [All topic guides](${baseUrl}/blog): Each guide gives a short answer, a full explanation and links to our in-depth articles, videos, questions and glossary terms.
 ${topicList}
 
 ## Glossary of Sanatan Dharma, Chakra & Healing Terms

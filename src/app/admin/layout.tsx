@@ -150,8 +150,6 @@ export default function AdminLayout({
         return "Publication & Blogs";
       case "/admin/video-blogs":
         return "Video Blogs & Transcripts";
-      case "/admin/pillar":
-        return "Pillar Guides Manager";
       case "/admin/glossary":
         return "Sanskrit Glossary";
       case "/admin/faq":
@@ -197,8 +195,6 @@ export default function AdminLayout({
         return "Blogs";
       case "/admin/video-blogs":
         return "Video Blogs";
-      case "/admin/pillar":
-        return "Pillar Guides";
       case "/admin/glossary":
         return "Glossary";
       case "/admin/faq":
@@ -388,15 +384,6 @@ export default function AdminLayout({
           >
             <Compass size={16} />
             <span>Topic Guides</span>
-          </Link>
-          <Link
-            href="/admin/pillar"
-            title="Pillar Guides"
-            className={`sidebar-link ${pathname === "/admin/pillar" ? "active" : ""}`}
-            onClick={() => setSidebarOpen(false)}
-          >
-            <Compass size={16} />
-            <span>Pillar Guides</span>
           </Link>
           <Link
             href="/admin/quora-qa"
