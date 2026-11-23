@@ -91,7 +91,7 @@ const programsOrder = [
   "Manifestation Mastery"
 ];
 
-export default function ServicesPage() {
+export default function ServicesPage({ after }: { after?: React.ReactNode } = {}) {
   const router = useRouter();
 
   // Database States
@@ -822,6 +822,7 @@ export default function ServicesPage() {
         </div>
       </main>
 
+      {after}
       <Footer />
 
       {/* Embedded Component Specific CSS Styles */}

@@ -13,6 +13,17 @@ import { TopicBadge, TopicTrail } from "@/components/blog/TopicTrail";
 // Articles are now built on the server (so search and AI crawlers receive the full text),
 // and refreshed at most once a minute.
 export const revalidate = 60;
+export const dynamicParams = true;
+
+// Prebuild the published articles; new ones are built on first visit and refreshed every minute.
+export async function generateStaticParams() {
+  try {
+    const { data } = await supabaseServer.from("blogs").select("id, slug").eq("approval_status", "published").limit(200);
+    return (data || []).map((b: { id: string; slug?: string }) => ({ id: b.slug || b.id }));
+  } catch {
+    return [];
+  }
+}
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -56,13 +67,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     const blog = await loadBlog(id);
     if (!blog) {
       return {
-        title: "Article Not Found | Diving Sanatan",
+        title: { absolute: "Article Not Found | Diving Sanatan" },
         description: "The requested spiritual wellness article could not be resolved from our database.",
         robots: { index: false, follow: false },
       };
     }
     const description = blogDescription(blog);
-    const title = (blog.meta_title || "").trim() || `${blog.title} | ${blog.category}`;
+    const rawTitle = (blog.meta_title || "").trim() || `${blog.title} | ${blog.category}`;
+    // the site template adds " | Diving Sanatan"; do not add it twice
+    const title = /diving sanatan/i.test(rawTitle) ? { absolute: rawTitle } : rawTitle;
     const image = blogImageUrl(blog);
     return {
       title,
@@ -86,7 +99,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   } catch (err) {
     console.error("Failed to generate dynamic blog metadata:", err);
     return {
-      title: "Spiritual Healing Wisdom Blog | Diving Sanatan",
+      title: { absolute: "Spiritual Healing Wisdom Blog | Diving Sanatan" },
       description: "Read insightful guides on holistic therapy, energy medicine, chakra healing, and natural healing methods.",
     };
   }

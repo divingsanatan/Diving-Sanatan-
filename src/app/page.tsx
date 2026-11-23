@@ -2,7 +2,8 @@ import HomeClient from "./HomeClient";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Healing, Meditation & Energy Alignment Sanctuary | Diving Sanatan",
+  title: { absolute: "Healing, Meditation & Energy Alignment Sanctuary | Diving Sanatan" },
+  alternates: { canonical: "https://divingsanatan.online/" },
   description: "Diving Sanatan is a sacred sanctuary for holistic healing, reiki, sound balancing, and mindfulness meditation. Take our interactive somatic energy quiz to start your healing journey.",
   keywords: [
     "Diving sanatan",

@@ -39,7 +39,22 @@ const iso = (d?: string) => {
   return Number.isNaN(t.getTime()) ? undefined : t.toISOString();
 };
 
-export const blogDescription = (b: BlogRow) => (b.meta_description || "").trim() || truncate((b.tldr || "").trim() || stripHtml(b.content || ""), 155);
+/** A search snippet must be plain text: no tags, no markdown marks, no emoji, no stray spaces, and short enough to show in full. */
+export function cleanSnippet(input: string, max = 155): string {
+  const text = (input || "")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/(\*\*|__|`)/g, "")
+    .replace(/^#+\s*/gm, "")
+    .replace(/[\p{Extended_Pictographic}\u200d\ufe0f]/gu, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (text.length <= max) return text;
+  const cut = text.slice(0, max - 1);
+  return `${cut.slice(0, Math.max(cut.lastIndexOf(" "), 80)).trim()}…`;
+}
+
+export const blogDescription = (b: BlogRow) => cleanSnippet((b.meta_description || "").trim() || (b.tldr || "").trim() || stripHtml(b.content || ""));
 export const blogImageUrl = (b: BlogRow) => absolute(b.og_image_override) || absolute(b.image);
 export const blogIsNoindex = (b: BlogRow) => /noindex/i.test(b.robots_directive || "");
 

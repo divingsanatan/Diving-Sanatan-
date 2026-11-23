@@ -1,4 +1,6 @@
 import ServicesClient from "./ServicesClient";
+import ServicesIndex from "@/components/services/ServicesIndex";
+import { getPublishedServices } from "@/lib/siteServer";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -26,9 +28,14 @@ export const metadata: Metadata = {
     description: "Explore and book our expert-led services: Chakra Balancing, Aura scanning, Reiki, Sound Healing, and personalized spiritual guidance.",
     url: "https://divingsanatan.online/services",
     type: "website",
-  }
+  },
+  alternates: { canonical: "https://divingsanatan.online/services" },
 };
 
-export default function Page() {
-  return <ServicesClient />;
+// The service list is also built on the server, so every service page is linked in the HTML.
+export const revalidate = 300;
+
+export default async function Page() {
+  const services = await getPublishedServices();
+  return <ServicesClient after={<ServicesIndex services={services} />} />;
 }

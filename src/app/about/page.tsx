@@ -3,6 +3,7 @@ import { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Our Sanctuary & Spiritual Healers",
+  alternates: { canonical: "https://divingsanatan.online/about" },
   description: "Diving Sanatan bridges ancient energy medicine and Indian beliefs with modern wellness standards. Meet our certified gurus, life coaches, and inner engineers.",
   keywords: [
     "Diving sanatan",

@@ -3,6 +3,7 @@ import { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Contact Our Spiritual Healers & Guides",
+  alternates: { canonical: "https://divingsanatan.online/contact" },
   description: "Connect with Diving Sanatan Sanctuary in Bhopal. Inquire about custom retreat bookings, personal life coaching, nazar clearing, or remote chakra energy alignments.",
   keywords: [
     "Contact Diving Sanatan",

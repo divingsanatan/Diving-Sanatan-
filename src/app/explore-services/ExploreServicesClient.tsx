@@ -112,7 +112,7 @@ const getServiceHighlights = (service: Service): string[] => {
   ];
 };
 
-export default function ExploreServicesClient() {
+export default function ExploreServicesClient({ after }: { after?: React.ReactNode } = {}) {
   const router = useRouter();
 
   // Search, Sort & Pagination state
@@ -255,7 +255,7 @@ export default function ExploreServicesClient() {
           <div className="catalog-container">
             <div className="catalog-header-meta">
               <div className="meta-left">
-                <h2 className="catalog-title">All Sacred Therapies</h2>
+                <h1 className="catalog-title">All Sacred Therapies</h1>
                 <span className="meta-count">
                   Showing {services.length} of {totalServices} services
                   {totalPages > 1 ? ` (Page ${page} of ${totalPages})` : ""}
@@ -497,6 +497,7 @@ export default function ExploreServicesClient() {
         )}
       </main>
 
+      {after}
       <Footer />
 
       <style jsx>{`

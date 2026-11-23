@@ -6,88 +6,30 @@ import { supabaseServer } from "@/utils/supabaseServer";
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = "https://divingsanatan.online";
 
-  // Static site pages
+  // Public pages that are always there. Their dates are left out on purpose: a date that changes on every
+  // visit teaches search engines to ignore it, so only pages with a real edit date carry one.
   const staticRoutes: MetadataRoute.Sitemap = [
-    {
-      url: `${baseUrl}`,
-      lastModified: new Date(),
-      changeFrequency: "daily",
-      priority: 1.0,
-    },
-    {
-      url: `${baseUrl}/services`,
-      lastModified: new Date(),
-      changeFrequency: "weekly",
-      priority: 0.9,
-    },
-    {
-      url: `${baseUrl}/blog/glossary`,
-      lastModified: new Date(),
-      changeFrequency: "weekly",
-      priority: 0.75,
-    },
-    {
-      url: `${baseUrl}/blog/quora-qa`,
-      lastModified: new Date(),
-      changeFrequency: "daily",
-      priority: 0.75,
-    },
-    {
-      url: `${baseUrl}/blog/video-transcripts`,
-      lastModified: new Date(),
-      changeFrequency: "weekly",
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/shop`,
-      lastModified: new Date(),
-      changeFrequency: "weekly",
-      priority: 0.85,
-    },
-    {
-      url: `${baseUrl}/booking`,
-      lastModified: new Date(),
-      changeFrequency: "weekly",
-      priority: 0.9,
-    },
-    {
-      url: `${baseUrl}/blog`,
-      lastModified: new Date(),
-      changeFrequency: "daily",
-      priority: 0.85,
-    },
-    {
-      url: `${baseUrl}/about`,
-      lastModified: new Date(),
-      changeFrequency: "weekly",
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/reviews`,
-      lastModified: new Date(),
-      changeFrequency: "weekly",
-      priority: 0.75,
-    },
-    {
-      url: `${baseUrl}/contact`,
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/privacy`,
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.4,
-    },
+    { url: `${baseUrl}`, changeFrequency: "daily", priority: 1.0 },
+    { url: `${baseUrl}/blog`, changeFrequency: "daily", priority: 0.9 },
+    { url: `${baseUrl}/services`, changeFrequency: "weekly", priority: 0.9 },
+    { url: `${baseUrl}/explore-services`, changeFrequency: "weekly", priority: 0.8 },
+    { url: `${baseUrl}/gurus`, changeFrequency: "weekly", priority: 0.8 },
+    { url: `${baseUrl}/blog/quora-qa`, changeFrequency: "daily", priority: 0.8 },
+    { url: `${baseUrl}/blog/glossary`, changeFrequency: "weekly", priority: 0.8 },
+    { url: `${baseUrl}/blog/video-transcripts`, changeFrequency: "weekly", priority: 0.7 },
+    { url: `${baseUrl}/shop`, changeFrequency: "weekly", priority: 0.8 },
+    { url: `${baseUrl}/reviews`, changeFrequency: "weekly", priority: 0.6 },
+    { url: `${baseUrl}/about`, changeFrequency: "monthly", priority: 0.6 },
+    { url: `${baseUrl}/contact`, changeFrequency: "monthly", priority: 0.5 },
+    { url: `${baseUrl}/privacy`, changeFrequency: "yearly", priority: 0.2 },
   ];
 
   try {
     // Dynamic blog articles, services, and comparison pages from Supabase
-    const [blogsRes, servRes, compRes, shopRes, glossRes, topicRes, qaRes, videoRes] = await Promise.all([
-      supabaseServer.from("blogs").select("id, slug, date").order("date", { ascending: false }),
-      supabaseServer.from("services").select("id, name"),
-      supabaseServer.from("comparison_pages").select("slug"),
+    const [blogsRes, servRes, guruRes, shopRes, glossRes, topicRes, qaRes, videoRes] = await Promise.all([
+      supabaseServer.from("blogs").select("id, slug, date, updated_at").eq("approval_status", "published").order("date", { ascending: false }),
+      supabaseServer.from("services").select("id, created_at").eq("approval_status", "published"),
+      supabaseServer.from("practitioners").select("id, created_at").eq("approval_status", "published"),
       // Published products that haven't been marked "noindex"
       supabaseServer
         .from("shop_products")
@@ -128,28 +70,28 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     const blogRoutes: MetadataRoute.Sitemap = (blogsRes.data || []).filter((blog) => !importedBlogIds.has(String(blog.id))).map((blog) => ({
       url: `${baseUrl}/blog/${blog.slug || blog.id}`, // the same address each article names as its canonical link
-      lastModified: blog.date ? new Date(blog.date) : new Date(),
+      lastModified: blog.updated_at || blog.date ? new Date(blog.updated_at || blog.date) : undefined,
       changeFrequency: "weekly",
       priority: 0.7,
     }));
 
     const serviceRoutes: MetadataRoute.Sitemap = (servRes.data || []).map((serv) => ({
       url: `${baseUrl}/services/${serv.id}`,
-      lastModified: new Date(),
+      lastModified: serv.created_at ? new Date(serv.created_at) : undefined,
       changeFrequency: "weekly",
       priority: 0.8,
     }));
 
-    const compRoutes: MetadataRoute.Sitemap = (compRes.data || []).map((comp) => ({
-      url: `${baseUrl}/blog/comparison/${comp.slug}`,
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.65,
+    const guruRoutes: MetadataRoute.Sitemap = (guruRes.data || []).map((g) => ({
+      url: `${baseUrl}/gurus/${g.id}`,
+      lastModified: g.created_at ? new Date(g.created_at) : undefined,
+      changeFrequency: "monthly" as const,
+      priority: 0.7,
     }));
 
     const shopRoutes: MetadataRoute.Sitemap = (shopRes.data || []).map((prod) => ({
       url: `${baseUrl}/shop/${prod.slug}`,
-      lastModified: prod.updated_at ? new Date(prod.updated_at) : new Date(),
+      lastModified: prod.updated_at ? new Date(prod.updated_at) : undefined,
       changeFrequency: "weekly",
       priority: 0.8,
       images: (Array.isArray(prod.images) ? prod.images : [])
@@ -201,7 +143,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       ],
     }));
 
-    return [...staticRoutes, ...blogRoutes, ...serviceRoutes, ...compRoutes, ...shopRoutes, ...glossaryRoutes, ...topicRoutes, ...qaRoutes, ...videoRoutes];
+    return [...staticRoutes, ...blogRoutes, ...serviceRoutes, ...guruRoutes, ...shopRoutes, ...glossaryRoutes, ...topicRoutes, ...qaRoutes, ...videoRoutes];
   } catch (error) {
     console.error("Error generating dynamic sitemap routes:", error);
   }

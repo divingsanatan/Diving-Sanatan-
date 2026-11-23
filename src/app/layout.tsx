@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import { Cormorant_Garamond, Plus_Jakarta_Sans } from "next/font/google";
+import { YOUTUBE_CHANNEL_URL } from "@/lib/youtube";
 import "./globals.css";
 import StyledJsxRegistry from "./registry";
 import { GlobalSearchProvider } from "@/components/providers/GlobalSearchProvider";
@@ -66,7 +67,9 @@ export const metadata: Metadata = {
     description: "Realign your mind, body, and spirit. Explore our healing blog, book energy alignment sessions, and learn mindfulness meditation practices.",
     type: "website",
     siteName: "Diving Sanatan",
+    images: [{ url: "/images/blog_hero_bg.png", width: 1024, height: 682, alt: "Diving Sanatan" }],
   },
+  twitter: { card: "summary_large_image" },
   metadataBase: new URL("https://divingsanatan.online"),
   other: {
     "google-adsense-account": "ca-pub-4820128927673407",
@@ -82,17 +85,32 @@ export default function RootLayout({
     <html lang="en" data-theme="light" className={`${cormorant.variable} ${jakarta.variable}`} suppressHydrationWarning>
       <head>
         <meta name="google-adsense-account" content="ca-pub-4820128927673407" />
-        {/* Organization Schema */}
+        {/* Organization + WebSite markup: one consistent brand identity for search engines and AI tools */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
               "@context": "https://schema.org",
-              "@type": "Organization",
-              "name": "Sanatan Dharma",
-              "url": "https://divingsanatan.online/",
-              "logo": "https://divingsanatan.online/logo.svg"
-            })
+              "@graph": [
+                {
+                  "@type": "Organization",
+                  "@id": "https://divingsanatan.online/#organization",
+                  name: "Diving Sanatan",
+                  url: "https://divingsanatan.online/",
+                  logo: { "@type": "ImageObject", url: "https://divingsanatan.online/logo.svg" },
+                  description: "Diving Sanatan offers guided healing, meditation and energy alignment sessions, and explains Sanatan Dharma, chakras and Tantra in plain language.",
+                  sameAs: [YOUTUBE_CHANNEL_URL],
+                },
+                {
+                  "@type": "WebSite",
+                  "@id": "https://divingsanatan.online/#website",
+                  url: "https://divingsanatan.online/",
+                  name: "Diving Sanatan",
+                  inLanguage: "en",
+                  publisher: { "@id": "https://divingsanatan.online/#organization" },
+                },
+              ],
+            }),
           }}
         />
       </head>

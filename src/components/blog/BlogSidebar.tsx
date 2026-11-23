@@ -2,6 +2,7 @@
 
 import React from "react";
 import { useBlog } from "@/app/blog/BlogContext";
+import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Grid, Flower, Sparkles, Compass, Heart, Volume2,
@@ -134,8 +135,8 @@ export const BlogSidebar: React.FC = () => {
           )}
         </div>
         {/* Glossary */}
-        <button
-          onClick={() => router.push("/blog/glossary")}
+        <Link
+          href="/blog/glossary"
           className={`sidebar-item ${pathname === "/blog/glossary" ? "active" : ""}`}
         >
           <div className="sidebar-icon-box">
@@ -145,11 +146,11 @@ export const BlogSidebar: React.FC = () => {
             <span className="item-name">Glossary</span>
           </div>
           {pathname === "/blog/glossary" && <span className="sidebar-active-dot" />}
-        </button>
+        </Link>
 
         {/* Q&A Community */}
-        <button
-          onClick={() => router.push("/blog/quora-qa")}
+        <Link
+          href="/blog/quora-qa"
           className={`sidebar-item ${pathname === "/blog/quora-qa" ? "active" : ""}`}
         >
           <div className="sidebar-icon-box">
@@ -159,11 +160,11 @@ export const BlogSidebar: React.FC = () => {
             <span className="item-name">Questions & Answers</span>
           </div>
           {pathname === "/blog/quora-qa" && <span className="sidebar-active-dot" />}
-        </button>
+        </Link>
 
         {/* Video Transcripts */}
-        <button
-          onClick={() => router.push("/blog/video-transcripts")}
+        <Link
+          href="/blog/video-transcripts"
           className={`sidebar-item ${pathname === "/blog/video-transcripts" ? "active" : ""}`}
         >
           <div className="sidebar-icon-box">
@@ -173,7 +174,7 @@ export const BlogSidebar: React.FC = () => {
             <span className="item-name">Video Transcripts</span>
           </div>
           {pathname === "/blog/video-transcripts" && <span className="sidebar-active-dot" />}
-        </button>
+        </Link>
 
       </div>
 

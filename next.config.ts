@@ -13,7 +13,14 @@ const nextConfig: NextConfig = {
       { source: "/blog/pillar", destination: "/blog", permanent: true },
       { source: "/blog/topics", destination: "/blog", permanent: true },
       { source: "/admin/pillar", destination: "/admin/topics", permanent: false },
+      // /services/explore showed the same page as /explore-services
+      { source: "/services/explore", destination: "/explore-services", permanent: true },
     ];
+  },
+  // A second safety lock on private areas: even if a link to them leaks, search engines are told not to index them.
+  async headers() {
+    const noindex = [{ key: "X-Robots-Tag", value: "noindex, nofollow" }];
+    return ["/admin/:path*", "/api/:path*", "/profile/:path*", "/cart", "/checkout", "/booking", "/search", "/shop/cart", "/shop/checkout", "/shop/order/:path*", "/blog/topics/preview/:path*"].map((source) => ({ source, headers: noindex }));
   },
   // The files public/llms.txt and public/llm-full.txt are old, hand-written copies that would
   // otherwise be served instead of the live versions. These rules make the live versions
