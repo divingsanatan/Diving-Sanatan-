@@ -176,34 +176,6 @@ export interface BlogCategory {
 }
 
 
-export interface ComparisonRowItem {
-  label: string;
-  valueA: string;
-  valueB: string;
-}
-
-export interface ComparisonMediaItem {
-  type: "image" | "video";
-  src: string;
-}
-
-export interface ComparisonPage {
-  id: string;
-  slug: string;
-  title: string;
-  subtitle: string;
-  modalityAName: string;
-  modalityAPrice: string;
-  modalityAServiceId?: string;
-  modalityBName: string;
-  modalityBPrice: string;
-  modalityBServiceId?: string;
-  rows: ComparisonRowItem[];
-  media: ComparisonMediaItem[];
-  serviceIds: string[];
-  createdAt?: string;
-}
-
 export interface FAQItem {
   id: string;
   question: string;

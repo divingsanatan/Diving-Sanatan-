@@ -26,7 +26,6 @@ function BlogLayoutInner({ children }: { children: React.ReactNode }) {
     "/blog/glossary": { title: "Search Terms", placeholder: "Type a term..." },
     "/blog/topics": { title: "Search Topics", placeholder: "Type a topic..." },
     "/blog/quora-qa": { title: "Search Questions", placeholder: "Type your question..." },
-    "/blog/case-studies": { title: "Search Case Studies", placeholder: "Type keywords..." },
     "/blog/video-transcripts": { title: "Search Videos", placeholder: "Type keywords..." },
   };
 

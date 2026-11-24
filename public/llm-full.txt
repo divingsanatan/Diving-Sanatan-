@@ -63,7 +63,6 @@ Our blog covers topics including:
 - Crystal properties and selection guides
 - Breath-work routines for specific conditions
 - Sanskrit terminology and spiritual philosophy
-- Comparisons between healing modalities
 - Seasonal wellness advice and Ayurvedic guidance
 
 ## Sitemap
@@ -74,7 +73,6 @@ Our blog covers topics including:
 - Glossary: https://divingsanatan.online/glossary
 - FAQ: https://divingsanatan.online/faq
 - Contact: https://divingsanatan.online/contact
-- Comparisons: https://divingsanatan.online/comparisons
 
 ## Citation Guidelines
 

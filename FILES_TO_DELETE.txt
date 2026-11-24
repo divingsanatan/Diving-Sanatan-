@@ -1,0 +1,9 @@
+Delete these from GitHub after uploading the zip (they are no longer used):
+
+src/app/blog/case-studies          (whole folder)
+src/app/blog/comparison            (whole folder)
+src/app/api/comparisons            (whole folder)
+src/components/ui/MediaCarousel.tsx
+src/app/blog/BlogListingClient.tsx
+src/app/blog/pillar/PillarListingClient.tsx
+supabase/migrations/20260625000000_comparison_pages.sql

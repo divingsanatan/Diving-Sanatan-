@@ -25,7 +25,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
 
   try {
-    // Dynamic blog articles, services, and comparison pages from Supabase
+    // Dynamic blog articles, services, practitioners, products, topics, questions and videos from Supabase
     const [blogsRes, servRes, guruRes, shopRes, glossRes, topicRes, qaRes, videoRes] = await Promise.all([
       supabaseServer.from("blogs").select("id, slug, date, updated_at").eq("approval_status", "published").order("date", { ascending: false }),
       supabaseServer.from("services").select("id, created_at").eq("approval_status", "published"),

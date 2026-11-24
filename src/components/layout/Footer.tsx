@@ -26,7 +26,6 @@ const LINK_GROUPS: { title: string; links: FooterLink[] }[] = [
       { label: "Guides & articles", href: "/blog" },
       { label: "Glossary", href: "/blog/glossary" },
       { label: "Questions & answers", href: "/blog/quora-qa" },
-      { label: "Case studies", href: "/blog/case-studies" },
       { label: "Video transcripts", href: "/blog/video-transcripts" },
     ],
   },

@@ -23,12 +23,20 @@ structured data, text present in the server HTML, redirects, noindex headers and
 ## Fixed in the database
 - 3 blog meta descriptions held raw HTML and markdown. Cleaned. Two over-long or broken page titles shortened.
 
-## Needs a decision or a manual step
-- Case studies page is written into the code and now kept out of search until the cases are confirmed real and consented.
-- Comparison pages have no data table; kept out of search.
-- Service records look like sample data (practitioner names that are not in the practitioners table, ratings not backed by
-  reviews, picture keywords instead of pictures, empty benefits and process lists). Replace with real details.
-- Three blog articles have no TL;DR.
-- Vercel: add www.divingsanatan.online (with DNS) redirecting to the main address, and make the vercel.app address redirect
-  permanently (308) instead of 307.
-- Google Search Console and Bing Webmaster Tools: verify the site and submit /sitemap.xml.
+## Removed completely (22 Nov 2026)
+- Case studies and comparison pages: pages, API, menu and footer links, types and the unused media carousel.
+  Old addresses (/blog/case-studies, /blog/comparison, /comparisons) permanently redirect to /blog.
+
+## Article fixes (database)
+- The main Tantra article was pasted with markdown marks and had no real headings. It now has 14 section headings, 16
+  sub-headings and proper lists; every word was checked to be unchanged. The original is kept in the table blog_content_backups.
+- TL;DRs written for the three articles that had none. Empty headings, stray editor comments and a self-link were cleaned.
+
+## Still open
+- Service records look like sample data. Replace with real details when you work on the services pages.
+- Vercel: www.divingsanatan.online is added and redirects (308) to the main address. It starts working once the DNS record
+  below is added at Namecheap.
+
+## Deleting old files from the repo (they are no longer used)
+src/app/blog/case-studies/  src/app/blog/comparison/  src/app/api/comparisons/  src/components/ui/MediaCarousel.tsx
+supabase/migrations/20260625000000_comparison_pages.sql  src/app/blog/BlogListingClient.tsx  src/app/blog/pillar/PillarListingClient.tsx

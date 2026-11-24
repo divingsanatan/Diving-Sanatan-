@@ -12,6 +12,11 @@ const nextConfig: NextConfig = {
     return [
       { source: "/blog/pillar", destination: "/blog", permanent: true },
       { source: "/blog/topics", destination: "/blog", permanent: true },
+      // Removed sections: old links go to the blog home instead of a dead page
+      { source: "/blog/case-studies", destination: "/blog", permanent: true },
+      { source: "/blog/comparison", destination: "/blog", permanent: true },
+      { source: "/blog/comparison/:slug*", destination: "/blog", permanent: true },
+      { source: "/comparisons", destination: "/blog", permanent: true },
       { source: "/admin/pillar", destination: "/admin/topics", permanent: false },
       // /services/explore showed the same page as /explore-services
       { source: "/services/explore", destination: "/explore-services", permanent: true },
