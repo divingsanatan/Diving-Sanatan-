@@ -3,11 +3,11 @@
 import React, { useMemo, useState } from "react";
 import { ArrowLeft, ExternalLink, Plus, Save, Sparkles, Trash2, X } from "lucide-react";
 import RichTextEditor from "@/components/ui/RichTextEditor";
+import CategorySelect from "@/components/admin/CategorySelect";
 import { SITE_URL, stripHtml, truncate, wordCount } from "@/lib/shopShared";
 import { leadingWords } from "@/lib/glossaryShared";
 import { scoreTone, slugifyQuestion, type Check } from "@/lib/faqShared";
 import {
-  QA_DEFAULT_CATEGORIES,
   defaultQaFocusKeyword,
   effectiveMetaDescription,
   effectiveMetaTitle,
@@ -132,7 +132,6 @@ export default function QaEditor({
     return ld ? JSON.stringify(ld, null, 2) : "";
   }, [eff]);
 
-  const categories = useMemo(() => Array.from(new Set([...QA_DEFAULT_CATEGORIES, ...allQuestions.map((q) => q.category).filter(Boolean)])), [allQuestions]);
   const relatedChosen = eff.relatedQuestions.map((s) => allQuestions.find((q) => q.slug === s)).filter((q): q is QaQuestion => !!q);
   const relatedOptions = allQuestions
     .filter((q) => q.id !== initial.id && q.status === "published" && isAnswered(q) && !eff.relatedQuestions.includes(q.slug))
@@ -205,9 +204,8 @@ export default function QaEditor({
 
           <div className={shop.row2}>
             <div className={shop.field}>
-              <label className={shop.label} htmlFor="q-cat">Topic</label>
-              <input id="q-cat" className={shop.input} list="qa-cats" disabled={locked} value={draft.category} maxLength={60} placeholder="Choose or type a topic" onChange={(e) => update({ category: e.target.value })} />
-              <datalist id="qa-cats">{categories.map((c) => (<option key={c} value={c} />))}</datalist>
+              <label className={shop.label} htmlFor="q-cat">Category</label>
+              <CategorySelect id="q-cat" disabled={locked} value={draft.category} onChange={(category) => update({ category })} />
             </div>
             <div className={shop.field}>
               <label className={shop.label} htmlFor="q-status">Status</label>

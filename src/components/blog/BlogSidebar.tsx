@@ -2,7 +2,6 @@
 
 import React from "react";
 import { useBlog } from "@/app/blog/BlogContext";
-import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Grid, Flower, Sparkles, Compass, Heart, Volume2,
@@ -14,6 +13,7 @@ interface CategoryItem {
   id: string;
   name: string;
   icon: React.ReactNode;
+  articles: number;
 }
 
 const getCategoryIcon = (name: string) => {
@@ -35,6 +35,12 @@ export const BlogSidebar: React.FC = () => {
   const router = useRouter();
   const { activeCategory, setActiveCategory, activeBlog } = useBlog();
 
+  const go = (href: string) => (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+    e.preventDefault();
+    router.push(href);
+  };
+
   const [categoriesExpanded, setCategoriesExpanded] = React.useState(false);
   const [categoryItems, setCategoryItems] = React.useState<CategoryItem[]>([]);
   const [loading, setLoading] = React.useState(true);
@@ -53,7 +59,8 @@ export const BlogSidebar: React.FC = () => {
             .map((cat: any) => ({
               id: cat.name.toLowerCase(),
               name: cat.name,
-              icon: getCategoryIcon(cat.name)
+              icon: getCategoryIcon(cat.name),
+              articles: Number(cat.counts?.blog) || 0
             }));
           setCategoryItems(items);
         }
@@ -66,7 +73,10 @@ export const BlogSidebar: React.FC = () => {
     fetchCategories();
   }, []);
 
-  const categoryIds = React.useMemo(() => categoryItems.map(item => item.id), [categoryItems]);
+  // The category list is shared by every kind of content. Only show the ones that have articles in them.
+  const visibleCategoryItems = React.useMemo(() => categoryItems.filter((c) => c.articles > 0), [categoryItems]);
+
+  const categoryIds = React.useMemo(() => visibleCategoryItems.map(item => item.id), [visibleCategoryItems]);
 
   // Auto-expand categories if we are on /blog and a subcategory is active
   React.useEffect(() => {
@@ -103,7 +113,7 @@ export const BlogSidebar: React.FC = () => {
               <Grid size={16} strokeWidth={1.5} />
             </div>
             <div className="item-text-container">
-              <span className="item-name">Topic Guides &amp; Articles</span>
+              <span className="item-name">Guides &amp; Articles</span>
             </div>
             {categoriesExpanded ? (
               <ChevronUp size={14} strokeWidth={1.5} style={{ opacity: 0.5 }} />
@@ -114,7 +124,7 @@ export const BlogSidebar: React.FC = () => {
 
           {categoriesExpanded && (
             <div className="category-children">
-              {categoryItems.map((item) => {
+              {visibleCategoryItems.map((item) => {
                 const isActive = pathname === "/blog" && activeCategory.toLowerCase() === item.id.toLowerCase();
                 return (
                   <button
@@ -135,8 +145,10 @@ export const BlogSidebar: React.FC = () => {
           )}
         </div>
         {/* Glossary */}
-        <Link
+        {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- real link for crawlers; the click handler keeps navigation inside the app */}
+        <a
           href="/blog/glossary"
+          onClick={go("/blog/glossary")}
           className={`sidebar-item ${pathname === "/blog/glossary" ? "active" : ""}`}
         >
           <div className="sidebar-icon-box">
@@ -146,11 +158,13 @@ export const BlogSidebar: React.FC = () => {
             <span className="item-name">Glossary</span>
           </div>
           {pathname === "/blog/glossary" && <span className="sidebar-active-dot" />}
-        </Link>
+        </a>
 
         {/* Q&A Community */}
-        <Link
+        {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- real link for crawlers; the click handler keeps navigation inside the app */}
+        <a
           href="/blog/quora-qa"
+          onClick={go("/blog/quora-qa")}
           className={`sidebar-item ${pathname === "/blog/quora-qa" ? "active" : ""}`}
         >
           <div className="sidebar-icon-box">
@@ -160,11 +174,13 @@ export const BlogSidebar: React.FC = () => {
             <span className="item-name">Questions & Answers</span>
           </div>
           {pathname === "/blog/quora-qa" && <span className="sidebar-active-dot" />}
-        </Link>
+        </a>
 
         {/* Video Transcripts */}
-        <Link
+        {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- real link for crawlers; the click handler keeps navigation inside the app */}
+        <a
           href="/blog/video-transcripts"
+          onClick={go("/blog/video-transcripts")}
           className={`sidebar-item ${pathname === "/blog/video-transcripts" ? "active" : ""}`}
         >
           <div className="sidebar-icon-box">
@@ -174,7 +190,7 @@ export const BlogSidebar: React.FC = () => {
             <span className="item-name">Video Transcripts</span>
           </div>
           {pathname === "/blog/video-transcripts" && <span className="sidebar-active-dot" />}
-        </Link>
+        </a>
 
       </div>
 

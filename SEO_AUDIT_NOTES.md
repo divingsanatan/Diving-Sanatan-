@@ -40,3 +40,10 @@ structured data, text present in the server HTML, redirects, noindex headers and
 ## Deleting old files from the repo (they are no longer used)
 src/app/blog/case-studies/  src/app/blog/comparison/  src/app/api/comparisons/  src/components/ui/MediaCarousel.tsx
 supabase/migrations/20260625000000_comparison_pages.sql  src/app/blog/BlogListingClient.tsx  src/app/blog/pillar/PillarListingClient.tsx
+
+## One category list for all content (25 Nov 2026)
+- Articles, video blogs, questions and glossary terms now share ONE category list: Admin > Content Categories (add, rename, delete).
+  Renaming moves every piece of content to the new name; a category still in use cannot be deleted.
+- Services keep their own list (Admin > Service Categories).
+- The editors for questions, videos and glossary terms now pick from the shared list (no free typing).
+- Sidebar fix: the Glossary, Questions and Videos items were stacking their icon above the text. Fixed.

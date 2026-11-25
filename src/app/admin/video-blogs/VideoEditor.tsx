@@ -3,11 +3,11 @@
 import React, { useMemo, useState } from "react";
 import { ArrowLeft, ExternalLink, Plus, Save, Sparkles, Trash2, X } from "lucide-react";
 import RichTextEditor from "@/components/ui/RichTextEditor";
+import CategorySelect from "@/components/admin/CategorySelect";
 import { SITE_URL, truncate, wordCount } from "@/lib/shopShared";
 import { leadingWords } from "@/lib/glossaryShared";
 import { scoreTone, slugifyQuestion, type Check } from "@/lib/faqShared";
 import {
-  VIDEO_DEFAULT_CATEGORIES,
   defaultVideoFocusKeyword,
   effectiveMetaDescription,
   effectiveMetaTitle,
@@ -148,7 +148,6 @@ export default function VideoEditor({
   const liveUrl = videoUrl(eff.slug || "your-video");
   const jsonLd = useMemo(() => (eff.youtubeId ? JSON.stringify(videoJsonLd(eff), null, 2) : ""), [eff]);
 
-  const categories = useMemo(() => Array.from(new Set([...VIDEO_DEFAULT_CATEGORIES, ...allVideos.map((v) => v.category).filter(Boolean)])), [allVideos]);
   const relatedChosen = eff.relatedVideos.map((s) => allVideos.find((v) => v.slug === s)).filter((v): v is VideoPost => !!v);
   const relatedOptions = allVideos
     .filter((v) => v.id !== initial.id && v.status === "published" && !eff.relatedVideos.includes(v.slug))
@@ -271,9 +270,8 @@ export default function VideoEditor({
 
           <div className={shop.row2}>
             <div className={shop.field}>
-              <label className={shop.label} htmlFor="v-cat">Topic</label>
-              <input id="v-cat" className={shop.input} list="vb-cats" value={draft.category} maxLength={60} placeholder="Choose or type a topic" onChange={(e) => update({ category: e.target.value })} />
-              <datalist id="vb-cats">{categories.map((c) => (<option key={c} value={c} />))}</datalist>
+              <label className={shop.label} htmlFor="v-cat">Category</label>
+              <CategorySelect id="v-cat" value={draft.category} onChange={(category) => update({ category })} />
             </div>
             <div className={shop.field}>
               <label className={shop.label} htmlFor="v-status">Status</label>

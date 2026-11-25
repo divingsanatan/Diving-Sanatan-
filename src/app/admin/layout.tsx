@@ -136,8 +136,10 @@ export default function AdminLayout({
         return "Shop Orders";
       case "/admin/practitioners":
         return "Practitioners Registry";
+      case "/admin/content-categories":
+        return "Content Categories (all blogs, videos, questions and terms)";
       case "/admin/categories":
-        return "Healing Disciplines";
+        return "Service Categories";
       case "/admin/keywords":
         return "SEO Keywords";
       case "/admin/quiz-questions":
@@ -181,8 +183,10 @@ export default function AdminLayout({
         return "Orders";
       case "/admin/practitioners":
         return "Practitioners";
+      case "/admin/content-categories":
+        return "Content Categories";
       case "/admin/categories":
-        return "Categories";
+        return "Service Categories";
       case "/admin/keywords":
         return "Keywords";
       case "/admin/quiz-questions":
@@ -338,12 +342,21 @@ export default function AdminLayout({
           </Link>
           <Link
             href="/admin/categories"
-            title="Categories"
+            title="Service Categories"
             className={`sidebar-link ${pathname === "/admin/categories" ? "active" : ""}`}
             onClick={() => setSidebarOpen(false)}
           >
             <Grid size={16} />
-            <span>Categories</span>
+            <span>Service Categories</span>
+          </Link>
+          <Link
+            href="/admin/content-categories"
+            title="Content Categories"
+            className={`sidebar-link ${pathname === "/admin/content-categories" ? "active" : ""}`}
+            onClick={() => setSidebarOpen(false)}
+          >
+            <Grid size={16} />
+            <span>Content Categories</span>
           </Link>
           <Link
             href="/admin/team"

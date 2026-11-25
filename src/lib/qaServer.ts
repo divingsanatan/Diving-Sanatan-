@@ -94,16 +94,20 @@ export async function countRecent(table: "qa_questions" | "qa_comments", profile
   return count || 0;
 }
 
-/** Categories a visitor may choose: the defaults plus any a healer or staff member has used. */
+/** Categories a visitor may choose: the one shared category list (Admin > Content Categories). */
 export async function allowedCategories(): Promise<string[]> {
-  const set = new Set(QA_DEFAULT_CATEGORIES);
   try {
-    const { data } = await supabaseServer.from("qa_questions").select("category").neq("category", "").limit(2000);
-    for (const r of data || []) if (r.category) set.add(r.category);
+    const { data } = await supabaseServer
+      .from("blog_categories")
+      .select("name")
+      .or("approval_status.eq.published,approval_status.is.null")
+      .order("name", { ascending: true });
+    const names = (data || []).map((r) => String(r.name || "").trim()).filter(Boolean);
+    if (names.length) return names;
   } catch {
-    /* defaults are enough */
+    /* fall through to the built-in list */
   }
-  return Array.from(set);
+  return QA_DEFAULT_CATEGORIES.slice();
 }
 
 /* --------------------------- input validation --------------------------- */
