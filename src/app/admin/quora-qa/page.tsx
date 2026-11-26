@@ -115,7 +115,12 @@ export default function AdminQaPage() {
   }), [questions]);
 
   // Healers start on the questions that need an answer; staff start on the review queue
-  const activeView: View = view ?? (isStaff ? (counts.review > 0 ? "review" : "awaiting") : "awaiting");
+  // Open on the first list that has something in it (review queue, then waiting questions, then the answered ones)
+  const activeView: View =
+    view ??
+    (isStaff
+      ? counts.review > 0 ? "review" : counts.awaiting > 0 ? "awaiting" : counts.answered > 0 ? "answered" : "all"
+      : counts.awaiting > 0 ? "awaiting" : "answered");
 
   const stats = useMemo(() => {
     const live = scored.filter((x) => x.s && x.q.status === "published");
@@ -279,10 +284,10 @@ export default function AdminQaPage() {
 
       <div className={shop.topbar}>
         <div>
-          <h2 className={shop.h2}>Q&amp;A Board</h2>
+          <h2 className={shop.h2}>Questions &amp; Answers</h2>
           <p className={shop.sub}>
             {isStaff
-              ? "Approve new questions, have a healer answer them, and optimise each answered question for SEO, AI search (GEO) and answer engines (AEO)."
+              ? "One place for the public Q&A board and the former FAQs: approve new questions, have a healer answer them, and optimise each answered question for SEO, AI search (GEO) and answer engines (AEO)."
               : "Questions waiting for a healer's answer. Open one to write the official answer."}
           </p>
         </div>
@@ -322,9 +327,9 @@ export default function AdminQaPage() {
         ))}
       </div>
 
-      <div className={shop.filters}>
-        <input className={shop.input} placeholder="Search questions" aria-label="Search questions" value={query} onChange={(e) => { setQuery(e.target.value); setPage(1); }} />
-        <select className={shop.select} aria-label="Sort questions" value={sort} onChange={(e) => { setSort(e.target.value as typeof sort); setPage(1); }}>
+      <div className={shop.filters} style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center" }}>
+        <input className={shop.input} style={{ flex: "1 1 260px", maxWidth: 420 }} placeholder="Search questions" aria-label="Search questions" value={query} onChange={(e) => { setQuery(e.target.value); setPage(1); }} />
+        <select className={shop.select} style={{ flex: "0 0 auto", width: "auto", minWidth: 190 }} aria-label="Sort questions" value={sort} onChange={(e) => { setSort(e.target.value as typeof sort); setPage(1); }}>
           <option value="newest">Newest first</option><option value="recent">Recently updated</option><option value="oldest">Oldest first</option><option value="weakest">Weakest score first</option>
         </select>
       </div>
