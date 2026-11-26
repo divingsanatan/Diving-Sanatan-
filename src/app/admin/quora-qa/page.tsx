@@ -340,7 +340,7 @@ export default function AdminQaPage() {
         ) : pageRows.length === 0 ? (
           <div className={shop.empty}>{questions.length === 0 ? "No questions yet. Visitors can ask from the Q&A Board, or use “Add Q&A”." : "Nothing here."}</div>
         ) : (
-          <table className={shop.table}>
+          <table className={`${shop.table} ${shop.tableWide}`}>
             <thead><tr><th>Question</th><th>Status</th><th>Asked by</th><th>Comments</th><th>Reviewed</th><th>SEO</th><th>GEO</th><th>AEO</th><th>Overall</th><th>Actions</th></tr></thead>
             <tbody>
               {pageRows.map(({ q, s }) => (
@@ -359,7 +359,7 @@ export default function AdminQaPage() {
                   <td>{s ? <span className={`${styles.pillScore} ${tone(s.aeo.score)}`}>{s.aeo.score}</span> : "–"}</td>
                   <td>{s ? <span className={`${styles.pillScore} ${tone(s.overall)}`}>{s.overall}</span> : "–"}</td>
                   <td>
-                    <div className={shop.actions}>
+                    <div className={shop.actionsNoWrap}>
                       {isStaff && q.status === "pending" && (
                         <>
                           <button className={`${shop.btn} ${shop.primary} ${shop.small}`} onClick={() => void decide(q, "published")} aria-label={`Approve ${truncate(q.title, 40)}`}><Check size={14} /> Approve</button>

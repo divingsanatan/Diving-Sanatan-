@@ -342,7 +342,7 @@ export default function AdminTopicsPage() {
 
       <div className={shop.tableCard}>
         {loading ? <p className={shop.empty}>Loading…</p> : topics.length === 0 ? <p className={shop.empty}>No topics yet. Create the first one.</p> : (
-          <table className={shop.table}>
+          <table className={`${shop.table} ${shop.tableWide}`}>
             <thead><tr><th>Topic</th><th>Status</th><th>Articles</th><th>Videos</th><th>Questions</th><th>Terms</th><th>Actions</th></tr></thead>
             <tbody>
               {topics.map((t) => (
@@ -351,7 +351,7 @@ export default function AdminTopicsPage() {
                   <td><span className={`${shop.status} ${t.status === "published" ? shop.st_published : shop.st_draft}`}>{t.status}</span></td>
                   <td>{t.counts.blog || 0}</td><td>{t.counts.video || 0}</td><td>{t.counts.qa || 0}</td><td>{t.counts.glossary || 0}</td>
                   <td>
-                    <div className={shop.actions}>
+                    <div className={shop.actionsNoWrap}>
                       <button type="button" className={`${shop.btn} ${shop.secondary} ${shop.small}`} onClick={() => void openEdit(t.id)}><Pencil size={14} /> Edit</button>
                       <a className={`${shop.btn} ${shop.secondary} ${shop.small}`} href={t.status === "published" ? topicPath(t.slug) : `/blog/topics/preview/${t.slug}`} target="_blank" rel="noopener noreferrer" aria-label={`${t.status === "published" ? "View" : "Preview"} ${t.title}`}><ExternalLink size={14} /></a>
                       <button type="button" className={`${shop.btn} ${shop.danger} ${shop.small}`} onClick={() => void remove(t)} aria-label={`Delete ${t.title}`}><Trash2 size={14} /></button>

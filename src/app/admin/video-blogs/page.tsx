@@ -285,7 +285,7 @@ export default function AdminVideoBlogsPage() {
         ) : pageRows.length === 0 ? (
           <div className={shop.empty}>{videos.length === 0 ? "No videos yet. Use “Import from blog posts” to bring over your existing ones, or “Add video”." : "No videos match your filters."}</div>
         ) : (
-          <table className={shop.table}>
+          <table className={`${shop.table} ${shop.tableWide}`}>
             <thead><tr><th>Video</th><th>Shape</th><th>Status</th><th>SEO</th><th>GEO</th><th>AEO</th><th>Overall</th><th>Actions</th></tr></thead>
             <tbody>
               {pageRows.map(({ v, s }) => (
@@ -307,7 +307,7 @@ export default function AdminVideoBlogsPage() {
                   <td><span className={`${styles.pillScore} ${tone(s.aeo.score)}`}>{s.aeo.score}</span></td>
                   <td><span className={`${styles.pillScore} ${tone(s.overall)}`}>{s.overall}</span></td>
                   <td>
-                    <div className={shop.actions}>
+                    <div className={shop.actionsNoWrap}>
                       <button className={`${shop.btn} ${shop.secondary} ${shop.small}`} onClick={() => openEditor(v)} aria-label={`Edit ${truncate(v.title, 40)}`}><Pencil size={14} /> Edit</button>
                       <button className={`${shop.btn} ${shop.secondary} ${shop.small}`} onClick={() => void toggleStatus(v)}>{v.status === "published" ? "Unpublish" : "Publish"}</button>
                       {v.status === "published" && <a className={`${shop.btn} ${shop.secondary} ${shop.small}`} href={`/blog/video-transcripts/${v.slug}`} target="_blank" rel="noopener noreferrer" aria-label={`View ${truncate(v.title, 40)}`}><ExternalLink size={14} /></a>}

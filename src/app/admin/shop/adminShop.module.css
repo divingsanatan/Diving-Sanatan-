@@ -597,3 +597,9 @@
     padding: 16px;
   }
 }
+
+/* Wide tables scroll sideways inside their card instead of squeezing every column
+   (which made the action buttons stack on top of each other). */
+.tableWide { min-width: 1020px; }
+.tableWide td:first-child, .tableWide th:first-child { min-width: 260px; }
+.actionsNoWrap { display: flex; gap: 6px; flex-wrap: nowrap; white-space: nowrap; }
