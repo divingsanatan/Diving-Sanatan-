@@ -18,6 +18,10 @@ const nextConfig: NextConfig = {
       { source: "/blog/comparison/:slug*", destination: "/blog", permanent: true },
       { source: "/comparisons", destination: "/blog", permanent: true },
       { source: "/admin/pillar", destination: "/admin/topics", permanent: false },
+      // FAQ merged into Questions & Answers: public pages (same page names) and the admin screen
+      { source: "/blog/faq", destination: "/blog/quora-qa", permanent: true },
+      { source: "/blog/faq/:slug", destination: "/blog/quora-qa/:slug", permanent: true },
+      { source: "/admin/faq", destination: "/admin/quora-qa", permanent: false },
       // /services/explore showed the same page as /explore-services
       { source: "/services/explore", destination: "/explore-services", permanent: true },
     ];

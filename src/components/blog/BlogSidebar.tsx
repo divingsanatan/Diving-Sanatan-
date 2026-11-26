@@ -223,22 +223,6 @@ export const BlogSidebar: React.FC = () => {
             Ask a Question
           </button>
         </div>
-      ) : pathname === "/blog/faq" ? (
-        <div className="faq-inspiration-card">
-          <h4 className="faq-inspiration-title">Curiosity leads to clarity.</h4>
-          <p className="faq-inspiration-desc">
-            Explore answers to common questions on healing, practices, and spiritual growth.
-          </p>
-          <div className="faq-inspiration-image-wrapper">
-            <img src="/images/meditation_aura.png" alt="Curiosity leads to clarity" className="faq-inspiration-image" />
-          </div>
-          <button
-            className="faq-inspiration-btn"
-            onClick={() => router.push("/blog")}
-          >
-            Explore All Blogs
-          </button>
-        </div>
       ) : isVideoBlog ? (
         <div className="inspiration-card wisdom-card">
           <h4 className="wisdom-title">Wisdom in motion.</h4>

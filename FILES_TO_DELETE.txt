@@ -1,9 +1,21 @@
-Delete these from GitHub after uploading the zip (they are no longer used):
+Delete these from GitHub after uploading the zip. They are no longer used.
+(The site works the same if you forget: old links are redirected before these files are ever reached.)
 
-src/app/blog/case-studies          (whole folder)
-src/app/blog/comparison            (whole folder)
-src/app/api/comparisons            (whole folder)
-src/components/ui/MediaCarousel.tsx
-src/app/blog/BlogListingClient.tsx
-src/app/blog/pillar/PillarListingClient.tsx
-supabase/migrations/20260625000000_comparison_pages.sql
+From the first clean-up (case studies, comparison pages, old lists):
+  src/app/blog/case-studies          (whole folder)
+  src/app/blog/comparison            (whole folder)
+  src/app/api/comparisons            (whole folder)
+  src/components/ui/MediaCarousel.tsx
+  src/app/blog/BlogListingClient.tsx
+  src/app/blog/pillar/PillarListingClient.tsx
+  supabase/migrations/20260625000000_comparison_pages.sql
+
+From the FAQ + Q&A merge:
+  src/app/admin/faq                  (whole folder: the old FAQ admin screens)
+  src/app/blog/faq                   (whole folder: the old public FAQ pages)
+  src/app/api/faq                    (whole folder: the old FAQ API)
+
+Optional, only AFTER the three FAQ folders above are deleted:
+  src/lib/faqServer.ts
+  src/lib/faqRevalidate.ts
+(Keep src/lib/faqShared.ts: the Q&A, video, glossary and topic code still uses it.)

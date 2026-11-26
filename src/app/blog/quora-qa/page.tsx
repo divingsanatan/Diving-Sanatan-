@@ -6,7 +6,7 @@ import { getPublishedQuestions, allowedCategories } from "@/lib/qaServer";
 import { isIndexable, qaIndexJsonLd, qaPath } from "@/lib/qaShared";
 import { jsonLdString } from "@/lib/shopServer";
 import glossary from "../glossary/glossary.module.css";
-import faq from "../faq/faq.module.css";
+import faq from "./qaList.module.css";
 
 // Rebuilt at most once a minute, and instantly whenever a question or answer is saved.
 export const revalidate = 60;

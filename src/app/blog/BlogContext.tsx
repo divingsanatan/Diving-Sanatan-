@@ -80,7 +80,7 @@ export function BlogProvider({ children }: { children: React.ReactNode }) {
     const trimmed = query.trim();
     setSearchQueryState(trimmed);
 
-    const searchablePages = ["/blog", "/blog/faq", "/blog/glossary", "/blog/pillar"];
+    const searchablePages = ["/blog", "/blog/glossary", "/blog/quora-qa"];
     if (searchablePages.includes(pathname)) {
       if (pathname === "/blog") {
         const params = new URLSearchParams(window.location.search);

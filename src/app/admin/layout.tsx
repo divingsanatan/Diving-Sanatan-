@@ -147,15 +147,13 @@ export default function AdminLayout({
       case "/admin/topics":
         return "Topic Guides (pillar pages)";
       case "/admin/quora-qa":
-        return "Public Q&A Board";
+        return "Questions & Answers (public Q&A board and FAQs)";
       case "/admin/blogs":
         return "Publication & Blogs";
       case "/admin/video-blogs":
         return "Video Blogs & Transcripts";
       case "/admin/glossary":
         return "Sanskrit Glossary";
-      case "/admin/faq":
-        return "FAQs Manager";
       case "/admin/leads":
         return "Customer Leads Profiles";
       case "/admin/seo-command":
@@ -194,15 +192,13 @@ export default function AdminLayout({
       case "/admin/topics":
         return "Topic Guides";
       case "/admin/quora-qa":
-        return "Q&A Board";
+        return "Questions & Answers";
       case "/admin/blogs":
         return "Blogs";
       case "/admin/video-blogs":
         return "Video Blogs";
       case "/admin/glossary":
         return "Glossary";
-      case "/admin/faq":
-        return "FAQs";
       case "/admin/leads":
         return "Leads";
       case "/admin/seo-command":
@@ -400,12 +396,12 @@ export default function AdminLayout({
           </Link>
           <Link
             href="/admin/quora-qa"
-            title="Q&A Board"
+            title="Questions & Answers"
             className={`sidebar-link ${pathname === "/admin/quora-qa" ? "active" : ""}`}
             onClick={() => setSidebarOpen(false)}
           >
             <MessageSquare size={16} />
-            <span>Q&A Board</span>
+            <span>Questions & Answers</span>
           </Link>
           <Link
             href="/admin/glossary"
@@ -415,15 +411,6 @@ export default function AdminLayout({
           >
             <BookOpen size={16} />
             <span>Glossary</span>
-          </Link>
-          <Link
-            href="/admin/faq"
-            title="FAQs"
-            className={`sidebar-link ${pathname === "/admin/faq" ? "active" : ""}`}
-            onClick={() => setSidebarOpen(false)}
-          >
-            <HelpCircle size={16} />
-            <span>FAQs</span>
           </Link>
 
           <div style={{ borderTop: "1px solid #4b545c", margin: "10px 0" }}></div>

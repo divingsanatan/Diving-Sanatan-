@@ -36,7 +36,6 @@ export type AdminPageType =
   | "blogs"
   | "video-blogs"
   | "glossary"
-  | "faq"
   | "leads"
   | "users"
   | "team";
@@ -199,16 +198,6 @@ export default function StatsDashboard({ pageType, actions, customStats }: Stats
         { label: "Needs Review", trend: "Missing definitions", trendType: "attention", icon: Clock }
       ]
     },
-    faq: {
-      title: "FAQs Manager",
-      subtitle: "Create, edit, and classify frequently asked questions for clients.",
-      cards: [
-        { label: "Total FAQs", trend: "Common questions", trendType: "neutral", icon: HelpCircle },
-        { label: "Active Status", trend: "Published FAQs", trendType: "up", icon: CheckCircle2 },
-        { label: "Draft/Hidden", trend: "Hidden from public", trendType: "attention", icon: EyeOff }
-      ]
-    },
-
     leads: {
       title: "Customer Leads Profiles",
       subtitle: "Track potential clients, contact requests, consultation details, and follow-ups.",
@@ -300,7 +289,6 @@ export default function StatsDashboard({ pageType, actions, customStats }: Stats
           blogs: ["/api/blogs", "/api/blogs/categories"],
           "video-blogs": ["/api/videos?all=1"],
           glossary: ["/api/glossary"],
-          faq: ["/api/faq?all=1"],
 
           leads: ["/api/leads"],
           users: ["/api/users"],
@@ -332,7 +320,6 @@ export default function StatsDashboard({ pageType, actions, customStats }: Stats
         const quizQuestions = getDataset("quiz-questions");
         const blogs = getDataset("blogs");
         const glossary = getDataset("glossary");
-        const faq = getDataset("faq");
         const videoPosts = getDataset("videos");
 
         const leads = getDataset("leads");
@@ -432,13 +419,6 @@ export default function StatsDashboard({ pageType, actions, customStats }: Stats
             val2 = glossCats.size;
             val3 = glossary.filter((g: any) => g.illustration).length;
             val4 = glossary.filter((g: any) => !g.definition).length;
-            break;
-
-          case "faq":
-            val1 = faq.length;
-            val2 = faq.filter((f: any) => f.isPublished).length;
-            val3 = faq.filter((f: any) => !f.isPublished).length;
-            val4 = 0;
             break;
 
 

@@ -43,6 +43,7 @@ export default function AdminQaPage() {
   const [saving, setSaving] = useState(false);
   const [view, setView] = useState<View | null>(null);
   const [query, setQuery] = useState("");
+  const [sort, setSort] = useState<"newest" | "oldest" | "recent" | "weakest">("newest");
   const [page, setPage] = useState(1);
   const [filling, setFilling] = useState(false);
   const [comments, setComments] = useState<QaComment[]>([]);
@@ -136,8 +137,13 @@ export default function AdminQaPage() {
       })
       .filter(({ q: x }) => (isStaff ? true : x.status === "published")) // healers only see live questions
       .filter(({ q: x }) => !q || `${x.title} ${x.slug} ${x.category} ${x.askedByName}`.toLowerCase().includes(q))
-      .sort((a, b) => (activeView === "answered" ? (a.s?.overall ?? 0) - (b.s?.overall ?? 0) : (b.q.createdAt || "").localeCompare(a.q.createdAt || "")));
-  }, [scored, activeView, query, isStaff]);
+      .sort((a, b) => {
+        if (sort === "weakest") return (a.s?.overall ?? 101) - (b.s?.overall ?? 101) || a.q.title.localeCompare(b.q.title);
+        if (sort === "oldest") return (a.q.createdAt || "").localeCompare(b.q.createdAt || "");
+        if (sort === "recent") return (b.q.updatedAt || "").localeCompare(a.q.updatedAt || "");
+        return (b.q.createdAt || "").localeCompare(a.q.createdAt || "");
+      });
+  }, [scored, activeView, query, isStaff, sort]);
 
   const pages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
   const pageRows = rows.slice((Math.min(page, pages) - 1) * PAGE_SIZE, Math.min(page, pages) * PAGE_SIZE);
@@ -318,6 +324,9 @@ export default function AdminQaPage() {
 
       <div className={shop.filters}>
         <input className={shop.input} placeholder="Search questions" aria-label="Search questions" value={query} onChange={(e) => { setQuery(e.target.value); setPage(1); }} />
+        <select className={shop.select} aria-label="Sort questions" value={sort} onChange={(e) => { setSort(e.target.value as typeof sort); setPage(1); }}>
+          <option value="newest">Newest first</option><option value="recent">Recently updated</option><option value="oldest">Oldest first</option><option value="weakest">Weakest score first</option>
+        </select>
       </div>
 
       <div className={shop.tableCard}>
@@ -327,7 +336,7 @@ export default function AdminQaPage() {
           <div className={shop.empty}>{questions.length === 0 ? "No questions yet. Visitors can ask from the Q&A Board, or use “Add Q&A”." : "Nothing here."}</div>
         ) : (
           <table className={shop.table}>
-            <thead><tr><th>Question</th><th>Status</th><th>Asked by</th><th>Comments</th><th>SEO</th><th>GEO</th><th>AEO</th><th>Overall</th><th>Actions</th></tr></thead>
+            <thead><tr><th>Question</th><th>Status</th><th>Asked by</th><th>Comments</th><th>Reviewed</th><th>SEO</th><th>GEO</th><th>AEO</th><th>Overall</th><th>Actions</th></tr></thead>
             <tbody>
               {pageRows.map(({ q, s }) => (
                 <tr key={q.id}>
@@ -339,6 +348,7 @@ export default function AdminQaPage() {
                   </td>
                   <td>{q.anonymous ? "Anonymous" : q.askedByName || "–"}</td>
                   <td>{q.commentCount || 0}</td>
+                  <td>{q.reviewedBy?.trim() ? <Check size={16} aria-label={`Reviewed by ${q.reviewedBy}`} /> : "–"}</td>
                   <td>{s ? <span className={`${styles.pillScore} ${tone(s.seo.score)}`}>{s.seo.score}</span> : "–"}</td>
                   <td>{s ? <span className={`${styles.pillScore} ${tone(s.geo.score)}`}>{s.geo.score}</span> : "–"}</td>
                   <td>{s ? <span className={`${styles.pillScore} ${tone(s.aeo.score)}`}>{s.aeo.score}</span> : "–"}</td>

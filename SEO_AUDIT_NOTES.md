@@ -47,3 +47,10 @@ supabase/migrations/20260625000000_comparison_pages.sql  src/app/blog/BlogListin
 - Services keep their own list (Admin > Service Categories).
 - The editors for questions, videos and glossary terms now pick from the shared list (no free typing).
 - Sidebar fix: the Glossary, Questions and Videos items were stacking their icon above the text. Fixed.
+
+## FAQ merged into Questions & Answers in the admin too (25 Nov 2026)
+- Admin has one section: Questions & Answers. The FAQ menu item and screens are gone; /admin/faq goes to it.
+- Checked before removing: all 8 FAQs already exist as published questions, none had an "in-depth explanation", none had
+  drafts or reviews, so nothing was lost. The old faqs table is kept as a backup.
+- The Q&A admin gained what the FAQ admin had and it lacked: a sort menu (newest, recently updated, oldest, weakest score) and a Reviewed column.
+- Old public addresses /blog/faq and /blog/faq/<name> permanently redirect to /blog/quora-qa and /blog/quora-qa/<name>.
