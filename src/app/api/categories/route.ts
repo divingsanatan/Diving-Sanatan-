@@ -2,13 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/utils/supabaseServer";
 import { getOrSetServerCache, invalidateServerCache } from "@/utils/serverCache";
 import { requireStaff } from "@/utils/authSession";
+import { isPanelRequest, ADMIN_NO_STORE, PUBLIC_REVALIDATE } from "@/utils/adminView";
 
 /**
  * GET Handler - Retrieves all categories from Supabase
  */
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const categories = await getOrSetServerCache("categories_all", 60, async () => {
+    const panel = isPanelRequest(req);
+    const categories = await getOrSetServerCache(`categories_all_${panel ? "panel" : "public"}`, panel ? 0 : 60, async () => {
       const { data, error } = await supabaseServer
         .from("categories")
         .select("*")
@@ -22,7 +24,7 @@ export async function GET() {
 
     return NextResponse.json(
       { success: true, data: categories },
-      { headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" } }
+      { headers: panel ? ADMIN_NO_STORE : PUBLIC_REVALIDATE }
     );
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error?.message || "Failed to read categories" }, { status: 500 });

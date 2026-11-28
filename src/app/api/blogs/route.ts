@@ -1,3 +1,4 @@
+import { wantsAdminView } from "@/utils/adminView";
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/utils/supabaseServer";
 import { slugify } from "@/utils/slugify";
@@ -36,7 +37,8 @@ export async function GET(req: NextRequest) {
     const id = searchParams.get("id");
     const category = searchParams.get("category");
     const section = searchParams.get("section");
-    const adminView = searchParams.get("admin_view");
+    // Drafts and pending articles are visible only to signed-in panel users.
+    const adminView = wantsAdminView(req) ? "true" : "";
 
     const excludePillar = searchParams.get("exclude_pillar");
 

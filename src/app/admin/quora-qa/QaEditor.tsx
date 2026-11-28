@@ -159,6 +159,7 @@ export default function QaEditor({
           <button type="button" className={`${shop.btn} ${shop.secondary} ${shop.small}`} onClick={() => onBack(dirty)}><ArrowLeft size={14} /> Q&amp;A</button>
           <span>{isNew ? "New Q&A" : truncate(eff.title || "Edit question", 60)}</span>
           {dirty && <span className={shop.dirty}>● Unsaved changes</span>}
+          {!dirty && !isNew && <span className={shop.hint} role="status">✓ All changes saved</span>}
         </div>
         <div className={shop.editorBtns}>
           {isAnswered(eff) && (

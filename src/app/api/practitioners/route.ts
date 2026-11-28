@@ -22,47 +22,47 @@ function mapPractitionerToCamelCase(p: any): Practitioner {
   };
 }
 
+/** What anyone may see: no email address and no internal account id. */
+function mapPublicPractitioner(p: any) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { email, user_id, ...rest } = mapPractitionerToCamelCase(p);
+  return rest;
+}
+
 /**
- * GET Handler - Retrieves practitioners from Supabase (or single practitioner if id parameter is provided)
+ * GET Handler - Retrieves practitioners from Supabase (or a single practitioner if the id parameter is provided).
+ * Visitors get published profiles only, without private fields. Signed-in panel users get everything, always fresh.
  */
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
-    const headers = {
-      "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
-    };
+    const panel = isPanelRequest(req);
+    const headers = panel ? ADMIN_NO_STORE : PUBLIC_REVALIDATE;
+    const ttl = panel ? 0 : 60;
+    const view = panel ? "panel" : "public";
 
     if (id) {
-      const cacheKey = `practitioner_${id}`;
-      const data = await getOrSetServerCache(cacheKey, 60, async () => {
-        const { data: p, error } = await supabaseServer
-          .from("practitioners")
-          .select("*")
-          .eq("id", id)
-          .single();
-
+      const data = await getOrSetServerCache(`practitioner_${id}_${view}`, ttl, async () => {
+        const { data: p, error } = await supabaseServer.from("practitioners").select("*").eq("id", id).single();
         if (error || !p) return null;
-        return mapPractitionerToCamelCase(p);
+        if (panel) return mapPractitionerToCamelCase(p);
+        if ((p.approval_status || "published") !== "published") return null;
+        return mapPublicPractitioner(p);
       });
 
       if (!data) {
-        return NextResponse.json({ success: false, error: "Practitioner not found" }, { status: 404 });
+        return NextResponse.json({ success: false, error: "Practitioner not found" }, { status: 404, headers });
       }
-
       return NextResponse.json({ success: true, data }, { headers });
     }
 
-    const cacheKey = "practitioner_all";
-    const mapped = await getOrSetServerCache(cacheKey, 60, async () => {
-      const { data: practitioners, error } = await supabaseServer
-        .from("practitioners")
-        .select("*")
-        .order("name", { ascending: true });
-
+    const mapped = await getOrSetServerCache(`practitioner_all_${view}`, ttl, async () => {
+      let q = supabaseServer.from("practitioners").select("*");
+      if (!panel) q = q.eq("approval_status", "published");
+      const { data: practitioners, error } = await q.order("name", { ascending: true });
       if (error) throw new Error(error.message);
-
-      return (practitioners || []).map(mapPractitionerToCamelCase);
+      return (practitioners || []).map(panel ? mapPractitionerToCamelCase : mapPublicPractitioner);
     });
 
     return NextResponse.json({ success: true, data: mapped }, { headers });
@@ -72,6 +72,7 @@ export async function GET(req: NextRequest) {
 }
 
 import { requirePanel } from "@/utils/authSession";
+import { isPanelRequest, ADMIN_NO_STORE, PUBLIC_REVALIDATE } from "@/utils/adminView";
 import { hashPassword, randomPassword } from "@/utils/auth";
 
 

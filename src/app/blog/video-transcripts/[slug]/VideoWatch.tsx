@@ -4,7 +4,6 @@ import React, { createContext, useCallback, useContext, useRef, useState, useSyn
 import VideoPlayer, { type VideoPlayerHandle } from "../VideoPlayer";
 import SubscribeButton from "../SubscribeButton";
 import type { TranscriptLine } from "@/lib/videoShared";
-import { youtubeWatchUrl } from "@/lib/youtube";
 import styles from "../video.module.css";
 
 interface Ctx {
@@ -71,7 +70,6 @@ export function WatchPlayer({
       <div className={styles.share}>
         <button type="button" className={styles.shareBtn} onClick={copy}>Copy link</button>
         <a className={styles.shareBtn} href={`https://wa.me/?text=${encodeURIComponent(`${title} ${shareUrl}`)}`} target="_blank" rel="noopener noreferrer">WhatsApp</a>
-        <a className={styles.shareBtn} href={youtubeWatchUrl(youtubeId)} target="_blank" rel="noopener noreferrer">Open on YouTube</a>
         {canShare && <button type="button" className={styles.shareBtn} onClick={nativeShare}>Share…</button>}
         {copied && <span className={styles.copied} role="status">Link copied</span>}
       </div>

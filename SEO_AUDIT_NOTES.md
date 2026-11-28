@@ -54,3 +54,11 @@ supabase/migrations/20260625000000_comparison_pages.sql  src/app/blog/BlogListin
   drafts or reviews, so nothing was lost. The old faqs table is kept as a backup.
 - The Q&A admin gained what the FAQ admin had and it lacked: a sort menu (newest, recently updated, oldest, weakest score) and a Reviewed column.
 - Old public addresses /blog/faq and /blog/faq/<name> permanently redirect to /blog/quora-qa and /blog/quora-qa/<name>.
+
+## Video page, admin freshness and private data (26 Nov 2026)
+- Video page: the player is always exactly 9:16 (Shorts) or 16:9, on desktop and phone, with a black background; headings and lists use
+  the same fonts and weights as the rest of the site; share buttons are centred; transcript rows line up; "Open on YouTube" removed.
+- Admin lists (practitioners, services, service categories, articles, shared categories) are no longer kept by the web host's shared cache,
+  so a save shows on the next load. Editors for videos and questions show "All changes saved".
+- Visitors now get published items only: the public practitioner list no longer includes email addresses, internal account ids or
+  unapproved profiles, and ?admin_view=true only works for a signed-in panel user (it used to expose drafts to anyone).

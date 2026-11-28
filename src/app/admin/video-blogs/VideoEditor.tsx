@@ -173,6 +173,7 @@ export default function VideoEditor({
           <button type="button" className={`${shop.btn} ${shop.secondary} ${shop.small}`} onClick={() => onBack(dirty)}><ArrowLeft size={14} /> Videos</button>
           <span>{isNew ? "New video" : truncate(eff.title || "Edit video", 60)}</span>
           {dirty && <span className={shop.dirty}>● Unsaved changes</span>}
+          {!dirty && !isNew && <span className={shop.hint} role="status">✓ All changes saved</span>}
         </div>
         <div className={shop.editorBtns}>
           <div className={styles.scores} aria-label="Scores">

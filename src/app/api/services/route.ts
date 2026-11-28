@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/utils/supabaseServer";
 import { Service } from "@/types/database";
 import { getOrSetServerCache, invalidateServerCache } from "@/utils/serverCache";
+import { wantsAdminView, ADMIN_NO_STORE, PUBLIC_REVALIDATE } from "@/utils/adminView";
 import { requirePanel } from "@/utils/authSession";
 
 async function runSupabaseQuery<T extends { error: { message?: string } | null }>(
@@ -54,11 +55,9 @@ function mapServiceCategories(s: any): Service {
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const headers = {
-      "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
-    };
-    
-    const adminView = searchParams.get("admin_view");
+    // Only signed-in panel users can see unpublished services, and that view is never cached.
+    const adminView = wantsAdminView(req) ? "true" : "";
+    const headers = adminView ? ADMIN_NO_STORE : PUBLIC_REVALIDATE;
     const singleId = searchParams.get("id");
     const maxPrice = searchParams.get("maxPrice");
     const duration = searchParams.get("duration");
@@ -70,7 +69,7 @@ export async function GET(req: NextRequest) {
 
     const cacheKey = `service_${adminView === "true" ? "admin" : "pub"}_${singleId || "all"}_${maxPrice || ""}_${duration || ""}`;
 
-    const rawData = await getOrSetServerCache(cacheKey, 60, async () => {
+    const rawData = await getOrSetServerCache(cacheKey, adminView ? 0 : 60, async () => {
       if (singleId) {
         let q = supabaseServer
           .from("services")

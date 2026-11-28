@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/utils/supabaseServer";
 import { requirePanel } from "@/utils/authSession";
+import { wantsAdminView, ADMIN_NO_STORE } from "@/utils/adminView";
 
 /**
  * The ONE category list for all content: articles, video blogs, questions and glossary terms.
@@ -49,8 +50,7 @@ const zero: Counts = { blog: 0, video: 0, qa: 0, glossary: 0 };
 
 export async function GET(req: NextRequest) {
   try {
-    const { searchParams } = new URL(req.url);
-    const adminView = searchParams.get("admin_view") === "true";
+    const adminView = wantsAdminView(req);
 
     let query = supabaseServer.from("blog_categories").select("*");
     if (!adminView) query = query.or("approval_status.eq.published,approval_status.is.null");
@@ -59,10 +59,10 @@ export async function GET(req: NextRequest) {
 
     // Public visitors see only what is published; the admin screen sees everything that uses a category.
     const usage = await usageByName(!adminView);
-    return NextResponse.json({
-      success: true,
-      data: (data || []).map((r) => mapCategory(r, usage.get(String(r.name).trim().toLowerCase()) || zero)),
-    });
+    return NextResponse.json(
+      { success: true, data: (data || []).map((r) => mapCategory(r, usage.get(String(r.name).trim().toLowerCase()) || zero)) },
+      adminView ? { headers: ADMIN_NO_STORE } : undefined
+    );
   } catch {
     return NextResponse.json({ success: false, error: "Failed to read categories" }, { status: 500 });
   }
